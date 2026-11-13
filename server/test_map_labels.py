@@ -16,6 +16,16 @@ RES = os.environ.get("LAVA_RES", "/mnt/c/Users/gmkrt/OneDrive/Desktop/LAVA/res")
 raw = open(os.path.join(RES, "database", "locations.xml"), "rb").read()
 edits = M.load()
 
+WAREHOUSE_LEVELS = {(5998, 1697): 8, (6002, 1738): 8, (5957, 1743): 12,
+                    (5913, 1976): 12, (5931, 2031): 16, (5883, 2060): 16,
+                    (6183, 1976): 17}
+
+
+def warehouse_wording(text, cell):
+    old_level = 19 if cell == (6183, 1976) else WAREHOUSE_LEVELS[cell]
+    return text.replace("игроками %d уровня" % old_level,
+                        "игроками %d+ уровня" % WAREHOUSE_LEVELS[cell])
+
 
 def rows_at(doc, x, y, was):
     out = []
@@ -181,7 +191,7 @@ def rows_of(doc, box):
 FSC_AIRFIELD_CELL = (5970, 1727)                 # the cut of the ФСЦ, below
 # The boss clock's retexts (2026-10-11, below): the camps' and their chiefs'
 # places' hours, each row's text for another. The warehouses' were retexted
-# too, and are the original's again since 2026-10-12 (below).
+# too; their original hours stay, with clarified minimum-level wording (below).
 CLOCK_WHY = "The owner's boss clock, 2026-10-11"
 CLOCK = {(e["x"], e["y"], e["was"]): e["text"] for e in LABELS
          if e.get("why", "").startswith(CLOCK_WHY)}
@@ -207,6 +217,8 @@ for x, y, text in rows_of(raw, HALFA_BOX):
         text = text.replace("12:00", "13:00").replace("16:00", "17:00").replace("23:00", "21:00")
     if (x, y, text) in CLOCK:
         text, clocked = CLOCK[(x, y, text)], clocked + 1
+    if (x, y) in WAREHOUSE_LEVELS:
+        text = warehouse_wording(text, (x, y))
     kept.append((x, y, text))
 check("  ..and every other name around Вади-Хальфа is the file's own, row for row (the (P) camp"
       " 124's hidden since 2026-09-30, the ФСЦ airfield's since 2026-10-10, the boss clock's"
@@ -214,7 +226,7 @@ check("  ..and every other name around Вади-Хальфа is the file's own, 
       [r for r in rows_of(out, HALFA_BOX) if r not in OURS_ADDED], kept)
 check("  ..of which there are dozens", len(kept) > 30, True)
 check("  ..eight of them retexted to the boss clock: the four camps and their chiefs' places (the"
-      " southern warehouse's is the original's)", clocked, 8)
+      " southern warehouse keeps its original hours)", clocked, 8)
 
 # The owner's cut of Вади-Хальфа's ФСЦ (2026-10-10, «убери фсц тоже»): the
 # FSC airfield 528 (the blue square with «!» beside the old market) and the
@@ -294,8 +306,7 @@ check("the river cut's own edits are those four cells and no other (Абри's c
 # of the clock behind it stays the original's, and is listed here; the staffs
 # and the dig 433 promised what nothing on the server keeps, and lose those
 # lines (below). The warehouses' «Хозяин склада» keeps his own hour since
-# 2026-10-12, the original's 20:00, and their names are the original's again
-# (below).
+# 2026-10-12, the original's 20:00; minimum-level wording is clarified below.
 print("the boss clock (2026-10-11)")
 import bosses  # noqa: E402
 
@@ -363,7 +374,7 @@ with open(os.path.join(os.path.dirname(HERE), "data", "schedule.json"), encoding
 # хозяин должен прриходить один раз!!!», 2026-10-12), at
 # bosses.DEFAULT_WAREHOUSE_HOURS for the bosses' stay: 20:00 to 21:00, the
 # original's own «Хозяин присутствует с 20:00 до 21:00». The seven names
-# over the warehouses are the file's, untouched, and say his window as the
+# over the warehouses keep their original hours and say his window as the
 # default makes it: another hour there and no new labels fails here.
 print("the warehouses' master (2026-10-12)")
 
@@ -385,11 +396,11 @@ check("  ..(the helper says the old three windows as they were written)",
       windows_said([840, 1080, 1320], 60), "с 14:00 до 15:00, с 18:00 до 19:00 и с 22:00 до 23:00")
 check("the seven warehouses' names say the master's one window, the default's",
       say(WAREHOUSES, MASTER_SAYS), one_each(WAREHOUSES))
-check("  ..as the original's own words, each the file's one row over its cell, unedited",
+check("warehouse labels change only minimum-level wording, not hours or other conditions",
       ({c: texts_at(out, *c) for c in WAREHOUSES},
        sorted((e["x"], e["y"]) for e in LABELS if (e["x"], e["y"]) in WAREHOUSES)),
-      ({c: [t.replace('19 уровня', '17 уровня') if c == (6183,1976) else t
-             for t in texts_at(raw,*c)] for c in WAREHOUSES}, [(6183,1976)]))
+      ({c: [warehouse_wording(t, c) for t in texts_at(raw, *c)] for c in WAREHOUSES},
+       sorted(WAREHOUSE_LEVELS)))
 check("  ..and none of them names the bosses' hours any more",
       [(c, t) for c in WAREHOUSES for t in texts_at(out, *c) if "14:00" in t or "22:00" in t], [])
 check("  ..and Вади-Хальфа's three still share the box from 19:00 to 20:00, the window wh_box of"
@@ -429,10 +440,10 @@ check("every other name on the map that tells an hour or offers blueprints is on
       sorted({(x, y) for x, y, t in rows_of(out, EVERYWHERE) if TIMED.search(t)}
              - set(CLOCK_CELLS) - set(WAREHOUSES)),
       sorted(set(ORIGINAL) | set(PRISONS)))
-check("  ..the warehouses' byte for byte as the file has them",
-      [rows_bytes(out,c) for c in WAREHOUSES],
-      [[r.replace('19 уровня'.encode(), '17 уровня'.encode()) for r in rows_bytes(raw,c)]
-       if c == (6183,1976) else rows_bytes(raw,c) for c in WAREHOUSES])
+check("  ..warehouse bytes change only the agreed minimum-level wording",
+      [rows_bytes(out, c) for c in WAREHOUSES],
+      [[warehouse_wording(r.decode('utf-8'), c).encode('utf-8')
+        for r in rows_bytes(raw, c)] for c in WAREHOUSES])
 check("  ..each byte for byte as the file has it, «Лагерь Большого Мвамбы» too, each under its name",
       [(rows_bytes(out, c), all(t.startswith(ORIGINAL.get(c, "Лагерь Большого Мвамбы"))
                                 for t in texts_at(out, *c))) for c in sorted(ORIGINAL) + [MWAMBA]],

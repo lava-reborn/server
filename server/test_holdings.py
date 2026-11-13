@@ -297,6 +297,26 @@ async def main():
           [(True, True, "Патроны и афро владельцам склада", key, lvl, True, False)
            for key, lvl in (("wh_sever", 8), ("wh_vostok", 8), ("wh_ug", 12))])
 
+    expected_levels = {'wh_sever': 8, 'wh_vostok': 8, 'wh_ug': 12,
+                       'wh_dn_sever': 12, 'wh_dn_vostok': 16, 'wh_dn_ug': 16,
+                       'wh_ah_center': 17}
+    check("all seven warehouses keep their agreed minimum levels",
+          {key: site.min_level for key, site in holdings.sites().items()}, expected_levels)
+    for key, minimum in expected_levels.items():
+        site = holdings.sites()[key]
+        for second_level in (minimum - 1, minimum, minimum + 1, 20):
+            snap = dict(pool=100, killer=1, killer_clan=wolves, fighters=[
+                dict(char=cid, clan=wolves, clan_name="Волки", here=True,
+                     alive=True, level=lvl, harm=20)
+                for cid, lvl in ((1, minimum), (2, second_level))])
+            result = holdings.winner(snap, holdings.table().squad, site.min_level)
+            check("%s: member at %d with member at %d qualifies iff both reach the minimum"
+                  % (key, minimum, second_level),
+                  result is not None, second_level >= minimum)
+        row = quests.get(site.quest)
+        check("%s: reward quest has the same minimum and no upper level cap" % key,
+              (row.level, row.max_level), (minimum, None))
+
     # The master's hours: one window a day, at 20:00, and none at the bosses'
     # 14, 18 and 22 -- the day before the fights below, he is not there.
     check("the boss keeps the warehouse masters' hour, 20:00 alone",
@@ -372,8 +392,10 @@ async def main():
     for s in everybody:
         take(s)
     LINES.take()
+    level(amir, 9)
     got = await fight([(alice, 200), (amir, 200)], amir)
-    check("two members of the Волки at level 8 hurt it and kill it: they take it",
+    level(amir, 8)
+    check("two members of the Волки at levels 8 and 9 hurt it and kill it: they take it",
           got, ("capture", wolves))
     row = log_rows(1)[0]
     check("  ..one 'capture' row: the Волки after, nobody before, the killer credited,"
