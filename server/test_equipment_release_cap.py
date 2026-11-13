@@ -8,6 +8,7 @@ from unittest.mock import Mock, patch
 os.environ.pop("LAVA_DB_URL", None)
 os.environ["LAVA_DB"] = ":memory:"
 
+import accounts
 import auction
 import barter
 import craft
@@ -144,13 +145,34 @@ class ReleaseBoundary(unittest.TestCase):
                 self.assertFalse(items.acquisition_blocked(mod))
 
     def test_existing_mail_attachment_is_kept_and_no_payment_or_creation_occurs(self):
-        store, sess = Mock(), Mock()
-        store.mail_letter.return_value = dict(items_json=json.dumps([dict(type_id=11489)]))
+        store = accounts.Store(':memory:')
+        self.addCleanup(store.close)
+        account, _ = store.register('release-mail', 'test-only')
+        cid, _ = store.create_character(account, 'ReleaseMail', 0, '1')
+        # A real historical parcel, not a mock that fails on BEGIN before
+        # acquisition_blocked is reached and happens to return the same ACK.
+        fields = inventory.new_fields(11489)
+        root = fields.pop('root')
+        item = store.create_item(cid, 11489, root, **fields)
+        attachment = mail.snapshot(item)
+        store.delete_item(item['uniq'])
+        letter = store.mail_send(cid, mail.SYSTEM_SENDER, 0, 'Archived parcel', '',
+                                 123, 7, json.dumps([attachment]))
+        purse = store.money(cid)
+        rows = store.items_of(cid)
+        sess = Mock(char_id=cid)
         handler = mail.Mail(sess, store, {})
-        with patch.object(handler, "side_of", return_value="in"):
-            handler.uldml(dict(id="1"))
-        store.create_item.assert_not_called()
-        store.mail_take.assert_not_called()
+        with patch.object(mail.log, 'exception', side_effect=AssertionError('unexpected mail failure')), \
+                patch.object(store, 'create_item', wraps=store.create_item) as create, \
+                patch.object(store, 'set_money', wraps=store.set_money) as pay, \
+                patch.object(store, 'mail_update', wraps=store.mail_update) as take:
+            handler.uldml(dict(id=str(letter['id'])))
+        create.assert_not_called()
+        pay.assert_not_called()
+        take.assert_not_called()
+        self.assertEqual(store.mail_letter(letter['id']), letter)
+        self.assertEqual(store.money(cid), purse)
+        self.assertEqual(store.items_of(cid), rows)
         sess.character.assert_not_called()
         sess.send.assert_called_once_with("cmdAck", res=mail.RES_REFUSED)
 
