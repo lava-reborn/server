@@ -116,8 +116,10 @@ def __icEquipDouble(obj):
     if not _global.__icCanStart(this, card):
         return
     root = card.item.rootID
-    if obj.target == this.bag_mc and (root == 0 or root == 1 or root == 2):
+    if obj.target == this.bag_mc and (root == 0 or root == 5 or root == 3):
         # The old double-click branch can leave hand items without a target.
+        # Item.as: firearm=0, cold arm=5, ammo=3. Wear=1 keeps its
+        # native clothing slot; medicine=2 keeps native use-on-double-click.
         # Use the same DDOperation and validation/confirmation path as a drop
         # on the primary hand; do not send a command or move the card here.
         slot = this.outfitInterface.prim_mc

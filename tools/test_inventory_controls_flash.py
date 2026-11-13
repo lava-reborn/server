@@ -5,6 +5,7 @@ stand-ins; equipment submission is recorded instead of sending commands.
 This is not a physical keyboard, raster QA or FPS measurement.
 """
 import os
+import json
 
 import test_location_transition as host
 import widescreen as w
@@ -27,12 +28,51 @@ def __inventoryProbe(url):
         owner.__proto__ = lol.gpui.EquipInterface.prototype
         _root.weapon.__proto__ = lol.core.objects.FireArm.prototype
         bag.__icOwner = owner
-        card = {"item":_root.weapon, "__icBag":bag, "blockItem":_global.__probeNoop}
+        # Native compiled methods call the explicit AS2 accessor, whereas
+        # generated wrappers read .item. The stand-in must expose both.
+        card = {"item":_root.weapon, "__get__item":_global.__probeGetItem, "__icBag":bag, "blockItem":_global.__probeNoop}
         card.clickFlag = True
         lol.gpui.BagInterface.prototype.shiftSelect.apply(bag, [{"target":card}])
         report.hits = _root.nativeHits
         report.destination = _root.destination
         report.shift_cleared_click = not card.clickFlag
+        # Exercise the native type constants and original clothing/medicine
+        # branches, not just a stand-in handler with copied numeric roots.
+        card.unblockItem = _global.__probeNoop
+        owner.currDDOperation = None
+        owner.outfitInterface.head_mc = {"id":"head", "item_mc":{"item":{}, "blockItem":_global.__probeNoop}}
+        card.item = new(lol.core.objects.Wear, "0", 0, lol.core.objects.Item.WEAR)
+        card.item.inited = True
+        card.item.getProp = _global.__probeProp
+        report.armour_class = card.item.__className
+        report.armour_root = card.item.rootID
+        _root.destination = "missing"
+        lol.gpui.BagInterface.prototype.shiftSelect.apply(bag, [{"target":card}])
+        report.armour_destination = _root.destination
+        owner.currDDOperation = None
+        _root.healUses = 0
+        owner.equipment = {"onDoubleClick":_global.__probeUseMedicine}
+        card.item = new(lol.core.objects.HealItem, "0", 0, lol.core.objects.Item.HEAL_ITEM)
+        card.item.inited = True
+        card.item.getProp = _global.__probeProp
+        report.medicine_class = card.item.__className
+        lol.gpui.BagInterface.prototype.shiftSelect.apply(bag, [{"target":card}])
+        report.medicine_uses = _root.healUses
+        report.medicine_pending = Boolean(owner.currDDOperation)
+        owner.currDDOperation = None
+        card.item = new(lol.core.objects.MeleeWeapon, "0", 0, lol.core.objects.Item.COLD_ARM)
+        card.item.inited = True
+        card.item.getProp = _global.__probeProp
+        _root.destination = "missing"
+        lol.gpui.BagInterface.prototype.shiftSelect.apply(bag, [{"target":card}])
+        report.knife_destination = _root.destination
+        owner.currDDOperation = None
+        card.item = new(lol.core.objects.Ammo, "0", 0, lol.core.objects.Item.AMMO)
+        card.item.inited = True
+        card.item.getProp = _global.__probeProp
+        _root.destination = "missing"
+        lol.gpui.BagInterface.prototype.shiftSelect.apply(bag, [{"target":card}])
+        report.ammo_destination = _root.destination
         # Exercise the actual native getNumFromSortList/selection path when
         # the old anchor was removed or hidden by a filter.
         stale = {"currSelectItem":{"item":{"id":"gone"}}, "sortList":[card], "selectItem_arr":[], "clearSelectList":_global.__probeNoop, "getNumFromSortList":lol.gpui.BagInterface.prototype.getNumFromSortList, "select":lol.gpui.BagInterface.prototype.select}
@@ -58,6 +98,12 @@ def __probeProp(name):
 
 def __probeNoop():
     return
+
+def __probeGetItem():
+    return this.item
+
+def __probeUseMedicine(item, slot):
+    _root.healUses = _root.healUses + 1
 
 def __probeSubmit():
     _root.nativeHits = _root.nativeHits + 1
@@ -100,12 +146,18 @@ def main():
     check('native Shift selection submits one equipment operation', row.get('hits'), '1')
     check('native weapon equip selects the primary slot', row.get('destination'), 'primary')
     check('native Shift consumes the double-click flag', row.get('shift_cleared_click'), 'true')
+    check('native Shift armour selects its clothing slot', row.get('armour_destination'), 'head')
+    check('native Shift medicine uses once and leaves no pending equipment operation',
+          (row.get('medicine_uses'), row.get('medicine_pending')), ('1', 'false'))
+    check('native Shift knife selects the primary slot', row.get('knife_destination'), 'primary')
+    check('native Shift ammunition selects the weapon target', row.get('ammo_destination'), 'primary')
     check('native filtered-out range anchor selects the current card safely', row.get('selected_current'), 'true')
     check('native trade Escape reaches only its own recipient',
           (row.get('trade_escape'), row.get('other_escape')), ('1', '0'))
     check('native complete filter chain preserves stats cancellation and toggle',
           (row.get('stats_cancel'), row.get('stats_toggle')), ('true', 'true'))
     if fails:
+        print(json.dumps(row,sort_keys=True))
         print('\n'.join(fails))
         raise SystemExit(1)
 

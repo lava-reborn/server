@@ -96,7 +96,12 @@ def send_to(sess, command, params):
         # Session.close here would recursively broadcast presence/departure.
         sess._failed_fanout_writer = writer
         log.info("recipient %s disconnected: %s", getattr(sess, 'peer', None), exc)
-        writer.close()
+        try:
+            writer.close()
+        except OSError:
+            # Teardown of the same failed socket must not re-raise into the
+            # fanout either. Programming errors are deliberately not hidden.
+            log.debug("failed recipient transport was already unusable", exc_info=True)
         return False
     if failed is not None:
         sess._failed_fanout_writer = None  # a lingering session resumed on a new socket

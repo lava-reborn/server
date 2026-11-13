@@ -246,7 +246,9 @@ class InventoryControls(unittest.TestCase):
         self.assertEqual(self.calls, ['native-cancel'])
 
     def test_hand_items_choose_primary_and_keep_native_requirement_checks(self):
-        for root in (0, 1, 2):
+        # Item.as: FIRE_ARM=0, COLD_ARM=5, AMMO=3. Wear and medicine
+        # must retain their distinct native equip/use routes.
+        for root in (0, 5, 3):
             with self.subTest(root=root):
                 self.calls.clear()
                 panel, bag = self.owner()
@@ -262,6 +264,19 @@ class InventoryControls(unittest.TestCase):
                 self.assertIs(panel['currDDOperation'], operation)
                 self.assertEqual(self.calls[1], ('to', ('previous', slot, slot['item_mc'])))
                 self.assertEqual(self.calls[-1], 'native-requirements-and-confirmation')
+
+    def test_armour_and_medicine_keep_native_slot_and_use_routes(self):
+        for root in (1, 2):
+            with self.subTest(root=root):
+                self.calls.clear()
+                panel, bag = self.owner()
+                panel['outfitInterface'] = dict(prim_mc=dict(id='primary',item_mc={}))
+                card = self.card()
+                card['item']['rootID'] = root
+                self.call('EquipInterface','doubleClick',panel,dict(target=bag,item_mc=card))
+                self.assertEqual(len(self.calls),1)
+                self.assertIs(self.calls[0]['item_mc'],card)
+                self.assertNotIn('currDDOperation',panel)
 
     def test_equipment_rejection_releases_pointer_but_waiting_warning_keeps_it(self):
         operation = dict(item='weapon')
