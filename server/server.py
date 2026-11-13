@@ -619,8 +619,16 @@ class Session:
             with STORE.booked_as(*self.money_cause(cmd, params)):
                 fn(params)
         except Exception:
-            # A bug in one handler must not drop the player's connection.
             log.exception("  !!    handler for %r failed", cmd)
+            if cmd in {"hello", "login", "newPers", "selPers", "actPlayer", "lenter"}:
+                # Entry has several different reply contracts, and may have
+                # already sent success. A second ACK would corrupt FIFO;
+                # disconnect so the client can retry instead of waiting forever.
+                # A partially loaded character must not overwrite its durable
+                # position or state with this session's initial defaults.
+                self._failed_entry_before_presence = ONLINE.by_char.get(self.char_id) is not self
+                self.close(force=True)
+                return
         if self.closed:
             return
         if cmd in GEAR_COMMANDS:
@@ -816,10 +824,10 @@ class Session:
             # The clan's roster holders hear "offline", seen_at is written,
             # an invitation to this character is off. Never raises.
             CLANS.offline(self)
-            if self.char_id:
+            if self.char_id and not getattr(self, "_failed_entry_before_presence", False):
                 STORE.save_position(self.char_id, self.loc.id, self.pos,
                                     self.gx, self.gy, self.on_map)
-            if self.char:
+            if self.char and not getattr(self, "_failed_entry_before_presence", False):
                 self.char.save(STORE)
         finally:
             self.writer.close()
@@ -4352,24 +4360,21 @@ async def handle_client(reader, writer):
     log.info("connect %s", peer)
     sess = Session(writer, peer)
     SESSIONS.add(sess)
-    fr = FrameReader()
+    fr = FrameReader(policy=True)
     try:
         while True:
             data = await reader.read(4096)
             if not data:
                 break
-            # Flash may probe for a policy file on the game port itself.
-            if data.startswith(b"<policy-file-request/>"):
-                log.info("  policy request")
-                writer.write(POLICY)
-                await writer.drain()
-                continue
             for raw in fr.feed(data):
                 # Closed under our feet (a relogin elsewhere, a kick): the
                 # rest of what this socket sent is not read at all, see
                 # Session.handle.
                 if sess.closed or sess.writer is not writer:
                     break
+                if raw == b"<policy-file-request/>":
+                    writer.write(POLICY)
+                    continue
                 try:
                     name, params = decode(raw)
                 except Exception:
@@ -4737,13 +4742,20 @@ def broadcast_online_count():
     for sess in connected:
         if not sess.online_counter or sess.closed:
             continue
-        if not sess.online_names:
-            sess.send("online", count=count)
-            continue
-        if names is None:
-            names = RawList(sorted((clans.list_safe(s.nick) for s in connected),
-                                   key=lambda n: (n.casefold(), n)))
-        sess.send("online", count=count, names=names)
+        try:
+            if not sess.online_names:
+                sess.send("online", count=count)
+                continue
+            if names is None:
+                names = RawList(sorted((clans.list_safe(s.nick) for s in connected),
+                                       key=lambda n: (n.casefold(), n)))
+            sess.send("online", count=count, names=names)
+        except OSError:
+            # One stale recipient must not abort somebody else's login.
+            # Closing the transport wakes handle_client's finally. Do not
+            # call Session.close here: it recursively broadcasts presence.
+            log.info("  online recipient %s disconnected", sess.peer, exc_info=True)
+            sess.writer.close()
 
 
 def publish_online():

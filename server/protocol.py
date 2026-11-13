@@ -232,13 +232,23 @@ def decode(src):
 class FrameReader:
     """Accumulates bytes, yields complete NUL-delimited frames."""
 
-    def __init__(self):
+    def __init__(self, policy=False):
         self._buf = b""
+        self._policy = policy
 
     def feed(self, data):
         self._buf += data
         out = []
-        while TERM in self._buf:
+        while True:
+            # Flash also probes the game socket. TCP can split the XML or
+            # combine it with hello; the probe need not end with NUL.
+            if self._policy and self._buf.startswith(b"<policy-file-request/>"):
+                probe = b"<policy-file-request/>"
+                out.append(probe)
+                self._buf = self._buf[len(probe):]
+                continue
+            if TERM not in self._buf:
+                break
             raw, self._buf = self._buf.split(TERM, 1)
             if raw:
                 out.append(raw)
