@@ -40,7 +40,9 @@ class CombatClient(unittest.TestCase):
                         Math=dict(max=max, min=min),
                         lol=dict(core=dict(SceneShifter=dict(linkGame=dict(
                             visavisAvatar=dict(removeMovieClip=lambda: self.calls.append('avatar')))),
-                            player=dict(Training=dict(UPD_CLOSE=0))),
+                            player=dict(Training=dict(UPD_CLOSE=0)),
+                            objects=dict(FireArm=dict(PISTOL=0, SHOTGUN=1, ASSAULT=2,
+                                                      RIFLE=3, MACHINEGUN=4, SMG=5))),
                             data=dict(BigUINTCluster=lambda n: dict(value=n), BigUINT=lambda c: c),
                             server=dict(mess=dict(CSM_SSUpdate=lambda a,b: dict(kind=a, number=b)))))
         spec = patches(w.Asm, w.UNDEF)

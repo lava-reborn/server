@@ -106,23 +106,25 @@ def __bfVisualStart(scene, figure, bundle):
     bundle.events = []
 
 def __bfAimSound(scene, aim):
+    # Snapshot the aiming weapon intentionally: a fallback for that confirmed
+    # volley must not take the sound of a newly switched weapon.
     if scene.master:
         player = scene.master.getPlayer(aim)
         if player and player.equipment:
             item = player.equipment.primaryItem
             if item and item.getProp:
                 weapon = item.getProp("weapon_type")
-                if weapon == 0:
+                if weapon == lol.core.objects.FireArm.PISTOL:
                     return lol.sound.SoundEvent.PISTOL_FIRE
-                if weapon == 1:
+                if weapon == lol.core.objects.FireArm.SHOTGUN:
                     return lol.sound.SoundEvent.SHOTGUN_FIRE
-                if weapon == 2:
+                if weapon == lol.core.objects.FireArm.ASSAULT:
                     return lol.sound.SoundEvent.ASSAULT_FIRE
-                if weapon == 3:
+                if weapon == lol.core.objects.FireArm.RIFLE:
                     return lol.sound.SoundEvent.RIFLE_FIRE
-                if weapon == 4:
+                if weapon == lol.core.objects.FireArm.MACHINEGUN:
                     return lol.sound.SoundEvent.MACHINEGUN_FIRE
-                if weapon == 5:
+                if weapon == lol.core.objects.FireArm.SMG:
                     return lol.sound.SoundEvent.SMG_FIRE
     return None
 
@@ -335,5 +337,7 @@ def patches(Asm, undef):
     recovery = recovery_patches(Asm, undef)
     from medicine_cooldown_client import patches as medicine_patches
     medicine = medicine_patches(Asm, undef)
-    return dict(globals=functions + recovery['globals'] + medicine['globals'],
-                wraps=tuple(wraps) + recovery['wraps'] + medicine['wraps'])
+    from respawn_client import patches as respawn_patches
+    respawn = respawn_patches(Asm, undef)
+    return dict(globals=functions + recovery['globals'] + medicine['globals'] + respawn['globals'],
+                wraps=tuple(wraps) + recovery['wraps'] + medicine['wraps'] + respawn['wraps'])
