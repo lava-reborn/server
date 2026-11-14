@@ -22,7 +22,8 @@ def validate():
     import items
     import world
     raw = data()
-    source_ids = set(raw['extra_sources']) | set(raw['archive_sources']) | set(map(int, raw['labels']))
+    source_ids = (set(raw['extra_sources']) | set(raw['archive_sources']) | set(map(int, raw['labels']))
+                  | set(raw.get('simulator_sources', ())))
     if not source_ids <= items.catalogue().keys():
         raise ValueError('Training content refers to an unknown item')
     if any(items.root_of(source) != raw['source_roots'][str(source)] for source in source_ids):

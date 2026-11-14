@@ -11,6 +11,8 @@ import secrets
 from protocol import Str, RawList, escape
 from training.rules import Rules, simulator_notes
 
+LEGACY_SIMULATOR_KEY = re.compile(r'simulator-[0-9a-f]{7,40}')
+
 
 @dataclass(frozen=True)
 class Profile:
@@ -20,16 +22,23 @@ class Profile:
     notes: tuple
     saved: dict | None = None
 
-@lru_cache(maxsize=1)
 def catalogue():
     from training import formulas as training_formulas
+    # An early baseline-only query must not hide an engine installed later.
+    # Cache by the installed implementation, not by the first import order.
+    engine = training_formulas.engine() if training_formulas.available() else None
+    return _catalogue(engine)
+
+
+@lru_cache(maxsize=2)
+def _catalogue(engine):
     result = (
         Profile('baseline-v1', 'Исходный профиль', Rules(combat_v2=False, broken_armour=True), (
             'Исходный профиль полигона. Прежний расчёт попаданий, брони и лечения. '
             'Используются независимые тренировочные копии предметов, а не основной инвентарь.',)),
     )
-    if training_formulas.available():
-        result += (training_formulas.engine().profile(),)
+    if engine is not None:
+        result += (engine.profile(),)
     if len({p.key for p in result}) != len(result) or len({selector(p.rules) for p in result}) != len(result):
         raise ValueError('Range profile identifiers and selectors must be unique')
     return result
@@ -43,6 +52,10 @@ def restore(rules):
     if rules.combat_v2 and not rules.simulator_formulas:
         return replace(rules, combat_v2=False, ammo_modifiers=False,
                        broken_armour=True, revision='baseline-v1')
+    if rules.simulator_formulas and LEGACY_SIMULATOR_KEY.fullmatch(rules.revision):
+        from training import formulas
+        if formulas.available():
+            return replace(rules, revision=formulas.engine().KEY)
     return rules
 
 
@@ -119,7 +132,13 @@ def load_personal(raw):
     records = []
     for row in raw[:MAX_PERSONAL]:
         try:
-            rules = resolve(row['values'], row['base'])
+            base = row['base']
+            if isinstance(base, str) and LEGACY_SIMULATOR_KEY.fullmatch(base):
+                from training import formulas
+                values = Rules.from_values(row['values'])
+                if formulas.available() and values.simulator_formulas:
+                    base = formulas.engine().KEY
+            rules = resolve(row['values'], base)
             record = personal_record(row['key'], row['title'], rules)
             if all(p.key != record.key and p.title.casefold() != record.title.casefold() for p in records):
                 records.append(record)

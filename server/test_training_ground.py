@@ -52,6 +52,7 @@ class Writer:
 
 class TrainingGround(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
+        tg.preload()
         self.store = accounts.Store.temporary()
         self.patch = patch.object(server, 'STORE', self.store)
         self.patch.start()

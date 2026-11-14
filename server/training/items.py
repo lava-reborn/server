@@ -5,18 +5,18 @@ import math
 import item_templates
 import item_type_ids
 from pathlib import Path
+from training import config
 
-FIRST = 54000
-LAST = 65535
+FIRST, LAST = config.ITEM_FIRST, config.ITEM_LAST
 SOURCES = {}
 COPIES = {}
 SIMULATOR_COPIES = {}
 PROFILE_SOURCES = {}
-SIMULATOR_FIRST = 57000
+SIMULATOR_FIRST, SIMULATOR_LAST = config.SIMULATOR_FIRST, config.SIMULATOR_LAST
 FRAMES = {}
 REFERENCE_PRICES = {}
 PROTOTYPES = {}
-PROTOTYPE_FIRST = 61000
+PROTOTYPE_FIRST = config.PROTOTYPE_FIRST
 SIMULATOR_GUN_BASE = 900000
 PATH = Path(__file__).resolve().parents[2] / 'data' / 'training_items.json'
 # Only combat/handling data may differ; identity, transfers and currencies cannot.
@@ -70,6 +70,9 @@ def register_sets_and_strings():
     global _REGISTERED
     if _REGISTERED:
         return
+    # The shared TCP/HTTP bootstrap must run before catalogues are cached.
+    from training.engines import install
+    install()
     from training import catalog
     prepare(catalog.item_catalogue())
     _REGISTERED = True
@@ -122,21 +125,30 @@ def validate_ammunition(frames, roots):
         raise ValueError('Training ammunition has no weapon: %s' % sorted(ammunition - used))
 
 
-def registered_ids(sources, catalogue):
-    sources = tuple(sources)
+def registered_ids(sources, catalogue, namespace='baseline'):
     registry = json.loads((PATH.parent / 'training_item_ids.json').read_text(encoding='utf-8'))
     if registry.get('version') != 1:
         raise ValueError('Unsupported training type registry')
-    ids = {int(source): target for source, target in registry['baseline'].items()}
+    namespaces = {name: {int(source): target for source, target in registry.get(name, {}).items()}
+                  for name in ('baseline', 'simulator')}
+    ids = namespaces[namespace]
     reserved = set(registry['reserved'])
-    targets = list(ids.values())
+    targets = [target for mapping in namespaces.values() for target in mapping.values()]
     if (len(set(targets)) != len(targets) or set(targets) & reserved
             or any(not item_type_ids.private(t) or t in catalogue for t in targets)
             or any(not item_type_ids.private(t) or t in catalogue for t in reserved)):
         raise ValueError('Training type registry collision')
+    if any(not SIMULATOR_FIRST <= target <= SIMULATOR_LAST
+           for target in namespaces['simulator'].values()):
+        raise ValueError('Simulator type registry outside its namespace')
+    if any(not FIRST <= target <= config.BASELINE_LAST for target in namespaces['baseline'].values()):
+        raise ValueError('Baseline type registry outside its namespace')
+    if sources is None:
+        return ids
+    sources = tuple(sources)
     missing = set(sources) - ids.keys()
     if missing:
-        raise ValueError('Append new sources to training_item_ids.json: %s' % sorted(missing))
+        raise ValueError('Append new %s sources to training_item_ids.json: %s' % (namespace, sorted(missing)))
     return {t: ids[t] for t in sources}
 
 
@@ -147,13 +159,16 @@ def prepare(sources):
     table = items.catalogue()
     prototypes = prototype_rows()
     originals = sorted(set(sources) - set(prototypes))
+    if (any(t in table for t in prototypes)
+            or any(not PROTOTYPE_FIRST <= t <= config.PROTOTYPE_LAST for t in prototypes)):
+        raise ValueError('Training prototype type range collision')
     overrides = json.loads(PATH.read_text(encoding='utf-8-sig')).get('items', {})
     if any(int(t) not in sources for t in overrides):
         raise ValueError('Unknown training override source')
     copies = registered_ids(originals, table)
     reserved = set(json.loads((PATH.parent / 'training_item_ids.json').read_text(encoding='utf-8'))['reserved'])
     if (set(prototypes) & set(copies.values()) or not set(prototypes) <= reserved
-            or any(t in table or not PROTOTYPE_FIRST <= t <= 61999 for t in prototypes)):
+            or any(t in table or not PROTOTYPE_FIRST <= t <= config.PROTOTYPE_LAST for t in prototypes)):
         raise ValueError('Training prototype type range collision')
     frames = {}
     prices = {}
@@ -204,6 +219,7 @@ def prepare(sources):
     from training import formulas as training_formulas
     from training import sets as training_sets
     simulator_copies = dict(copies)
+    simulator_ids = registered_ids(None, table, 'simulator') if training_formulas.available() else {}
     profile_sources = {}
     for source, old_type in copies.items():
         if not training_formulas.available():
@@ -225,8 +241,10 @@ def prepare(sources):
             params['set_type'] = selected[0]
         if params == old:
             continue
-        target = SIMULATOR_FIRST + len(profile_sources)
-        if target > 59999 or target in table or target in frames:
+        if source not in simulator_ids:
+            raise ValueError('Append simulator source to training_item_ids.json: %s' % source)
+        target = simulator_ids[source]
+        if target > SIMULATOR_LAST or target in table or target in frames:
             raise ValueError('Simulator type range collision')
         params['type'] = target
         frames[target] = command, params

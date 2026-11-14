@@ -2,6 +2,7 @@
 import asyncio
 import copy
 import unittest
+from unittest.mock import patch
 import names
 import mobs
 import bosses
@@ -138,11 +139,11 @@ class Opponents(unittest.IsolatedAsyncioTestCase):
         g = self.enter()
         g.mob_type = 8620
         original = mobs.stats(8620).level
-        self.assertFalse(range_formulas.available())
-        with self.assertRaises(ValueError):
-            range_formulas.data()
+        with patch.object(range_formulas, '_ENGINE', None):
+            self.assertFalse(range_formulas.available())
+            with self.assertRaises(ValueError):
+                range_formulas.data()
         self.assertEqual(mobs.stats(8620).level, original)
-        self.assertEqual([p.key for p in installed_profiles.catalogue()], ['baseline-v1'])
         self.unchanged()
 
     async def test_selected_fighter_summary_reflects_set_and_custom_changes(self):

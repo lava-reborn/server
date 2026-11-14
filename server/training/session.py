@@ -192,7 +192,7 @@ class Ground:
                 self.restore_notice = ('Пресеты сохранены. В них есть предметы, исключённые из нового симулятора; '
                                        'восстановлен прежний профиль полигона. Замените эти вещи для новых правил.')
             restored_rules = training_profiles.restore(rules)
-            if restored_rules != rules:
+            if restored_rules != rules and not rules.simulator_formulas:
                 self.restore_notice = self.restore_notice + (' Промежуточный профиль удалён. Включён исходный профиль; '
                                        'настройки персонажа и снаряжение сохранены.')
             rules = restored_rules
@@ -992,7 +992,13 @@ def activate(ground, persist=True):
 
 
 def resume(owner):
-    """Restore personal progress; ignore legacy shared-room tokens in solo mode."""
+    """Restore personal progress; ignore legacy shared-room tokens in solo mode.
+
+    In the dormant shared mode party membership selects visitors at entry,
+    not continued access. Only the server's durable checkpoint supplies that
+    room token, never a client command. Solo restoration keeps the personal
+    checkpoint but allocates a fresh room instead of rejoining another player.
+    """
     current = getattr(owner, 'training_ground', None)
     if current is not None:
         current.clone.enter_location()
@@ -1048,13 +1054,13 @@ def resume(owner):
 
 
 def preload():
+    # The same explicit catalogue preparation serves TCP and HTTP/text startup.
+    training_items.register_sets_and_strings()
     training_rules.current()
     training_profiles.catalogue()
     if training_formulas.available():
         training_formulas.engine().coefficients()
     training_effects.definitions()
-    training_items.prepare(item_catalogue())
-    training_items.register_sets_and_strings()
     # Build both immutable catalogue indexes before accepting sockets, not on
     # the first filter click or profile switch in the shared event loop.
     training_supply.index(False)

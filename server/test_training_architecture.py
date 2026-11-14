@@ -43,7 +43,7 @@ class TrainingArchitecture(unittest.TestCase):
                     self.assertNotEqual((node.value.id, node.attr), ('sys', 'modules'), str(path))
 
     def test_lower_layers_do_not_import_coordinator_or_dispatcher(self):
-        for path in PACKAGE.glob('*.py'):
+        for path in PACKAGE.rglob('*.py'):
             if path.stem in ('api', 'session'):
                 continue
             with self.subTest(module=path.stem):
@@ -68,9 +68,11 @@ from training import api
 before = dict(names.ALL)
 api.preload()
 assert 'training.session' not in sys.modules
+assert 'training.engines.simulator_v1' not in sys.modules
 assert names.ALL == before
 os.environ['LAVA_TRAINING_GROUND'] = '1'
 api.preload()
+assert 'training.engines.simulator_v1' in sys.modules
 from training import opponents
 import item_templates, sets
 assert all(names.ALL.get(key) == text for key, text in opponents.NAMES.items())
