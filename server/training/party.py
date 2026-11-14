@@ -31,6 +31,9 @@ def cancel_invites(owner):
 def entrants(owner):
     """Leader-directed group entry, as requested by the game rules.
 
+    Joining the party is the selection mechanism; there is deliberately no
+    second invitation per visitor. Bert's entry quest explains this before
+    hand-in. Only co-located members enter, and each may leave independently.
     Windows/routes are cancelled on entry; already paid/queued journeys are
     refused before any participant is changed, so entry cannot eat their fare.
     """
