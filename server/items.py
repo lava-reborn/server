@@ -38,6 +38,7 @@ import os
 
 import blueprint_prices
 import craft
+import item_templates
 import npcs
 import orig_texts
 import own_items
@@ -494,11 +495,13 @@ PLAYER_GEAR_MAX_LEVEL = 17
 
 
 def acquisition_blocked(type_id):
-    """Weapon/clothing above the released level cannot be newly obtained.
+    """Ordinary acquisition refuses private templates and unreleased equipment.
 
-    Medicine, ammunition, blueprints and other non-equipment are unaffected.
+    Ordinary medicine, ammunition, blueprints and non-equipment are unaffected.
     Keep this separate from out_of_game: it must not trigger confiscation.
     """
+    if item_templates.contains(type_id):
+        return True
     if root_of(type_id) not in (FIRE_ARM, COLD_ARM, WEAR):
         return False
     si = params_of(type_id) or {}
@@ -527,7 +530,7 @@ BATTLE_HEAL_AFRO_AP_MULTIPLIER = 1.5
 
 def battle_medicine(type_id):
     """All battle health/stamina medicines, including G dose packs."""
-    root, name = catalogue().get(type_id, (None, ""))
+    root, name = catalogue().get(item_templates.source_type(type_id), (None, ""))
     return root == HEAL and name.startswith("Med_Battle_")
 
 
@@ -540,7 +543,7 @@ def no_combat(type_id):
     client's own quick heal picks the strongest medicine in the bag with no
     look at the war state (PersEquip.useHealItem), 1035-1380 health for
     0 AP among them."""
-    entry = catalogue().get(type_id)
+    entry = catalogue().get(item_templates.source_type(type_id))
     return bool(entry and entry[0] == HEAL and entry[1].startswith("Med_Pacific_"))
 
 
@@ -555,6 +558,8 @@ STIMULANT_UNAVAILABLE = (
 
 def stimulant_unavailable(type_id):
     """Block only HEAL items promising an unimplemented temporary effect."""
+    if item_templates.supports_effects(type_id):
+        return False
     if STIMULANT_EFFECTS_ENABLED or root_of(type_id) != HEAL:
         return False
     p = params_of(type_id) or {}
@@ -817,7 +822,7 @@ def stock_table():
 
 def root_of(type_id):
     """Root class of a type, or None when the client has no such type."""
-    entry = catalogue().get(type_id)
+    entry = catalogue().get(item_templates.source_type(type_id))
     return entry[0] if entry else None
 
 
@@ -1107,6 +1112,8 @@ def static_info(type_id):
     takes the numbers of data/sets.json last: the owner's file for the whole
     ladder of a set, which a wiki table of the old system has no say in.
     """
+    if item_templates.contains(type_id):
+        return item_templates.static_info(type_id)
     info = designed_info(type_id)
     if info:
         rec = wiki().get(type_id)

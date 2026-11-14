@@ -237,6 +237,32 @@ def text(string_id):
     return ALL.get(string_id, "#%d" % string_id)
 
 
+_SEALED = False
+
+
+def seal():
+    global _SEALED
+    _SEALED = True
+
+
+def validate_strings(strings):
+    """Check the whole batch without changing the published string table."""
+    if _SEALED or _DOCUMENT is not None:
+        raise RuntimeError("Text preload has already been published or sealed")
+    values = dict(strings)
+    for key, value in values.items():
+        if type(key) is not int or key <= 0 or not isinstance(value, str):
+            raise ValueError("Invalid additional string")
+        if key in ALL and ALL[key] != value:
+            raise ValueError("Additional string overlaps an existing id")
+    return values
+
+
+def register_strings(strings):
+    """Add startup strings; never replace ids or change a published preload."""
+    ALL.update(validate_strings(strings))
+
+
 _DOCUMENT = None
 
 
@@ -248,6 +274,8 @@ def document():
     """
     global _DOCUMENT
     if _DOCUMENT is None:
+        import mode_extensions
+        mode_extensions.seal()
         _DOCUMENT = "".join(
             "<s id='%d'>%s</s>" % (i, _escape(n)) for i, n in sorted(ALL.items()))
     return _DOCUMENT
@@ -277,9 +305,9 @@ _SHA = None
 def document_bytes():
     """The table as the bytes the client reads, built once and kept.
 
-    Safe to cache for the life of the process, and that is not an assumption:
-    ALL is assembled at import out of res/ and data/, and nothing writes to it
-    afterwards. Measured rather than believed -- five processes under
+    Safe to cache for the life of the process: ALL is assembled at import
+    out of res/ and data/. Optional strings must be registered before the
+    first document is built; later registration is rejected. Five processes under
     PYTHONHASHSEED 0, 1, 12345 and random, on 3.11 and on the 3.12 of the
     container image, all produce the same 1 915 490 bytes and the same digest,
     because document() joins sorted(ALL.items()) and every key is an int.

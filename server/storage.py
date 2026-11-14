@@ -83,8 +83,9 @@ def atomic(db):
             db._atomic_failed = False
 
 
-def using_postgres():
-    return bool(DB_URL)
+def using_postgres(db=None):
+    """Connection dialect when supplied; environment only for default connections."""
+    return isinstance(db, PostgresDB) if db is not None else bool(DB_URL)
 
 
 # --- SQLite ---------------------------------------------------------------
@@ -447,13 +448,13 @@ def pg_schema(schema_sql):
 
 # --- вход -----------------------------------------------------------------
 
-def lower(column):
+def lower(column, db=None):
     """Нижний регистр, одинаково понятный обеим базам.
 
     LOWER в SQLite folds только латиницу, поэтому там подставляется своя
     функция pylower; в Postgres LOWER справляется с кириллицей сам.
     """
-    return "LOWER(%s)" % column if DB_URL else "pylower(%s)" % column
+    return "LOWER(%s)" % column if using_postgres(db) else "pylower(%s)" % column
 
 
 def connect(path=None):

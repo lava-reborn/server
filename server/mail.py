@@ -560,7 +560,7 @@ class Mail:
                 if not self.store.lock_quest_character(self.char_id):
                     self.ack(RES_REFUSED)
                     return
-                lock = " FOR UPDATE" if storage.using_postgres() else ""
+                lock = " FOR UPDATE" if storage.using_postgres(self.store.db) else ""
                 self.store.db.execute("SELECT id FROM mail WHERE id = ?" + lock,
                                       (letter_id(p.get("id")),)).fetchone()
                 row = self.store.mail_letter(letter_id(p.get("id")))

@@ -177,7 +177,7 @@ def _label(where, value, clean):
     return clean(value)
 
 
-def parse(doc):
+def parse(doc, *, variants=VARIANTS):
     """(sets, set of each type, piece records) out of the file's document.
 
     Raises ValueError on anything the wire could not carry or the file does
@@ -242,8 +242,8 @@ def parse(doc):
         if not members:
             raise ValueError("%s: no members" % where)
         variant = rec.get("variant") or ""
-        if variant not in VARIANTS:
-            raise ValueError("%s: variant %r is none of %s" % (where, variant, "/".join(VARIANTS[1:])))
+        if variant not in variants:
+            raise ValueError("%s: variant %r is none of %s" % (where, variant, "/".join(variants[1:])))
         table[set_type] = dict(name=orig_texts.item_name(name), desc=orig_texts.text(desc),
                                family=rec.get("family") or str(set_type),
                                level=_int(where + ".level", rec.get("level", 0)),
@@ -263,22 +263,91 @@ def _load():
 
 
 SETS, SET_OF, ITEMS = _load()
+_EXTRA_SETS, _EXTRA_SET_OF, _EXTRA_ITEMS = {}, {}, {}
+
+
+_SEALED = False
+
+
+def seal():
+    global _SEALED
+    _SEALED = True
+
+
+def validate(doc, *, variants=VARIANTS, template_members=()):
+    """Validate a startup set batch; variants are explicitly owned by its mode."""
+    if _SEALED:
+        raise RuntimeError("Additional sets are sealed")
+    table, members, pieces = parse(doc, variants=variants)
+    if (table.keys() & (SETS.keys() | _EXTRA_SETS.keys())
+            or members.keys() & (SET_OF.keys() | _EXTRA_SET_OF.keys())):
+        raise ValueError("Additional sets overlap existing types")
+    import item_templates
+    if members.keys() & item_templates._SOURCES.keys() - set(template_members):
+        raise ValueError("Set pieces overlap unrelated registered templates")
+    import items
+    if members.keys() & items.catalogue().keys():
+        raise ValueError("Additional set pieces overlap ordinary catalogue types")
+    return table, members, pieces
+
+
+def _publish(prepared):
+    table, members, pieces = prepared
+    _EXTRA_SETS.update(table)
+    _EXTRA_SET_OF.update(members)
+    _EXTRA_ITEMS.update(pieces)
+
+
+def extension_strings(prepared):
+    """All set and member strings of a validated batch, before publication."""
+    import items
+    table, members, pieces = prepared
+    out = {}
+    for set_type, record in table.items():
+        out[NAME_ID_OFFSET + set_type] = record['name']
+        if record['desc']:
+            out[DESC_ID_OFFSET + set_type] = record['desc']
+        out.update({items.STRING_ID_OFFSET + t: text for t, text in record['names'].items()})
+        out.update({items.DESC_ID_OFFSET + t: text for t, text in record['descs'].items()})
+    return out
+
+
+def register(doc, *, variants=VARIANTS):
+    """Register sets and their strings together before startup is sealed.
+
+    Non-template pieces are supported; cached wear comparisons include these
+    sets. Private template members must be declared in mode_extensions.register.
+    """
+    import names
+    prepared = validate(doc, variants=variants)
+    text = names.validate_strings(extension_strings(prepared))
+    _publish(prepared)
+    names.ALL.update(text)
+
+
+def records():
+    """Ordinary and registered set records, without mutating the base table."""
+    return (*SETS.values(), *_EXTRA_SETS.values())
+
+
+def record_of(set_type):
+    return SETS.get(set_type) or _EXTRA_SETS.get(set_type)
 
 
 def set_of(type_id):
     """The set a type belongs to, or 0 -- which is what ss_si_wear says for none."""
-    return SET_OF.get(type_id, 0)
+    return SET_OF.get(type_id, _EXTRA_SET_OF.get(type_id, 0))
 
 
 def variant_of(type_id):
     """The variant of the set a piece is in (VARIANTS), "" for none."""
-    s = SETS.get(SET_OF.get(type_id))
+    s = record_of(set_of(type_id))
     return s["variant"] if s else ""
 
 
 def slot_of(type_id):
     """The slot a piece fills in its set (SLOTS), or None."""
-    s = SETS.get(SET_OF.get(type_id))
+    s = record_of(set_of(type_id))
     if not s:
         return None
     return next(slot for slot, t in s["members"].items() if t == type_id)
@@ -286,13 +355,13 @@ def slot_of(type_id):
 
 def item(type_id):
     """What the file lays over this piece's ss_si_wear, or None."""
-    return ITEMS.get(type_id)
+    return ITEMS.get(type_id, _EXTRA_ITEMS.get(type_id))
 
 
 def strings():
     """Every set string id and its text, for names.ALL."""
     out = {}
-    for set_type, s in SETS.items():
+    for set_type, s in (*SETS.items(), *_EXTRA_SETS.items()):
         out[NAME_ID_OFFSET + set_type] = s["name"]
         if s["desc"]:
             out[DESC_ID_OFFSET + set_type] = s["desc"]
@@ -306,19 +375,19 @@ def item_names():
     does (items.STRING_ID_OFFSET + type), and names.py puts them there, over
     the original's, since the owner named these by their icons.
     """
-    return {t: n for s in SETS.values() for t, n in s["names"].items()}
+    return {t: n for s in records() for t, n in s["names"].items()}
 
 
 def item_descs():
     """type_id -> the description the file gives a piece, cleaned; names.py
     puts it under items.DESC_ID_OFFSET + type, over the original's."""
-    return {t: d for s in SETS.values() for t, d in s["descs"].items()}
+    return {t: d for s in records() for t, d in s["descs"].items()}
 
 
 def described(type_id):
     """Whether the file gives this piece a description of its own -- and so
     whether ss_si_wear may carry its id even where the original has none."""
-    s = SETS.get(SET_OF.get(type_id))
+    s = record_of(set_of(type_id))
     return bool(s and type_id in s["descs"])
 
 
@@ -336,7 +405,7 @@ def fallback(type_value):
 
 def frame(set_type):
     """The ss_si_set parameters for one set, the keys SetObject.initSet reads."""
-    s = SETS.get(set_type)
+    s = record_of(set_type)
     if s is None:
         return fallback(set_type)
     p = dict(type=set_type, res=s["res"], name=NAME_ID_OFFSET + set_type,
@@ -365,7 +434,7 @@ def pieces(worn):
     """
     out = {}
     for type_id in worn:
-        s = SET_OF.get(type_id)
+        s = set_of(type_id)
         if s:
             out[s] = out.get(s, 0) + 1
     return out
@@ -381,7 +450,7 @@ def bonuses(worn):
     """
     total = zero()
     for set_type, n in pieces(worn).items():
-        for k, b in SETS[set_type]["bonus"].items():
+        for k, b in record_of(set_type)["bonus"].items():
             if k <= n:
                 for key in SCALARS:
                     total[key] += b[key]
@@ -406,8 +475,8 @@ def look(worn):
     worn = list(worn)
     if len(worn) != len(SLOTS) or any(t is None for t in worn):
         return 0
-    kinds = {SET_OF.get(t, 0) for t in worn}
+    kinds = {set_of(t) for t in worn}
     if len(kinds) != 1:
         return 0
     set_type = kinds.pop()
-    return SETS[set_type]["res"] if set_type else 0
+    return record_of(set_type)["res"] if set_type else 0
