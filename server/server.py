@@ -787,6 +787,7 @@ class Session:
         row. A repeated transport close is a no-op; force finalizes a
         lingering body on timeout, death, kick or server shutdown.
         """
+        training_ground.cancel_entry(self)
         if getattr(self, 'training_ground', None) is not None:
             training_ground.suspend(self)
         if self.closed and (not force or self.linger is None):

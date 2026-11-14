@@ -51,9 +51,15 @@ def handle(owner, command, params):
     if command == 'tg' and params.get('op') == 'hello' and ground is None:
         version = str(params.get('version', ''))
         owner.training_protocol = CLIENT_PROTOCOL if version == str(CLIENT_PROTOCOL) else None
+        owner.training_entry_confirmation = compatible(owner) and params.get('entry_confirmation') == 1
         owner.training_types_version = params.get('types_version')
         owner.send('tg', op='hello', version=CLIENT_PROTOCOL,
                    available=int(enabled() and compatible(owner)))
+        return True
+    if command == 'tg' and params.get('op') == 'entry_reply':
+        if enabled() and compatible(owner) and ground is None:
+            from training.entry import reply
+            reply(owner, params)
         return True
     if command == 'tg' and params.get('op') in ('types_ack', 'types_request'):
         if ground is not None and compatible(owner):
@@ -111,6 +117,12 @@ def suspend(owner):
     ground = getattr(owner, 'training_ground', None)
     if ground is not None:
         ground.exit(notify=False, suspend=True)
+
+
+def cancel_entry(owner):
+    if getattr(owner, 'training_entry', None) is not None:
+        from training.entry import cancel
+        cancel(owner)
 
 
 

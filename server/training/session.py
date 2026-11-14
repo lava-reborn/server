@@ -899,7 +899,8 @@ def check_entry(owner, p):
 
 def enter_from_quest(owner):
     npc_id = next((eid for eid, npc in owner.room.npcs.items() if npc.type_id == BERT), 0) if owner.room else 0
-    enter(owner, dict(npc=npc_id))
+    from training.entry import request
+    request(owner, dict(npc=npc_id), check_entry, enter)
 
 
 def save_presence(grounds):
