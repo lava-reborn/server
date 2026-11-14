@@ -1396,7 +1396,9 @@ def __tgClick():
             p.status.text = "Сначала примените правила во вкладке Правила."
             return
         if _global.__tgProfileKey(_global.__tgPlayer) != _global.__tgPlayerKey or (_global.__tgMode == "fighter" and _global.__tgProfileKey(_global.__tgEnemy) != _global.__tgEnemyKey):
-            p.status.text = "Сначала примените изменённые пресеты персонажа и противника."
+            p.status.text = "У компьютера примените изменения: «Навыки противника» → «Применить противника»."
+            if _global.__tgProfileKey(_global.__tgPlayer) != _global.__tgPlayerKey:
+                p.status.text = "У инструктора примените изменения: «Навыки и специализации» → «Применить навыки»."
             return
         m = _global.__tgSend("start")
         m.addProp("mob", _global.__tgMob)
