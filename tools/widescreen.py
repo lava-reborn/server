@@ -3173,6 +3173,9 @@ def injected():
         (("gpui", "HelpDropList"), "faq", "__siteHelpFaqOrig",
          (), fn_site_nothing()),
         (("gpui", "EnterGameInterface"), "init", "__siteLoginInitOrig",
+         # Account recovery/registration remain in the launcher's login panel:
+         # Launcher.cs opens REGISTER_URL and SITE + "/?forgot=1". These
+         # Flash buttons are legacy lava-online.ru handlers, not that flow.
          (), fn_site_hide("__siteLoginInitOrig", (), ("lostPassw_btn", "registration_btn", "support_btn", "i_have_problem_btn"))),
         (("gpui", "EnterGameInterface"), "lostPassw", "__siteLostPasswordOrig",
          (), fn_site_nothing()),
