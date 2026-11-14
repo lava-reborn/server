@@ -106,8 +106,36 @@ def __tgEntryPrompt(value):
     dialog.label = "Отправиться на полигон?\\n\\nКомандир отряда: " + leader + ".\\nПереход начнётся, когда согласятся все.\\nНа ответ — 60 секунд.\\n\\nОсновной персонаж и его вещи сохранятся."
     dialog.apply_btn.label = "Да"
     dialog.cancel_btn.label = "Отмена"
+    _global.__tgEntryButton(dialog.apply_btn, "Да")
+    _global.__tgEntryButton(dialog.cancel_btn, "Отмена")
     dialog.addEventListener("click", _global, _global.__tgEntryAnswer)
     dialog.onUnload = _global.__tgEntryUnloaded
+
+def __tgEntryButton(button, caption):
+    # Native query buttons bake OK/Cancel into their bitmaps. Cover only their
+    # text area; keep the original border, event handlers and pressed state.
+    if button._label:
+        button._label._visible = False
+    if button.label_txt:
+        button.label_txt._visible = False
+    face = button.createEmptyMovieClip("__tgCaption", button.getNextHighestDepth())
+    matrix = new(flash.geom.Matrix)
+    matrix.createGradientBox(57, 14, 157 / 100, 4, 5)
+    face.beginGradientFill("linear", [6447713, 5000267, 2171168], [100, 100, 100], [0, 90, 255], matrix)
+    face.moveTo(4, 5)
+    face.lineTo(61, 5)
+    face.lineTo(61, 19)
+    face.lineTo(4, 19)
+    face.lineTo(4, 5)
+    face.endFill()
+    face.createTextField("text", face.getNextHighestDepth(), 0, 4, 65, 18)
+    field = face.text
+    field.selectable = False
+    field.embedFonts = False
+    format = new(TextFormat, "Tahoma", 11, 13026735)
+    format.align = "center"
+    field.setNewTextFormat(format)
+    field.text = caption
 
 def __tgEntryUnloaded():
     _global.__tgEntryAnswer({"target":this, "success":False})

@@ -28,6 +28,7 @@ class Bootstrap(unittest.TestCase):
             return value
         env['lol']['server']['mess'] = dict(CSMessage=message)
         env['_global']['__tgTransmit'] = sent.append
+        env['_global']['__tgEntryButton'] = lambda button, caption: button.update(label=caption)
         class Text(str):
             def split(self, sep):
                 class Parts(list):

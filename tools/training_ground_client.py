@@ -2283,7 +2283,7 @@ def patches(Asm, undef):
     functions.append(('__tgDeleteItem', ('oid',), delete))
     bootstrap_names = frozenset(('__tgConnect', '__tgHandshakeSend', '__tgBootstrapNotify', '__tgTransmit',
                                 '__tgEntryReply', '__tgEntryClose', '__tgEntryPrompt',
-                                '__tgEntryAnswer', '__tgEntryUnloaded'))
+                                '__tgEntryAnswer', '__tgEntryUnloaded', '__tgEntryButton'))
     bootstrap = [row for row in functions if row[0] in bootstrap_names]
     private = [row for row in functions if row[0] not in bootstrap_names]
     loads = loader(Asm, private)
