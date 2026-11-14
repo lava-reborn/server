@@ -67,8 +67,8 @@ RULES = {  # ticket, price (hundredths for G), G-only, min/max level, location
     520:(2649,200,True,9,20,187), 521:(2650,250,True,11,20,187),
     721:(2648,2400,False,12,20,197), 722:(2651,300,True,12,20,103),
     916:(2652,3000,False,16,20,446), 917:(2653,3700,False,17,20,446),
-    918:(3574,4730,False,19,20,446), 919:(2654,300,True,16,20,446),
-    920:(2655,350,True,17,20,446), 921:(3575,450,True,19,20,446),
+    918:(3574,4730,False,17,20,446), 919:(2654,300,True,16,20,446),
+    920:(2655,350,True,17,20,446), 921:(3575,450,True,17,20,446),
 }
 
 
@@ -167,7 +167,7 @@ class LotteryRelease(unittest.TestCase):
     def test_availability_preserves_minimum_and_extends_to_level_twenty(self):
         for qtype,(_ticket,_price,_gold,lo,hi,_loc) in RULES.items():
             q = quests.get(qtype)
-            for level in {0, 8, 9, 16, 17, lo, hi, hi+1} | ({lo-1} if lo else set()):
+            for level in {0, 8, 9, 16, 17, 18, 19, lo, hi, hi+1} | ({lo-1} if lo else set()):
                 with self.subTest(quest=qtype,level=level):
                     for skill in self.s.char.skill:
                         skill[0] = level
@@ -242,6 +242,23 @@ class LotteryRelease(unittest.TestCase):
                 self.complete(qid)
                 self.assertEqual(self.acks(), [0])
                 self.assertEqual(self.s.inv.bag_pieces(), {expected[0]:expected[1]})
+
+    def test_abu_upper_tier_lotteries_accept_level_seventeen_and_eighteen(self):
+        for qtype in (918, 921):
+            for level in (17, 18):
+                with self.subTest(quest=qtype, level=level):
+                    for row in self.store.items_of(self.cid):
+                        self.store.delete_item(row['uniq'])
+                    qid = self.prepare(qtype, player_level=level)
+                    self.assertIn('от 17 ур.', self.q.texts[0])
+                    self.assertIn('17\u201320', self.q.texts[1])
+                    self.s.cmd_q_status(dict(q_type=qtype))
+                    status = [p for c,p in self.frames if c=='q_status'][-1]
+                    self.assertEqual(status['status'], 1)
+                    expected = self.q.draw(PointRandom(0))
+                    self.complete(qid)
+                    self.assertEqual(self.acks(), [0])
+                    self.assertEqual(self.s.inv.bag_pieces(), {expected[0]:expected[1]})
 
     def test_all_pools_can_be_completed_at_level_twenty(self):
         for qtype in RULES:
