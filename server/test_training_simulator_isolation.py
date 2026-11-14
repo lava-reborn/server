@@ -4,6 +4,7 @@ from unittest.mock import patch
 from training import rules, runtime
 import test_training_isolation as isolation
 import test_training_review as review
+import test_training_entry as entry
 
 
 def enable_simulator(case):
@@ -15,6 +16,12 @@ def enable_simulator(case):
 
 
 class SimulatorReview(review.Review):
+    async def asyncSetUp(self):
+        await super().asyncSetUp()
+        enable_simulator(self)
+
+
+class SimulatorSoloEntry(entry.SoloEntry):
     async def asyncSetUp(self):
         await super().asyncSetUp()
         enable_simulator(self)
@@ -34,4 +41,4 @@ class SimulatorIsolation(isolation.Isolation):
 
 if __name__ == '__main__':
     from testkit import run_cases
-    run_cases(SimulatorIsolation, SimulatorReview)
+    run_cases(SimulatorIsolation, SimulatorReview, SimulatorSoloEntry)
