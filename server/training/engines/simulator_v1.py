@@ -232,7 +232,7 @@ def ranged_critical(shooter, target, weapon, optimal):
 def profile():
     from training.profiles import Profile
     from training.rules import Rules, simulator_notes
-    return Profile(KEY, 'Симулятор: после правок',
+    return Profile(KEY, 'Ребаланс после симуляций - 11.11.2026',
                    Rules(revision=KEY, ammo_modifiers=True, simulator_formulas=True),
                    simulator_notes() + ('Особые предметы: классические излучатели, арбалет и ракетница '
                    'сохраняют восстановленные параметры полигона. P-варианты без данных симулятора '
