@@ -476,6 +476,60 @@ class Bootstrap(unittest.TestCase):
                 self.assertIs(stats_row[1], stats)
                 self.assertIs(location_row[1], master['__tgEnterOrig'])
 
+    def test_queued_foreign_equipment_response_keeps_original_after_hook_teardown(self):
+        env, f, foreign, calls, pending = self.foreign_equipment_request()
+        f['__tgGetStuff'].invoke(foreign, [3, 1000013])
+        target, callback, data = pending[0]
+        f['__tgDetachHooks'].invoke(None, [])
+        # The FIFO keeps the function reference captured before detach.
+        callback.invoke(target, [dict(data=data, param=dict(o_list=['helmet', 'weapon']))])
+        self.assertEqual(calls, [['helmet', 'weapon']])
+
+    def test_foreign_snapshot_from_previous_visit_is_discarded(self):
+        env, f, foreign, calls, pending = self.foreign_equipment_request()
+        f['__tgGetStuff'].invoke(foreign, [3, 1000013])
+        env['_global']['__tgEpoch'] += 1
+        target, callback, data = pending[0]
+        callback.invoke(target, [dict(data=data, param=dict(o_list=['old private weapon']))])
+        self.assertEqual(calls, [])
+
+    def test_foreign_bag_response_does_not_complete_own_return(self):
+        env, f, foreign, calls, pending = self.foreign_equipment_request()
+        env['_global']['__tgReturnBagPending'] = True
+        f['__tgGetStuff'].invoke(foreign, [11, 1000013])
+        target, callback, data = pending[0]
+        callback.invoke(target, [dict(data=data, param=dict(o_list=['foreign bag']))])
+        self.assertTrue(env['_global']['__tgReturnBagPending'])
+        self.assertEqual(calls, [['foreign bag']])
+
+    def test_other_stuff_managers_keep_native_request_path(self):
+        env, f, _ = self.environment()
+        calls = []
+        for manager in ({}, dict(isGamer=True, id=0), dict(isGamer=False, id=1000013)):
+            manager['__tgGetStuffOrig'] = lambda *args: calls.append(args)
+            f['__tgGetStuff'].invoke(manager, [3, 1000012])
+        self.assertEqual(calls, [(3, 1000012)] * 3)
+
+    def foreign_equipment_request(self):
+        env, f, _ = self.environment()
+        calls, pending = [], []
+        g = env['_global']
+        proto = env['lol']['core']['player']['PersEquip']['prototype']
+        proto['ss_ack'] = lambda obj: calls.append(obj['param']['o_list'])
+        class Instance(dict):
+            def get(self, key, default=None):
+                return super().get(key, proto.get(key, default))
+        foreign = Instance(isGamer=False, id=1000013)
+        def native_get(mask, target):
+            pending.append((foreign, foreign.get('ss_ack'), mask))
+        foreign['__tgGetStuffOrig'] = native_get
+        foreign['XMC'] = dict(Send=lambda message: True)
+        env['lol']['server'].update(mess=dict(CSM_SSGet=lambda mask, target: dict(mask=mask, target=target)),
+            XMLCCallStack=dict(addCall=lambda event, target, handler, data: pending.append((target, handler, data))))
+        f['__tgAttachHooks'].invoke(None, [])
+        g.update(__tgActive=False, __tgEpoch=4)
+        return env, f, foreign, calls, pending
+
 
 if __name__ == '__main__':
     import sys

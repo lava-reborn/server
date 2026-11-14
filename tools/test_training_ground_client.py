@@ -621,10 +621,10 @@ class TrainingClient(unittest.TestCase):
         received = []
         env = dict(_global=dict(__tgEpoch=3), Boolean=bool)
         funcs = self.helpers(env)
-        eq = dict(ss_ack=received.append)
-        funcs['__tgSnapshotAck'].invoke(eq, [dict(data=dict(mask=11, epoch=2), param=dict(o_list=['copy']))])
+        eq = dict(isGamer=True)
+        funcs['__tgSnapshotAck'].invoke(eq, [dict(data=dict(mask=11, epoch=2, original=received.append), param=dict(o_list=['copy']))])
         self.assertEqual(received, [])
-        funcs['__tgSnapshotAck'].invoke(eq, [dict(data=dict(mask=11, epoch=3), param=dict(o_list=['real']))])
+        funcs['__tgSnapshotAck'].invoke(eq, [dict(data=dict(mask=11, epoch=3, original=received.append), param=dict(o_list=['real']))])
         self.assertEqual(received, [dict(data=11, param=dict(o_list=['real']))])
 
     def test_late_item_initialization_cannot_reinsert_retired_training_copy(self):

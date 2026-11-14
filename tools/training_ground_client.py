@@ -1916,24 +1916,28 @@ def __tgUpdateCall():
     _global.__tgForgetItems()
 
 def __tgGetStuff(n, id):
-    if not this.isGamer or (id and id != this.id) or (not this.__tgManaged and not _global.__tgActive):
+    if this.isGamer == None or (id and id != this.id) or (this.isGamer and not this.__tgManaged and not _global.__tgActive):
         this.__tgGetStuffOrig(n, id)
         return
-    this.__tgManaged = True
+    if this.isGamer:
+        this.__tgManaged = True
     m = new(lol.server.mess.CSM_SSGet, n, id)
     if this.XMC.Send(m):
         replace = Boolean(this.__tgReplaceNextBag)
         this.__tgReplaceNextBag = False
-        lol.server.XMLCCallStack.addCall("ss_ack", this, _global.__tgSnapshotAck, {"mask":n, "epoch":_global.__tgEpoch, "replace":replace})
+        # FIFO callbacks may outlive the lazy hooks (including foreign actors
+        # and inspect windows). Capture the native method, not its alias name.
+        lol.server.XMLCCallStack.addCall("ss_ack", this, _global.__tgSnapshotAck, {"mask":n, "epoch":_global.__tgEpoch, "replace":replace, "original":this.__tgEquipOrig})
 
 def __tgSnapshotAck(obj):
     if obj.data.epoch != _global.__tgEpoch:
         return
     this.__tgReplaceBag = Boolean(obj.data.replace)
+    original = obj.data.original
     obj.data = obj.data.mask
-    this.ss_ack(obj)
+    _global.__tgApplyEquipment.apply(this, [obj, original])
     this.__tgReplaceBag = False
-    if _global.__tgReturnBagPending and not _global.__tgActive and Math.floor(Number(obj.data) / 8) % 2 == 1:
+    if this.isGamer and _global.__tgReturnBagPending and not _global.__tgActive and Math.floor(Number(obj.data) / 8) % 2 == 1:
         _global.__tgReturnBagPending = False
     _global.__tgMaybeDetach()
 
@@ -1977,6 +1981,9 @@ def __tgClearSlots(equipment, slots):
         i = i + 1
 
 def __tgEquipWrapper(obj):
+    _global.__tgApplyEquipment.apply(this, [obj, this.__tgEquipOrig])
+
+def __tgApplyEquipment(obj, original):
     if this.isGamer and this.__tgReplaceBag:
         mask = Number(obj.data)
         if Math.floor(mask) % 2 == 1:
@@ -1985,7 +1992,7 @@ def __tgEquipWrapper(obj):
             _global.__tgClearSlots(this, this.action_arr)
         if Math.floor(mask / 8) % 2 == 1:
             _global.__tgClearBag(this)
-    this.__tgEquipOrig(obj)
+    original.apply(this, [obj])
     if _global.__tgActive:
         _global.__tgForgetItems()
 
