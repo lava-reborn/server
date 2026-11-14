@@ -9,6 +9,7 @@ found; a later owner of a method must never be overwritten by teardown.
 
 SOURCE = '''
 def __tgConnect(host, port):
+    _global.__tgEntryClose()
     _global.__tgEndpoint = host + ":" + String(port)
     _global.__tgOwner = None
     this.__tgCompatible = False
@@ -18,11 +19,13 @@ def __tgHandshakeSend(mess):
     # Existing characters enter from selPers; only newborns use actPlayer.
     # Negotiate before either command can restore a saved training session.
     if mess.name == "selPers" or mess.name == "actPlayer":
+        _global.__tgEntryClose()
         this.__tgCompatible = False
         hello = new(lol.server.mess.CSMessage)
         hello._name = "tg"
         hello.addProp("op", "@hello@")
         hello.addProp("version", 1)
+        hello.addProp("entry_confirmation", 1)
         if _global.__tgTypeCache and _global.__tgTypeCache.version:
             hello.addProp("types_version", "@" + _global.__tgTypeCache.version + "@")
         _global.__tgTransmit(hello)
@@ -34,6 +37,14 @@ def __tgBootstrapNotify(cmd):
     value = cmd.params
     if value.op == "hello":
         this.__tgCompatible = Number(value.version) == 1 and Boolean(value.available)
+        return
+    if value.op == "entry_invite":
+        if this.__tgCompatible:
+            _global.__tgEntryPrompt(value)
+        return
+    if value.op == "entry_end":
+        if _global.__tgEntryDialog and _global.__tgEntryDialog.__tgEntryToken == value.confirmation:
+            _global.__tgEntryClose()
         return
     if value.op == "types_cached":
         cache = _global.__tgTypeCache
@@ -60,6 +71,57 @@ def __tgBootstrapNotify(cmd):
         ack.addProp("version", "@" + value.version + "@")
         _global.__tgTransmit(ack)
     return result
+
+def __tgEntryReply(token, accepted):
+    message = new(lol.server.mess.CSMessage)
+    message._name = "tg"
+    message.addProp("op", "@entry_reply@")
+    message.addProp("confirmation", "@" + token + "@")
+    message.addProp("accept", accepted)
+    _global.__tgTransmit(message)
+
+def __tgEntryClose():
+    dialog = _global.__tgEntryDialog
+    _global.__tgEntryDialog = None
+    if not dialog:
+        return
+    dialog.removeEventListener("click", _global, _global.__tgEntryAnswer)
+    if lol.core.SceneShifter._ref.UIPanels.query.instance.content == dialog:
+        lol.core.SceneShifter.closeWindow("query")
+
+def __tgEntryPrompt(value):
+    if not value.confirmation or _global.__tgActive:
+        return
+    if _global.__tgEntryDialog and _global.__tgEntryDialog.__tgEntryToken == value.confirmation:
+        return
+    _global.__tgEntryClose()
+    # Never replace another purchase/trade confirmation or answer it for the user.
+    if lol.core.SceneShifter._ref.UIPanels.query.instance:
+        _global.__tgEntryReply(value.confirmation, 0)
+        return
+    dialog = lol.core.SceneShifter.openNewWindow("query").content
+    _global.__tgEntryDialog = dialog
+    dialog.__tgEntryToken = value.confirmation
+    leader = value.leader.split("&").join("&amp;").split("<").join("&lt;").split(">").join("&gt;")
+    dialog.label = "Отправиться на полигон?\\n\\nКомандир отряда: " + leader + ".\\nПереход начнётся, когда согласятся все.\\nНа ответ — 60 секунд.\\n\\nОсновной персонаж и его вещи сохранятся."
+    dialog.apply_btn.label = "Да"
+    dialog.cancel_btn.label = "Отмена"
+    dialog.addEventListener("click", _global, _global.__tgEntryAnswer)
+    dialog.onUnload = _global.__tgEntryUnloaded
+
+def __tgEntryUnloaded():
+    _global.__tgEntryAnswer({"target":this, "success":False})
+
+def __tgEntryAnswer(event):
+    dialog = _global.__tgEntryDialog
+    if not dialog or event.target != dialog:
+        return
+    token = dialog.__tgEntryToken
+    _global.__tgEntryClose()
+    accepted = 0
+    if event.success:
+        accepted = 1
+    _global.__tgEntryReply(token, accepted)
 
 def __tgMaybeDetach():
     if not _global.__tgHooksActive or _global.__tgActive or _global.__tgReturnEquipment or _global.__tgSnapshotPending or _global.__tgReturnBagPending:

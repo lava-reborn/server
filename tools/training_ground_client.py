@@ -2281,7 +2281,9 @@ def patches(Asm, undef):
     delete.var('lol').member('core', 'objects', 'ItemFactory', 'itemStore').var('oid')
     delete.op('delete').op('pop')
     functions.append(('__tgDeleteItem', ('oid',), delete))
-    bootstrap_names = frozenset(('__tgConnect', '__tgHandshakeSend', '__tgBootstrapNotify', '__tgTransmit'))
+    bootstrap_names = frozenset(('__tgConnect', '__tgHandshakeSend', '__tgBootstrapNotify', '__tgTransmit',
+                                '__tgEntryReply', '__tgEntryClose', '__tgEntryPrompt',
+                                '__tgEntryAnswer', '__tgEntryUnloaded'))
     bootstrap = [row for row in functions if row[0] in bootstrap_names]
     private = [row for row in functions if row[0] not in bootstrap_names]
     loads = loader(Asm, private)

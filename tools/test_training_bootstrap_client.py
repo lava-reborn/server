@@ -8,6 +8,90 @@ import widescreen
 
 
 class Bootstrap(unittest.TestCase):
+    def invitation_ui(self):
+        env, f, _ = self.environment(bootstrap_only=True)
+        sent, closed = [], []
+        query = dict(instance=None)
+        dialog = dict(apply_btn={}, cancel_btn={}, addEventListener=lambda *a: None,
+                      removeEventListener=lambda *a: None)
+        def open_window(name):
+            query['instance'] = dict(content=dialog)
+            return query['instance']
+        def close_window(name):
+            closed.append(name)
+            query['instance'] = None
+        env['lol']['core']['SceneShifter'] = dict(_ref=dict(UIPanels=dict(query=query)),
+                            openNewWindow=open_window, closeWindow=close_window)
+        def message():
+            value = {}
+            value['addProp'] = lambda k, v: value.update({k: v})
+            return value
+        env['lol']['server']['mess'] = dict(CSMessage=message)
+        env['_global']['__tgTransmit'] = sent.append
+        class Text(str):
+            def split(self, sep):
+                class Parts(list):
+                    def join(self, separator):
+                        return Text(separator.join(self))
+                return Parts(super().split(sep))
+        packet = dict(messID='tg', params=dict(op='entry_invite', confirmation='request',
+                                            leader=Text('Tester12'), seconds=60))
+        conn = dict(__tgCompatible=True)
+        notify = lambda packet: f['__tgBootstrapNotify'].invoke(conn, [packet])
+        return env, f, dialog, query, sent, closed, packet, notify
+
+    def test_invitation_uses_native_query_without_loading_private_equipment_hooks(self):
+        env, f, dialog, query, sent, closed, packet, notify = self.invitation_ui()
+        notify(packet)
+        self.assertEqual(dialog['apply_btn']['label'], 'Да')
+        self.assertEqual(dialog['cancel_btn']['label'], 'Отмена')
+        self.assertIn('Tester12', dialog['label'])
+        self.assertIn('60 секунд', dialog['label'])
+        self.assertNotIn('__tgInstall', env['_global'])
+        self.assertFalse(env['_global'].get('__tgHooksActive', False))
+        notify(packet)
+        self.assertEqual(sent, [])
+        self.assertEqual(closed, [])
+        f['__tgEntryAnswer'].invoke(None, [dict(target=dialog, success=True)])
+        f['__tgEntryAnswer'].invoke(None, [dict(target=dialog, success=True)])
+        self.assertEqual(len(sent), 1)
+        self.assertEqual((sent[0]['op'], sent[0]['accept'], sent[0]['confirmation']),
+                         ('@entry_reply@', 1, '@request@'))
+
+    def test_cancel_or_unload_declines_once_and_server_end_sends_no_answer(self):
+        for action in ('cancel', 'unload', 'server'):
+            with self.subTest(action=action):
+                env, f, dialog, query, sent, closed, packet, notify = self.invitation_ui()
+                notify(packet)
+                if action == 'cancel':
+                    f['__tgEntryAnswer'].invoke(None, [dict(target=dialog, success=False)])
+                elif action == 'unload':
+                    f['__tgEntryUnloaded'].invoke(dialog, [])
+                else:
+                    notify(dict(messID='tg', params=dict(op='entry_end', confirmation='older')))
+                    self.assertIs(env['_global']['__tgEntryDialog'], dialog)
+                    notify(dict(messID='tg', params=dict(op='entry_end', confirmation='request')))
+                f['__tgEntryUnloaded'].invoke(dialog, [])
+                self.assertEqual(len(sent), 0 if action == 'server' else 1)
+                if sent:
+                    self.assertEqual(sent[0]['accept'], 0)
+                self.assertIsNone(env['_global']['__tgEntryDialog'])
+
+    def test_busy_query_is_not_replaced_or_implicitly_confirmed(self):
+        env, f, dialog, query, sent, closed, packet, notify = self.invitation_ui()
+        other = dict(content=dict(purchase=True))
+        query['instance'] = other
+        notify(packet)
+        self.assertIs(query['instance'], other)
+        self.assertEqual(closed, [])
+        self.assertEqual(sent[0]['accept'], 0)
+
+    def test_old_or_disabled_connection_cannot_show_an_invitation(self):
+        env, f, dialog, query, sent, closed, packet, notify = self.invitation_ui()
+        f['__tgBootstrapNotify'].invoke(dict(__tgCompatible=False), [packet])
+        self.assertIsNone(query['instance'])
+        self.assertEqual(sent, [])
+
     def test_connect_tracks_own_endpoint_and_keeps_native_transport_result(self):
         env, f, _ = self.environment(bootstrap_only=True)
         f['__tgConnect'].closure['String'] = str
