@@ -11,7 +11,7 @@ def __tgKitBuild(p, W, H):
     _global.__tgButton(p, "kitLevel", "Уровень: " + String(_global.__tgKitLevel) + " ▼", 28, 103, 200, "kit_menu", "level")
     _global.__tgButton(p, "kitLine", "Версия: " + _global.__tgKitLine + " ▼", 28, 143, 200, "kit_menu", "line")
     _global.__tgButton(p, "kitClass", _global.__tgKitClasses[_global.__tgKitClass] + " ▼", 28, 183, 200, "kit_menu", "class")
-    _global.__tgText(p, "kitHint", "Заменяет настройки и вещи клона.\n\nБроня и оружие надеваются, припасы - в рюкзак. Оружие нужно зарядить.\n\nСостав и уровни вещей указаны справа.", 28, 227, 200, H - 348, False)
+    _global.__tgText(p, "kitHint", "Заменяет навыки и вещи персонажа на полигоне.\n\nБроня и оружие надеваются, припасы — в рюкзак. Оружие нужно зарядить.", 28, 227, 200, H - 348, False)
     _global.__tgText(p, "kitHeading", "Загрузка состава…", 250, 103, W - 278, 25, False)
     _global.__tgText(p, "kitSummary", "", 250, 135, W - 278, 90, False)
     _global.__tgText(p, "kitContents", "", 250, 230, W - 278, H - 350, False)

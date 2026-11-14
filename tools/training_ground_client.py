@@ -138,7 +138,7 @@ def __tgButton(p, name, label, x, y, w, op, value):
     b.onRelease = _global.__tgClick
     b.onRollOver = _global.__tgHover
     b.onRollOut = _global.__tgUnhover
-    b.hintTitle_str = label
+    b.hintTitle_str = ""
     return b
 
 def __tgHUDResize():
@@ -197,7 +197,8 @@ def __tgHover():
     if this.__tgStyled:
         this.shine._visible = True
         this.caption.textColor = 15657956
-    lol.gpui.HintManager.showHint(this.hintTitle_str, 0, this._width)
+    if this.hintTitle_str:
+        lol.gpui.HintManager.showHint(this.hintTitle_str, 0, this._width)
 
 def __tgUnhover():
     if this.__tgStyled:
@@ -444,7 +445,7 @@ def __tgBuild():
         return
     if _global.__tgTab == "reset":
         _global.__tgText(p, "resetTitle", "Начать настройку персонажа с нуля", 28, 105, W - 56, 30, False)
-        _global.__tgText(p, "resetInfo", "Персонаж на полигоне вернётся на 1-й уровень. Навыки и специализации будут сброшены, все вещи и активные эффекты удалены.\\n\\nОсновной персонаж и другие участники не изменятся. Правила боя, противник и площадка сохранятся. Очистку нельзя отменить.", 28, 145, W - 56, 155, False)
+        _global.__tgText(p, "resetInfo", "Персонаж на полигоне вернётся на 1-й уровень. Навыки и специализации будут сброшены, все вещи и активные эффекты удалены.\\n\\nОсновной персонаж не изменится. Правила боя, противник и площадка сохранятся. Очистку нельзя отменить.", 28, 145, W - 56, 155, False)
         _global.__tgButton(p, "resetPlayer", "Очистить всё", 28, 320, 210, "reset_prepare", "")
         return
     if _global.__tgTab == "rules":
@@ -468,32 +469,32 @@ def __tgBuild():
         if fighter:
             p.mode.caption.text = "Противник: настроенный боец · сменить"
             _global.__tgUITextFit(p.mode.caption)
-        _global.__tgText(p, "info", "Площадка общая: её смена переносит всех участников (" + String(_global.__tgParticipants) + ").", 28, 136, W - 56, 34, False)
-        _global.__tgButton(p, "spawn", _global.__tgSpawnLabels[_global.__tgSpawnPoint] + " ▼", 28, 180, column, "spawns", "")
+        _global.__tgText(p, "info", "Площадка меняется сразу. Остальные настройки — при вызове противника.", 28, 136, W - 56, 26, False)
+        _global.__tgButton(p, "spawn", _global.__tgSpawnLabels[_global.__tgSpawnPoint] + " ▼", 28, 168, column, "spawns", "")
         p.spawn.hintTitle_str = "Где появится противник при следующем вызове."
-        _global.__tgText(p, "distanceInfo", "До точки появления: ~" + String(_global.__tgDistance) + " гексов", 28, 212, column, 24, False)
+        _global.__tgText(p, "distanceInfo", "До точки появления: ~" + String(_global.__tgDistance) + " гексов", 28, 200, column, 24, False)
         behaviour = "Поведение: атакует и двигается"
         if _global.__tgStationary:
             behaviour = "Поведение: неподвижная мишень"
-        _global.__tgButton(p, "stationary", behaviour, right, 180, column, "stationary", "")
+        _global.__tgButton(p, "stationary", behaviour, right, 168, column, "stationary", "")
         title = "Параметры моба / босса"
         if fighter:
             title = "Боевая медицина настроенного противника"
-        _global.__tgText(p, "conditionTitle", title, 28, 244, W - 56, 24, False)
+        _global.__tgText(p, "conditionTitle", title, 28, 228, W - 56, 24, False)
         healing = "Лечение: выключено"
         if _global.__tgEnemyHealing:
             healing = "Лечение: включено"
-        _global.__tgButton(p, "healing", healing, 28, 276, column, "enemyhealing", "")
-        _global.__tgText(p, "belowLabel", "Порог HP / выносл., %", right, 276, column - 80, 24, False)
-        _global.__tgText(p, "healBelow", String(_global.__tgHealBelow), W - 98, 276, 70, 24, True)
-        _global.__tgText(p, "countLabel", "Применений за бой", 28, 308, column - 80, 24, False)
-        _global.__tgText(p, "healCount", String(_global.__tgHealCount), 28 + column - 70, 308, 70, 24, True)
-        _global.__tgText(p, "hpLabel", "HP и выносливость, %", 28, 276, column - 80, 24, False)
-        _global.__tgText(p, "mobHealth", String(_global.__tgMobHealth), 28 + column - 70, 276, 70, 24, True)
-        _global.__tgText(p, "damageLabel", "Урон моба / босса, %", right, 276, column - 80, 24, False)
-        _global.__tgText(p, "mobDamage", String(_global.__tgMobDamage), W - 98, 276, 70, 24, True)
-        _global.__tgText(p, "scaleHint", "100%: исходные параметры моба. Диапазон: 25-300%.", 28, 308, W - 56, 24, False)
-        _global.__tgText(p, "healingHint", "Порог: 10–90%. Лимит: 0–30 применений.", right, 308, column, 36, False)
+        _global.__tgButton(p, "healing", healing, 28, 260, column, "enemyhealing", "")
+        _global.__tgText(p, "belowLabel", "Лечиться ниже, %", right, 260, column - 80, 24, False)
+        _global.__tgText(p, "healBelow", String(_global.__tgHealBelow), W - 98, 260, 70, 24, True)
+        _global.__tgText(p, "countLabel", "Лечений за бой (0–30)", 28, 292, column - 80, 24, False)
+        _global.__tgText(p, "healCount", String(_global.__tgHealCount), 28 + column - 70, 292, 70, 24, True)
+        _global.__tgText(p, "hpLabel", "HP и выносливость, %", 28, 260, column - 80, 24, False)
+        _global.__tgText(p, "mobHealth", String(_global.__tgMobHealth), 28 + column - 70, 260, 70, 24, True)
+        _global.__tgText(p, "damageLabel", "Урон моба / босса, %", right, 260, column - 80, 24, False)
+        _global.__tgText(p, "mobDamage", String(_global.__tgMobDamage), W - 98, 260, 70, 24, True)
+        _global.__tgText(p, "scaleHint", "100% — как в выбранном профиле. 50% — вдвое меньше, 200% — вдвое больше.\\nHP и выносливость меняются вместе; урон — отдельно.\\nДопустимый диапазон: 1 - 10 000 %", 28, 288, W - 56, 60, False)
+        _global.__tgText(p, "healingHint", "При 50% лечится, если HP или выносливость ниже половины. Порог: 10–90%.", right, 288, column, 60, False)
         chosen = _global.__tgMobName
         if fighter:
             chosen = _global.__tgEnemyPreset
@@ -512,12 +513,12 @@ def __tgBuild():
         p.mobDamage.restrict = "0-9"
         p.healBelow.restrict = "0-9"
         p.healCount.restrict = "0-9"
-        p.mobHealth.maxChars = 3
-        p.mobDamage.maxChars = 3
+        p.mobHealth.maxChars = 5
+        p.mobDamage.maxChars = 5
         p.healBelow.maxChars = 2
         p.healCount.maxChars = 2
-        _global.__tgText(p, "targetSummary", "Выбран противник: " + chosen, 28, 348, W - 56, 32, False)
-        _global.__tgText(p, "report", _global.__tgReport, 28, 386, W - 56, Math.max(20, H - 510), False)
+        _global.__tgText(p, "targetSummary", "Выбран противник: " + chosen, 28, 352, W - 56, 38, False)
+        _global.__tgText(p, "report", _global.__tgReport, 28, 394, W - 56, Math.max(20, H - 518), False)
         return
     _global.__tgCatalogueControls(p, W, H)
 
@@ -559,7 +560,7 @@ def __tgResetPrompt(v):
     dialog.__tgContext = context
     if v.op == "kit_confirm":
         dialog.__tgAction = "kit_apply"
-        dialog.label = "Применить набор: " + v.title + "?\\n\\nТекущие вещи, навыки, специализации и эффекты клона будут заменены.\\n\\nОсновной персонаж не изменится. Отменить замену нельзя."
+        dialog.label = "Применить набор: " + v.title + "?\\n\\nТекущие вещи, навыки, специализации и эффекты персонажа на полигоне будут заменены.\\n\\nОсновной персонаж не изменится. Отменить замену нельзя."
     dialog.addEventListener("click", _global, _global.__tgResetAnswer)
 
 def __tgResetAnswer(event):
@@ -619,7 +620,7 @@ def __tgRulesControls(p, W, H):
         return
     base = _global.__tgRuleBase()
     p.__ruleBase = base
-    _global.__tgText(p, "ruleHint", "100%: без изменения. Меньше разброс: выше точность.", 28, 132, W - 56, 22, False)
+    _global.__tgText(p, "ruleHint", "От выбранного профиля: 100% — без изменений, 50% — половина, 200% — вдвое.", 28, 132, W - 56, 22, False)
     sections = ["Основное", "Характеристики", "Пояснения"]
     sectionKeys = ["main", "attributes", "help"]
     section = _global.__tgRuleSection or "main"
@@ -631,11 +632,10 @@ def __tgRulesControls(p, W, H):
         i = i + 1
     values = _global.__tgRuleDraftValues.split(",")
     if section == "help":
-        text = "Основное: запас HP и выносливости, величина брони и разброс. 80% разброса означает меньший разброс, а не 80% вероятности попадания.\\n\\nХарактеристики: масштабируют итоговые силу, ловкость, телосложение, восприятие и интеллект. Их влияние зависит от основы формул. Телосложение и запас HP могут усиливать друг друга.\\n\\nПараметры патронов: коэффициенты урона по HP, урона по выносливости цели и дальности из данных боеприпаса. Не меняют число пуль и расход ОД. Остальные свойства патронов определяются основой профиля.\\n\\nДополнительная броня прибавляется до процентного изменения брони. Это настройка правил, а не выдача баффа. Защита сломанной брони учитывается только при включённом переключателе.\\n\\nОбласть действия: настройки относятся к вашему тренировочному персонажу и связанным с ним противникам; обычные мобы используют доступные им параметры. Другие участники выбирают правила отдельно. Основная игра не меняется.\\n\\nСоздание копии и сохранение профиля не применяют правила к бою. После настройки нажмите «Применить правила». Сброс к основе также меняет только черновик."
-        _global.__tgText(p, "ruleHelpHint", "Прокрутите пояснения колёсиком мыши.", 28, 190, W - 56, 22, False)
-        f = _global.__tgText(p, "ruleDescription", text, 28, 218, W - 100, H - 435, False)
+        text = "Как настроить: выберите профиль, измените нужные значения и нажмите «Применить правила». Правила действуют на вашего персонажа и противников только на полигоне. У мобов учитываются доступные им параметры.\\n\\nПроценты считаются от значений выбранного профиля. 100% оставляет значение прежним, 50% уменьшает вдвое, 200% увеличивает вдвое. Это доля значения, а не прибавка к нему. Диапазон: 1–1000%.\\n\\nЗапас здоровья и выносливости: меняет их максимум. Например, 400 HP при 150% станут 600 HP, если остальные настройки не менять.\\n\\nБроня: меняет значение защиты. 200% удваивает броню, но не означает защиту от всего урона. Доп. броня задаётся в единицах: при броне 100, добавке 20 и значении 150% получится 180 единиц.\\n\\nРазброс: меньше значение — точнее стрельба. 50% вдвое сужает разброс. Это не 50% вероятности попадания: важны также дистанция, оружие и цель.\\n\\nХарактеристики: меняет силу, ловкость, телосложение, восприятие и интеллект. Их бонусы рассчитываются по выбранному профилю. Например, 150% силы превратят 10 в 15. Изменение телосложения может также изменить запас HP и выносливости.\\n\\nПараметры патронов: включает их влияние на урон по HP, выносливости цели и дальность. Не меняют число пуль и расход ОД. Остальные свойства патронов определяются выбранным профилем.\\n\\nЗащита сломанной брони: «да» сохраняет её вклад в защиту, «нет» исключает его.\\n\\nСохранение профиля запоминает настройки для выбора в будущем. Чтобы использовать их сейчас, нажмите «Применить правила». «Сбросить к основе» возвращает значения выбранного профиля в полях; для боя их тоже нужно применить."
+        f = _global.__tgText(p, "ruleDescription", text, 28, 190, W - 100, H - 407, False)
         f.scroll = 1
-        _global.__tgButton(p, "ruleUp", "▲", W - 60, 218, 28, "rulescroll", 0 - 5)
+        _global.__tgButton(p, "ruleUp", "▲", W - 60, 190, 28, "rulescroll", 0 - 5)
         _global.__tgButton(p, "ruleDown", "▼", W - 60, H - 242, 28, "rulescroll", 5)
     else:
         indices = [5, 6, 7, 8, 9]
@@ -760,14 +760,13 @@ def __tgRuleDescription(p, W, H):
             baseIndex = baseIndex + 1
     if len(paragraphs) == 0:
         paragraphs = ["Описание не загружено. Откройте компьютер заново."]
-    _global.__tgText(p, "ruleInfoHint", "Описание можно прокручивать колёсиком мыши.", 28, 138, W - 56, 25, False)
-    field = _global.__tgText(p, "ruleDescription", paragraphs.join("\\n\\n"), 28, 172, W - 100, H - 392, False)
+    field = _global.__tgText(p, "ruleDescription", paragraphs.join("\\n\\n"), 28, 138, W - 100, H - 358, False)
     fmt = field.getTextFormat()
     fmt.size = 16
     field.setTextFormat(fmt)
     field.setNewTextFormat(fmt)
     field.scroll = 1
-    _global.__tgButton(p, "ruleUp", "▲", W - 60, 172, 28, "rulescroll", 0 - 5)
+    _global.__tgButton(p, "ruleUp", "▲", W - 60, 138, 28, "rulescroll", 0 - 5)
     _global.__tgButton(p, "ruleDown", "▼", W - 60, H - 245, 28, "rulescroll", 5)
     _global.__tgButton(p, "rulesInfo", "Настроить правила", 28, H - 205, 230, "rulesinfo", "")
     _global.__tgButton(p, "applyRules", "Применить правила", 270, H - 205, 210, "rulesapply", "")

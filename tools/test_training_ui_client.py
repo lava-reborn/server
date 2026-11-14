@@ -88,6 +88,19 @@ def environment(width=1004,height=710,tab='player',context='player',supply=False
     return funcs,g,root
 
 class TrainingPrivateUI(unittest.TestCase):
+    def test_button_tooltips_add_information_instead_of_repeating_the_caption(self):
+        funcs,g,root=environment(tab='result',context='computer')
+        funcs['__tgBuild'].invoke(None,[])
+        hints=[]
+        funcs['__tgHover'].closure['lol']['gpui']=dict(HintManager=dict(
+            showHint=lambda *args:hints.append(args)))
+        p=g['__tgPanel']
+        self.assertEqual(p['location']['hintTitle_str'],'')
+        funcs['__tgHover'].invoke(p['location'],[])
+        self.assertEqual(hints,[])
+        funcs['__tgHover'].invoke(p['spawn'],[])
+        self.assertEqual(hints[0][0],'Где появится противник при следующем вызове.')
+
     def test_hud_reuses_button_and_resize_listener_across_state_updates(self):
         funcs,g,root=environment()
         stage=funcs['__tgHUD'].closure['Stage']
@@ -225,6 +238,10 @@ class TrainingPrivateUI(unittest.TestCase):
                     funcs['__tgRuleScroll'].invoke(None,[5])
                     self.assertEqual(f['scroll'],6)
                     self.assertIn('Не меняют число пуль',f['text'])
+                    self.assertIn('400 HP при 150% станут 600 HP',f['text'])
+                    self.assertIn('получится 180 единиц',f['text'])
+                    self.assertIn('Диапазон: 1–1000%',f['text'])
+                    self.assertNotIn('ruleHelpHint',p)
 
     def test_conditions_show_actual_location_and_preserve_input_when_switching_enemy_kind(self):
         funcs,g,root=environment(tab='result',context='computer')
@@ -234,7 +251,10 @@ class TrainingPrivateUI(unittest.TestCase):
         self.assertEqual(p['location']['caption']['text'],'Площадка: Арена №1 ▼')
         self.assertEqual(p['conditionTitle']['text'],'Параметры моба / босса')
         self.assertIn('100%',p['scaleHint']['text'])
-        p['mobHealth']['text']='150';p['mobDamage']['text']='125'
+        self.assertIn('Допустимый диапазон: 1 - 10 000 %',p['scaleHint']['text'])
+        self.assertEqual(p['mobHealth']['maxChars'],5)
+        self.assertEqual(p['mobDamage']['maxChars'],5)
+        p['mobHealth']['text']='10000';p['mobDamage']['text']='888'
         funcs['__tgClick'].invoke(dict(__op='mode',__value=''),[])
         p=g['__tgPanel']
         self.assertIn('настроенного противника',p['conditionTitle']['text'])
@@ -242,10 +262,54 @@ class TrainingPrivateUI(unittest.TestCase):
         p['healBelow']['text']='40';p['healCount']['text']='10'
         funcs['__tgClick'].invoke(dict(__op='mode',__value=''),[])
         p=g['__tgPanel']
-        self.assertEqual(p['mobHealth']['text'],'150')
-        self.assertEqual(p['mobDamage']['text'],'125')
+        self.assertEqual(p['mobHealth']['text'],'10000')
+        self.assertEqual(p['mobDamage']['text'],'888')
         self.assertEqual(g['__tgHealBelow'],40)
         self.assertEqual(g['__tgHealCount'],10)
+
+    def test_conditions_explain_percentages_without_covering_controls_or_footer(self):
+        for size in ((800,600),(1004,710),(1920,1080)):
+            for mode in ('mob','fighter'):
+                funcs,g,root=environment(*size,tab='result',context='computer')
+                g['__tgMode']=mode
+                funcs['__tgBuild'].invoke(None,[])
+                p=g['__tgPanel'];boxes=[]
+                for c in p.children:
+                    if c.get('_visible',True) and (c.get('kind')=='text' or '__op' in c):
+                        boxes.append((c['_name'],c['_x'],c['_y'],
+                            c.get('__width',c.get('_width',0)),c.get('__height',c.get('_height',0))))
+                for i,(name,x,y,w,h) in enumerate(boxes):
+                    for other,xx,yy,ww,hh in boxes[i+1:]:
+                        self.assertFalse(min(x+w,xx+ww)>max(x,xx) and min(y+h,yy+hh)>max(y,yy),
+                                         (size,mode,name,other))
+                self.assertIn('при вызове противника',p['info']['text'])
+                if mode=='mob':
+                    self.assertIn('50% — вдвое меньше',p['scaleHint']['text'])
+                    self.assertIn('урон — отдельно',p['scaleHint']['text'])
+                else:
+                    self.assertIn('ниже половины',p['healingHint']['text'])
+
+    def test_new_panels_have_no_obsolete_group_or_scroll_instructions(self):
+        contexts=[('player','player',False),('kits','player',False),
+                  ('enemy','computer',False),('result','computer',False),
+                  ('rules','computer',False),('reset','computer',False),
+                  ('mob','computer',False),('enemygear','computer',False)]
+        contexts += [('gear',ctx,True) for ctx in
+                     ('weapons','armoury','supplies','medical','boosts','specialist','archive')]
+        for tab,context,supply in contexts:
+            funcs,g,root=environment(tab=tab,context=context,supply=supply)
+            funcs['__tgBuild'].invoke(None,[])
+            def visible_texts(clip):
+                if not clip.get('_visible',True):
+                    return
+                if clip.get('kind')=='text':
+                    yield clip['text']
+                for child in clip.children:
+                    yield from visible_texts(child)
+            text='\n'.join(visible_texts(g['__tgPanel']))
+            for obsolete in ('Площадка общая','всех участников','другие участники',
+                             'Прокрутите пояснения','прокручивать колёсиком','undefined'):
+                self.assertNotIn(obsolete,text,(tab,context))
 
     def test_profile_menu_selection_is_draft_and_description_has_no_overlaps(self):
         for width,height in ((800,600),(1004,710),(1280,720)):
@@ -259,6 +323,7 @@ class TrainingPrivateUI(unittest.TestCase):
             funcs['__tgBuild'].invoke(None,[])
             p=g['__tgPanel']
             self.assertEqual(p['ruleDescription']['text'],'Симулятор: новая броня\n\nНовые режимы оружия')
+            self.assertNotIn('ruleInfoHint',p)
             self.assertLessEqual(p['ruleDescription']['_y']+p['ruleDescription']['_height'],p['rulesInfo']['_y'])
             self.assertLess(p['applyRules']['_y']+p['applyRules']['__height'],p['status']['_y'])
             funcs['__tgClick'].invoke(dict(__op='profiles',__value=''),[])
