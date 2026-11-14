@@ -893,6 +893,12 @@ def repair_base_price(si):
     return cost
 
 
+def repair_rmod(loc_id, trader_type):
+    """One advertised/charged rate; warehouse flags only in their own site."""
+    site = holdings.site_at(loc_id) if loc_id is not None else None
+    return RMOD * 0.7 if site is not None and trader_type == site.flag else RMOD
+
+
 def repair_window(si, brk, max_break_cur, rmod=RMOD):
     """Every figure the repair window prints for one thing, the gold ones in
     hundredths of an ounce: ((afro, gold, restore) in its slot, (afro, gold)
@@ -1114,6 +1120,26 @@ class Inventory:
         """What the character carries: worn, held and the bag -- not the
         bank, or a full storage would stop them buying a single round."""
         return sum(weight_of(r) for r in self.carried())
+
+    def normalize_magazines(self, rows, notify=False):
+        """Conserve claimed legacy overflow before describing owned inventory."""
+        import magazine_migration
+        try:
+            changed, added = magazine_migration.normalize(self.store, self.char_id, rows, self.locked)
+        except storage.CommitError:
+            self.close_after_uncertain_commit()
+            return False
+        except Exception:
+            log.exception("Legacy magazine normalization failed for %s", self.char_id)
+            self.sess.close(force=True)
+            return False
+        if changed:
+            rows[:] = [changed.get(row['uniq'], row) for row in rows] + added
+            if notify:
+                for row in added:
+                    self.push_status(row, 1)
+                    self.push_di(row)
+        return True
 
     def create(self, type_id, count=1, slot=BAG, char_id=None):
         if items.acquisition_blocked(type_id):
@@ -1583,6 +1609,8 @@ class Inventory:
         rows, look = None, 0
         if char_id:
             rows = self.rows(char_id)
+            if char_id == self.char_id and not self.normalize_magazines(rows):
+                return
             o_list = self.equipment_list(char_id, mask, rows)
             if mask & MASK_WEAR:
                 look = look_of(rows)
@@ -1630,6 +1658,11 @@ class Inventory:
         # with target=<id>, and that is the one DI the client pulls for
         # somebody else's item. Anything that exists is described.
         if row and (row["type_id"], row["root"]) == (type_id, root):
+            if row['char_id'] == self.char_id and row['slot'] != BANK:
+                owned = [row]
+                if not self.normalize_magazines(owned, notify=True):
+                    return
+                row = owned[0]
             self.push_di(row)
             return
         # An item on sale is no row in items: it lives in its lot, and is
@@ -1701,13 +1734,17 @@ class Inventory:
             # Only an accepted move changes the active weapon. An unrelated
             # bag/secondary move or a refused switch must preserve the aim.
             self.sess.combat.primary_changed()
-        # Meant for everyone else in the location, so they redraw this
-        # player's figure; PlayerRegister.ss_obj_move ignores it for
-        # Gamer.ID, so the sender's own copy is harmless. There is no room
-        # fan-out on the server yet; when there is, this is the frame to
-        # send to the rest of the room with the sender's entity id.
         self.send("ss_obj_move", id=0, obj=BigUInt(oid_of(row)), to=dst,
                   **{"from": src})
+        if PRIMARY in (src, dst) and self.sess.room is not None:
+            # A remote PersEquip only replaces the active hand when `to`
+            # names PRIMARY; replaying PRIMARY -> BAG would leave its old
+            # firearm visible. Publish the resulting hand, including empty,
+            # without another item query or an unsolicited ss_ack.
+            active = row if dst == PRIMARY else displaced
+            self.sess.room.broadcast(("ss_obj_move", dict(
+                id=self.sess.pid, obj=BigUInt(oid_of(active)) if active else EMPTY,
+                to=PRIMARY, **{"from": PRIMARY})), exclude=self.sess)
 
     # --- ss_use ------------------------------------------------------------
     def ss_use(self, p):
@@ -2097,67 +2134,82 @@ class Inventory:
         a refusal stopped it listening (repAllAck); a 0 takes that one out
         of the slot, where a 3 said «Сервер не отвечает».
         """
+        if code == UPD_RESTORE:
+            if self.repair_context(p) is not None:
+                self.restore(p)
+            return
+        try:
+            with storage.atomic(self.store.db):
+                if not self.store.lock_quest_character(self.char_id):
+                    self.ack(RES_REFUSED)
+                    return
+                row = self.repair_context(p)
+                if row is None:
+                    return
+                si = items.params_of(row["type_id"]) or {}
+                top = row["max_break_cur"] or si.get("max_break_abs", 0)
+                if not top:
+                    self.ack(RES_REFUSED)
+                    return
+                room = getattr(self.sess, "room", None)
+                rate = repair_rmod(room.loc.id if room is not None else None,
+                                   getattr(self.trade, "trader_type", None))
+                price_afro, price_gold, price_restore = repair_prices(
+                    si, row["brk"], row["max_break_cur"], rate)
+                new_top = max(int(math.floor(top * REPAIR_KEEPS)), min(row["brk"], top))
+                if new_top < 1:
+                    self.ack(RES_BROKEN)
+                    self.sess.say("Предмет больше не ремонтируется: максимальная"
+                                  " прочность исчерпана%s" % (
+                                      ". Вернуть её можно восстановлением за золото"
+                                      if price_restore is not None
+                                      and restore_policy.base_price(row["type_id"], si) else ""))
+                    return
+                idle = (new_top, new_top) == (row["brk"], row["max_break_cur"])
+                paid = (0, 0) if idle else ((0, price_gold) if code == UPD_REPAIR_GOLD else (price_afro, 0))
+                owner = self.store.character(self.char_id)
+                afro, gold = owner["afro"], owner["gold"]
+                if afro < paid[0] or gold < paid[1]:
+                    ch = self.sess.character()
+                    ch.afro, ch.gold = afro, gold
+                    self.ack(RES_NO_MONEY)
+                    return
+                afro, gold = afro - paid[0], gold - paid[1]
+                if not idle:
+                    if any(paid):
+                        with self.booked("repair", row["type_id"]):
+                            self.store.set_money(self.char_id, afro, gold)
+                    self.store.update_item(row["uniq"], brk=new_top, max_break_cur=new_top)
+        except storage.CommitError:
+            self.close_after_uncertain_commit()
+            return
+        except Exception:
+            log.exception("Repair failed for character %s", self.char_id)
+            self.ack(RES_REFUSED)
+            return
+        # Publish and update the live purse only after confirmed COMMIT.
+        ch = self.sess.character()
+        ch.afro, ch.gold = afro, gold
+        self.ack(RES_OK)
+        self.push_di(self.store.item(row["uniq"]))
+        self.push_money()
+
+    def repair_context(self, p):
+        """Current item and rights, re-read inside a repair transaction."""
         row = self.find(p.get("obj"))
         if not row or row["root"] not in items.BREAKABLE_ROOTS:
             self.ack(RES_NOT_FOUND)
-            return
+            return None
         trader = getattr(self.trade, "trader_type", None)
         if trophies.is_registrar(trader) and not trophies.keeps_stall(trader):
-            # userInfo_Trader tells the client this one mends nothing
-            # (server.py, can_repair=0), so the window never opens here.
             self.ack(RES_REFUSED)
-            return
+            return None
         room = getattr(self.sess, "room", None)
         if not holdings.may_repair(self.store, room.loc.id if room is not None else None,
                                    trader, self.char_id):
-            # A warehouse's flag in its room mends for the clan holding it
-            # alone (holdings.py); everybody else was told can_repair=0.
             self.ack(RES_REFUSED)
-            return
-        if code == UPD_RESTORE:
-            self.restore(p)
-            return
-        si = items.params_of(row["type_id"]) or {}
-        abs_top = si.get("max_break_abs", 0) or row["max_break_cur"]
-        top = row["max_break_cur"] or abs_top
-        if not top:
-            self.ack(RES_REFUSED)
-            return
-        price_afro, price_gold, price_restore = repair_prices(
-            si, row["brk"], row["max_break_cur"])
-        afro, gold = self.money()
-
-        # Nine tenths of the ceiling, and never under the durability
-        # the thing has (REPAIR_KEEPS).
-        new_top = max(int(math.floor(top * REPAIR_KEEPS)), min(row["brk"], top))
-        if new_top < 1:
-            self.ack(RES_BROKEN)
-            self.sess.say("Предмет больше не ремонтируется: максимальная"
-                          " прочность исчерпана%s" % (
-                              ". Вернуть её можно восстановлением за золото"
-                              if price_restore is not None
-                              and restore_policy.base_price(row["type_id"], si) else ""))
-            return
-        new_brk = new_top
-        paid = (0, price_gold) if code == UPD_REPAIR_GOLD else (price_afro, 0)
-        idle = (new_brk, new_top) == (row["brk"], row["max_break_cur"])
-        if idle:
-            paid = (0, 0)
-        elif afro < paid[0] or gold < paid[1]:
-            self.ack(RES_NO_MONEY)
-            return
-        else:
-            if any(paid):
-                self.set_money(afro - paid[0], gold - paid[1], "repair", row["type_id"])
-            self.store.update_item(row["uniq"], brk=new_brk, max_break_cur=new_top)
-        log.info("  ..    %s %d: %d/%d -> %d/%d for %d afro, %d/100 G",
-                 "nothing to do for" if idle else "repaired", row["type_id"],
-                 row["brk"], top, new_brk, new_top, paid[0], paid[1])
-        self.ack(RES_OK)
-        row = self.store.item(row["uniq"])
-        if row is not None:
-            self.push_di(row)
-        self.push_money()
+            return None
+        return row
 
     def restore(self, p):
         """Called after repair's NPC checks; item and G payment commit together."""

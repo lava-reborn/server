@@ -267,19 +267,17 @@ def short(row, code, afro=None, gold=None):
         mender.char.afro = afro
     if gold is not None:
         mender.char.gold = gold
-    # Restoration reads the authoritative purse under the character lock.
+    # Repair and restoration read the authoritative purse under the character lock.
     # Test setup must therefore change that purse too, without booking a payment.
-    if code == inventory.UPD_RESTORE:
-        rstore.db.execute("UPDATE characters SET afro=?, gold=? WHERE id=?",
-                          (mender.char.afro, mender.char.gold, rcid))
-        rstore.db.commit()
+    rstore.db.execute("UPDATE characters SET afro=?, gold=? WHERE id=?",
+                      (mender.char.afro, mender.char.gold, rcid))
+    rstore.db.commit()
     try:
         return press(row, code)
     finally:
         mender.char.afro, mender.char.gold = kept
-        if code == inventory.UPD_RESTORE:
-            rstore.db.execute("UPDATE characters SET afro=?, gold=? WHERE id=?", (*kept, rcid))
-            rstore.db.commit()
+        rstore.db.execute("UPDATE characters SET afro=?, gold=? WHERE id=?", (*kept, rcid))
+        rstore.db.commit()
 
 
 REP, GOLD, RESTORE = inventory.UPD_REPAIR, inventory.UPD_REPAIR_GOLD, inventory.UPD_RESTORE

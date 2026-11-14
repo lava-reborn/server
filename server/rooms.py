@@ -83,6 +83,37 @@ def viewer_frame(cmd, params):
     return fn
 
 
+def send_to(sess, command, params):
+    """Fanout delivery: a stale recipient cannot abort another player's action."""
+    writer = sess.writer
+    failed = getattr(sess, '_failed_fanout_writer', None)
+    if failed is writer:
+        return False
+    # asyncio usually absorbs a socket write error and closes its transport
+    # instead of raising from StreamWriter.write (notably on Linux).
+    closing = getattr(writer, 'is_closing', None)
+    if closing is not None and closing():
+        sess._failed_fanout_writer = writer
+        return False
+    try:
+        sess.send(command, **params)
+    except OSError as exc:
+        # Let the connection's finally clean up outside the current fanout.
+        # Session.close here would recursively broadcast presence/departure.
+        sess._failed_fanout_writer = writer
+        log.info("recipient %s disconnected: %s", getattr(sess, 'peer', None), exc)
+        try:
+            writer.close()
+        except OSError:
+            # Teardown of the same failed socket must not re-raise into the
+            # fanout either. Programming errors are deliberately not hidden.
+            log.debug("failed recipient transport was already unusable", exc_info=True)
+        return False
+    if failed is not None:
+        sess._failed_fanout_writer = None  # a lingering session resumed on a new socket
+    return True
+
+
 class Room:
     """One location, shared. Subscribers are sessions standing in it."""
 
@@ -204,7 +235,7 @@ class Room:
                 continue
             out = fn(sess)
             if out:
-                sess.send(out[0], **out[1])
+                send_to(sess, out[0], out[1])
 
     def snapshot_for(self, sess):
         """Everything already here, for someone who just arrived.
@@ -462,7 +493,7 @@ class GlobalMapRoom:
             if sess in shown:
                 shown.discard(sess)
                 if stop is not None:
-                    other.send("userMove", **stop)
+                    send_to(other, "userMove", stop)
         if not self.seen and self._timer is not None:
             self._timer.cancel()
             self._timer = None
@@ -493,8 +524,8 @@ class GlobalMapRoom:
         for other in self.seen:
             if (other is not sess and other.on_map and not other.closed
                     and self._within(sess, other)):
-                other.send("userMsg", group=0, nick=Str(sess.nick),
-                           entry=Str(raw), **{"from": sess.pid})
+                send_to(other, "userMsg", dict(group=0, nick=Str(sess.nick),
+                           entry=Str(raw), **{"from": sess.pid}))
 
     # --- internals -------------------------------------------------------
     def _within(self, a, b):
@@ -538,8 +569,8 @@ class GlobalMapRoom:
             told.add(other.pid)
             vx, vy = viewer.current_pos()
             ox, oy = other.current_pos()
-            viewer.send("newUser", id=other.pid,
-                        dx=int(round(vx - ox)), dy=int(round(vy - oy)))
+            send_to(viewer, "newUser", dict(id=other.pid,
+                        dx=int(round(vx - ox)), dy=int(round(vy - oy))))
         self._send_move(viewer, other)
 
     def _send_move(self, viewer, other):
@@ -547,8 +578,8 @@ class GlobalMapRoom:
         flight, vx/vy cells per second. t is read and never used."""
         x, y = other.current_pos()
         speed_x, speed_y = (other.leg[3], other.leg[4]) if other.leg else (0, 0)
-        viewer.send("userMove", id=other.pid, dx=x, dy=y,
-                    vx=speed_x, vy=speed_y, t=0)
+        send_to(viewer, "userMove", dict(id=other.pid, dx=x, dy=y,
+                    vx=speed_x, vy=speed_y, t=0))
 
     def _arm(self):
         self._timer = asyncio.get_running_loop().call_later(

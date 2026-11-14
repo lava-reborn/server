@@ -163,6 +163,7 @@ class Stand:
         self.pid, self.gx, self.gy, self.clock = pid, x, y, clock
         self.nick = "player%d" % pid
         self.leg, self.on_map, self.closed = None, True, False
+        self.writer = object()  # Transport identity for the recording session.
         self.got = []
 
     def current_pos(self):

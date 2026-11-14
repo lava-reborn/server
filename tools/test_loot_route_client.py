@@ -16,6 +16,8 @@ class Choices(Arr):
 class LootRoute(unittest.TestCase):
     def setUp(self):
         self.calls=[]
+        self.now=100
+        self.timers=[]
         self.here=dict(gx=0,gy=0,num=0)
         self.bag=dict(gx=5,gy=0,num=5)
         self.blocked=dict(gx=4,gy=0,num=4)
@@ -28,7 +30,10 @@ class LootRoute(unittest.TestCase):
         self.loc=dict(locationGrid=grid,locInfo=dict(width=100,height=100),
                       getCellFromNumber=lambda n:self.here if n==0 else self.bag,
                       movePlayer=lambda cell:self.calls.append(('move',cell)))
-        self.env=dict(_global=dict(__bfDefer=lambda *a:False),Number=float,
+        self.env=dict(_global={},Number=float,
+                      getTimer=lambda:self.now,
+                      setInterval=lambda fn,ms:self.timers.append((fn,ms)) or len(self.timers),
+                      clearInterval=lambda timer:None,
                       Math=dict(max=max,floor=math.floor,abs=abs),
                       lol=dict(core=dict(Master=dict(getInstance=lambda:dict(currentLocation=self.loc))),
                                gpui=dict(UserSettings=dict(PATH_FINDING='path',getSetting=lambda _:False))))
@@ -55,6 +60,24 @@ class LootRoute(unittest.TestCase):
     def test_far_outside_configured_search_window_does_not_allocate_path(self):
         self.assertFalse(self.functions['__bfLootReachable'].invoke(None,[self.loc,self.here,dict(gx=100,gy=0)]))
         self.assertEqual(self.calls,[])
+
+    def test_loot_click_waits_for_recovery_then_opens_once(self):
+        self.bag.update(gx=1)
+        gamer=dict(walker=dict(numPos=0),createLoot=lambda _:self.calls.append('open'))
+        gamer['gotoLoot']=lambda pos:self.functions['__bfLootGo'].invoke(gamer,[pos])
+        self.env['_global']['__bfRecoveryUntil']=200
+        self.functions['__bfLootGo'].invoke(gamer,[5])
+        self.assertNotIn('open',self.calls)
+        self.assertEqual(len(self.timers),1)
+        self.now=199
+        self.functions['__bfDrainInput'].invoke(None,[])
+        self.assertNotIn('open',self.calls)
+        self.now=200
+        self.functions['__bfDrainInput'].invoke(None,[])
+        self.functions['__bfDrainInput'].invoke(None,[])
+        self.assertEqual(self.calls.count('open'),1)
+        self.assertIsNone(self.env['_global']['__bfPendingInput'])
+        self.assertIsNone(self.env['_global']['__bfInputTimer'])
 
 
 if __name__=='__main__':

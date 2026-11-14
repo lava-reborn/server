@@ -55,8 +55,8 @@ $repo = Split-Path -Parent $here
 if (-not $Out) { $Out = Join-Path $repo "dist\LavaReborn.exe" }
 # The links in the window follow the site's own map: /register, /wiki and
 # /cabinet are its pages, the forum and the patch notes topic live on the
-# forum. A forgotten password has no page: the window explains in place
-# that the administrator issues a new one.
+# forum. The login panel's "Forgot password" opens $Site/?forgot=1;
+# the site's form requests a reset link to the account's confirmed e-mail.
 if (-not $RegisterUrl) { $RegisterUrl = "$Site/register" }
 if (-not $WikiUrl) { $WikiUrl = "$Site/wiki" }
 if (-not $CabinetUrl) { $CabinetUrl = "$Site/cabinet" }

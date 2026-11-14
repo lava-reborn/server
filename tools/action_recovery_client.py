@@ -13,12 +13,23 @@ def __bfClearInput():
     _global.__bfObservedFigure = None
 
 def __bfWaiting():
-    if _global.__bfRecoveryUntil and getTimer() < _global.__bfRecoveryUntil:
-        return True
+    now = getTimer()
+    serverWaiting = _global.__bfRecoveryUntil and now < _global.__bfRecoveryUntil
     figure = _global.__bfOwnerFigure
     if figure and figure.behavior == "fire" and figure.onEnterFrame and figure.animationEnabled != False and figure.isActive != False and figure.is_default != True:
         if figure.__bfBursts and len(figure.__bfBursts) > 0 and figure.__bfBursts[0].got > 0:
-            return True
+            bundle = figure.__bfBursts[0]
+            observed = _global.__bfObservedFigure
+            if not observed or observed.figure != figure or observed.bundle != bundle or observed.frame != figure.currentFrameNumber or observed.got != bundle.got or now < observed.at:
+                observed = {"figure":figure, "bundle":bundle, "frame":figure.currentFrameNumber, "got":bundle.got, "at":now}
+                _global.__bfObservedFigure = observed
+            # Normal completion still releases immediately via nextSequence.
+            # Only a full second with NO frame/bullet progress may escape a
+            # broken visual wait, and never before the authoritative floor.
+            return serverWaiting or now - observed.at < 1000
+    _global.__bfObservedFigure = None
+    if serverWaiting:
+        return True
     return False
 
 def __bfDefer(owner, method, args):
@@ -28,6 +39,7 @@ def __bfDefer(owner, method, args):
             if figure.__bfBursts and len(figure.__bfBursts) > 0 and figure.__bfBursts[0].got > 0:
                 _global.__bfVisualFlush(figure.__bfScene, figure, False)
         _global.__bfPendingInput = None
+        _global.__bfObservedFigure = None
         if _global.__bfInputTimer:
             clearInterval(_global.__bfInputTimer)
         _global.__bfInputTimer = None
@@ -55,6 +67,7 @@ def __bfDrainInput():
     if _global.__bfWaiting():
         return
     _global.__bfPendingInput = None
+    _global.__bfObservedFigure = None
     clearInterval(_global.__bfInputTimer)
     _global.__bfInputTimer = None
     figure = _global.__bfOwnerFigure
@@ -110,12 +123,15 @@ def __bfNextSequence():
 
 def __bfHitTarget(event):
     figure = this.getWalker(event.targetID)
+    if not figure and event.__bfPoint:
+        return event.__bfPoint
     if figure and figure.behavior == "die":
-        return {"x":figure._x, "y":figure._y - 50}
+        return event.__bfPoint or {"x":figure._x, "y":figure._y - 50}
     if figure and figure.__bfBursts and len(figure.__bfBursts) > 0:
         if figure.__bfBursts[0].got > 0 and (figure.behavior == "fire" or figure.behavior == "fire_out"):
-            return {"x":figure._x, "y":figure._y - 50}
-    return this.__bfHitTargetOrig(event)
+            return event.__bfPoint or {"x":figure._x, "y":figure._y - 50}
+    point = this.__bfHitTargetOrig(event)
+    return event.__bfPoint or point
 
 def __bfProtectedVisual(figure):
     return figure and figure.__bfBursts and len(figure.__bfBursts) > 0 and figure.__bfBursts[0].got > 0 and (figure.behavior == "fire" or figure.behavior == "fire_out")
@@ -137,9 +153,13 @@ def __bfFinishMove(obj):
 def __bfPosition(obj):
     walker = obj.walker
     figure = this.getWalker(walker.id)
-    if _global.__bfProtectedVisual(figure) or (walker.__bfStoppingMove and _global.__bfChangingWeapon(figure)):
+    if walker.__bfStoppingMove and (_global.__bfProtectedVisual(figure) or _global.__bfChangingWeapon(figure)):
         this.placeWalker(figure, walker.x, walker.y)
         return
+    if _global.__bfProtectedVisual(figure):
+        # A real new step supersedes delayed cosmetic firing on observers.
+        # An authoritative stop above only corrects the position.
+        _global.__bfVisualFlush(this, figure, False)
     this.__bfPositionOrig(obj)
 
 def __bfPanelSwap():

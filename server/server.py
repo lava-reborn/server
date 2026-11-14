@@ -619,8 +619,29 @@ class Session:
             with STORE.booked_as(*self.money_cause(cmd, params)):
                 fn(params)
         except Exception:
-            # A bug in one handler must not drop the player's connection.
             log.exception("  !!    handler for %r failed", cmd)
+            if cmd in {"hello", "login", "newPers", "selPers", "actPlayer", "lenter"}:
+                # Entry has several different reply contracts, and may have
+                # already sent success. A second ACK would corrupt FIFO;
+                # disconnect so the client can retry instead of waiting forever.
+                # A partially loaded character must not overwrite its durable
+                # position or state with this session's initial defaults.
+                self._failed_entry_before_presence = ONLINE.by_char.get(self.char_id) is not self
+                if cmd == 'lenter' and self.char_id:
+                    # Do not persist an unaccepted destination and trap the
+                    # next login there. Preserve character/money changes; only
+                    # the location falls back to the last completed entry.
+                    self._failed_location_entry = True
+                    try:
+                        safe = getattr(self, '_accepted_place', None)
+                        if safe is None:
+                            start = world.location(START_LOC)
+                            safe = (START_LOC, start.entry_cell(), GLOBAL_X, GLOBAL_Y, False)
+                        STORE.save_position(self.char_id, *safe)
+                    except Exception:
+                        log.exception('could not restore accepted location for %s', self.char_id)
+                self.close(force=True)
+                return
         if self.closed:
             return
         if cmd in GEAR_COMMANDS:
@@ -816,10 +837,11 @@ class Session:
             # The clan's roster holders hear "offline", seen_at is written,
             # an invitation to this character is off. Never raises.
             CLANS.offline(self)
-            if self.char_id:
+            if (self.char_id and not getattr(self, "_failed_entry_before_presence", False)
+                    and not getattr(self, '_failed_location_entry', False)):
                 STORE.save_position(self.char_id, self.loc.id, self.pos,
                                     self.gx, self.gy, self.on_map)
-            if self.char:
+            if self.char and not getattr(self, "_failed_entry_before_presence", False):
                 self.char.save(STORE)
         finally:
             self.writer.close()
@@ -888,7 +910,13 @@ class Session:
         this object, and it goes back to the database after each change
         that costs something and once more on the way out.
         """
+        self._accepted_place = None  # never reuse another selected character's checkpoint
         self.char = progression.Character.load(STORE, char_id)
+        import magazine_migration
+        legacy_guns = [dict(r) for r in STORE.db.execute(
+            "SELECT * FROM items WHERE char_id=? AND type_id=? AND ammo_count>?",
+            (char_id, magazine_migration.BIZON_DAMAGE_CLIP_A, magazine_migration.CAPACITY)).fetchall()]
+        magazine_migration.normalize(STORE, char_id, legacy_guns)
         # Anything worn in a slot it does not fit (a row from before the
         # slot_type fix) goes back to the bag before the gear is counted,
         # and so does anything above the character's level (the level rule).
@@ -1102,7 +1130,7 @@ class Session:
                 blocked = {n.cell for n in inhabitants if n.root != world.MOB}
                 blocked.update(m.cell for m in fight.mobs.values() if m.alive)
             for player in getattr(self.room, "players", ()):
-                if player is not self:
+                if player is not self and self.loc.war:
                     blocked.add(player.live_cell(now))
                     blocked.add(player.pos)
             blocked.discard(anchor)
@@ -1440,6 +1468,7 @@ class Session:
         # to read it in (Inventory.over_level_to_bag); once.
         for line in self.inv.taken_off_lines():
             self.say(line)
+        self._accepted_place = (self.loc.id, self.pos, self.gx, self.gy, self.on_map)
 
     def room_key(self):
         """Which room this location is, for us: see travel.room_key -- or the
@@ -1565,6 +1594,9 @@ class Session:
         """
         row = STORE.character(self.char_id) if self.char_id else None
         loc_id, gx, gy = travel.home(row, (START_LOC, GLOBAL_X, GLOBAL_Y))
+        # A failed resurrection arrival must not put the revived character
+        # back at the previous life's combat checkpoint.
+        self._accepted_place = None
         self.on_map = False
         self.cancel_travel()
         GMAP.leave(self)
@@ -2445,7 +2477,7 @@ class Session:
                           # One source, not two: the client draws prices
                           # with these and the server charges with the same.
                           pmod=inventory.PMOD, smod=inventory.SMOD,
-                          rmod=inventory.RMOD)
+                          rmod=inventory.repair_rmod(self.room.loc.id, type_id))
             if trophies.is_registrar(type_id):
                 # A trophy registrar sells and mends nothing: its only
                 # service is "regTrophy" (NPCService.openService) -- but
@@ -4352,24 +4384,21 @@ async def handle_client(reader, writer):
     log.info("connect %s", peer)
     sess = Session(writer, peer)
     SESSIONS.add(sess)
-    fr = FrameReader()
+    fr = FrameReader(policy=True)
     try:
         while True:
             data = await reader.read(4096)
             if not data:
                 break
-            # Flash may probe for a policy file on the game port itself.
-            if data.startswith(b"<policy-file-request/>"):
-                log.info("  policy request")
-                writer.write(POLICY)
-                await writer.drain()
-                continue
             for raw in fr.feed(data):
                 # Closed under our feet (a relogin elsewhere, a kick): the
                 # rest of what this socket sent is not read at all, see
                 # Session.handle.
                 if sess.closed or sess.writer is not writer:
                     break
+                if raw == b"<policy-file-request/>":
+                    writer.write(POLICY)
+                    continue
                 try:
                     name, params = decode(raw)
                 except Exception:
@@ -4738,12 +4767,12 @@ def broadcast_online_count():
         if not sess.online_counter or sess.closed:
             continue
         if not sess.online_names:
-            sess.send("online", count=count)
+            rooms.send_to(sess, "online", dict(count=count))
             continue
         if names is None:
             names = RawList(sorted((clans.list_safe(s.nick) for s in connected),
                                    key=lambda n: (n.casefold(), n)))
-        sess.send("online", count=count, names=names)
+        rooms.send_to(sess, "online", dict(count=count, names=names))
 
 
 def publish_online():

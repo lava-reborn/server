@@ -10,6 +10,10 @@ def __lcDisableTraderNotice():
     this.traderMessage_bool = False
 
 def __lcFilter(name):
+    if name == "persInfo":
+        # The preceding window patch constructs this filter dynamically;
+        # it has no persInfoArr field. Preserve that wrapper in the chain.
+        return this.__lcFilterOrig(name)
     base = this[name + "Arr"]
     if not base:
         base = []

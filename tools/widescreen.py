@@ -811,6 +811,27 @@ def fn_site_nothing():
     return Asm()
 
 
+def fn_site_quest_text():
+    """Keep quest text/substitutions, without legacy profile/top-up anchors."""
+    a = Asm()
+    for marker in ('%startPutGold%', '%endPutGold%', '%startProfile%', '%endProfile%'):
+        a.push('strIn').push('', marker).var('strIn').push(3)
+        a.var('lol').member('utils', 'ParseString').push('replaceAll').op('callmethod').op('definelocal')
+    a.var('strIn').push(1).var('this').push('__siteQuestTextOrig').op('callmethod').op('return')
+    return a
+
+
+def fn_site_context():
+    """Block the obsolete web profile, retaining inspect/trade/party/chat."""
+    a = Asm()
+    a.var('obj').member('data', 'function_str').push('actionProfile').op('equals2').op('not').iftrue('native')
+    a.var('this').member('clickContext').var('this').push('selectItem', 3)
+    a.var('obj').member('target').push('removeEventListener').op('callmethod').op('pop')
+    a.push(UNDEF).op('return')
+    a.label('native').var('obj').push(1).var('this').push('__siteContextOrig').op('callmethod').op('return')
+    return a
+
+
 def fn_no_gold_tooltip():
     """showTooltip without its hints: «Пополнить счет» and «Помощь» point at
     buttons that are hidden (fn_frame). The flag still goes down, as the
@@ -3138,7 +3159,36 @@ def injected():
         (("gpui", "EquipInterface"), "init", "__siteSkinInitOrig",
          (), fn_site_hide("__siteSkinInitOrig", (), ("changeSkin_btn",))),
         (("gpui", "EquipInterface"), "showSkinPage", "__siteSkinOrig",
+         # TODO(next release): add in-game skin selection with server-side
+         # validation and an agreed price. Keep the old web handler disabled.
          (), fn_site_nothing()),
+        (("gpui", "LocationInterface"), "goToUserPage", "__siteLocalProfileOrig",
+         (), fn_site_nothing()),
+        (("gpui", "GlobalMapInterface"), "goToUserPage", "__siteGlobalProfileOrig",
+         (), fn_site_nothing()),
+        (("gpui", "HelpDropList"), "init", "__siteHelpInitOrig",
+         (), fn_site_hide("__siteHelpInitOrig", (), ("support_btn", "faq_btn"))),
+        (("gpui", "HelpDropList"), "support", "__siteHelpSupportOrig",
+         (), fn_site_nothing()),
+        (("gpui", "HelpDropList"), "faq", "__siteHelpFaqOrig",
+         (), fn_site_nothing()),
+        (("gpui", "EnterGameInterface"), "init", "__siteLoginInitOrig",
+         # Account recovery/registration remain in the launcher's login panel:
+         # Launcher.cs opens REGISTER_URL and SITE + "/?forgot=1". These
+         # Flash buttons are legacy lava-online.ru handlers, not that flow.
+         (), fn_site_hide("__siteLoginInitOrig", (), ("lostPassw_btn", "registration_btn", "support_btn", "i_have_problem_btn"))),
+        (("gpui", "EnterGameInterface"), "lostPassw", "__siteLostPasswordOrig",
+         (), fn_site_nothing()),
+        (("gpui", "EnterGameInterface"), "registrtion", "__siteRegistrationOrig",
+         (), fn_site_nothing()),
+        (("gpui", "EnterGameInterface"), "haveProblem", "__siteConnectionHelpOrig",
+         (), fn_site_nothing()),
+        (("gpui", "EnterGameInterface"), "support", "__siteLoginSupportOrig",
+         (), fn_site_nothing()),
+        (("core", "quests", "Quest"), "parseString", "__siteQuestTextOrig",
+         ("strIn",), fn_site_quest_text()),
+        (("display", "SpriteFocusManager"), "clickContext", "__siteContextOrig",
+         ("obj",), fn_site_context()),
         (("gpui", "BankInterface"), "init", "__siteBankInitOrig",
          (), fn_site_hide("__siteBankInitOrig", (), ("addGold_btn",))),
         (("gpui", "BankInterface"), "addGold", "__siteBankGoldOrig",
@@ -3279,6 +3329,13 @@ def injected():
     for name, params, body in commerce["globals"]:
         a.var("_global").push(name).function(params, body).op("setmember")
     wraps += commerce["wraps"]
+    from inventory_controls_client import patches as inventory_controls_patches
+    inventory_controls = inventory_controls_patches(Asm, UNDEF)
+    for name, params, body in inventory_controls['globals']:
+        a.var('_global').push(name).function(params, body).op('setmember')
+    wraps += inventory_controls['wraps']
+    from quest_window_client import patches as quest_window_patches
+    wraps += quest_window_patches(Asm, UNDEF)['wraps']
     from restore_price_client import patches as restore_patches
     restoration = restore_patches(Asm, UNDEF)
     for name, params, body in restoration["globals"]:
@@ -3322,6 +3379,7 @@ def injected():
     # The right-click menu without the old site's item (patch 9): the first
     # frame set it up before this code runs.
     a.var("_level0").member("menu").push("customItems", 0).op("initarray").op("setmember")
+    a.var('_root').push('onLava').function((), fn_site_nothing()).op('setmember')
     a.op("end")
     return a.assemble()
 

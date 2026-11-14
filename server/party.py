@@ -84,11 +84,11 @@ class Parties:
             if sess is None or sess is exclude:
                 continue
             mob_id = 0 if about is None or about == char_id else rooms.player_id(about)
-            sess.send("p_op", op=op, mob_id=mob_id)
+            rooms.send_to(sess, "p_op", dict(op=op, mob_id=mob_id))
 
     def roster_for(self, party, sess):
-        sess.send("p_m", list=[0 if c == sess.char_id else rooms.player_id(c)
-                               for c in party.members])
+        rooms.send_to(sess, "p_m", dict(list=[0 if c == sess.char_id else rooms.player_id(c)
+                               for c in party.members]))
 
     def roster(self, party):
         for char_id in list(party.present):

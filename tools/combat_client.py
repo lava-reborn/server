@@ -2,6 +2,14 @@
 from avm_codegen import Compiler
 
 SOURCE = '''
+def __bfRemotePrimary(obj):
+    # Native ss_obj_move constructs a type-0 firearm for an empty hand.
+    # Empty snapshots must use PersEquip's existing bare-fist fallback.
+    if not this.isGamer and obj.param.to == 512 and obj.param.obj == "0":
+        this.primaryItem = None
+        return
+    return this.__bfRemotePrimaryOrig(obj)
+
 def __bfTrainingClose(obj):
     if obj:
         if obj.target:
@@ -97,9 +105,48 @@ def __bfVisualStart(scene, figure, bundle):
         i = i + 1
     bundle.events = []
 
+def __bfAimSound(scene, aim):
+    # Snapshot the aiming weapon intentionally: a fallback for that confirmed
+    # volley must not take the sound of a newly switched weapon.
+    if scene.master:
+        player = scene.master.getPlayer(aim)
+        if player and player.equipment:
+            item = player.equipment.primaryItem
+            if item and item.getProp:
+                weapon = item.getProp("weapon_type")
+                if weapon == lol.core.objects.FireArm.PISTOL:
+                    return lol.sound.SoundEvent.PISTOL_FIRE
+                if weapon == lol.core.objects.FireArm.SHOTGUN:
+                    return lol.sound.SoundEvent.SHOTGUN_FIRE
+                if weapon == lol.core.objects.FireArm.ASSAULT:
+                    return lol.sound.SoundEvent.ASSAULT_FIRE
+                if weapon == lol.core.objects.FireArm.RIFLE:
+                    return lol.sound.SoundEvent.RIFLE_FIRE
+                if weapon == lol.core.objects.FireArm.MACHINEGUN:
+                    return lol.sound.SoundEvent.MACHINEGUN_FIRE
+                if weapon == lol.core.objects.FireArm.SMG:
+                    return lol.sound.SoundEvent.SMG_FIRE
+    return None
+
+def __bfPresentInterrupted(scene, figure, event):
+    # A confirmed volley must not become completely invisible when the next
+    # authoritative action interrupts its first visual frame. Show at most
+    # one captured trace per unplayed volley, not its entire remaining burst.
+    bundle = event.__bfBundle
+    if not bundle or bundle.shown or event.__bfPresented or not event.shot or not event.access:
+        return
+    if figure.animationEnabled == False or figure.isActive == False or not event.hits or len(event.hits) == 0:
+        return
+    bundle.shown = True
+    scene.applyFireAck(event)
+    event.__bfPresented = True
+    if lol.sound and lol.sound.SoundManager:
+        sound = bundle.sound or lol.sound.SoundEvent.FIREARM_FIRE
+        lol.sound.SoundManager.getInstance().playEventSound(sound)
+
 def __bfVisualFlush(scene, figure, draw):
-    bursts = figure.__bfBursts
-    bullets = figure.burstArr
+    bursts = figure.__bfBursts or []
+    bullets = figure.burstArr or []
     figure.__bfBursts = []
     figure.burstArr = []
     figure.__bfIncoming = None
@@ -110,6 +157,8 @@ def __bfVisualFlush(scene, figure, draw):
     while i < len(bullets):
         if draw != False:
             scene.applyFireAck(bullets[i])
+        else:
+            _global.__bfPresentInterrupted(scene, figure, bullets[i])
         i = i + 1
     i = 0
     while i < len(bursts):
@@ -121,6 +170,8 @@ def __bfVisualFlush(scene, figure, draw):
                 scene.addFireAckReport(event)
                 if draw != False:
                     scene.applyFireAck(event)
+                else:
+                    _global.__bfPresentInterrupted(scene, figure, event)
             j = j + 1
         i = i + 1
     scene.showFireAckReport()
@@ -142,6 +193,10 @@ def __bfVisualFinal(obj):
     # finalFrame. Drop unplayed cosmetic traces without another visual cycle.
     bullets = figure.burstArr
     figure.burstArr = []
+    i = 0
+    while i < len(bullets):
+        _global.__bfPresentInterrupted(this, figure, bullets[i])
+        i = i + 1
     if len(bullets) > 0:
         this.showFireAckReport()
     figure.__bfBursts.shift()
@@ -171,7 +226,7 @@ def __bfAim(obj):
         figure.__bfBursts.shift()
     if len(figure.__bfBursts) >= 8:
         _global.__bfVisualFlush(this, figure, False)
-    bundle = {"aim":obj, "expected":Math.max(1, obj.num_shots), "got":0, "events":[], "active":False}
+    bundle = {"aim":obj, "expected":Math.max(1, obj.num_shots), "got":0, "events":[], "active":False, "shown":False, "sound":_global.__bfAimSound(this, obj.aim)}
     figure.__bfIncoming = bundle
     figure.__bfBursts.push(bundle)
     figure.addEventListener("finalFrame", this, _global.__bfVisualFinal)
@@ -180,6 +235,17 @@ def __bfAim(obj):
 
 def __bfFire(event):
     figure = this.getWalker(event.gunnerID)
+    if figure and event.shot and event.access:
+        # Delayed cosmetic playback must not follow figures to new cells.
+        event.__bfOrigin = {"x":figure._x, "y":figure._y - 50}
+        i = 0
+        while event.hits and i < len(event.hits):
+            hit = event.hits[i]
+            if hit.type == "target":
+                target = this.getWalker(hit.targetID)
+                if target:
+                    hit.__bfPoint = {"x":target._x, "y":target._y - 50}
+            i = i + 1
     if figure and figure.__bfSkipVisual:
         if event.access:
             this.addFireAckReport(event)
@@ -190,22 +256,50 @@ def __bfFire(event):
         this.__bfFireOrig(event)
         return
     bundle = figure.__bfIncoming
+    event.__bfBundle = bundle
     bundle.got = bundle.got + 1
     if bundle.active:
         this.__bfFireOrig(event)
     else:
         bundle.events.push(event)
 
+def __bfApplyFire(event):
+    if event.shot:
+        if event.__bfPresented:
+            return
+        event.__bfPresented = True
+        if event.__bfBundle:
+            event.__bfBundle.shown = True
+    if not event.__bfOrigin:
+        return this.__bfApplyFireOrig(event)
+    point = None
+    while len(event.hits) > 0:
+        hit = event.hits.shift()
+        if hit.type == "point":
+            point = this.hitPoint(hit)
+        elif hit.type == "wall":
+            point = this.hitWall(hit)
+        elif hit.type == "target":
+            point = this.hitTarget(hit)
+    if event.shot and point:
+        this.traceShot(event.gunnerID, point, event.__bfOrigin)
+
+def __bfTraceShot(gunnerID, point, origin):
+    if not origin:
+        return this.__bfTraceShotOrig(gunnerID, point)
+    if not point:
+        return
+    trace = new(lol.fx.ShotTrace)
+    trace.traceShot(this.helpers_mc, origin, {"x":point.x + Math.random() * 20 - 10, "y":point.y + Math.random() * 20 - 10})
+
 def __bfBurstFinal(obj):
     if obj.data != "fire" and obj.target.burstArr:
-        obj.target.burstArr = []
-        this.showFireAckReport()
+        _global.__bfVisualFlush(this, obj.target, False)
     this.__bfBurstFinalOrig(obj)
 
 def __bfShotgunFinal(obj):
     if obj.data != "fire" and obj.target.burstArr:
-        obj.target.burstArr = []
-        this.showFireAckReport()
+        _global.__bfVisualFlush(this, obj.target, False)
     this.__bfShotgunFinalOrig(obj)
 
 def __bfDead(obj):
@@ -223,6 +317,7 @@ def patches(Asm, undef):
     bodies = {name: (params, body) for name, params, body in functions}
     wraps = []
     for path, method, keep, helper in (
+        (('core','player','PersEquip'), 'ss_obj_move', '__bfRemotePrimaryOrig', '__bfRemotePrimary'),
         (('core','player','Training'), 'close', '__bfTrainingCloseOrig', '__bfTrainingClose'),
         (('core','player','Gamer'), 'gotoLoot', '__bfLootGoOrig', '__bfLootGo'),
         (('core','player','Gamer'), 'createLoot', '__bfLootOpenOrig', '__bfLootOpen'),
@@ -230,6 +325,8 @@ def patches(Asm, undef):
         (('core','location','CharInfo'), 'showStamina', '__bfStaminaOrig', '__bfStamina'),
         (('core','location','DisplayLocScene'), 'aim', '__bfAimOrig', '__bfAim'),
         (('core','location','DisplayLocScene'), 'fireAck', '__bfFireOrig', '__bfFire'),
+        (('core','location','DisplayLocScene'), 'applyFireAck', '__bfApplyFireOrig', '__bfApplyFire'),
+        (('core','location','DisplayLocScene'), 'traceShot', '__bfTraceShotOrig', '__bfTraceShot'),
         (('core','location','DisplayLocScene'), 'busrtFireAck', '__bfBurstFinalOrig', '__bfBurstFinal'),
         (('core','location','DisplayLocScene'), 'shotgunFireAck', '__bfShotgunFinalOrig', '__bfShotgunFinal'),
         (('core','location','DisplayLocScene'), 'dead', '__bfDeadOrig', '__bfDead'),
@@ -240,5 +337,7 @@ def patches(Asm, undef):
     recovery = recovery_patches(Asm, undef)
     from medicine_cooldown_client import patches as medicine_patches
     medicine = medicine_patches(Asm, undef)
-    return dict(globals=functions + recovery['globals'] + medicine['globals'],
-                wraps=tuple(wraps) + recovery['wraps'] + medicine['wraps'])
+    from respawn_client import patches as respawn_patches
+    respawn = respawn_patches(Asm, undef)
+    return dict(globals=functions + recovery['globals'] + medicine['globals'] + respawn['globals'],
+                wraps=tuple(wraps) + recovery['wraps'] + medicine['wraps'] + respawn['wraps'])

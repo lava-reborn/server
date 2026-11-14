@@ -480,11 +480,15 @@ try:
     check("both sides see each other as enemies after preparation",
           any(f.startswith("lch;") and param(f, "enemy") == str(pid_a) for f in got), True)
     # Movement resumes after preparation; use the edge window to leave PvP.
-    edge = next(cell for cell in travel.exit_sides(caught_loc)
-                if cell not in caught_loc.obstacles)
     for who in (a, b):
-        edge = next(cell for cell in travel.exit_sides(caught_loc)
-                    if cell not in caught_loc.obstacles and cell not in who.scene_cells.values())
+        # A free corner can be cut off by rocks in a generated encounter.
+        # Choose a reachable exit rather than assuming the first free cell is.
+        occupied = set(who.scene_cells.values())
+        exits = set(travel.exit_sides(caught_loc)) - caught_loc.obstacles - occupied
+        route = mobs.find_path(caught_loc, who.scene_pos, exits.__contains__, occupied,
+                               limit=caught_loc.width * caught_loc.height)
+        assert route and route[-1] in exits, (caught_loc.id, who.scene_pos, 'no reachable exit')
+        edge = route[-1]
         testkit.walk_to(who, edge)
         moved = who.frames(0.3)
         check("after the countdown a participant can move to the exit",

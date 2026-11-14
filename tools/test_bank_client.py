@@ -132,6 +132,19 @@ class BankClient(unittest.TestCase):
             self.assertEqual(self.call('__lcFilter',dict(locationArr=base),'location'),['eat','ctrl','shift'])
         self.assertEqual(base,['eat'])
 
+    def test_lifecycle_filter_preserves_real_stats_hotkey_wrapper(self):
+        events = self.env['lol']['services']['HotKeyEvent']
+        for name in ('FILTER0', 'FILTER1', 'FILTER2', 'FILTER3', 'FILTER4',
+                     'PERS_INFO', 'CANCEL', 'CHAT_IN_FOCUS', 'COPY_LOG'):
+            events[name] = name
+        original = Function(('str',), w.fn_panel_hotkey_filter().assemble(), self.env)
+        filters = dict(__lcFilterOrig=original)
+        result = self.call('__lcFilter', filters, 'persInfo')
+        self.assertIn('CANCEL', result)
+        self.assertIn('PERS_INFO', result)
+        result.push('stale')
+        self.assertNotIn('stale', self.call('__lcFilter', filters, 'persInfo'))
+
 
 if __name__ == '__main__':
     run_cases(BankClient)

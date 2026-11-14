@@ -177,7 +177,11 @@ def run(patched, prepare_store=None):
     http = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
     url = "http://127.0.0.1:%d" % http.server_port
     version, body = w.read_swf(SRC)
-    tags = [t for t in w.split_tags(body) if t[0] not in (12, 26)] if SRC.name == "main.swf" else w.split_tags(body)
+    # inject() replaces its own marked DoAction. Keep the client's native
+    # startup/placement tags even if the resource is called main.swf: removing
+    # every DoAction also removes loadDefault(), so avatar metadata never loads
+    # and window probes cannot get past character selection.
+    tags = w.split_tags(body)
     w.patch_ceiling(tags, 3840, 2160)
     remask = w.fn_location_scene
     if not patched:

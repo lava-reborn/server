@@ -1646,6 +1646,12 @@
     "why": "RECOVERED ride and texts, DESIGNED way (the owner's «и потом сделай донголу тоже», 2026-10-13). 49: Нур-ад-Дин's «Проездной в Абри» (282), the ride to Абри's Портовый рынок (187) for the ticket 6547; the same cells as his other rides, where a player driven out from Абри arrives."
    },
    {
+    "quest": 18100,
+    "cells": [[37, 46], [36, 47], [38, 47], [37, 48]],
+    "target_loc_id": 187,
+    "why": "DESIGNED: owner gameplay release 2026-11-13, direct 100-afro ride without a pass from Nur-ad-Din at Dongola station to Abri port market; same safe boarding cells as ticket route 282."
+   },
+   {
     "quest": 632,
     "cells": [[37, 46], [36, 47], [38, 47], [37, 48]],
     "target_loc_id": 159,

@@ -46,6 +46,20 @@ fr = FrameReader()
 check("framing split", fr.feed(b"hello;min"), [])
 check("framing complete", fr.feed(b"or=2;\x00logout;\x00"), [b"hello;minor=2;", b"logout;"])
 
+probe = b"<policy-file-request/>"
+for split in range(len(probe) + 1):
+    fr = FrameReader(policy=True)
+    first = fr.feed(probe[:split])
+    second = fr.feed(probe[split:] + b"\0hello;\0logout;\0")
+    check("policy TCP split %d" % split, first + second,
+          [probe, b"hello;", b"logout;"])
+fr = FrameReader(policy=True)
+check("policy without NUL", fr.feed(probe), [probe])
+check("hello after non-NUL policy", fr.feed(b"hello;\0"), [b"hello;"])
+fr = FrameReader()
+check("default framing keeps policy until NUL", fr.feed(probe), [])
+check("default framing unchanged", fr.feed(b"\0"), [probe])
+
 # --- cyrillic / cp1251 ---
 f = frame("userMsg", entry=Str("Привет"))
 check("utf-8 frame", f.endswith(b"\x00"), True)

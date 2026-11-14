@@ -75,12 +75,16 @@ class ReleaseConsistency(unittest.TestCase):
     def test_warehouse_keeps_its_daily_window(self):
         self.assertEqual(tuple(bosses.warehouse_hours_from(bosses.DEFAULT_WAREHOUSE_HOURS)), (1200,))
         self.assertEqual(bosses.DEFAULT_STAY, 60)
-        # Only Abu's level requirement changed; its daily hours stay exact.
+        # Minimum-level clarification changes no warehouse or reward hours.
+        expected = {(5998, 1697): 8, (6002, 1738): 8, (5957, 1743): 12,
+                    (5913, 1976): 12, (5931, 2031): 16, (5883, 2060): 16,
+                    (6183, 1976): 17}
         rows = [(x, y, text) for x, y, _, text in map_labels.load()
                 if text and 'Хозяин присутствует' in text]
-        self.assertEqual([(x, y) for x, y, _ in rows], [(6183, 1976)])
-        self.assertIn('17 уровня', rows[0][2])
-        self.assertEqual(times(rows[0][2]), (1200, 1260, 1140, 1155))
+        self.assertEqual(sorted((x, y) for x, y, _ in rows), sorted(expected))
+        for x, y, text in rows:
+            self.assertIn('игроками %d+ уровня' % expected[x, y], text)
+            self.assertEqual(times(text), (1200, 1260, 1140, 1155 if (x, y) == (6183, 1976) else 1200))
 
     def test_leader_hint_matches_one_ingot_without_changing_two_ingot_exchange(self):
         text = quests.QUESTS[10].texts[quests.START]

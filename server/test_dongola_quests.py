@@ -28,8 +28,8 @@ In process:
     original's res or in client/files (the coin 46652, the release's copy of
     the original's qSilverReal); every thing asked for can be had --
     dropped while the quest wants it by somebody standing in the open places,
-    sold at a stall there, or handed out by a row; no row pays gold or an
-    ingot;
+    sold at a stall there, or handed out by a row; no row pays gold directly,
+    and only the approved G lottery awards an ingot;
   * the ways: each way row has its record at the giver's place, its cells on
     the grid, walkable, off the exits, where no window opens, nobody arrives
     and nobody stands; given and taken by one inhabitant; the pairs of the
@@ -44,7 +44,7 @@ In process:
     the prisoners drop the armband 2476 in 620-622, and the one keep_in row of
     2476 holds both prisons' blocks; 164-168 name both prisons' prisoners;
   * the mines' gates: three ways down at levels 12-15, three up at any level;
-    the lotteries: every prize worth less than its ticket, open to the town's
+    the lotteries: weighted expected value below the ticket, open to the town's
     band 12-16 and named for it; the warehouses:
     three sites, their boxes 768-770 in the window wh_box;
   * «Коллекция водителя шайтан-арбы»: its six pieces named and described,
@@ -303,9 +303,10 @@ try:
           [o for o in asked if o not in on_sale | handed | dropped], [])
     check("  ..the envelope, the beans, the lottery tickets and the bus tickets are sold",
           sorted(o for o in (1309, 333, 2648, 2651, 6546, 6547) if o not in on_sale), [])
-    check("no row of 630-799 pays gold (rew_gold), and none hands out an ingot",
+    check("no row of 630-799 pays gold directly; only the approved G lottery can award ingots",
           ([t for t in mine if real[t].rew_gold],
-           [t for t in mine for _f, o in real[t].things() if o in items.GOLD_INGOTS]), ([], []))
+           [(t, o) for t in mine for _f, o in real[t].things() if o in items.GOLD_INGOTS]),
+          ([], [(722, 4797)]))
 
     # The ways.
     ways = {}
@@ -363,7 +364,7 @@ try:
           {t: (frm, to, 0, 1) for t, (_d, frm, to) in RIDES.items()})
     check("Хассир, Луиджи and Нур-ад-Дин list their rides where q_idx finds them",
           (quests.given_by(HASSIR), quests.given_by(LUIGI), quests.given_by(NUR)),
-          ([273, 279, 158, 159, 630], [274, 275, 280, 281], [276, 282, 283, 631, 632, 636]))
+          ([273, 279, 158, 159, 630], [274, 275, 280, 281], [276, 282, 283, 631, 632, 636, 18100]))
     # With «Осмотр пирамиды» (741) and «Выбраться наверх» (748) free, a free
     # way into Zone 49 was a free ride to Донгола's station (the review of
     # 2026-10-14).
@@ -434,22 +435,21 @@ try:
     def worth(obj, num, gold):
         return inventory.buy_price(items.params_of(obj), items.root_of(obj), num, gold)
 
-    check("the lotteries: every prize worth less than the ticket (the house wins), the gold"
+    check("the lotteries: weighted expected retail value below the ticket, including jackpots; the gold"
           " one's prizes gold things",
-          ({t: [worth(o, n, gold) < price for o, n, _w in real[t].rew_random]
+          ({t: sum(worth(o, n, gold) * w for o, n, w in real[t].rew_random)
+                    < price * sum(w for _o, _n, w in real[t].rew_random)
             for t, (_k, price, gold) in LOTTERIES.items()},
            [o for o, _n, _w in real[722].rew_random if not items.params_of(o).get("g_cost")]),
-          ({t: [True] * len(real[t].rew_random) for t in LOTTERIES}, []))
+          ({t: True for t in LOTTERIES}, []))
     check("  ..at the tickets' prices: 2400 afro and 3 G (the TRADE package's stalls)",
           {t: worth(ticket, 1, gold) for t, (ticket, _p, gold) in LOTTERIES.items()},
           {t: price for t, (_k, price, _g) in LOTTERIES.items()})
-    check("  ..open to the town's band 12-16, the stalls' whole band of buyers, and named for it:"
-          " a 15th or 16th who buys a ticket can play it (the original's «(13-14)» left them a"
-          " ticket no row took, the gold one lost whole)",
+    check("  ..lotteries stay open from level 12 through 20, independently of the shop band",
           ({t: (real[t].level, real[t].max_level, real[t].name) for t in LOTTERIES},
            tuple(shop_bands.band(50)), tuple(shop_bands.band(103))),
-          ({721: TOWN_BAND + ("Лотерея Донголы (12-16)",),
-            722: TOWN_BAND + ("Золотая Лотерея Донголы (12-16)",)}, TOWN_BAND, TOWN_BAND))
+          ({721: (12, 20, "Лотерея Донголы (от 12 ур.)"),
+            722: (12, 20, "Золотая Лотерея Донголы (от 12 ур.)")}, TOWN_BAND, TOWN_BAND))
     with open(os.path.join(ROOT, "data", "holdings.json"), encoding=ENC) as fh:
         sites = json.load(fh)["sites"]
     check("the warehouses: three sites of data/holdings.json, their boxes' rows 768-770 the"

@@ -95,6 +95,56 @@ class ActionSync(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(s.pos, 10)
         self.assertEqual(f.ap, 97)
 
+    async def test_peaceful_players_can_cross_and_share_a_destination(self):
+        f, first, room, events, row = self.movement_session()
+        _, second, _, _, _ = self.movement_session()
+        second.char_id, second.room = 2, room
+        second.pos = 2
+        room.players[second] = True
+        room.loc.war = False
+        with self.clock(100):
+            first.move_in_location(dict(path=[0,1,2]))
+            second.move_in_location(dict(path=[2,1]))
+            self.assertEqual(first.walk[0],[0,1,2])
+            self.assertEqual(second.walk[0],[2,1])
+        with self.clock(100.21):
+            room.motion.advance()
+            self.assertEqual((first.live_cell(),second.live_cell()),(1,1))
+        with self.clock(100.41):
+            self.assertEqual(first.live_cell(),2)
+
+    async def test_peaceful_overlap_does_not_erase_npc_or_wall_blocks(self):
+        _, first, room, _, _ = self.movement_session()
+        _, second, _, _, _ = self.movement_session()
+        second.char_id, second.room = 2, room
+        second.pos = 2
+        room.players[second] = True
+        room.loc.war = False
+        room.npcs={1:NS(cell=2,root=server.world.TRADER)}
+        with self.clock(100):
+            self.assertIn(2,room.motion.occupied(first))
+            self.assertNotEqual(room.motion.free_cell(2,exclude=first),2)
+        room.npcs={}
+        mob=combat.mobs.Mob(99,1411,2)
+        room.combat.mobs={99:mob}
+        with self.clock(100):
+            self.assertIn(2,room.motion.occupied(first))
+        room.combat.mobs={}
+        room.loc.obstacles={2}
+        with self.clock(100):
+            self.assertNotEqual(room.motion.free_cell(2,exclude=first),2)
+
+    async def test_combat_location_still_blocks_players_without_active_fight_or_pvp(self):
+        _, first, room, _, _ = self.movement_session()
+        _, second, _, _, _ = self.movement_session()
+        second.char_id, second.room = 2, room
+        second.pos=2
+        room.players[second]=True
+        room.loc.war, room.loc.pvp, room.ws = True, False, False
+        with self.clock(100):
+            self.assertIn(2,room.motion.occupied(first))
+            self.assertNotEqual(room.motion.free_cell(2,exclude=first),2)
+
     async def test_different_remaining_route_to_same_destination_is_not_a_duplicate(self):
         f, s, room, events, row = self.movement_session()
         with self.clock(100):
@@ -199,16 +249,24 @@ class ActionSync(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(owner[0]['ap'], 98)
         self.assertNotIn('ap', observer[0])
 
-    async def test_two_tcp_clients_receive_the_same_authoritative_reroutes(self):
+    async def test_three_tcp_clients_keep_authoritative_reroutes_with_delayed_reads(self):
+        for latency in (0, .05, .15, .3):
+            with self.subTest(delivery_delay=latency):
+                await self.tcp_reroute_scene(latency)
+
+    async def tcp_reroute_scene(self, latency):
         f, actor, room, events, row = self.movement_session()
         _, observer, _, _, _ = self.movement_session()
         observer.char_id = 2
         observer.room = room
-        room.players = {actor: None, observer: None}
+        _, second_observer, _, _, _ = self.movement_session()
+        second_observer.char_id = 3
+        second_observer.room = room
+        room.players = {actor: None, observer: None, second_observer: None}
         room.broadcast = lambda value, **kw: rooms.Room.broadcast(room, value, **kw)
         with self.clock(100):
             self.start_walk(f, actor, list(range(11)))
-        seats = [actor, observer]
+        seats = [actor, observer, second_observer]
         moments = iter((100.45, 100.65))
         ready = asyncio.Event()
         handlers = set()
@@ -227,6 +285,7 @@ class ActionSync(unittest.IsolatedAsyncioTestCase):
                     raw = await reader.readuntil(b'\0')
                     cmd, params = decode(raw[:-1].decode('utf-8'))
                     self.assertEqual(cmd, 'moveTo')
+                    await asyncio.sleep(latency)  # command delivery, FIFO within each socket
                     with self.clock(next(moments)):
                         seat.cmd_moveTo(params)
                     await writer.drain()
@@ -242,7 +301,8 @@ class ActionSync(unittest.IsolatedAsyncioTestCase):
         listener = await asyncio.start_server(handle, '127.0.0.1', 0)
         port = listener.sockets[0].getsockname()[1]
         connections = []
-        async def receive_move(reader):
+        async def receive_move(reader, delay=0):
+            await asyncio.sleep(delay)  # a slow observer drains complete frames later
             while True:
                 raw = await asyncio.wait_for(reader.readuntil(b'\0'), 2)
                 cmd, params = decode(raw[:-1].decode('utf-8'))
@@ -251,12 +311,16 @@ class ActionSync(unittest.IsolatedAsyncioTestCase):
         try:
             connections.append(await asyncio.open_connection('127.0.0.1', port))
             connections.append(await asyncio.open_connection('127.0.0.1', port))
+            connections.append(await asyncio.open_connection('127.0.0.1', port))
             await asyncio.wait_for(ready.wait(), 2)
             for requested, ap in (([2, 3, 22], 98), ([2, 3, 2, 1], 97)):
                 reader, writer = connections[0]
                 writer.write(frame('moveTo', path=requested))
                 await writer.drain()
-                own, other = await asyncio.gather(receive_move(reader), receive_move(connections[1][0]))
+                own, other, later = await asyncio.gather(
+                    receive_move(reader), receive_move(connections[1][0], latency),
+                    receive_move(connections[2][0], latency * 2))
+                self.assertEqual(other, later)
                 self.assertEqual(own['path'], other['path'])
                 self.assertEqual(own['step_ms'], other['step_ms'])
                 self.assertEqual(own['path'], actor.walk[0])

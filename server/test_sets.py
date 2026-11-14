@@ -941,6 +941,8 @@ class Mender:
     def __init__(self):
         self.char = progression.Character.load(rstore, rcid)
         self.char.afro, self.char.gold = 17999, 1000
+        # The transactional repair path locks and reloads the persisted purse.
+        self.char.save(rstore)
         self.frames = []
 
     def character(self):
@@ -978,6 +980,7 @@ once, twice = top * 9 // 10, top * 9 // 10 * 9 // 10
 check("a level-8 G vest costs A's 12000 times five times 0.3: one afro short is refused",
       mend(inventory.UPD_REPAIR), ([inventory.RES_NO_MONEY], 0, top, 17999, 1000))
 mender.char.afro = 50000
+mender.char.save(rstore)
 check("  ..with 50 000 afro: mended for 18 000, to nine"
       " tenths of its ceiling",
       mend(inventory.UPD_REPAIR), ([0], once, once, 32000, 1000))

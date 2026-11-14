@@ -344,8 +344,9 @@ class Clans:
 
     def push_struct(self, clan_id, act, char_id, exclude=None, **fields):
         """gg_struct about one member to every roster holder (I1)."""
+        from rooms import send_to  # rooms/mobs/inventory import clans during startup
         for sess in self.roster_holders(clan_id, exclude):
-            sess.send("gg_struct", id=int(char_id), act=act, **fields)
+            send_to(sess, "gg_struct", dict(id=int(char_id), act=act, **fields))
 
     # --- what a client is told about itself ------------------------------------
     def fellow_self(self, sess, m=None):

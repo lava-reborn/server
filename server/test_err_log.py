@@ -458,6 +458,7 @@ class Proc:
     """A server process, its stdout and stderr drained apart as they come."""
 
     def __init__(self, script, env):
+        self.script, self.env = script, env
         self.p = subprocess.Popen([sys.executable, script], cwd=HERE, env=env,
                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                   encoding="utf-8", errors="replace")
@@ -486,7 +487,17 @@ class Proc:
 
     def stop(self):
         if self.p.poll() is None:
-            self.p.terminate()
+            if os.name == 'nt' and self.script == 'server.py':
+                # TerminateProcess cannot run logging.shutdown. Use the same
+                # local admin queue as the Windows launcher.
+                stopped = subprocess.run(
+                    [sys.executable, 'stopwarn.py', 'halt', '--by', 'test_err_log'],
+                    cwd=HERE, env=self.env, capture_output=True, timeout=30)
+                check('Windows error-log fixture stops gracefully', stopped.returncode, 0)
+                if stopped.returncode:
+                    self.p.terminate()  # cleanup a failed test, never call it a pass
+            else:
+                self.p.terminate()
         try:
             self.p.wait(timeout=30)
         except subprocess.TimeoutExpired:

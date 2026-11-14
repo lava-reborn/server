@@ -251,8 +251,13 @@ check("hand-made cold-arm numbers are for cold arms the client has",
       [t for t in cold if cat.get(t, (None,))[0] != items.COLD_ARM], [])
 check("the hand-made loot numbers -- the mine's sand and emeralds, the gold ingots of "
       "1, 5 and 10 ounces -- are for simple objects the client has and the wiki lacks",
-      (sorted(loot), [t for t in loot if cat.get(t, (None,))[0] != items.TRASH or t in wiki]),
+      (sorted(t for t in loot if t != 4203),
+       [t for t in loot if t != 4203 and (cat.get(t, (None,))[0] != items.TRASH or t in wiki)]),
       ([2258, 3159, 4796, 4797, 7620], []))
+check("the academy quest knife has only a death-drop override; its wiki data stays intact",
+      (cat[4203][0], 4203 in wiki,
+       {k: v for k, v in loot[4203].items() if not k.startswith('_')}),
+      (items.TRASH, True, {"drop_on_death": 0}))
 check("  ..and fill only holes: a positive wiki value stays, a price stays whole",
       (items._holes({"cost": 5, "strike_cost": 0}, {"cost": 100, "strike_cost": 5}),
        items._holes({"g_cost": 3}, {"cost": 100, "strike_cost": 5}),

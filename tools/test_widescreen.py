@@ -82,6 +82,9 @@ check("every HUD and frame branch lands inside its own function",
 # module defines is used, and every wrap leaves its saved original's name
 # in the injected code, which only a wired wrap puts there.
 WIRED = ("__requirementsReadOrig", "__questSendOrig", "__questFilterOrig",      # quest reads across transitions
+         "__qwInitOrig", "__qwKillOrig", "__qwStatusOrig",  # passive NPC updates
+         "__qwGetQuestOrig", "__qwTakeQuestOrig", "__qwGetAckOrig", "__qwTakeAckOrig",
+         "__bfApplyFireOrig", "__bfTraceShotOrig",
          "__itemFrameUpdateOrig", "__itemInfoAttachOrig",  # asynchronous item style
          "__wideBoundXOrig", "__wideBoundYOrig",       # location camera
          "__repairGoldOrig", "__repairGetPropOrig",    # gold-only repairs
@@ -91,6 +94,11 @@ WIRED = ("__requirementsReadOrig", "__questSendOrig", "__questFilterOrig",      
          "__siteExchangeInitOrig", "__siteExchangeGoldOrig",
          "__siteRegenInitOrig", "__siteRegenUpdOrig", "__siteRegenMoneyOrig",
          "__siteGoldMessageOrig",
+         "__siteLocalProfileOrig", "__siteGlobalProfileOrig",
+         "__siteHelpInitOrig", "__siteHelpSupportOrig", "__siteHelpFaqOrig",
+         "__siteLoginInitOrig", "__siteLostPasswordOrig", "__siteRegistrationOrig",
+         "__siteConnectionHelpOrig", "__siteLoginSupportOrig",
+         "__siteQuestTextOrig", "__siteContextOrig",
          "__progressInfoOrig", "__progress_increase_spec_level_func",
          "__onlineSendOrig", "__onlineNotifyOrig",     # online players
          "__wideCreateOrig", "__wideSceneOrig",        # library, location mask

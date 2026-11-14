@@ -374,6 +374,13 @@ try:
     b = Client(connect())
     login(b, BOB, True, "Bob")
     arrival, pos_b = enter(b)
+    # Peaceful entry may share Alice's cell. The barter scenarios below
+    # deliberately need three distinct adjacent positions; arrange that
+    # fixture explicitly instead of depending on spawn collision rules.
+    if not mobs.adjacent(pos, pos_b, loc):
+        pos_b = next(cell for cell in sorted(progression.hex_neighbours(pos, loc.width, loc.height))
+                     if cell not in loc.obstacles and cell not in b.scene_cells.values())
+        testkit.walk_to(b, pos_b)
     c = Client(connect())
     login(c, CAROL, True, "Carol")
     _got, pos_c = enter(c)

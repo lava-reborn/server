@@ -398,6 +398,7 @@ class _Seat(object):
         self.room, self.pos, self.pid = r, pos, rooms.player_id(char_id)
         self.inv = _Inv()
         self.sent = []
+        self.writer = object()  # Transport identity for the recording session.
         self.char = progression.Character()
         self.combat = combat.Fighter(self)
         self.combat.regen_at = float("inf")

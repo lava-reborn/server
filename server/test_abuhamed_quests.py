@@ -41,8 +41,8 @@ In process:
     windows prison_ah* keep the label's hours, the prisoners drop the
     armband 2476 in 651-653 and the one keep_in row holds the three prisons;
   * the mines' gates: three ways down at levels 15-20, three up at any level,
-    the labels L317-L319 named; the lotteries: every prize worth less than
-    its ticket, the town's band 16-20 covered;
+    the labels L317-L319 named; the lotteries: weighted expected value below
+    the ticket, including the approved jackpots, the town's band 16-20 covered;
   * the Центр: a site of data/holdings.json, its box's row 771 the holders',
     level 19, once a day, 48000 afro, in its own window wh_box_ah of 19:00
     for a quarter of an hour;
@@ -139,9 +139,9 @@ RIDES = {276: (NUR, DN_STATION, STATION), 283: (NUR, DN_STATION, STATION),
 TICKET_AH, TICKET_DN = 1567, 1639
 GATES_DOWN = {910: (213, 666, "L317"), 911: (214, 667, "L319"), 912: (215, 668, "L318")}
 GATES_UP = {913: (666, 213), 914: (667, 214), 915: (668, 215)}
-LOTTERIES = {916: (2652, 3000, False, (16, 16)), 917: (2653, 3700, False, (17, 18)),
-             918: (3574, 4730, False, (19, 20)), 919: (2654, 300, True, (16, 16)),
-             920: (2655, 350, True, (17, 18)), 921: (3575, 450, True, (19, 20))}
+LOTTERIES = {916: (2652, 3000, False, (16, 20)), 917: (2653, 3700, False, (17, 20)),
+             918: (3574, 4730, False, (17, 20)), 919: (2654, 300, True, (16, 20)),
+             920: (2655, 350, True, (17, 20)), 921: (3575, 450, True, (17, 20))}
 # The interiors of Абу-Хамед, none of them a place of the map (DESIGN.md 4.3).
 INTERIORS = ([649, 650, 651, 652, 653], [636, 637, 638, 639, 640],
              [666, 667, 668, 1034, 1035, 1036, 1227, 1228, 1229],
@@ -357,12 +357,12 @@ try:
           ({t: [(b, k)] for t, (b, _r, _x, k, _l, _p) in BANDITS.items()},
            {t: ([x], [l]) for t, (_b, _r, x, _k, l, _p) in BANDITS.items()},
            list(range(5546, 5576)), sorted(BANDITS)))
-    check("no row pays gold (rew_gold) or hands out an ingot; a fee in gold only on the rides,"
+    check("no row pays gold directly; only the three approved G lotteries award ingots; fees only on rides,"
           " Вюрт's key and the lessons (the text's gold and silver at 10:1)",
           ([t for t in live if real[t].rew_gold],
            [t for t in live for _f, o in real[t].things() if o in items.GOLD_INGOTS],
            {t: real[t].cost_gold for t in live if real[t].cost_gold and t not in LESSONS}),
-          ([], [], GOLD_FEES))
+          ([], [919, 920, 921], GOLD_FEES))
     check("  ..and the five «Убить X» take Абимбола's 100000 afro, nothing else an afro fee",
           {t: real[t].cost_afro for t in live if real[t].cost_afro},
           {t: 100000 for t in BANDITS})
@@ -426,7 +426,7 @@ try:
           {t: (frm, to, 0, 1) for t, (_d, frm, to) in RIDES.items()})
     check("Нур-ад-Дин and Веласкес list their rides where q_idx finds them",
           (quests.given_by(NUR), quests.given_by(VELASQUEZ)),
-          ([276, 282, 283, 631, 632, 636], [277, 284, 880, 884]))
+          ([276, 282, 283, 631, 632, 636, 18100], [277, 284, 880, 884]))
 
     # The prison.
     sched = events.table()
@@ -474,13 +474,14 @@ try:
     def worth(obj, num, gold):
         return inventory.buy_price(items.params_of(obj), items.root_of(obj), num, gold)
 
-    check("the lotteries: every prize worth less than the ticket (the house wins), the gold"
+    check("the lotteries: weighted expected retail value below the ticket, including jackpots; the gold"
           " ones' prizes gold things",
-          ({t: [worth(o, n, gold) < price for o, n, _w in real[t].rew_random]
+          ({t: sum(worth(o, n, gold) * w for o, n, w in real[t].rew_random)
+                    < price * sum(w for _o, _n, w in real[t].rew_random)
             for t, (_k, price, gold, _b) in LOTTERIES.items()},
            [o for t, (_k, _p, gold, _b) in LOTTERIES.items() if gold
             for o, _n, _w in real[t].rew_random if not items.params_of(o).get("g_cost")]),
-          ({t: [True] * len(real[t].rew_random) for t in LOTTERIES}, []))
+          ({t: True for t in LOTTERIES}, []))
     check("  ..each the ticket of its levels, the three covering the town's band 16-20",
           ({t: ([o for o, _n in real[t].wants()], real[t].level, real[t].max_level)
             for t in LOTTERIES},
