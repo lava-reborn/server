@@ -192,7 +192,7 @@ class Ground:
                 self.restore_notice = ('Пресеты сохранены. В них есть предметы, исключённые из нового симулятора; '
                                        'восстановлен прежний профиль полигона. Замените эти вещи для новых правил.')
             restored_rules = training_profiles.restore(rules)
-            if restored_rules != rules:
+            if restored_rules != rules and not rules.simulator_formulas:
                 self.restore_notice = self.restore_notice + (' Промежуточный профиль удалён. Включён исходный профиль; '
                                        'настройки персонажа и снаряжение сохранены.')
             rules = restored_rules

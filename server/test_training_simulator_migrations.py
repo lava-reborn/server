@@ -146,6 +146,7 @@ class SavedSimulatorSession(unittest.IsolatedAsyncioTestCase):
         restored = self.s.training_ground
         self.assertEqual(restored.rules.revision, engine.KEY)
         self.assertEqual(restored.rules.health, 2)
+        self.assertNotIn('Включён исходный профиль', restored.restore_notice)
         self.assertEqual(profiles.dump_personal(restored.personal_profiles)[0], dict(raw, base=engine.KEY))
         restored.save_settings()
         current = self.store.training_profile(self.s.char_id)
