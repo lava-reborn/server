@@ -1230,7 +1230,13 @@ class TrainingGround(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(weapon.max_range, si['max_range'][mode] * asi['range_mod'])
         self.assertEqual(weapon.piercing, asi['piercing'])
 
-    def party_members(self, count=3):
+    def party_members(self, count=3, *, shared=True):
+        # Exercise the unreleased shared-mode regressions explicitly; the
+        # production-default solo policy is tested separately.
+        from training import config
+        policy = patch.object(config, 'SHARED_ROOMS', shared)
+        policy.start()
+        self.addCleanup(policy.stop)
         import party
         directory = rooms.Directory()
         parties = party.Parties(directory)

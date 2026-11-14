@@ -1,6 +1,6 @@
 """Training range: session."""
 import accounts
-from training import checkpoints, content, services
+from training import checkpoints, config, content, services
 import asyncio
 import combat
 import copy
@@ -992,7 +992,7 @@ def activate(ground, persist=True):
 
 
 def resume(owner):
-    """Restore membership, never a real character or a caller-selected room."""
+    """Restore personal progress; ignore legacy shared-room tokens in solo mode."""
     current = getattr(owner, 'training_ground', None)
     if current is not None:
         current.clone.enter_location()
@@ -1008,7 +1008,7 @@ def resume(owner):
     try:
         ground = Ground(owner)
         visit = saved.get('room')
-        if isinstance(visit, str) and re.fullmatch('[0-9a-f]{32}', visit):
+        if config.SHARED_ROOMS and isinstance(visit, str) and re.fullmatch('[0-9a-f]{32}', visit):
             shared = next((peer.room for peer in ACTIVE
                            if not peer.closed and peer.room.key[1] == visit), None)
             if shared is not None:

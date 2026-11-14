@@ -1,5 +1,5 @@
-"""Party selects who shares a range; inventories remain per-character."""
-from training import services
+"""Solo entry policy; shared-room helpers are dormant until a future release."""
+from training import config, services
 from protocol import Str
 
 import movement
@@ -12,6 +12,8 @@ def entry_available(owner):
     from training import settings
     if not settings.ENABLED:
         return False
+    if not config.SHARED_ROOMS:
+        return True
     party = owner.party()
     return party is None or party.leader == owner.char_id
 
@@ -29,12 +31,10 @@ def cancel_invites(owner):
 
 
 def entrants(owner):
-    """Select and validate co-located visitors; entry.py gathers their consent.
+    """Select only the caller in this release, regardless of party leadership.
 
-    The leader initiates entry, every other visitor must accept beforehand.
-    Only co-located members enter, and each may leave independently.
-    Windows/routes are cancelled on entry; already paid/queued journeys are
-    refused before any participant is changed, so entry cannot eat their fare.
+    The dormant shared mode selects co-located consenting party members.
+    Paid/queued journeys are refused before any participant is changed.
     """
     if not entry_available(owner):
         raise ValueError('Отправиться на полигон с отрядом может только его командир')
@@ -42,7 +42,7 @@ def entrants(owner):
     result = [owner]
     if owner.way is not None or owner.passage is not None or owner.arrival is not None:
         raise ValueError('Сначала завершите или отмените поездку перед входом на полигон')
-    if party is None:
+    if not config.SHARED_ROOMS or party is None:
         return result
     directory = services.parties()
     for char_id in party.members:
@@ -80,6 +80,8 @@ def free_spawn(room, desired, excluded=None, reserved=()):
 
 
 def join(ground, room):
+    if not config.SHARED_ROOMS:
+        raise ValueError('Совместный полигон пока недоступен')
     ground.room = room
     ground._mob_entity_id = None
     ground.location = room.loc.id

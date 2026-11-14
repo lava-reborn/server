@@ -1,5 +1,6 @@
 """Cheap main-game facade. Disabled sessions import no range implementation."""
 from protocol import Str
+from training import config
 from training.config import CLIENT_PROTOCOL, ENTRY_QUEST, EXIT_QUEST, SERIAL_BASE, enabled
 from training.services import install
 
@@ -57,7 +58,7 @@ def handle(owner, command, params):
                    available=int(enabled() and compatible(owner)))
         return True
     if command == 'tg' and params.get('op') == 'entry_reply':
-        if enabled() and compatible(owner) and ground is None:
+        if config.SHARED_ROOMS and enabled() and compatible(owner) and ground is None:
             from training.entry import reply
             reply(owner, params)
         return True

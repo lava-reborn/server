@@ -3,7 +3,7 @@ import unittest
 from unittest.mock import patch
 
 from protocol import decode
-from training import api, entry, runtime, session
+from training import api, config, entry, party, runtime, session
 import test_training_ground as fixtures
 
 
@@ -155,6 +155,107 @@ class EntryConsent(unittest.IsolatedAsyncioTestCase):
         self.assertIsNone(getattr(self.s, 'training_entry', None))
 
 
+class SoloEntry(unittest.IsolatedAsyncioTestCase):
+    asyncSetUp = fixtures.TrainingGround.asyncSetUp
+    asyncTearDown = fixtures.TrainingGround.asyncTearDown
+    party_members = fixtures.TrainingGround.party_members
+
+    async def test_shared_visits_are_disabled_in_release_configuration(self):
+        self.assertFalse(config.SHARED_ROOMS)
+
+    async def test_leader_moves_only_self_without_invitations_or_guest_writes(self):
+        members, _, _ = self.party_members(3, shared=False)
+        public = self.s.room
+        before = {m.char_id: (dict(self.store.character(m.char_id)),
+                              self.store.training_profile(m.char_id),
+                              [dict(row) for row in m.inv.rows()]) for m in members[1:]}
+        # An unrelated member's client/travel state must not block a solo visit.
+        members[1].training_protocol = None
+        members[1].way = object()
+        session.enter_from_quest(self.s)
+        self.assertIsNotNone(self.s.training_ground)
+        for member in members[1:]:
+            self.assertIsNone(member.training_ground)
+            self.assertIs(member.room, public)
+            self.assertEqual((dict(self.store.character(member.char_id)),
+                              self.store.training_profile(member.char_id),
+                              [dict(row) for row in member.inv.rows()]), before[member.char_id])
+        for member in members:
+            packets = [decode(frame[:-1]) for frame in member.writer.frames]
+            self.assertFalse(any(name == 'tg' and p.get('op') == 'entry_invite' for name, p in packets))
+            self.assertIsNone(getattr(member, 'training_entry', None))
+        members[1].way = None
+
+    async def test_each_party_member_can_enter_and_leave_their_own_room(self):
+        members, _, group = self.party_members(3, shared=False)
+        grounds = []
+        # A non-leader can enter before the leader.
+        for member in (members[2], members[0], members[1]):
+            self.assertTrue(api.entry_available(member))
+            session.enter_from_quest(member)
+            ground = member.training_ground
+            ground.clone.cmd_lenter({})
+            grounds.append(ground)
+        self.assertEqual(len({id(g.room) for g in grounds}), 3)
+        for ground in grounds:
+            self.assertEqual(list(ground.room.grounds.values()), [ground])
+            self.assertEqual(list(ground.room.players), [ground.clone])
+        for ground in grounds[:2]:
+            ground.exit()
+            self.assertIsNone(ground.owner.training_ground)
+            self.assertIsNotNone(grounds[-1].owner.training_ground)
+        self.assertEqual(group.members, [m.char_id for m in members])
+
+    async def test_old_shared_checkpoints_resume_in_separate_rooms_with_personal_settings(self):
+        members, _, _ = self.party_members(3)
+        session.enter(self.s, dict(npc=self.npc))
+        grounds = [m.training_ground for m in members]
+        old_key = grounds[0].room.key[1]
+        for level, ground in zip((6, 12, 18), grounds):
+            profile = session.preset(level)
+            profile['gear'] = {6108: level * 10}
+            ground.configure_player(profile)
+            ground.exit(notify=False, suspend=True)
+        expected = [self.store.training_profile(m.char_id)['player'] for m in members]
+        with patch.object(config, 'SHARED_ROOMS', False):
+            for member in members:
+                self.assertTrue(session.resume(member))
+            restored = [m.training_ground for m in members]
+            self.assertEqual(len({id(g.room) for g in restored}), 3)
+            self.assertEqual(len({g.room.key[1] for g in restored}), 3)
+            for ground, profile in zip(restored, expected):
+                self.assertNotEqual(ground.room.key[1], old_key)
+                self.assertEqual(ground.profile, profile)
+                self.assertEqual(sum(row['count'] for row in ground.clone.inv.rows()),
+                                 sum(profile['gear'].values()))
+                self.assertEqual(self.store.training_profile(ground.owner.char_id)['room'], ground.room.key[1])
+
+    async def test_old_consent_replies_and_direct_room_join_cannot_enable_shared_visits(self):
+        from unittest.mock import Mock
+        members, _, _ = self.party_members(2, shared=False)
+        pending = Mock()
+        self.s.training_entry = pending
+        api.handle(self.s, 'tg', dict(op='entry_reply', confirmation='old', accept=1))
+        pending.reply.assert_not_called()
+        self.s.training_entry = None
+        session.enter_from_quest(self.s)
+        session.enter_from_quest(members[1])
+        first, second = [m.training_ground for m in members]
+        second_room = second.room
+        with self.assertRaisesRegex(ValueError, 'недоступен'):
+            party.join(second, first.room)
+        self.assertIs(second.room, second_room)
+
+    async def test_solo_travel_rejection_still_preserves_owner(self):
+        members, _, _ = self.party_members(2, shared=False)
+        self.s.way = object()
+        with self.assertRaises(ValueError):
+            session.enter_from_quest(self.s)
+        self.assertTrue(all(m.training_ground is None for m in members))
+        self.assertEqual(list(self.store.db._db.iterdump()), self.before)
+        self.s.way = None
+
+
 if __name__ == '__main__':
     from testkit import run_cases
-    run_cases(EntryConsent)
+    run_cases(EntryConsent, SoloEntry)

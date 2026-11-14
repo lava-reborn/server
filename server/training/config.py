@@ -5,6 +5,9 @@ ENTRY_QUEST = 9301
 EXIT_QUEST = 9302
 SERIAL_BASE = 1 << 40
 CLIENT_PROTOCOL = 1
+# Shared visits are reserved for a separately tested future release. Do not
+# expose an environment/client override in the current solo-only deployment.
+SHARED_ROOMS = False
 
 
 def enabled():
