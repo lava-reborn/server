@@ -192,6 +192,53 @@ class Review(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(any(name == 'userInfo_Player' for name, _ in frames))
         self.assertFalse(hasattr(self.s, 'training_inventory_before'))
 
+    async def test_two_guests_exit_without_transitioning_or_mutating_remaining_leader(self):
+        members, _, group = self.party_members(3)
+        for member in members[1:]:
+            member.inv.create(26075)
+        original = {member.char_id: [dict(row) for row in member.inv.rows()]
+                    for member in members}
+        session.enter(self.s, dict(npc=self.npc))
+        leader, second, third = [member.training_ground for member in members]
+        for ground in (leader, second, third):
+            ground.clone.cmd_lenter({})
+        leader.configure_player(session.preset(20))
+        room, clone, profile = leader.room, leader.clone, copy.deepcopy(leader.profile)
+        leader_items = [dict(row) for row in clone.inv.rows()]
+        for guest in (third, second):
+            self.s.writer.frames.clear()
+            guest.exit()
+            guest.owner.cmd_lenter({})
+            packets = [decode(frame[:-1]) for frame in self.s.writer.frames]
+            self.assertFalse(any(name in ('lcall', 'lenter', 'gmap') for name, _ in packets))
+            self.assertFalse(any(name == 'tg' and p.get('op') in ('exit', 'exit_pending')
+                                 for name, p in packets))
+            lost = [p['lostUser'] for name, p in packets if name == 'lch' and 'lostUser' in p]
+            self.assertEqual(lost, [guest.clone.pid])
+            self.assertNotIn(0, lost)
+            self.assertIs(self.s.training_ground, leader)
+            self.assertIs(leader.room, room)
+            self.assertIn(clone, room.players)
+            self.assertEqual(leader.profile, profile)
+            self.assertEqual([dict(row) for row in clone.inv.rows()], leader_items)
+            self.assertEqual(decode(self.s.writer.frames[-1][:-1])[1]['list'],
+                             [0] + [room.owner_ids.get(m.pid, m.pid) for m in members[1:]])
+        # Inspect the two returned real characters in both directions.
+        for viewer, target in ((members[1], members[2]), (members[2], members[1])):
+            viewer.writer.frames.clear()
+            viewer.cmd_ss_get(dict(target=target.pid, slot=inventory.MASK_BAG))
+            name, snapshot = decode(viewer.writer.frames[-1][:-1])
+            self.assertEqual(name, 'ss_ack')
+            self.assertEqual(set(snapshot['o_list']),
+                             {inventory.oid_of(row) for row in original[target.char_id]})
+        clone.cmd_getInfo(dict(id=0))
+        packets = [decode(frame[:-1]) for frame in self.s.writer.frames]
+        own = [p for name, p in packets if name == 'userInfo_Player' and p['id'] == 0][-1]
+        self.assertEqual((own['name'], own['lvl']), (self.s.nick, 20))
+        self.assertEqual(group.members, [m.char_id for m in members])
+        for member in members:
+            self.assertEqual([dict(row) for row in member.inv.rows()], original[member.char_id])
+
     async def test_participant_with_pending_paid_way_is_not_interrupted(self):
         members, _, _ = self.party_members(2)
         pending = members[1].way = object()
