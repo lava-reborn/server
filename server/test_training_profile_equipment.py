@@ -63,6 +63,40 @@ class ProfileEquipment(unittest.IsolatedAsyncioTestCase):
         self.assertEqual([dict(r) for r in ground.clone.inv.rows()], before)
         self.unchanged()
 
+    async def test_bizon_profiles_keep_main_capacity_and_private_ammunition_separate(self):
+        ground = self.enter()
+        source = 26185
+        original = items.params_of(source).copy()
+        baseline = copies.copy_type(source)
+        simulator = copies.copy_type(source, True)
+        self.assertEqual(baseline, 55446)  # Published baseline identity stays stable.
+        self.assertEqual(simulator, 57583)
+        self.assertEqual(original['clip_size'], 100)
+        self.assertEqual(items.params_of(baseline)['clip_size'], 100)
+        self.assertEqual(items.params_of(simulator)['clip_size'], 128)
+        inv = ground.clone.inv
+        gun = inv.create(baseline)
+        ammo = items.params_of(baseline)['comp_array'][0]
+        ground.store.update_item(gun['uniq'], ammo_type=ammo, ammo_count=100)
+        before = [dict(row) for row in inv.rows()]
+        self.assertTrue(inv.switch_profile(True))
+        current = ground.store.item(gun['uniq'])
+        self.assertEqual((current['type_id'], current['ammo_type'], current['ammo_count']),
+                         (simulator, ammo, 100))
+        # Inventory reads must not run the main-game Bizon migration on copies.
+        ground.store.update_item(gun['uniq'], ammo_count=128)
+        loaded = [dict(row) for row in inv.rows()]
+        self.assertTrue(inv.normalize_magazines(loaded))
+        self.assertEqual(loaded, [dict(row) for row in inv.rows()])
+        with self.assertRaisesRegex(ValueError, 'Разрядите оружие'):
+            inv.switch_profile(False)
+        self.assertEqual([dict(row) for row in inv.rows()], loaded)
+        ground.store.update_item(gun['uniq'], ammo_count=100)
+        self.assertTrue(inv.switch_profile(False))
+        self.assertEqual([dict(row) for row in inv.rows()], before)
+        self.assertEqual(items.params_of(source), original)
+        self.unchanged()
+
     async def test_shared_room_receives_new_equipment_and_vitals_without_changing_peer(self):
         members, _, _ = self.party_members(2)
         training.enter(self.s, dict(npc=self.npc))
