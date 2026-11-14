@@ -210,8 +210,8 @@ class Ground:
                 self.restore_notice = 'Прежняя цель удалена из каталога. Выберите нового противника.'
             spawn_point = integer(saved.get('spawn_point', DEFAULT_SPAWN), 0, len(SPAWN_LABELS) - 1)
             stationary = integer(saved.get('stationary', 0), 0, 1)
-            mob_health = integer(saved.get('mob_health', 100), 25, 300)
-            mob_damage = integer(saved.get('mob_damage', 100), 25, 300)
+            mob_health = integer(saved.get('mob_health', 100), settings.MOB_SCALE_MIN, settings.MOB_SCALE_MAX)
+            mob_damage = integer(saved.get('mob_damage', 100), settings.MOB_SCALE_MIN, settings.MOB_SCALE_MAX)
             enemy_healing = integer(saved.get('enemy_healing', 0), 0, 1)
             heal_below = integer(saved.get('heal_below', 50), 10, 90)
             heal_count = integer(saved.get('heal_count', 5), 0, 30)

@@ -1,4 +1,6 @@
 """Small catalogue, lifecycle and isolation checks for player-facing targets."""
+import asyncio
+import copy
 import unittest
 import names
 import mobs
@@ -40,6 +42,52 @@ class Opponents(unittest.IsolatedAsyncioTestCase):
     asyncTearDown = fixtures.TrainingGround.asyncTearDown
     enter = fixtures.TrainingGround.enter
     unchanged = fixtures.TrainingGround.unchanged
+
+    async def test_extended_scales_apply_once_and_do_not_modify_normal_mobs(self):
+        g = self.enter()
+        original = copy.deepcopy(vars(mobs.stats(g.mob_type)))
+        for profile in installed_profiles.catalogue():
+            g.rules = profile.rules
+            base = None
+            for health, damage in ((100, 100), (1, 10000), (888, 888), (10000, 1)):
+                g.last_request = 0
+                g.request(dict(op='start', token=g.token, mode='mob', stationary=1,
+                               mob_health=health, mob_damage=damage))
+                mob = g.room.combat.mobs[g.mob_eid]
+                actual = (mob.hp_max, mob.sp_max, mob.stats.dmg_min, mob.stats.dmg_max)
+                if base is None:
+                    base = actual
+                expected_min = max(0, round(base[2] * damage / 100))
+                expected = (max(1, round(base[0] * health / 100)),
+                            max(0, round(base[1] * health / 100)), expected_min,
+                            max(expected_min, round(base[3] * damage / 100)))
+                self.assertEqual(actual, expected, (profile.key, health, damage))
+                g.room.broadcast(('lch', dict(id=mob.eid, **mob.vitals())))
+                _, packet = decode(self.s.writer.frames[-1][:-1])
+                self.assertEqual((packet['hmax'], packet['smax']), actual[:2])
+                self.assertEqual(vars(mobs.stats(g.mob_type)), original)
+                g.finish('test', force=True)
+                await asyncio.sleep(0)  # Finish schedules the reset for the next loop turn.
+                self.assertEqual(g.phase, 'ready')
+                self.assertFalse(g.room.combat.mobs)
+        self.unchanged()
+
+    async def test_invalid_scales_are_rejected_without_starting_or_saving(self):
+        g = self.enter()
+        before = self.store.training_profile(self.s.char_id)
+        for field in ('mob_health', 'mob_damage'):
+            for invalid in (0, -1, 10001, '1.5', 'NaN', 'Infinity', True, '', None):
+                g.last_request = 0
+                request = dict(op='start', token=g.token, mode='mob', stationary=1,
+                               mob_health=888, mob_damage=888)
+                request[field] = invalid
+                with self.subTest(field=field, value=invalid), self.assertRaises(ValueError):
+                    g.request(request)
+                self.assertEqual((g.mob_health, g.mob_damage), (100, 100))
+                self.assertEqual(g.phase, 'ready')
+                self.assertFalse(g.room.combat.mobs)
+                self.assertEqual(self.store.training_profile(self.s.char_id), before)
+        self.unchanged()
 
     async def test_spawn_near_computer_and_each_group_can_finish_without_rewards(self):
         g = self.enter()

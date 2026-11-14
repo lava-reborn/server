@@ -53,6 +53,24 @@ class TrainingResume(unittest.IsolatedAsyncioTestCase):
         self.assertNotIn(ground, range_runtime.ACTIVE)
         self.assertIsNone(self.s.training_ground)
 
+    async def test_extended_mob_scales_survive_reconnect_and_apply_to_next_target(self):
+        ground = self.enter()
+        ground.request(dict(op='start', token=ground.token, mode='mob', stationary=1,
+                            mob_health=10000, mob_damage=888))
+        target = ground.room.combat.mobs[ground.mob_eid]
+        expected = (target.hp_max, target.sp_max, target.stats.dmg_min, target.stats.dmg_max)
+        self.suspend(ground)
+        saved = self.store.training_profile(self.s.char_id)
+        self.assertEqual((saved['mob_health'], saved['mob_damage']), (10000, 888))
+        self.assertTrue(training.resume(self.next_session()))
+        restored = self.s.training_ground
+        self.assertEqual((restored.mob_health, restored.mob_damage), (10000, 888))
+        self.assertFalse(restored.restore_notice)
+        restored.request(dict(op='start', token=restored.token, mode='mob', stationary=1))
+        target = restored.room.combat.mobs[restored.mob_eid]
+        self.assertEqual((target.hp_max, target.sp_max, target.stats.dmg_min, target.stats.dmg_max), expected)
+        self.unchanged()
+
     async def test_retired_profile_is_restored_as_baseline_without_losing_tuning(self):
         ground=self.enter()
         self.suspend(ground)

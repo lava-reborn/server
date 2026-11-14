@@ -35,6 +35,20 @@ class TrainingRules(unittest.TestCase):
             with self.subTest(raw=raw), self.assertRaises(ValueError):
                 Rules.parse(raw)
 
+    def test_description_uses_the_same_percentages_and_labels_as_the_panel(self):
+        rules = Rules(revision='user-0123456789abcdef', attributes=(1, .5, 1.5, 1, 2),
+                      health=1.5, stamina=2, armour=.8, spread=.5, effect_armour=20,
+                      ammo_modifiers=True, broken_armour=False)
+        before = rules.values()
+        text = rules.description()
+        for label in ('ловкость 50%', 'телосложение 150%', 'интеллект 200%',
+                      'Запас HP: 150%', 'выносливости: 200%', 'Броня: 80%',
+                      'доп. броня: 20 ед.', 'разброс: 50%',
+                      'Параметры патронов: учитывать', 'защита сломанной брони: не учитывать'):
+            self.assertIn(label, text)
+        self.assertNotIn(rules.revision, text)
+        self.assertEqual(rules.values(), before)
+
 
 if __name__ == '__main__':
     from testkit import run_cases

@@ -19,7 +19,7 @@ from training import (
 )
 from training.catalog import contraband, item_catalogue, item_line, mob_catalogue
 from training.character import validate_profile
-from training.settings import MAX_ITEMS, MAX_LEVEL, PAGE_SIZE, SPAWN_LABELS
+from training.settings import MAX_ITEMS, MAX_LEVEL, MOB_SCALE_MIN, MOB_SCALE_MAX, PAGE_SIZE, SPAWN_LABELS
 from training.validation import integer
 from training import services
 
@@ -231,8 +231,8 @@ def apply_request(ground, p, op, now):
     elif op == 'start':
         ground.require_terminal()
         spawn_point = integer(p.get('spawn_point', ground.spawn_point), 0, len(SPAWN_LABELS) - 1)
-        mob_health = integer(p.get('mob_health', ground.mob_health), 25, 300)
-        mob_damage = integer(p.get('mob_damage', ground.mob_damage), 25, 300)
+        mob_health = integer(p.get('mob_health', ground.mob_health), MOB_SCALE_MIN, MOB_SCALE_MAX)
+        mob_damage = integer(p.get('mob_damage', ground.mob_damage), MOB_SCALE_MIN, MOB_SCALE_MAX)
         ground.stationary = integer(p.get('stationary', 0), 0, 1) == 1
         mode = str(p.get('mode', 'mob'))
         if mode not in ('mob', 'fighter'):

@@ -93,20 +93,18 @@ class Rules:
         return damage, stamina, reach
 
     def description(self):
-        from training import formulas as training_formulas
-        profile = ('Симулятор ' + training_formulas.data()['source_commit'][:7] + ': параметры A/G-оружия, броня и бонусы комплектов, коэффициенты урона и мобов. '
-                   'Крит огнестрела игрока - только на оптимальной дистанции. Броня для винтовок и остального оружия считается по-разному. '
-                   'P-варианты без аналога в симуляторе сохраняют параметры полигона. ' if self.simulator_formulas else '')
-        return profile + ('Версия правил: %s. Множители: характеристики %s; HP %g; выносливость %g; '
-                'броня %g; разброс %g; добавка брони эффекта %g. '
-                'Множители патронов: %s; броня поломанных частей: %s. '
-                'Исправленная модель: %s. Изменения действуют только на полигоне. '
-                'Множитель 1 не меняет выбранную модель. Предметы имеют отдельные типы и таблицу параметров.') % (
-                    self.revision, '/'.join('%g' % v for v in self.attributes),
-                    self.health, self.stamina, self.armour, self.spread, self.effect_armour,
-                    'включены' if self.ammo_modifiers else 'текущая игра',
-                    'учитывается' if self.broken_armour else 'не учитывается',
-                    'включена' if self.combat_v2 else 'выключена')
+        attributes = ', '.join('%s %g%%' % (label, value * 100)
+                               for label, value in zip(
+                                   ('сила', 'ловкость', 'телосложение', 'восприятие', 'интеллект'),
+                                   self.attributes))
+        return ('Характеристики: %s.\n'
+                'Запас HP: %g%%; выносливости: %g%%.\n'
+                'Броня: %g%%; доп. броня: %g ед.; разброс: %g%%.\n'
+                'Параметры патронов: %s; защита сломанной брони: %s.') % (
+                    attributes, self.health * 100, self.stamina * 100,
+                    self.armour * 100, self.effect_armour, self.spread * 100,
+                    'учитывать' if self.ammo_modifiers else 'не учитывать',
+                    'учитывать' if self.broken_armour else 'не учитывать')
 
 @lru_cache(maxsize=1)
 def current():
