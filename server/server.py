@@ -69,6 +69,7 @@ import travel
 import trophies
 import upgrader
 import world
+from training import api as training_ground
 from protocol import BigUInt, FrameReader, RawList, decode, frame, Str
 
 HOST = os.environ.get("LAVA_HOST", "0.0.0.0")
@@ -360,6 +361,7 @@ PARTIES = party.Parties(ONLINE)
 # Clans are in the database (clans.py), and this holds only what each
 # client has been told and the invitations still open.
 CLANS = clans.Clans(STORE, ONLINE, GMAP)
+training_ground.install(parties=lambda: PARTIES, clans=lambda: CLANS, expects_ack=expects_ack)
 
 log = logging.getLogger("lava")
 
@@ -490,6 +492,9 @@ class Session:
         self.char = None
         # id of the teacher a training session is open with, or None
         self.training = None
+        self.training_ground = None
+        self.training_resume_char = None
+        self.training_types_version = None
         # The rented vehicle as (type id, epoch second the rental ends), or
         # None on foot. Loaded with the character, written straight to the
         # characters table: Character.save does not carry these two columns,
@@ -576,6 +581,10 @@ class Session:
         talk incomplete until its base skill goals have been reached."""
         if self.closed:
             return
+        if getattr(self, 'training_ground', None) is not None:
+            params = training_ground.outgoing(self, _cmd[0], params)
+            if params is None:
+                return
         if _cmd[0].startswith("q_di_"):
             params = self.fee_gate(params)
             params = self.skill_gate(params)
@@ -594,6 +603,9 @@ class Session:
         # the money exists twice.
         if self.closed:
             return
+        if cmd == 'tg' or getattr(self, 'training_ground', None) is not None:
+            if training_ground.handle(self, cmd, params):
+                return
         # What a barter the server has just closed still sends, having sent
         # it before the close arrived: a bare ready or deny that the dead
         # filter below would answer as if it waited for something, or a
@@ -775,6 +787,9 @@ class Session:
         row. A repeated transport close is a no-op; force finalizes a
         lingering body on timeout, death, kick or server shutdown.
         """
+        training_ground.cancel_entry(self)
+        if getattr(self, 'training_ground', None) is not None:
+            training_ground.suspend(self)
         if self.closed and (not force or self.linger is None):
             return
         if not force and not self.closed and self.should_linger():
@@ -1358,6 +1373,13 @@ class Session:
         # The same for a clan: the client's own fellow, a member's standings,
         # "online" to the roster holders. Also once a session.
         CLANS.online(self)
+        # Check the linked range once per selected character, not per move/map.
+        if self.training_resume_char != self.char_id:
+            # One attempt per selected character/session, including a failed
+            # restore. Ordinary location changes must not retry a broken save.
+            self.training_resume_char = self.char_id
+            if training_ground.resume(self) or self.closed:
+                return
         # ie != 1 means the client must confirm with lenter;accept=1 once it
         # has finished loading the location's XML and artwork. ws is the
         # room's actual war state, not the file's war flag: the flag only
@@ -1464,6 +1486,14 @@ class Session:
         # A member's client asks for its roster now that it stands in a
         # location; one that has stopped listening is told to reload.
         CLANS.entered(self)
+        if getattr(self, 'training_return', False):
+            self.training_return = False
+            self.combat.ap = min(getattr(self, 'training_return_ap', self.combat.ap), self.combat.ap_max)
+            self.combat.c_ap()
+            training_ground.returned(self)
+            self.push_stats()
+            self.send_player_info()
+            self.push_vitals()
         # What the login took off for the level, now that there is a chat
         # to read it in (Inventory.over_level_to_bag); once.
         for line in self.inv.taken_off_lines():
@@ -2779,6 +2809,12 @@ class Session:
         # Every real instance the client meets asks for this, through the
         # same window of five as ss_get_si; the sixth item stalls without it.
         # A mob's weapon is an instance too, just not one in the database.
+        parsed = inventory.parse_oid(p.get('obj'))
+        if parsed and parsed[0] >= training_ground.SERIAL_BASE:
+            # Late replies after leaving a range are empty real-instance frames,
+            # never a virtual mob weapon with a different dynamic-info schema.
+            self.inv.ss_get_di(p)
+            return
         if self.combat.ss_get_di(p):
             return
         self.inv.ss_get_di(p)
@@ -2965,6 +3001,10 @@ class Session:
         does keep_lent taking all of it back away from its stay_in): a
         lesson dropped by mistake is the player's to take again at once.
         """
+        if quest.type == training_ground.EXIT_QUEST:
+            return False
+        if quest.type == training_ground.ENTRY_QUEST and not training_ground.entry_available(self):
+            return False
         if quest.type in residence.QUESTS and not residence.allowed(self.character(), residence.QUESTS[quest.type]):
             return False
         if quests.acquisition_blocked(quest) or quest.over_cap(self.skill_level()):
@@ -3132,6 +3172,10 @@ class Session:
         and the bag holds what a craft row asks beyond its things (a
         salvage's broken gun, craft.ready), which is told and refused the
         same way."""
+        if quest.type == training_ground.EXIT_QUEST:
+            return False
+        if quest.type == training_ground.ENTRY_QUEST and not training_ground.entry_available(self):
+            return False
         if quest.type in residence.QUESTS and not residence.allowed(self.character(), residence.QUESTS[quest.type]):
             return False
         if not quest.has_fee:
@@ -3545,8 +3589,16 @@ class Session:
             self.say("Урок ничего не даст: %s уже на высшем уровне"
                      % ("специализация" if quest.rew_spec_xp else "навык"))
             return
-        way = travel.is_quest_way(quest.type)
-        if way:
+        training_entry = quest.type == training_ground.ENTRY_QUEST
+        if training_entry:
+            try:
+                training_ground.check_entry(self, dict(npc=p.get("mob", 0)))
+            except ValueError as why:
+                self.send("cmdAck", res=RES_NOT_AVAILABLE)
+                self.answer(str(why))
+                return
+        way = training_entry or travel.is_quest_way(quest.type)
+        if way and not training_entry:
             try:
                 travel.plan_quest_way(self.loc, quest.type,
                                       round(self.gx), round(self.gy))
@@ -3717,6 +3769,15 @@ class Session:
         hand-in paid a reward too. The rest of the hand-in stands -- the
         history, a reward -- as before.
         """
+        if quest.type == training_ground.ENTRY_QUEST:
+            try:
+                training_ground.enter_from_quest(self)
+            except ValueError as why:
+                self.answer(str(why))
+            except Exception:
+                log.exception('Could not enter range after quest hand-in for %s', self.char_id)
+                self.answer('Не удалось открыть полигон. Настройки сохранены; повторите задание у Берта.')
+            return
         log.info("  ..    quest #%d (%s) handed in: the way", q_id, quest.name)
         self.cancel_way()
         self.follow_way(quest, self.room)
@@ -4472,6 +4533,8 @@ async def main():
     # handler: a lazy load of the wiki tables once stalled the loop for two
     # seconds on whichever request touched an item first.
     items.preload()
+    if training_ground.enabled():
+        training_ground.preload()
     # A quest row naming a thing the game does not have, or handing over one
     # worth something, stops the server here, as a broken chain stops it at
     # the import (quests.check_items): at a hand-in it would be a quest

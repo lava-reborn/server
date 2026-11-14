@@ -29,6 +29,8 @@ ROOT = os.path.dirname(HERE)
 sys.path.insert(0, os.path.join(ROOT, "server"))
 
 import names  # noqa: E402  (needs the path above)
+from training import api as training_ground
+training_ground.preload_strings()
 
 # Exactly what bootstrap_http._send_xml puts on the wire for ?all=1: the byte
 # order mark, the client's own single-quoted declaration, then the document.
