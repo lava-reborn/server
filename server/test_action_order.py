@@ -16,13 +16,12 @@ import combat  # noqa: E402
 import inventory  # noqa: E402
 import items  # noqa: E402
 import progression  # noqa: E402
-from test_healing_completion import HealingCompletion  # noqa: E402
-from testkit import run_cases  # noqa: E402
+from testkit import run_cases, healing_fixture, attack_fixture  # noqa: E402
 
 class ActionOrder(unittest.IsolatedAsyncioTestCase):
 
     def fixture(self, type_id=6055):
-        f, ch, room, used = HealingCompletion().fixture(type_id)
+        f, ch, room, used = healing_fixture(type_id)
         events = []
         f.sess.send = lambda cmd, **p: events.append((cmd, p))
         f.c_ap = lambda: events.append(('c_ap', dict(ap=f.ap)))
@@ -39,22 +38,7 @@ class ActionOrder(unittest.IsolatedAsyncioTestCase):
         saved[0](*saved[1])
 
     def attack_fixture(self, type_id=25566):
-        f, ch, room, used, events = self.fixture()
-        for skill in ch.skill:
-            skill[0] = 20
-        ch.spec[1][0] = 4
-        row = dict(inventory.new_fields(type_id), type_id=type_id, uniq=2, root=items.COLD_ARM if type_id == 6241 else items.FIRE_ARM, slot=inventory.PRIMARY, char_id=1, ammo_count=10, ammo_type=6101, brk=100, cur_mode=0)
-        f.sess.on_map = False
-        f.sess.loc = NS(war=True, width=20, height=20)
-        f.sess.inv.find = lambda obj: row if obj == 'weapon' else dict(uniq=1, char_id=1, root=items.HEAL, type_id=6055, use_count=1)
-        f.cell = 0
-        f.preparing = lambda: False
-        room.broadcast = lambda frame, **kw: events.append(frame)
-        f.rc.set_ws = lambda ws: setattr(room, 'ws', ws)
-        f.fire_now = lambda *args: events.append(('resolved_fire', args))
-        f.strike_now = lambda *args: events.append(('resolved_strike', args))
-        f.strike_with = lambda *args: combat.Fighter.strike_with(f, *args)
-        return (f, ch, room, used, events, row)
+        return attack_fixture(type_id)
 
     async def test_valid_attack_replaces_heal(self):
         for type_id, kind in ((25566, 'aim'), (6241, 'strike')):

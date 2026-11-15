@@ -33,7 +33,7 @@ def _locked_rows(store, char_id, slot=None):
         sql += ' AND slot = ?'
         args.append(slot)
     sql += ' ORDER BY uniq'
-    if storage.using_postgres():
+    if storage.using_postgres(store.db):
         sql += ' FOR UPDATE'
     return [dict(row) for row in store.db.execute(sql, args).fetchall()]
 

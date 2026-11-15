@@ -22,7 +22,7 @@ done < <(find deploy tools launcher -name '*.sh' -type f | sort)
 python3 - <<'EOF' || bad=1
 import glob, json, sys
 bad = 0
-for path in sorted(glob.glob("server/*.py") + glob.glob("data/*.py") + glob.glob("tools/*.py")
+for path in sorted(glob.glob("server/**/*.py", recursive=True) + glob.glob("data/*.py") + glob.glob("tools/*.py")
                    + glob.glob("tools/impact/*.py") + glob.glob("client/*.py")
                    + glob.glob("launcher/test/*.py")):
     try:

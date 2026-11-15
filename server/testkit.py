@@ -370,3 +370,64 @@ def clear_approach(client, goals, fire, enemies, reach):
                 break
         frames += walk_frames(client, leg, exact=True)
     raise AssertionError((loc.id, client.scene_pos, 'fixture approach exhausted'))
+
+
+def healing_fixture(type_id=6043):
+    import combat, inventory, items, progression
+    from types import SimpleNamespace as NS
+    class HealingActor(NS):
+        is_player = True
+        prepare_weapon = combat.Fighter.prepare_weapon
+        prepare_melee = combat.Fighter.prepare_melee
+        healing_spec = combat.Fighter.healing_spec
+        healing_multiplier = combat.Fighter.healing_multiplier
+        medicine_cooldown_seconds = combat.Fighter.medicine_cooldown_seconds
+    row = dict(uniq=1, char_id=1, root=items.HEAL, type_id=type_id, use_count=1)
+    ch = progression.Character()
+    ch.hp = 30
+    events, consumed = ([], [])
+    room = NS(ws=False, broadcast=lambda frame, **kw: events.append(frame))
+    frames = []
+    sess = NS(char_id=1, room=room, inv=NS(find=lambda _: row, push_status=lambda *a: None, wear_worn=lambda *a: None), answer=events.append, push_stats=lambda **k: None, push_vitals=lambda: None, send=lambda name, **p: frames.append((name, p)))
+    f = HealingActor(sess=sess, rc=NS(room=room), ap=100, healing=None, dead=False, eid=1, damage_revision=0, character=lambda: ch, ack=events.append, store=NS(item=lambda _: row, delete_item=consumed.append))
+    f.heal_now = lambda *args: combat.Fighter.heal_now(f, *args)
+    f.c_ap = lambda: None
+    f.frames = frames
+    return (f, ch, room, consumed)
+
+
+def start_healing(f):
+    import combat, inventory
+    combat.Fighter.use_heal(f, dict(obj='1'), inventory.USE_IDLE)
+    if f.healing is None:
+        raise AssertionError('Healing fixture was not accepted')
+    timer = f.healing
+    args = timer._args[-1]
+    timer.cancel()
+    return args
+
+
+def attack_fixture(type_id=25566):
+    import combat, inventory, items
+    from types import SimpleNamespace as NS
+    f, ch, room, used = healing_fixture(6055)
+    events = []
+    f.sess.send = lambda cmd, **p: events.append((cmd, p))
+    f.c_ap = lambda: events.append(('c_ap', dict(ap=f.ap)))
+    f.aim = f.strike = None
+    f.sess.walk = None
+    for skill in ch.skill:
+        skill[0] = 20
+    ch.spec[1][0] = 4
+    row = dict(inventory.new_fields(type_id), type_id=type_id, uniq=2, root=items.COLD_ARM if type_id == 6241 else items.FIRE_ARM, slot=inventory.PRIMARY, char_id=1, ammo_count=10, ammo_type=6101, brk=100, cur_mode=0)
+    f.sess.on_map = False
+    f.sess.loc = NS(war=True, width=20, height=20)
+    f.sess.inv.find = lambda obj: row if obj == 'weapon' else dict(uniq=1, char_id=1, root=items.HEAL, type_id=6055, use_count=1)
+    f.cell = 0
+    f.preparing = lambda: False
+    room.broadcast = lambda frame, **kw: events.append(frame)
+    f.rc.set_ws = lambda ws: setattr(room, 'ws', ws)
+    f.fire_now = lambda *args: events.append(('resolved_fire', args))
+    f.strike_now = lambda *args: events.append(('resolved_strike', args))
+    f.strike_with = lambda *args: combat.Fighter.strike_with(f, *args)
+    return (f, ch, room, used, events, row)

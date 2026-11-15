@@ -1,4 +1,8 @@
-"""Repair-only A/G counterparts; sale prices and restoration are independent."""
+"""Repair-only counterparts from the ordinary catalogue, never private templates.
+
+Sale prices and restoration are independent. Private inventories own their
+valuation; adding their types to these cached public price ladders is forbidden.
+"""
 from functools import lru_cache
 import re
 

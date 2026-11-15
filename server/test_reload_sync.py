@@ -78,6 +78,7 @@ class ReloadSync(unittest.IsolatedAsyncioTestCase):
                     character=lambda: self.s.char,
                     ack=lambda res: self.s.send('cmdAck', res=res))
         self.s.combat = self.f
+        self.f.prepare_weapon = lambda *args: combat.Fighter.prepare_weapon(self.f, *args)
         self.f.c_ap = lambda: combat.Fighter.c_ap(self.f)
         self.f.primary_changed = lambda: combat.Fighter.primary_changed(self.f)
         self.f.refuse_no_ap = lambda: combat.Fighter.refuse_no_ap(self.f)
