@@ -2,9 +2,10 @@
 import copy
 from functools import lru_cache
 import re
+from training import config
 
-FIRST = 80000
-SIMULATOR_OFFSET = 1000
+FIRST = config.SET_FIRST
+SIMULATOR_OFFSET = config.SET_SIMULATOR_OFFSET
 
 
 @lru_cache(maxsize=1)

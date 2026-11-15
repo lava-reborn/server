@@ -11,8 +11,9 @@ import items
 import progression
 import storage
 from training import items as training_items
+from training import config
 
-FIRST = 90000
+FIRST = config.EFFECT_FIRST
 MAX_EFFECTS = 32
 PATH = Path(__file__).resolve().parents[2] / 'data/training_effects.json'
 ARRAYS = {'attribs': 5, 'skills': 5, 'specs': 15}
