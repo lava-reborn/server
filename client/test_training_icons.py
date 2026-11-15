@@ -13,6 +13,22 @@ from build import Build
 
 
 class TrainingIconBuild(unittest.TestCase):
+    def test_missing_or_empty_metadata_cannot_bypass_the_release_guard(self):
+        with tempfile.TemporaryDirectory(prefix='icon-build-') as tmp:
+            root = Path(tmp)
+            (root / 'data').mkdir()
+            (root / 'data/training_content.json').write_text('{}')
+            metadata = root / 'data/training_icons.json'
+            build = Build(tmp, None, None, str(root / 'out'))
+            self.addCleanup(shutil.rmtree, build.tmp, ignore_errors=True)
+            with self.assertRaisesRegex(SystemExit, 'Missing training icon catalogue'):
+                build.check_training_icons()
+            for sources in ({}, [], None):
+                with self.subTest(sources=sources):
+                    metadata.write_text(json.dumps({'version': 1, 'sources': sources}))
+                    with self.assertRaisesRegex(SystemExit, 'Empty or invalid training icon catalogue'):
+                        build.check_training_icons()
+
     def test_release_keeps_only_verified_icons_and_refuses_unknown_or_removed_ones(self):
         with tempfile.TemporaryDirectory(prefix='icon-build-') as tmp:
             root = Path(tmp)
