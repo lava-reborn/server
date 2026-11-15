@@ -1,0 +1,138 @@
+"""Versioned experimental rules used by range clones only."""
+from dataclasses import asdict, dataclass
+from functools import lru_cache
+import json
+import math
+from pathlib import Path
+
+PATH = Path(__file__).resolve().parents[2] / 'data' / 'training_rules.json'
+
+@dataclass(frozen=True)
+class Rules:
+    revision: str = 'baseline-v1'
+    attributes: tuple = (1, 1, 1, 1, 1)
+    health: float = 1
+    stamina: float = 1
+    armour: float = 1
+    spread: float = 1
+    effect_armour: float = 0
+    ammo_modifiers: bool = False
+    broken_armour: bool = False
+    combat_v2: bool = True
+    simulator_formulas: bool = False
+
+    @classmethod
+    def parse(cls, raw):
+        if set(raw) - {'revision', 'attributes', 'health', 'stamina', 'armour', 'spread',
+                       'effect_armour', 'ammo_modifiers', 'broken_armour', 'combat_v2', 'simulator_formulas'}:
+            raise ValueError('Unknown training rule')
+        attrs = tuple(raw.get('attributes', (1, 1, 1, 1, 1)))
+        if len(attrs) != 5:
+            raise ValueError('Five attribute scales required')
+        values = attrs + tuple(raw.get(k, 1) for k in ('health', 'stamina', 'armour', 'spread'))
+        if any(isinstance(x, bool) or not isinstance(x, (int, float)) or not math.isfinite(x) or not 0.01 <= x <= 10 for x in values):
+            raise ValueError('Training scales must be finite in 0.01..10')
+        revision = raw.get('revision', 'candidate-v2')
+        if not isinstance(revision, str) or not 1 <= len(revision) <= 64:
+            raise ValueError('Invalid training revision')
+        effect = raw.get('effect_armour', 0)
+        if isinstance(effect, bool) or not isinstance(effect, (int, float)) or not math.isfinite(effect) or not 0 <= effect <= 200:
+            raise ValueError('Training effect armour must be finite in 0..200')
+        ammo, broken = raw.get('ammo_modifiers', False), raw.get('broken_armour', False)
+        if not isinstance(ammo, bool) or not isinstance(broken, bool):
+            raise ValueError('Training flags must be boolean')
+        model = raw.get('combat_v2', True)
+        if not isinstance(model, bool):
+            raise ValueError('Training model flag must be boolean')
+        simulator = raw.get('simulator_formulas', False)
+        if not isinstance(simulator, bool) or simulator and not model:
+            raise ValueError('Simulator formulas require the corrected model')
+        return cls(revision, attrs, *values[5:], effect, ammo, broken, model, simulator)
+
+    def as_dict(self):
+        return asdict(self)
+
+    def values(self):
+        values = self.attributes + (self.health, self.stamina, self.armour, self.spread,
+                  self.effect_armour, int(self.ammo_modifiers), int(self.broken_armour), int(self.combat_v2))
+        if self.simulator_formulas:
+            values += (1,)
+        return ','.join(format(value, '.15g') for value in values)
+
+    @classmethod
+    def from_values(cls, text):
+        if not isinstance(text, str) or len(text) > 256:
+            raise ValueError('Invalid training rules payload')
+        values = text.split(',')
+        if len(values) not in (12, 13, 14) or any(v not in ('0', '1') for v in values[10:]):
+            raise ValueError('Twelve to fourteen training values required')
+        numbers = [float(v) for v in values[:10]]
+        return cls.parse(dict(revision='session-v1', attributes=numbers[:5],
+                              **dict(zip(('health', 'stamina', 'armour', 'spread', 'effect_armour'), numbers[5:])),
+                              ammo_modifiers=values[10] == '1', broken_armour=values[11] == '1',
+                              combat_v2=len(values) >= 13 and values[12] == '1',
+                              simulator_formulas=len(values) == 14 and values[13] == '1'))
+
+    def weapon(self, weapon, ammo):
+        if not self.ammo_modifiers and self.spread == 1:
+            return weapon
+        damage, stamina, reach = self.ammunition(ammo)
+        return weapon._replace(dmin=round(weapon.dmin * damage), dmax=round(weapon.dmax * damage),
+                               sdmin=round(weapon.sdmin * stamina), sdmax=round(weapon.sdmax * stamina),
+                               opt_lo=weapon.opt_lo * reach, opt_hi=weapon.opt_hi * reach,
+                               max_range=weapon.max_range * reach, cone=weapon.cone * self.spread / reach)
+
+    def ammunition(self, ammo):
+        damage = ammo.get('dam_mod', 1) if self.ammo_modifiers else 1
+        stamina = ammo.get('st_mod', 1) if self.ammo_modifiers else 1
+        reach = ammo.get('range_mod', 1) if self.ammo_modifiers else 1
+        # Static item data are trusted only after finite/range validation.
+        if any(isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v) or not 0 < v <= 10
+               for v in (damage, stamina, reach)):
+            raise ValueError('Invalid experimental ammunition modifiers')
+        return damage, stamina, reach
+
+    def description(self):
+        attributes = ', '.join('%s %g%%' % (label, value * 100)
+                               for label, value in zip(
+                                   ('сила', 'ловкость', 'телосложение', 'восприятие', 'интеллект'),
+                                   self.attributes))
+        return ('Характеристики: %s.\n'
+                'Запас HP: %g%%; выносливости: %g%%.\n'
+                'Броня: %g%%; доп. броня: %g ед.; разброс: %g%%.\n'
+                'Параметры патронов: %s; защита сломанной брони: %s.') % (
+                    attributes, self.health * 100, self.stamina * 100,
+                    self.armour * 100, self.effect_armour, self.spread * 100,
+                    'учитывать' if self.ammo_modifiers else 'не учитывать',
+                    'учитывать' if self.broken_armour else 'не учитывать')
+
+@lru_cache(maxsize=1)
+def current():
+    return Rules.parse(json.loads(PATH.read_text(encoding='utf-8-sig')))
+
+
+@lru_cache(maxsize=1)
+def simulator_notes():
+    from training import formulas as training_formulas
+    snapshot = training_formulas.data()
+    pages = ['Симулятор: после правок · ' + snapshot['source_commit'][:7] +
+        '\nНовая таблица оружия, комплектов и мобов из main симулятора. Далее: сравнение с исходной моделью по справочнику симулятора.',
+        'Управление на полигоне остаётся игровым: режим стрельбы выбираете вы. Автовыбор режима для виртуального игрока на сайте не заменяет ваши хоткеи. '
+        'Точки появления, агрессия и действия противников сохраняют правила полигона. Это ручной бой, а не автоматический прогон сайта.',
+        'Выбор профиля пока не меняет бой. Нажмите «Применить правила» после просмотра. Профиль сохраняется для вашего тренировочного персонажа; '
+        'в совместной комнате другие участники выбирают его отдельно. Основная игра не меняется. '
+        'P-предметы без аналога в симуляторе сохраняют прежние параметры полигона.']
+    for row in snapshot['rule_changes']:
+        # A long set table is split by sentences/entries, not shrunk to tiny type.
+        title = row['what']
+        text = 'Было: ' + row['now'] + '\nСтало: ' + row['after']
+        lines, page = [], ''
+        for part in text.replace('; ', ';\n').split('\n'):
+            if page and len(page) + len(part) > 620:
+                lines.append(page)
+                page = ''
+            page += ('\n' if page else '') + part
+        if page:
+            lines.append(page)
+        pages.extend(title + '\n\n' + part for part in lines)
+    return tuple(pages)

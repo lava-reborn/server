@@ -44,6 +44,7 @@ import io
 import json
 import os
 import re
+import item_type_ids
 
 PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                     "data", "own_items.json")
@@ -79,6 +80,8 @@ def parse(doc):
         if not FIRST <= t <= LAST:
             raise Refused("%s: a type of ours is %d..%d (above the original's, within an "
                           "oid's four hex digits)" % (where, FIRST, LAST))
+        if item_type_ids.private(t):
+            raise Refused('%s: type is reserved for runtime-only templates' % where)
         if not isinstance(rec, dict):
             raise Refused("%s: not an object" % where)
         name, like = rec.get("name"), rec.get("like")
