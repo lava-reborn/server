@@ -50,6 +50,7 @@ def main():
     ap.add_argument('--res', type=Path, required=True)
     ap.add_argument('--player', type=Path, required=True)
     ap.add_argument('--out', type=Path, required=True)
+    ap.add_argument('--training', action='store_true', help='Explicitly enable the private training range in this local kit')
     args = ap.parse_args()
     out = args.out.resolve()
     if out.exists() or out.with_suffix('.zip').exists():
@@ -57,6 +58,8 @@ def main():
     if not (args.res / 'main.swf').is_file() or not args.player.is_file():
         ap.error('Missing original resources or Flash projector.')
     out.mkdir(parents=True)
+    if args.training:
+        (out / 'training.enabled').write_text('Local training range enabled.\n', encoding='utf-8')
     print('Copying game resources...', flush=True)
     # Only game asset formats; cache databases, binaries and user data stay out.
     assets = {'.swf', '.xml', '.jpg', '.jpeg', '.png', '.mp3', '.wav', '.gif', '.txt'}
@@ -79,7 +82,8 @@ def main():
     ensure_tester_avatar(out / 'res')
     print('Building client with current patches...', flush=True)
     subprocess.run([sys.executable, '-B', str(ROOT / 'tools' / 'widescreen.py'),
-                    str(args.res / 'main.swf'), str(out / 'res' / 'main.swf')],
+                    str(args.res / 'main.swf'), str(out / 'res' / 'main.swf'),
+                    '--training' if args.training else '--no-training'],
                    cwd=ROOT, check=True)
     from tester_preloader import build as build_preloader
     build_preloader(out / 'res' / 'main.swf', out / 'res' / 'tester-start.swf')
