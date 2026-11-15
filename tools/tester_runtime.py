@@ -25,6 +25,7 @@ def configure():
         LAVA_GAME_PORT='19775', LAVA_HTTP_HOST='127.0.0.1',
         LAVA_HTTP_PORT='18080', LAVA_HTTP_RES='1', LAVA_CHEATS='1',
         LAVA_REGISTER_EMAIL='0', LAVA_ADMINS='',
+        LAVA_TRAINING_GROUND='1' if (ROOT / 'training.enabled').is_file() else '0',
         LAVA_BOSS_HOURS=','.join(str(i) for i in range(0, 24, 2)),
         LAVA_BOSS_TZ='Europe/Moscow', LAVA_BOSS_STAY='60',
         LAVA_WAREHOUSE_HOURS='20', LAVA_START='181', LAVA_START_AFRO='1000',

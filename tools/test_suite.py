@@ -83,6 +83,8 @@ def sorts():
 
 TREE = {
     "server/mod.py": MODULE,
+    "server/feature/nested.py": "import json\nDATA = json.load(open('data/nested.json'))\n",
+    "data/nested.json": "{}\n",
     "server/test_a.py": "import mod\nmod.used_by_a()\n",
     "server/test_b.py": ("import mod\nmod.used_by_b()\nopen('../data/table.json')\n"
                          "open('../data/kinds.json')\n"),
@@ -99,7 +101,7 @@ TREE = {
 # «common»), as world.placements is. Only test_a is noted as importing the
 # module, so that an import's read of names.json is told from the rest.
 MAP = {"suites": {"test_a": ["server/mod.py:<module>", "server/mod.py:used_by_a",
-                             "server/mod.py:load_table"],
+                             "server/mod.py:load_table", "server/feature/nested.py:<module>"],
                   "test_b": ["server/mod.py:used_by_b", "server/mod.py:load_table"],
                   "test_c": ["server/mod.py:gone_soon", "server/mod.py:load_table",
                              "server/mod.py:sorts"],
@@ -176,6 +178,9 @@ check("a table a module's top level reads: every suite that imported the module"
       picked(lambda: edit(ROOT, "data/names.json", "{}", '{"a": 1}'))[0], ["test_a"])
 _renamed = picked(lambda: git(ROOT, "mv", "data/table.json", "data/table2.json"))[0]
 check("a table renamed: the suite naming its old name is run", "test_b" in _renamed, True)
+check("a table loaded by a nested package: the suite importing that package",
+      picked(lambda: edit(ROOT, "data/nested.json", "{}", '{"a": 1}'))[0], ["test_a"])
+
 check("the docs: nothing", picked(lambda: edit(ROOT, "README.md", "docs", "the docs"))[0], [])
 _names, _why = picked(lambda: edit(ROOT, "Dockerfile", "scratch", "alpine"))
 check("a file no suite names: everything", _names, EVERY)

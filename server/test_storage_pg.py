@@ -39,7 +39,7 @@ import progression  # noqa: E402
 import storage  # noqa: E402
 
 checks = 0
-TABLES = ("mail", "map_marks", "items", "char_quests_done", "char_quests",
+TABLES = ("char_training_profiles", "mail", "map_marks", "items", "char_quests_done", "char_quests",
           "char_spec_access", "char_stats", "online", "heartbeat", "admin_actions", "auction_lots",
           "migrations", "trophies", "clan_ledger", "clan_relations", "clan_members",
           "clans", "characters", "accounts", "money_ledger", "char_lent", "ground",
@@ -111,6 +111,26 @@ ok(row["gold"] == 500 and row["afro"] == 7, "деньги записались: 
 ok(row["bank_steps"] == 0, "bank_steps у новорождённого 0")
 store.save_character_state(char_id, bank_steps=2)
 ok(store.character(char_id)["bank_steps"] == 2, "покупка хранилища записывается")
+
+# Training checkpoints share the main transaction, never the clone's SQLite.
+real_character = dict(store.character(char_id))
+store.save_training_profile(char_id, {"version": 1, "inside": True})
+ok(store.training_profile(char_id)["inside"] is True, "training checkpoint inserts")
+store.save_training_profile(char_id, {"version": 1, "inside": False})
+ok(store.training_profile(char_id)["inside"] is False, "training checkpoint upserts")
+
+
+def rollback_training_checkpoint():
+    with storage.atomic(store.db):
+        store.save_training_profile(char_id, {"version": 1, "inside": True})
+        raise ValueError("injected checkpoint rollback")
+
+
+ok(raises(rollback_training_checkpoint, ValueError), "checkpoint failure propagates")
+ok(store.training_profile(char_id)["inside"] is False, "nested checkpoint rolls back")
+ok(dict(store.character(char_id)) == real_character, "checkpoint leaves main character intact")
+store.db.execute("DELETE FROM char_training_profiles WHERE char_id = ?", (char_id,))
+store.db.commit()
 
 # --- вещи, квесты, письма: у всех свой ключ --------------------------------
 item = store.create_item(char_id, 45676, 1, count=3)

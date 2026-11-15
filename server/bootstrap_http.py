@@ -51,6 +51,8 @@ if __name__ == "__main__":
 import accounts
 import email_flow
 import names
+from training import api as training_ground
+training_ground.preload_strings()
 import items
 import stopwarn
 import map_cells

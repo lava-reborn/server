@@ -50,6 +50,10 @@ CREATE TABLE IF NOT EXISTS characters (
     on_map     INTEGER NOT NULL DEFAULT 0,
     UNIQUE (account_id, slot)
 );
+CREATE TABLE IF NOT EXISTS char_training_profiles (
+    char_id INTEGER PRIMARY KEY REFERENCES characters(id) ON DELETE CASCADE,
+    data TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS char_stats (
     char_id INTEGER NOT NULL REFERENCES characters(id),
     kind    TEXT    NOT NULL,      -- 'attrib' | 'skill' | 'spec'
@@ -1584,8 +1588,8 @@ def seed_stats(db, char_id):
                (progression.START_AFRO, char_id))
 
 
-def connect():
-    db = storage.connect(DB_PATH)
+def connect(path=None):
+    db = storage.connect(DB_PATH if path is None else path)
     # Журнал и таймаут выставляет сам storage: два процесса держат эту
     # базу -- сервер игры и страница регистрации, -- и писатель не должен
     # запирать читателя на всю транзакцию. Схема одна на обе базы: для
@@ -1598,11 +1602,16 @@ def connect():
 
 
 class Store:
-    def __init__(self, path=None):
-        global DB_PATH
-        if path:
-            DB_PATH = path
-        self.db = connect()
+    def __init__(self, path=None, *, db=None):
+        """Use a local path or an already initialised borrowed connection.
+
+        The provider must supply an exclusively owned, migrated db= connection.
+        Store.close closes it too; Store does not reconnect, migrate or change
+        the process-wide default database.
+        """
+        if path is not None and db is not None:
+            raise ValueError("Choose a database path or a borrowed connection")
+        self.db = db if db is not None else (connect() if path is None else connect(path))
         # (source, ref) a purse written now is booked under (money_ledger),
         # set around a command by its handler (booked_as); None books it
         # under LEDGER_OTHER. The game server is one thread: a command runs
@@ -1610,6 +1619,41 @@ class Store:
         self.money_source = None
         self.quest_revisions = {}
         self._combat_clans = {}
+
+    @classmethod
+    def temporary(cls):
+        """An isolated SQLite store, even when the real server uses Postgres."""
+        db = storage.SqliteDB(':memory:')
+        try:
+            db.create_schema(SCHEMA)
+            migrate(db)
+            return cls(db=db)
+        except Exception:
+            db.close()
+            raise
+
+    def training_profile(self, char_id):
+        row = self.db.execute("SELECT data FROM char_training_profiles WHERE char_id = ?", (char_id,)).fetchone()
+        if row is None:
+            return None
+        try:
+            profile = json.loads(row['data'])
+            if not isinstance(profile, dict):
+                raise ValueError('Training checkpoint is not an object')
+            return profile
+        except (ValueError, TypeError):
+            log.warning('Invalid saved training profile for character %s', char_id)
+            return None
+
+    def save_training_profile(self, char_id, profile):
+        if not isinstance(profile, dict):
+            raise ValueError('Training checkpoint must be an object')
+        data = json.dumps(profile, ensure_ascii=False, separators=(',', ':'), allow_nan=False)
+        if len(data) > 16384:
+            raise ValueError('Training profile is too large')
+        with storage.atomic(self.db):
+            self.db.execute("INSERT INTO char_training_profiles(char_id, data) VALUES (?, ?)"
+                            " ON CONFLICT(char_id) DO UPDATE SET data = excluded.data", (char_id, data))
 
     def quests_changed(self, char_id):
         """Invalidate online availability snapshots after a quest write."""
@@ -1819,7 +1863,7 @@ class Store:
             "SELECT c.*, a.login, a.banned FROM characters c"
             " JOIN accounts a ON a.id = c.account_id"
             " WHERE %s LIKE ? OR %s LIKE ?"
-            % (storage.lower("c.name"), storage.lower("a.login")) +
+            % (storage.lower("c.name", self.db), storage.lower("a.login", self.db)) +
             " ORDER BY c.name LIMIT ?", (like, like, limit)).fetchall()
 
     # --- who is in the game ----------------------------------------------
@@ -2440,7 +2484,7 @@ class Store:
 
     def lock_quest_character(self, char_id):
         """Serialize this character's quest writes inside storage.atomic."""
-        lock = " FOR UPDATE" if storage.using_postgres() else ""
+        lock = " FOR UPDATE" if isinstance(self.db, storage.PostgresDB) else ""
         return self.db.execute("SELECT id FROM characters WHERE id = ?" + lock,
                                (char_id,)).fetchone() is not None
 
