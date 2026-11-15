@@ -47,7 +47,6 @@ the gate runs as itself, checks what came out before anything is signed.
 """
 import argparse
 import hashlib
-import json
 import os
 import re
 import shutil
@@ -461,36 +460,6 @@ class Build:
         finally:
             sys.path.pop(0)
 
-    def check_training_icons(self):
-        """Refuse missing range pictures before publishing/restarting the game."""
-        path = os.path.join(self.tree, 'data', 'training_icons.json')
-        if not os.path.isfile(path):
-            if os.path.isfile(os.path.join(self.tree, 'data', 'training_content.json')):
-                raise SystemExit('Missing training icon catalogue: data/training_icons.json')
-            return  # Older trees/toy builder fixtures have no range catalogue.
-        with open(path, encoding='utf-8') as fh:
-            document = json.load(fh)
-        if document.get('version') != 1:
-            raise SystemExit('Unsupported training icon catalogue')
-        sources = document.get('sources')
-        if not isinstance(sources, dict) or not sources:
-            raise SystemExit('Empty or invalid training icon catalogue')
-        sys.path.insert(0, os.path.join(self.tree, 'server'))
-        try:
-            import own_items
-            cat = own_items.table(self.original('database/objects.xml'))
-            cat.update(own_items.rows(cat, own_items.load(
-                os.path.join(self.tree, 'data', 'own_items.json'))))
-            for source, icon in sources.items():
-                if icon not in cat:
-                    raise SystemExit('Training item %s: unknown icon type %s' % (source, icon))
-                path = own_items.icon_path(*cat[icon])
-                if path not in self.files:
-                    raise SystemExit('Training item %s: missing client icon %s' % (source, path))
-            self.report.append('training:  %d icon mappings verified' % len(sources))
-        finally:
-            sys.path.pop(0)
-
     def run(self):
         os.makedirs(self.out, exist_ok=True)
         self.base = read_entries(self.base_path, "lava-base 1")
@@ -582,7 +551,6 @@ class Build:
                     self.put(p, fh.read(), "files")
                 n += 1
         self.report.append("files:     %d from client/files/" % n)
-        self.check_training_icons()
 
         # Windows puts two paths differing in case into one file, and a file
         # cannot be a folder of another.

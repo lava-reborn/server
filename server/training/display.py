@@ -1,7 +1,6 @@
 """Cached range presentation: exact model icons and catalogue classification."""
 from functools import lru_cache
 from pathlib import Path
-import json
 import re
 
 UPGRADES = {'precision': 'Точность', 'damage': 'Урон', 'shotrange': 'Дальность',
@@ -55,40 +54,19 @@ def weapon_class(source):
     return items.params_of(source).get('weapon_type', -1)
 
 
-@lru_cache(maxsize=1)
-def icon_catalogue():
-    # Production mounts only XML/server tables, not the client's SWF artwork.
-    # This generated table is checked against the client release's manifest.
-    path = Path(__file__).resolve().parents[2] / 'data/training_icons.json'
-    document = json.loads(path.read_text(encoding='utf-8'))
-    if document.get('version') != 1:
-        raise ValueError('Unsupported training icon catalogue')
-    return {int(source): icon for source, icon in document['sources'].items()}
-
-
 @lru_cache(maxsize=None)
 def icon_source(source):
     import items
-    candidate = icon_catalogue().get(source)
-    if (candidate is None or candidate not in items.catalogue()
-            or items.root_of(candidate) != items.root_of(source)
-            or model(candidate) != model(source)):
-        raise ValueError('No matching model icon for training item: %s' % source)
-    return candidate
-
-
-def resolve_icon(source, paths):
-    """Build-time selection from shipped client paths; no server artwork I/O."""
-    import items
     import own_items
     from training import balance as training_balance
+    import world
     from training import items as training_items
     if source in training_items.PROTOTYPES:
-        return resolve_icon(training_items.PROTOTYPES[source]['base'], paths)
-    root, _raw = items.catalogue()[source]
+        return icon_source(training_items.PROTOTYPES[source]['base'])
+    root, raw = items.catalogue()[source]
     def exists(candidate):
         return (candidate is not None and items.root_of(candidate) == root
-                and own_items.icon_path(*items.catalogue()[candidate]) in paths)
+                and (Path(world.RES) / own_items.icon_path(*items.catalogue()[candidate])).is_file())
     if exists(source):
         return source
     own = own_items.load().get(source)
