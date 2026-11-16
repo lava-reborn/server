@@ -20,12 +20,16 @@ No LAVA_TEST_REPORT, no file: a suite run by hand prints what it always did.
 
 connect(port, proc, log) is how a suite waits for the server it started: a
 socket once the port answers, the server's own last lines if it died first.
+With LAVA_TEST_GATEWAY set, that socket goes to the server through a relay
+(see GATEWAY below), and the suite plays on as if it were direct.
 """
+import atexit
 import json
 import linecache
 import os
 import re
 import socket
+import subprocess
 import sys
 import time
 
@@ -173,6 +177,60 @@ def _tail(log, size=2000):
     return "".join(log)[-size:]
 
 
+# The Go gateway that will stand before this server (the repository
+# reborn/game, its bin/game) has to be invisible to the client, and the
+# suites are what says whether it is: LAVA_TEST_GATEWAY names its binary, and
+# then every socket connect() hands out reaches the server through a gateway
+# of its own, started here in front of that server's port. Nothing else
+# changes: a suite starts its server and plays exactly as before. Unset, as
+# in CI, there is no gateway and connect() is what it always was.
+#
+# The gateway is told its addresses the way it reads them, GAME_* in its
+# environment. Its log goes beside the suite's report (LAVA_TEST_REPORT with
+# ".gateway.log" for ".jsonl"), or nowhere when there is no report.
+GATEWAY = os.environ.get("LAVA_TEST_GATEWAY") or ""
+GATEWAY_WAIT = 20
+_gateways = {}          # (host, port) of a server -> port of its gateway
+
+
+def _free_port():
+    with socket.socket() as probe:
+        probe.bind(("127.0.0.1", 0))
+        return probe.getsockname()[1]
+
+
+def _gateway_port(host, port):
+    """The port of the gateway before the server on host:port, started on
+    the first call. The server already listens: connect() saw to that."""
+    if (host, port) in _gateways:
+        return _gateways[(host, port)]
+    entrance = _free_port()
+    env = dict(os.environ,
+               GAME_GATEWAY_TCP_ADDR="127.0.0.1:%d" % entrance,
+               GAME_GATEWAY_UPSTREAM_ADDR="%s:%d" % (host, port),
+               GAME_HTTP_ADDR="127.0.0.1:%d" % _free_port())
+    report = os.environ.get("LAVA_TEST_REPORT")
+    out = (open(re.sub(r"\.jsonl$", "", report) + ".gateway.log", "a")
+           if report else subprocess.DEVNULL)
+    proc = subprocess.Popen([GATEWAY], env=env, stdout=out, stderr=out)
+    atexit.register(proc.kill)
+    end = time.time() + GATEWAY_WAIT
+    while True:
+        if proc.poll() is not None:
+            raise SystemExit("gateway %s exited (%s) before it listened"
+                             % (GATEWAY, proc.returncode))
+        try:
+            socket.create_connection(("127.0.0.1", entrance), 0.5).close()
+            break
+        except OSError:
+            if time.time() > end:
+                raise SystemExit("gateway %s did not start in %ds"
+                                 % (GATEWAY, GATEWAY_WAIT))
+            time.sleep(0.05)
+    _gateways[(host, port)] = entrance
+    return entrance
+
+
 def connect(port, proc=None, log=None, timeout=None, host="127.0.0.1"):
     """A socket to the server on port, as soon as it listens. proc is the
     server's Popen: if it exits first, the suite stops with its exit code and
@@ -185,12 +243,21 @@ def connect(port, proc=None, log=None, timeout=None, host="127.0.0.1"):
             raise SystemExit("server exited (%s) before it listened:\n%s"
                              % (proc.returncode, _tail(log)))
         try:
-            return socket.create_connection((host, port), 0.5)
+            direct = socket.create_connection((host, port), 0.5)
+            break
         except OSError:
             if time.time() > end:
                 raise SystemExit("server did not start in %ds:\n%s"
                                  % (window, _tail(log)))
             time.sleep(0.1)
+    if not GATEWAY:
+        return direct
+    # The wait above is still on the server itself: a gateway accepts at
+    # once and hangs up when its server is not there, which would hand a
+    # suite that restarts its server a dead socket instead of a wait.
+    direct.close()
+    return socket.create_connection(
+        ("127.0.0.1", _gateway_port(host, port)), 0.5)
 
 
 def scene_client(cls):
