@@ -31,6 +31,25 @@ def plain_tile():
     return J.make(256, 256, planes, sampling=(2, 2), qtables=fine)
 
 
+def original_tiles():
+    """The installed client's painted tiles are not original test inputs."""
+    res = Path(os.environ.get('LAVA_RES', ''))
+    paths = (TOWN, OTHER)
+    if not all((res / path).is_file() for path in paths):
+        print('  -- original JPEG integration not run: the two global-map tiles are unavailable;'
+              ' synthetic painting checks still run')
+        return None
+    base = Path(__file__).resolve().parent.parent / 'client/base.txt'
+    originals = {path: (res / path).read_bytes() for path in paths}
+    hashes = {parts[2]: parts[0] for line in base.read_text(encoding='utf-8').splitlines()
+              if len(parts := line.split('\t')) == 3}
+    if any(hashlib.sha256(raw).hexdigest() != hashes[path] for path, raw in originals.items()):
+        print('  -- original JPEG integration not run: LAVA_RES has modified tiles (client/base.txt);'
+              ' synthetic painting checks still run')
+        return None
+    return originals
+
+
 class EdenMapPaintTests(unittest.TestCase):
     def assert_town_blocks_only(self, original, marked):
         before, after = J.Jpeg(original), J.Jpeg(marked)
@@ -86,17 +105,19 @@ class EdenMapPaintTests(unittest.TestCase):
             self.assertIsNone(installed.get(TOWN))
             self.assertEqual(installed._tiles, {})
 
+
+class EdenOriginalMapPaintTests(unittest.TestCase):
+    assert_town_blocks_only = EdenMapPaintTests.assert_town_blocks_only
+
+    @classmethod
+    def setUpClass(cls):
+        cls.originals = original_tiles()
+        if cls.originals is None:
+            raise unittest.SkipTest('Original JPEG integration requires original resource tiles')
+
     def test_real_original_jpegs_keep_only_one_green_town_and_do_not_reencode_twice(self):
         res = Path(os.environ.get('LAVA_RES', ''))
-        paths = (TOWN, OTHER)
-        if not all((res / path).is_file() for path in paths):
-            self.skipTest('The two original global-map JPEG resources are not available')
-        base = Path(__file__).resolve().parent.parent / 'client/base.txt'
-        originals = {path: (res / path).read_bytes() for path in paths}
-        hashes = {parts[2]: parts[0] for line in base.read_text(encoding='utf-8').splitlines()
-                  if len(parts := line.split('\t')) == 3}
-        if any(hashlib.sha256(raw).hexdigest() != hashes[path] for path, raw in originals.items()):
-            self.skipTest('LAVA_RES contains modified images rather than original release resources')
+        paths, originals = (TOWN, OTHER), self.originals
         read = lambda path: originals.get(path)
         tiles, _report = M.apply(read, eden_plan())
         self.assertEqual(set(tiles), {TOWN})
@@ -108,4 +129,8 @@ class EdenMapPaintTests(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    run_cases(EdenMapPaintTests)
+    cases = [EdenMapPaintTests]
+    if original_tiles() is not None:
+        print('  -- original JPEG integration enabled: both tiles match client/base.txt')
+        cases.append(EdenOriginalMapPaintTests)
+    run_cases(*cases)

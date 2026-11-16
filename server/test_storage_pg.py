@@ -35,11 +35,14 @@ if not DSN:
 import psycopg  # noqa: E402
 
 import accounts  # noqa: E402
+import eden  # noqa: E402
+import eden_ground  # noqa: E402
 import progression  # noqa: E402
 import storage  # noqa: E402
 
 checks = 0
-TABLES = ("char_training_profiles", "mail", "map_marks", "items", "char_quests_done", "char_quests",
+TABLES = ("eden_ground", "eden_palm_state", "char_eden", "char_eden_visits",
+          "char_training_profiles", "mail", "map_marks", "items", "char_quests_done", "char_quests",
           "char_spec_access", "char_stats", "online", "heartbeat", "admin_actions", "auction_lots",
           "migrations", "trophies", "clan_ledger", "clan_relations", "clan_members",
           "clans", "characters", "accounts", "money_ledger", "char_lent", "ground",
@@ -131,6 +134,73 @@ ok(store.training_profile(char_id)["inside"] is False, "nested checkpoint rolls 
 ok(dict(store.character(char_id)) == real_character, "checkpoint leaves main character intact")
 store.db.execute("DELETE FROM char_training_profiles WHERE char_id = ?", (char_id,))
 store.db.commit()
+
+# --- Эдем: назначение, счётчик и добыча в общей транзакции ------------------
+eden_before = dict(store.character(char_id))
+sentence = eden.assign(store, char_id, "pg-test", "Проверка назначения")
+ok(sentence["visit"] == 1 and eden.assigned(store, char_id) == sentence,
+   "Eden assignment persists its first visit")
+ok(raises(lambda: eden.assign(store, char_id, "pg-test", "Повтор"), ValueError),
+   "duplicate Eden assignment is refused without incrementing visits")
+
+
+def rollback_eden_reassignment():
+    with storage.atomic(store.db):
+        eden.release(store, char_id)
+        eden.assign(store, char_id, "pg-test", "Откат назначения")
+        raise ValueError("injected Eden reassignment rollback")
+
+
+ok(raises(rollback_eden_reassignment, ValueError), "Eden reassignment failure propagates")
+ok(eden.assigned(store, char_id) == sentence and store.db.execute(
+    "SELECT visits FROM char_eden_visits WHERE char_id=?", (char_id,)).fetchone()["visits"] == 1,
+   "nested release and next visit roll back together")
+ok(eden.release(store, char_id) == sentence and eden.release(store, char_id) is None,
+   "Eden releases exactly once")
+sentence = eden.assign(store, char_id, "pg-test", "Второе назначение")
+ok(sentence["visit"] == 2, "Eden lifetime counter survives release")
+place = (eden.CENTER, *eden.CELLS[eden.CENTER])
+palm_key, deadline = (eden.CENTER, 200, 1790), time.time() + 300.125
+palm_columns = ("loc", "home_cell", "mob_type", "respawn_at")
+with storage.atomic(store.db):
+    harvest = eden_ground.create(store, eden.GOOD_BANANA, char_id, 2, place, 200, deadline)
+    for due in (deadline - 10, deadline):
+        store.db.replace("eden_palm_state", palm_columns, [(*palm_key, due)],
+                         conflict=("loc", "home_cell", "mob_type"))
+ok(store.item(harvest["uniq"])["char_id"] == 0 and dict(store.db.execute(
+    "SELECT owner_char, visit FROM eden_ground WHERE uniq=?", (harvest["uniq"],)).fetchone())
+   == {"owner_char": char_id, "visit": 2}, "ground resource retains its finishing worker and visit")
+ok(len(store.on_ground(0)) == 1 and len(store.db.execute(
+    "SELECT * FROM eden_palm_state").fetchall()) == 1 and abs(store.db.execute(
+    "SELECT respawn_at FROM eden_palm_state").fetchone()["respawn_at"] - deadline) < 1e-3,
+   "palm deadline upserts one key and preserves fractional seconds")
+
+
+def rollback_eden_ground_release():
+    with storage.atomic(store.db):
+        eden.release(store, char_id)
+        eden_ground.withdraw_owned_ground(store, char_id)
+        store.db.replace("eden_palm_state", palm_columns, [(*palm_key, deadline + 30)],
+                         conflict=("loc", "home_cell", "mob_type"))
+        raise ValueError("injected Eden ground rollback")
+
+
+ok(raises(rollback_eden_ground_release, ValueError), "Eden ground release failure propagates")
+ok(eden.assigned(store, char_id) == sentence and store.item(harvest["uniq"]) is not None
+   and len(store.on_ground(0)) == 1 and store.db.execute(
+       "SELECT COUNT(*) n FROM eden_ground WHERE uniq=?", (harvest["uniq"],)).fetchone()["n"] == 1
+   and abs(store.db.execute("SELECT respawn_at FROM eden_palm_state").fetchone()["respawn_at"]
+           - deadline) < 1e-3, "release rollback preserves sentence, resource, binding and deadline")
+with storage.atomic(store.db):
+    eden.release(store, char_id)
+    eden_ground.withdraw_owned_ground(store, char_id)
+    store.db.execute("DELETE FROM eden_palm_state WHERE loc=?", (eden.CENTER,))
+ok(store.item(harvest["uniq"]) is None and store.on_ground(0) == [] and store.db.execute(
+    "SELECT COUNT(*) n FROM eden_ground WHERE owner_char=?", (char_id,)).fetchone()["n"] == 0,
+   "release removes owned ground and its binding despite FK-free schema")
+ok(dict(store.character(char_id)) == eden_before and store.db.execute(
+    "SELECT visits FROM char_eden_visits WHERE char_id=?", (char_id,)).fetchone()["visits"] == 2,
+   "Eden state SQL preserves the character and its lifetime visit history")
 
 # --- вещи, квесты, письма: у всех свой ключ --------------------------------
 item = store.create_item(char_id, 45676, 1, count=3)

@@ -8,6 +8,7 @@ from unittest.mock import Mock, patch
 from test_eden_quests import EdenQuestTests
 import eden
 import inventory
+import items
 import quests
 import rooms
 import server
@@ -231,6 +232,53 @@ class EdenAdminRealCloseTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(self.store.item(own_ammo['uniq']), own_ammo)
             self.assertEqual(self.store.money(self.s.char_id), before_money)
             previous = tool['uniq']
+
+    async def test_committed_assignment_invalidates_old_merchant_buy_sell_and_repair(self):
+        # A real Session previously kept this ordinary stock across lcall.
+        # A forged purchase then bought Bartholomew's goods inside Eden.
+        self.s.inv.trade = inventory.TradeSession(1, 81, 36)
+        stock_index = items.stock_for(81, 36).index(6043)
+        ordinary = self.s.inv.create(inventory.STARTER_PISTOL)
+        self.store.update_item(ordinary['uniq'], brk=1)
+        self.s.char.gold = 10000
+        self.s.char.save(self.store)
+        self.apply('eden')
+        self.s.cmd_lenter(dict(accept=1))
+        self.assertEqual(self.s.loc.id, eden.CENTER)
+        self.assertIsNone(self.s.inv.trade)
+        before = self.store.money(self.s.char_id), self.store.items_of(self.s.char_id)
+        operations = (
+            dict(s_status=inventory.UPD_BUY, obj=format(stock_index, 'x'), param=1),
+            dict(s_status=inventory.UPD_BUY_GOLD, obj=format(stock_index, 'x'), param=1),
+            dict(s_status=inventory.UPD_SELL, obj=inventory.oid_of(ordinary), param=1),
+            *(dict(s_status=code, obj=inventory.oid_of(ordinary)) for code in
+              (inventory.UPD_REPAIR, inventory.UPD_REPAIR_GOLD, inventory.UPD_RESTORE)),
+        )
+        for packet in operations:
+            with self.subTest(code=packet['s_status']):
+                self.s.writer.frames.clear()
+                self.s.cmd_ss_upd(packet)
+                self.assertIsNone(self.s.inv.trade)
+                self.assertEqual((self.store.money(self.s.char_id),
+                                  self.store.items_of(self.s.char_id)), before)
+                # No shop owns this command now. Keep the existing bare
+                # fallback acknowledgement, without item or money updates.
+                self.assertEqual(self.s.writer.frames, [('cmdAck', {'res': 0})])
+
+    async def test_assignment_rollback_preserves_the_previous_merchant_session(self):
+        trade = self.s.inv.trade = inventory.TradeSession(1, 81, 36)
+        before = (dict(self.store.character(self.s.char_id)),
+                  self.store.items_of(self.s.char_id))
+        self.s.writer.frames.clear()
+        with patch.object(self.store, 'save_position', side_effect=RuntimeError('assignment rollback')):
+            with self.assertRaisesRegex(RuntimeError, 'assignment rollback'):
+                self.apply('eden')
+        self.assertIs(self.s.inv.trade, trade)
+        self.assertIsNone(eden.assigned(self.store, self.s.char_id))
+        self.assertEqual((dict(self.store.character(self.s.char_id)),
+                          self.store.items_of(self.s.char_id)), before)
+        self.assertFalse(self.s.closed)
+        self.assertEqual(self.s.writer.frames, [])
 
     async def test_offline_reassignment_is_loaded_by_a_fresh_native_equipment_request(self):
         own_gun = self.s.inv.create(inventory.STARTER_PISTOL, slot=inventory.PRIMARY)

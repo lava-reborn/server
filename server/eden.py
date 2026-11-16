@@ -371,6 +371,10 @@ def admin_apply(store, row, sess, home):
                     server.GMAP.leave(sess)
                 sess.eden_sentence = sentence
                 sess._accepted_place = None
+                # The old merchant must not remain usable from the island.
+                # Clear only after COMMIT: a failed assignment still leaves
+                # the character and its ordinary shop session where they were.
+                sess.inv.trade = None
                 sess.inv.refresh_gear()
                 sess.restore(store.character(cid))
                 sess.send('eden_inv', refresh=1)

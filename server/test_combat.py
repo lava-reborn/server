@@ -720,6 +720,7 @@ _scratch.close()
 class _XpSession(object):
     def __init__(self, ch):
         self.char, self.pushed = ch, []
+        self.loc = _open
 
     def character(self):
         return self.char
