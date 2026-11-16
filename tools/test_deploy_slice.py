@@ -89,7 +89,18 @@ def client(data, objects=ORIGINAL_OBJECTS):
     res = tempfile.mkdtemp(dir=WORK)
     os.makedirs(os.path.join(res, "locations", "static"))
     os.makedirs(os.path.join(res, "database"))
-    for rel, body in ((REL, data), (OBJECTS, objects)):
+    files = {}
+    for directory in (os.path.join(ROOT, "data", "locations", "static"),
+                      os.path.join(ROOT, "client", "files", "locations", "static")):
+        if not os.path.isdir(directory):
+            continue
+        for name in os.listdir(directory):
+            rel = "locations/static/" + name
+            if name.endswith(".xml") and rel != REL and base_sha(rel) is not None:
+                files[rel] = original_of(rel)
+                assert files[rel] is not None, "fixture needs the original " + rel
+    files.update(((REL, data), (OBJECTS, objects)))
+    for rel, body in files.items():
         if body is not None:
             with open(os.path.join(res, *rel.split("/")), "wb") as fh:
                 fh.write(body)

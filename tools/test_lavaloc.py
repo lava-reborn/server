@@ -130,7 +130,8 @@ try:
                     expected_spawns)
             if got != want:
                 bad_world.append(lid)
-        if lid is not None and str(lid) in SIDES_TABLE and SIDES_TABLE[str(lid)] != L.exits_row(m):
+        if lid is not None and world.path_for(lid) == f and str(lid) in SIDES_TABLE \
+                and SIDES_TABLE[str(lid)] != L.exits_row(m):
             bad_exits.append(lid)
         if [c[:2] for c in m["lists"]["zones"]] != [c[:2] for c in m["lists"]["outzones"]]:
             bad_zones.append(f)

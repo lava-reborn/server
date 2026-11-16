@@ -35,6 +35,7 @@ DB = os.path.join(tempfile.mkdtemp(), "test.db")
 sys.path.insert(0, HERE)
 import accounts
 import mobs
+import progression
 import travel
 import world
 accounts.DB_PATH = DB
@@ -563,7 +564,16 @@ try:
     check("Alice's disconnected body is still visible under the same player id",
           [f for f in got if "rtype=-1;" in f],
           ["lch;newUser=%d;pos=%d;rtype=-1;" % (pid_a, alice_pos)])
-    testkit.walk_to(b, b.scene_pos - 1)
+    # A safe fractional arrival may already be beside the disconnected
+    # body. Pick an actual free neighbouring hex, not that occupied body's
+    # contact cell, which the fixture correctly treats as a stationary stop.
+    loc = world.location(b.scene_id)
+    blocked = loc.obstacles | set(b.scene_cells.values()) | set(travel.exit_sides(loc))
+    start = b.scene_pos
+    target = next(cell for cell in progression.hex_neighbours(start, loc.width, loc.height)
+                  if cell not in blocked)
+    testkit.walk_to(b, target)
+    check("the surviving client makes one real step", b.fixture_path, [start, target])
     expected = '|%s|' % '|'.join(map(str, b.fixture_path))
     check("and can still walk",
           movement_frames(b.frames(), owner_ap=50), ["cmdAck;res=0;", "userMove;id=0;path=%s;" % expected])

@@ -122,6 +122,7 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(os.path.dirname(HERE), "server"))
 sys.path.insert(0, HERE)
+import eden_map
 import world  # noqa: E402
 from build_npc_wiki import NOISE, XY, links, sections, skel, tokens  # noqa: E402
 
@@ -770,7 +771,8 @@ class Placer:
         cut to see what it changed."""
         self.files = static_files()
         usable = {i: f for i, f in self.files.items()
-                  if not f["test"] and f["ntitle"] not in GENERIC_TITLES
+                  if i not in eden_map.LOC_TO_CELL
+                  and not f["test"] and f["ntitle"] not in GENERIC_TITLES
                   and any(s in "WNES" for s in f["sides"])}
         # Clones: the same file shipped twice under two ids.
         self.clones = collections.defaultdict(list)
@@ -823,6 +825,10 @@ class Placer:
                      for i, f in self.usable.items()}
         self.cells = {}
         for cell, raws in tooltips().items():
+            # The exact administrative mapping belongs to eden_map, not
+            # the ordinary heuristic placer. Keep its labels on the map.
+            if cell in eden_map.CELL_TO_LOC:
+                continue
             heads, text, wants = parse_tooltip(raws)
             self.cells[cell] = dict(raws=raws, heads=heads, text=text, wants=wants,
                                     head=max(heads, key=len),

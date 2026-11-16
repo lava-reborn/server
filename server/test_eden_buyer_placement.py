@@ -9,6 +9,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 
 import names
 import npcs
+import eden_shop
 import progression
 import rooms
 import travel
@@ -35,7 +36,10 @@ class EdenBuyerPlacementTests(unittest.TestCase):
         self.assertTrue(names.known(BUYER))
         self.assertEqual(npcs.stock(BUYER), [])
         self.assertFalse(npcs.home(BUYER))
-        self.assertTrue(os.path.isfile(os.path.join(world.RES, 'mobs', types[APPEARANCE][2] + '.xml')))
+        # Server/CI resources contain catalogues, not the client's mob art.
+        # Its published native appearance ID must resolve to the original
+        # auctioneer above; the player's client owns that existing animation.
+        self.assertEqual(eden_shop.ART_TYPE, APPEARANCE)
 
     def test_buyer_is_only_in_town_beside_house_refuse_and_has_six_clear_approaches(self):
         placements = [(loc, row) for loc, rows in world.placements().items()

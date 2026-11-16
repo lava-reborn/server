@@ -14921,18 +14921,9 @@
       "start": "Одна связка зелёных бананов — один талон за зелень. Сортировщик принимает только этот вид бананов.",
       "notfinish": "Задание ещё не выполнено.",
       "finish": "Держи талон.",
-      "own_texts": [
-        "name",
-        "start",
-        "notfinish",
-        "finish"
-      ],
-      "give": [
-        1788
-      ],
-      "take": [
-        1788
-      ],
+      "own_texts": ["name", "start", "notfinish", "finish"],
+      "give": [1788],
+      "take": [1788],
       "rew_afro": 0,
       "rew_gold": 0,
       "repeatable": 1,
@@ -14941,17 +14932,10 @@
       "q_type": 0,
       "why": "RECOVERED type-specific banana/ticket exchange1:1 and personal sorter. DESIGNED local service wiring approved2026-11-16; closed administrative Eden only.",
       "objs": [
-        {
-          "obj": 4236,
-          "num": 1
-        }
+        {"obj": 4236, "num": 1}
       ],
-      "rew_obj": [
-        4231
-      ],
-      "num_rew_obj": [
-        1
-      ]
+      "rew_obj": [4231],
+      "num_rew_obj": [1]
     },
     {
       "type": 18112,
@@ -14960,18 +14944,9 @@
       "start": "Одна связка зрелых бананов — один талон за зрелость. Сортировщик принимает только этот вид бананов.",
       "notfinish": "Задание ещё не выполнено.",
       "finish": "Держи талон.",
-      "own_texts": [
-        "name",
-        "start",
-        "notfinish",
-        "finish"
-      ],
-      "give": [
-        1787
-      ],
-      "take": [
-        1787
-      ],
+      "own_texts": ["name", "start", "notfinish", "finish"],
+      "give": [1787],
+      "take": [1787],
       "rew_afro": 0,
       "rew_gold": 0,
       "repeatable": 1,
@@ -14980,17 +14955,10 @@
       "q_type": 0,
       "why": "RECOVERED type-specific banana/ticket exchange1:1 and personal sorter. DESIGNED local service wiring approved2026-11-16; closed administrative Eden only.",
       "objs": [
-        {
-          "obj": 4235,
-          "num": 1
-        }
+        {"obj": 4235, "num": 1}
       ],
-      "rew_obj": [
-        4232
-      ],
-      "num_rew_obj": [
-        1
-      ]
+      "rew_obj": [4232],
+      "num_rew_obj": [1]
     },
     {
       "type": 18113,
@@ -14999,18 +14967,9 @@
       "start": "Одна связка гнилых бананов — один талон за гниль. Сортировщик принимает только этот вид бананов.",
       "notfinish": "Задание ещё не выполнено.",
       "finish": "Держи талон.",
-      "own_texts": [
-        "name",
-        "start",
-        "notfinish",
-        "finish"
-      ],
-      "give": [
-        1786
-      ],
-      "take": [
-        1786
-      ],
+      "own_texts": ["name", "start", "notfinish", "finish"],
+      "give": [1786],
+      "take": [1786],
       "rew_afro": 0,
       "rew_gold": 0,
       "repeatable": 1,
@@ -15019,17 +14978,10 @@
       "q_type": 0,
       "why": "RECOVERED type-specific banana/ticket exchange1:1 and personal sorter. DESIGNED local service wiring approved2026-11-16; closed administrative Eden only.",
       "objs": [
-        {
-          "obj": 4237,
-          "num": 1
-        }
+        {"obj": 4237, "num": 1}
       ],
-      "rew_obj": [
-        4233
-      ],
-      "num_rew_obj": [
-        1
-      ]
+      "rew_obj": [4233],
+      "num_rew_obj": [1]
     },
     {
       "type": 18114,
@@ -15038,18 +14990,9 @@
       "start": "Соберите 100 талонов за зелень, 1000 за зрелость и 75 за гниль. За полную норму получите пропуск из Эдема; отдайте его смотрителю Люку в городишке.",
       "notfinish": "Задание ещё не выполнено.",
       "finish": "Норма выполнена. Покажи пропуск Люку.",
-      "own_texts": [
-        "name",
-        "start",
-        "notfinish",
-        "finish"
-      ],
-      "give": [
-        1785
-      ],
-      "take": [
-        1785
-      ],
+      "own_texts": ["name", "start", "notfinish", "finish"],
+      "give": [1785],
+      "take": [1785],
       "rew_afro": 0,
       "rew_gold": 0,
       "repeatable": 1,
@@ -15059,25 +15002,12 @@
       "why": "RECOVERED Eden purpose and NPC from the preserved client/wiki; DESIGNED server wiring approved 2026-11-16. Closed administrative plantation only. No ordinary-world route or reward.",
       "need_quest": 18127,
       "objs": [
-        {
-          "obj": 4231,
-          "num": 100
-        },
-        {
-          "obj": 4232,
-          "num": 1000
-        },
-        {
-          "obj": 4233,
-          "num": 75
-        }
+        {"obj": 4231, "num": 100},
+        {"obj": 4232, "num": 1000},
+        {"obj": 4233, "num": 75}
       ],
-      "rew_obj": [
-        4234
-      ],
-      "num_rew_obj": [
-        1
-      ]
+      "rew_obj": [4234],
+      "num_rew_obj": [1]
     },
     {
       "type": 18115,
@@ -15086,18 +15016,9 @@
       "start": "Передайте пропуск из Эдема. После освобождения все бананы, листья, талоны и корзина останутся на плантации.",
       "notfinish": "Задание ещё не выполнено.",
       "finish": "Возвращайся к обычной жизни.",
-      "own_texts": [
-        "name",
-        "start",
-        "notfinish",
-        "finish"
-      ],
-      "give": [
-        1784
-      ],
-      "take": [
-        1784
-      ],
+      "own_texts": ["name", "start", "notfinish", "finish"],
+      "give": [1784],
+      "take": [1784],
       "rew_afro": 0,
       "rew_gold": 0,
       "repeatable": 1,
@@ -15106,10 +15027,7 @@
       "q_type": 0,
       "why": "RECOVERED Eden purpose and NPC from the preserved client/wiki; DESIGNED server wiring approved 2026-11-16. Closed administrative plantation only. No ordinary-world route or reward.",
       "objs": [
-        {
-          "obj": 4234,
-          "num": 1
-        }
+        {"obj": 4234, "num": 1}
       ],
       "rew_loc": 1
     },
@@ -15120,18 +15038,9 @@
       "start": "Принесите 20 пальмовых листьев. Получите корзину: наденьте её на пояс, чтобы увеличить силу на 20 и переносить больше бананов. При выходе корзина остаётся на плантации.",
       "notfinish": "Задание ещё не выполнено.",
       "finish": "Корзина готова. Удачи в работе.",
-      "own_texts": [
-        "name",
-        "start",
-        "notfinish",
-        "finish"
-      ],
-      "give": [
-        1789
-      ],
-      "take": [
-        1789
-      ],
+      "own_texts": ["name", "start", "notfinish", "finish"],
+      "give": [1789],
+      "take": [1789],
       "rew_afro": 0,
       "rew_gold": 0,
       "repeatable": 1,
@@ -15140,17 +15049,10 @@
       "q_type": 0,
       "why": "RECOVERED Eden purpose and NPC from the preserved client/wiki; DESIGNED server wiring approved 2026-11-16. Closed administrative plantation only. No ordinary-world route or reward.",
       "objs": [
-        {
-          "obj": 4305,
-          "num": 20
-        }
+        {"obj": 4305, "num": 20}
       ],
-      "rew_obj": [
-        4304
-      ],
-      "num_rew_obj": [
-        1
-      ]
+      "rew_obj": [4304],
+      "num_rew_obj": [1]
     },
     {
       "type": 18117,
@@ -15159,18 +15061,9 @@
       "start": "Вы можете освободиться за золото: при первом попадании в Эдем - 50 G, при втором - 100 G. С третьего попадания откуп недоступен: нужно выполнить норму у Рона и передать пропуск Люку. Все местные предметы останутся на плантации.",
       "notfinish": "Задание ещё не выполнено.",
       "finish": "Беги и не оглядывайся.",
-      "own_texts": [
-        "name",
-        "start",
-        "notfinish",
-        "finish"
-      ],
-      "give": [
-        1789
-      ],
-      "take": [
-        1789
-      ],
+      "own_texts": ["name", "start", "notfinish", "finish"],
+      "give": [1789],
+      "take": [1789],
       "obj": 0,
       "rew_afro": 0,
       "rew_gold": 0,
@@ -15189,18 +15082,9 @@
       "start": "Вы можете освободиться за афро: при первом попадании в Эдем - 5 000 000 афро, при втором - 10 000 000 афро. С третьего попадания откуп недоступен: нужно выполнить норму у Рона и передать пропуск Люку. Все местные предметы останутся на плантации.",
       "notfinish": "Задание ещё не выполнено.",
       "finish": "Беги и не оглядывайся.",
-      "own_texts": [
-        "name",
-        "start",
-        "notfinish",
-        "finish"
-      ],
-      "give": [
-        1789
-      ],
-      "take": [
-        1789
-      ],
+      "own_texts": ["name", "start", "notfinish", "finish"],
+      "give": [1789],
+      "take": [1789],
       "obj": 0,
       "rew_afro": 0,
       "rew_gold": 0,
@@ -15219,18 +15103,9 @@
       "start": "Отправиться к Эрлу Коупену на западный участок. Принимает гнилые бананы.",
       "notfinish": "Задание ещё не выполнено.",
       "finish": "Отправляйся на работу.",
-      "own_texts": [
-        "name",
-        "start",
-        "notfinish",
-        "finish"
-      ],
-      "give": [
-        1785
-      ],
-      "take": [
-        1785
-      ],
+      "own_texts": ["name", "start", "notfinish", "finish"],
+      "give": [1785],
+      "take": [1785],
       "obj": 0,
       "rew_afro": 0,
       "rew_gold": 0,
@@ -15248,18 +15123,9 @@
       "start": "Вернуться в городишко к бригадиру Рону Деккеру, смотрителю Люку и Бену Ганну.",
       "notfinish": "Задание ещё не выполнено.",
       "finish": "Возвращайся к бригадиру.",
-      "own_texts": [
-        "name",
-        "start",
-        "notfinish",
-        "finish"
-      ],
-      "give": [
-        1786
-      ],
-      "take": [
-        1786
-      ],
+      "own_texts": ["name", "start", "notfinish", "finish"],
+      "give": [1786],
+      "take": [1786],
       "obj": 0,
       "rew_afro": 0,
       "rew_gold": 0,
@@ -15277,18 +15143,9 @@
       "start": "Отправиться к Бо-лину Чену на южный участок. Принимает зрелые бананы.",
       "notfinish": "Задание ещё не выполнено.",
       "finish": "Отправляйся на работу.",
-      "own_texts": [
-        "name",
-        "start",
-        "notfinish",
-        "finish"
-      ],
-      "give": [
-        1785
-      ],
-      "take": [
-        1785
-      ],
+      "own_texts": ["name", "start", "notfinish", "finish"],
+      "give": [1785],
+      "take": [1785],
       "obj": 0,
       "rew_afro": 0,
       "rew_gold": 0,
@@ -15306,18 +15163,9 @@
       "start": "Вернуться в городишко к бригадиру Рону Деккеру, смотрителю Люку и Бену Ганну.",
       "notfinish": "Задание ещё не выполнено.",
       "finish": "Возвращайся к бригадиру.",
-      "own_texts": [
-        "name",
-        "start",
-        "notfinish",
-        "finish"
-      ],
-      "give": [
-        1787
-      ],
-      "take": [
-        1787
-      ],
+      "own_texts": ["name", "start", "notfinish", "finish"],
+      "give": [1787],
+      "take": [1787],
       "obj": 0,
       "rew_afro": 0,
       "rew_gold": 0,
@@ -15335,18 +15183,9 @@
       "start": "Отправиться к Саше Бушкову на восточный участок. Принимает зелёные бананы.",
       "notfinish": "Задание ещё не выполнено.",
       "finish": "Отправляйся на работу.",
-      "own_texts": [
-        "name",
-        "start",
-        "notfinish",
-        "finish"
-      ],
-      "give": [
-        1785
-      ],
-      "take": [
-        1785
-      ],
+      "own_texts": ["name", "start", "notfinish", "finish"],
+      "give": [1785],
+      "take": [1785],
       "obj": 0,
       "rew_afro": 0,
       "rew_gold": 0,
@@ -15364,18 +15203,9 @@
       "start": "Вернуться в городишко к бригадиру Рону Деккеру, смотрителю Люку и Бену Ганну.",
       "notfinish": "Задание ещё не выполнено.",
       "finish": "Возвращайся к бригадиру.",
-      "own_texts": [
-        "name",
-        "start",
-        "notfinish",
-        "finish"
-      ],
-      "give": [
-        1788
-      ],
-      "take": [
-        1788
-      ],
+      "own_texts": ["name", "start", "notfinish", "finish"],
+      "give": [1788],
+      "take": [1788],
       "obj": 0,
       "rew_afro": 0,
       "rew_gold": 0,
@@ -15393,18 +15223,9 @@
       "start": "О! Явился. Нехороший человек...",
       "notfinish": "",
       "finish": "Тебе предстоит взять рекордную высоту. По дисциплине, по организованности. Найди бригадира и получи задание.",
-      "own_texts": [
-        "name",
-        "start",
-        "notfinish",
-        "finish"
-      ],
-      "give": [
-        1784
-      ],
-      "take": [
-        1784
-      ],
+      "own_texts": ["name", "start", "notfinish", "finish"],
+      "give": [1784],
+      "take": [1784],
       "obj": 0,
       "rew_afro": 0,
       "rew_gold": 0,
@@ -15421,27 +15242,14 @@
       "start": "Первый раз тут? Работа тяжелая, был тут один зек. Дал деру и мне оставил свою дневную норму в талонах. Могу продать тебе 500 талонов за зрелые бананы за 15000 афро. Отдал бы так, но семья голодает..<Br><Br>Предложение доступно один раз за историю персонажа и только при первом попадании в Эдем.",
       "notfinish": "Давай монетки-то.",
       "finish": "Держи и не говори где взял.",
-      "own_texts": [
-        "name",
-        "start",
-        "notfinish",
-        "finish"
-      ],
-      "give": [
-        1789
-      ],
-      "take": [
-        1789
-      ],
+      "own_texts": ["name", "start", "notfinish", "finish"],
+      "give": [1789],
+      "take": [1789],
       "obj": 0,
       "rew_afro": 0,
       "rew_gold": 0,
-      "rew_obj": [
-        4232
-      ],
-      "num_rew_obj": [
-        500
-      ],
+      "rew_obj": [4232],
+      "num_rew_obj": [500],
       "cost_afro": 15000,
       "repeatable": 0,
       "service": true,

@@ -38,6 +38,7 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(os.path.dirname(HERE), "server"))
+import eden_map  # noqa: E402
 import travel  # noqa: E402
 import world  # noqa: E402
 
@@ -332,10 +333,14 @@ def check_walk():
     # it by hand in terrain_verified.json.
     drawn = hand_drawn()
     unexplained = [c for c in blocked
-                   if not world.water(*c) and c not in drawn]
+                   if not world.water(*c) and c not in drawn and not eden_map.inside_cell(*c)]
     assert not unexplained, \
         "borders: %d cells blocked by neither the map nor a hand: %s" \
         % (len(unexplained), unexplained[:10])
+    assert all(not world.passable(*c) for c in eden_map.CELL_TO_LOC), \
+        "borders: ordinary travel reaches the administrative Eden region"
+    assert not (set(eden_map.CELL_TO_LOC) & seen), \
+        "borders: the ordinary start reaches Eden"
     print("  %d of them drawn by hand" % len([c for c in blocked
                                               if c in drawn]))
     print("the world is %d by %d cells; %d are blocked, every one of them"

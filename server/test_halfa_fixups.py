@@ -294,6 +294,7 @@ check("a kill quest with a fee pays it at the take; a delivery with one at the h
 class _XpSession(object):
     def __init__(self, ch):
         self.char, self.pushed = ch, []
+        self.loc = world.location(100)
 
     def character(self):
         return self.char

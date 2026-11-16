@@ -82,6 +82,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(os.path.dirname(HERE), "server"))
 import place_settlements  # noqa: E402
+import eden_map  # noqa: E402
+import world  # noqa: E402
 from testkit import check, fails  # noqa: E402
 
 # The cuts, cell by cell: what stood there before, and nothing now.
@@ -219,6 +221,12 @@ check("  ..and the three cells the cuts across the river held are pinned: «Ан
 
 now = cells(place_settlements.Placer().run())
 check("the table on disk is the placer's own output", now == on_disk, True)
+# Restored administrative labels must never move ordinary settlements.
+check("ordinary placement never claims an Eden cell or reuses its location IDs",
+      ([c for c in now if tuple(map(int, c.split(","))) in eden_map.CELL_TO_LOC],
+       sorted(set(now.values()) & set(eden_map.LOC_TO_CELL))), ([], []))
+check("world resolves every restored Eden cell through its canonical mapping",
+      [world.location_at(*c) for c in eden_map.CELL_TO_LOC], list(eden_map.CELL_TO_LOC.values()))
 
 before_fixed = {k: v for k, v in verified["cells"].items() if k not in INTENDED and k not in HELD}
 before = cells(place_settlements.Placer(fixed=before_fixed, retired=()).run())

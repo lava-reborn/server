@@ -114,6 +114,18 @@ HAND = {184: [(1135, [56, 88], False)],
         289: [(2367, [28, 69], False), (2368, [14, 95], False), (2369, [20, 13], False),
               (2370, [20, 85], False), (2371, [36, 114], False), (2372, [23, 9], False),
               (2373, [24, 80], False), (2374, [41, 38], False)]}
+# The approved plantation restores these four original IDs through overlays.
+# Keep them explicit: new or changed ordinary-world hand rows still fail.
+for _lid, _cells in {
+        264: [(35, 11), (8, 13), (55, 15), (37, 39), (13, 52), (54, 63),
+              (32, 71), (12, 78), (31, 95), (53, 103), (11, 114), (35, 116)],
+        265: [(10, 11), (50, 11), (33, 28), (10, 38), (51, 47), (22, 61),
+              (54, 77), (10, 80), (27, 91), (13, 109), (34, 114), (53, 116)],
+        266: [(9, 11), (51, 11), (37, 29), (52, 31), (12, 48), (50, 58),
+              (27, 65), (12, 82), (53, 92), (26, 105), (9, 111), (53, 119)],
+}.items():
+    HAND[_lid] = [(1790, list(cell), False) for cell in _cells]
+HAND[267] = [(60020, [20, 110], False)]
 
 
 def ring(camp):
@@ -276,7 +288,8 @@ try:
     # hand rows of the original's places.
     OURS = set(world.overlay_ids())
     check("the hand rows of 184, 31 and 102 are as they were, and Абри's of 187, 88, 92 and 289,"
-          " Донгола's of 103 and 93 and Абу-Хамед's of 132, 168 and 263 are the only others (the places"
+          " Донгола's of 103 and 93, Абу-Хамед's of 132, 168 and 263 and Eden's restored 264..267"
+          " are the only others (the places"
           " of ours aside)",
           {lid: [(r["type"], r["cell"], bool(r.get("escort"))) for r in recs if "patrol" not in r]
            for lid, recs in table.items() if any("patrol" not in r for r in recs)

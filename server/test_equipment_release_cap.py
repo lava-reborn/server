@@ -160,7 +160,7 @@ class ReleaseBoundary(unittest.TestCase):
                                  123, 7, json.dumps([attachment]))
         purse = store.money(cid)
         rows = store.items_of(cid)
-        sess = Mock(char_id=cid)
+        sess = Mock(char_id=cid, eden_sentence=None, loc=None, gx=None, gy=None)
         handler = mail.Mail(sess, store, {})
         with patch.object(mail.log, 'exception', side_effect=AssertionError('unexpected mail failure')), \
                 patch.object(store, 'create_item', wraps=store.create_item) as create, \

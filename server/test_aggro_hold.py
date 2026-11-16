@@ -121,6 +121,7 @@ class _Seat(object):
 
     def __init__(self, room, pos, char_id=1):
         self.room, self.pos, self.pid = room, pos, rooms.player_id(char_id)
+        self.loc = room.loc
         self.inv = _Inv()
         self.sent = []
         self.writer = object()  # Transport identity for the recording session.

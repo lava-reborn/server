@@ -155,9 +155,9 @@ def far(c):
     return any(x0 <= c[0] <= x1 and y0 <= c[1] <= y1 for x0, x1, y0, y1 in FAR.values())
 
 
-# The 66 names hidden: Доктор «Д»'s four columns of eight, the staffs, the
+# The 62 names still hidden: Доктор «Д»'s four columns of eight, the staffs, the
 # stages, the digs, the bases, «Ангар в джунглях», Эван's six, the north-west
-# corner's eight, the island «Эдем»'s four.
+# corner's eight. Eden's four labels were restored separately in November.
 COLUMNS = [(5941, 1696), (5844, 1825), (5851, 1985), (6145, 1992)]
 HIDDEN = ({(x, y + k) for x, y in COLUMNS for k in range(8)}
           | {(5935, 1711), (5944, 1712), (5943, 1722), (5840, 1839), (5850, 1850), (5849, 1851), (5850, 1999),
@@ -165,8 +165,11 @@ HIDDEN = ({(x, y + k) for x, y in COLUMNS for k in range(8)}
              (6167, 1989), (6174, 1982)}
           | {(5867, 1827), (5868, 1827), (5868, 1828), (5869, 1828), (5868, 1829), (5869, 1829)}
           | {(5840, 1600), (5840, 1601), (5841, 1601), (5838, 1603), (5836, 1605), (5833, 1607), (5834, 1607),
-             (5840, 1607)}
-          | {(5858, 1929), (5857, 1928), (5857, 1930), (5859, 1930)})
+             (5840, 1607)})
+EDEN_LABELS = {(5858, 1929): "Плантация Эдем<br>Городишко",
+               (5857, 1929): "Плантация Эдем<br>Сортировщик гнилых бананов",
+               (5858, 1930): "Плантация Эдем<br>Сортировщик зрелых бананов",
+               (5859, 1929): "Плантация Эдем<br>Сортировщик зелёных бананов"}
 # Five of them had an edit of the owner's map labels of 2026-10-11 (the
 # staffs' «Сражение за чертежи», the dig 433's tomb raider): a hide now.
 RETEXTED = [(5935, 1711), (5850, 1999), (6158, 2000), (5840, 1839), (5943, 1722)]
@@ -493,7 +496,7 @@ except Exception:
 print("the map's names")
 try:
     ours = {(e["x"], e["y"]): bool(e.get("hide")) for e in LABELS if e.get("why", "").startswith(CUT_WHY)}
-    check("data/map_labels.json hides the 66 names of the far banks and edits nothing else for the cut",
+    check("data/map_labels.json hides the remaining 62 names of the far banks and edits nothing else for the cut",
           (sorted(ours), set(ours.values())), (sorted(HIDDEN), {True}))
     check("  ..five of them the owner's map labels of 2026-10-11 had retexted: a hide now, of the same row",
           [(c, len([e for e in LABELS if (e["x"], e["y"]) == c])) for c in RETEXTED], [(c, 1) for c in RETEXTED])
@@ -510,8 +513,9 @@ try:
     before = rows_of(raw)
     if len([r for r in before if r[2] == "Лагерь за рекой"]) == 3:
         after = rows_of(out)
-        check("on the original's file no name is left over a far bank or an island, where it had 70",
-              ([r for r in after if far(r[:2])], len([r for r in before if far(r[:2])])), ([], 70))
+        check("only the four restored Eden names remain over a far bank or island, formerly 70",
+              (sorted(r for r in after if far(r[:2])), len([r for r in before if far(r[:2])])),
+              (sorted((x, y, t) for (x, y), t in EDEN_LABELS.items()), 70))
         others, _n = map_labels.apply(raw, [(x, y, w, t) for x, y, w, t in map_labels.load()
                                             if (x, y) not in HIDDEN])
         check("  ..and every name off the far banks is as the edits without this cut's leave it, row for row",
@@ -554,12 +558,12 @@ try:
           {c: boxed(8 * c[0] + 4, 8 * c[1] + 4) for c in CROSSES}, {c: [] for c in CROSSES})
     named_no_place = sorted(c for c in HIDDEN if c not in ON_CELLS)
     check("every hidden name with no place under it is decided: its square goes, or the picture has none there"
-          " ('bare', 34; Донгола's cut of the same day adds four of its own by the town, Абу-Хамед's of"
+          " ('bare', 30; Донгола's cut of the same day adds four of its own by the town, Абу-Хамед's of"
           " 2026-10-14 two)",
           ([c for c in named_no_place if c not in plan.cells and c not in plan.bare],
            len([c for c, why in plan.bare.items() if why.startswith(CUT_WHY)]),
            sorted(c for c, why in plan.bare.items() if not why.startswith(CUT_WHY))),
-          ([], 34, [(5873, 2008), (5876, 2007), (5885, 2035), (5912, 1993), (6140, 1869), (6272, 1942)]))
+          ([], 30, [(5873, 2008), (5876, 2007), (5885, 2035), (5912, 1993), (6140, 1869), (6272, 1942)]))
     check("  ..and no 'bare' cell is a square's", sorted(set(plan.bare) & (set(SQ_PLACES) | set(SQ_NAMES))), [])
     check("the tiles a change can touch take in 15808, the white square of «Ангар в джунглях»",
           15808 in plan.tiles(), True)

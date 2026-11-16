@@ -69,10 +69,12 @@ def register(sess, info):
 
 # --- the rule, in process ----------------------------------------------------
 QUARTER_CELL = world.cell_of(36)  # The shipped map, not the wiki's older coordinates.
-check("the explicit registrar is Said; every exception has its source",
-      (sorted(npcs.HOME), all(row.get("why", "").strip()
+check("the explicit enabled registrar is Said; every exception has its source",
+      (sorted(t for t, enabled in npcs.HOME.items() if enabled), all(row.get("why", "").strip()
        for key, row in json.load(open(npcs.PATH, encoding="utf-8"))["home"].items()
        if not key.startswith("_"))), ([44], True))
+check("the Eden buyer explicitly refuses home registration",
+      (npcs.HOME.get(60020), server.Session.offers_home(60020)), (False, False))
 check("Said and the caravan's healer register homes",
       [server.Session.offers_home(t) for t in (44, 5202)], [True, True])
 check("corn, palm, defender, cow, ratcatcher, grindstone and technogeek do not",
