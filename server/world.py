@@ -12,6 +12,7 @@ type id. A hex cell's number is gy * width + gx.
 """
 import json
 import math
+import eden_map
 import os
 import re
 
@@ -567,6 +568,9 @@ def cell_of(loc_id):
     back wherever they happened to stand before. A settlement wide enough
     to cover two cells answers with the first.
     """
+    island = eden_map.cell_of(loc_id)
+    if island is not None:
+        return island
     global _CELL_OF
     if _CELL_OF is None:
         _CELL_OF = {}
@@ -592,6 +596,9 @@ def location_at(gx, gy):
     # settlement icon is drawn from the cell's top-left corner, and a player
     # standing anywhere on that square expects to walk into it. Rounding
     # sent the half of the square past its centre into the neighbour.
+    island = eden_map.location_at(gx, gy)
+    if island is not None:
+        return island
     cell = (int(math.floor(gx)), int(math.floor(gy)))
     found = settlements().get(cell)
     if found is None:
@@ -755,6 +762,8 @@ def passable(gx, gy):
     Floor, not round, like location_at: the cell under a position is the one
     the client draws the figure on.
     """
+    if eden_map.inside_cell(gx, gy):
+        return False
     x, y = int(math.floor(gx)), int(math.floor(gy))
     if not in_map(x, y):
         return False
@@ -1161,6 +1170,8 @@ def mob_types():
     for m in re.finditer(r'<mob type_id="(\d+)"\s+root_type_id=\s*"(\d+)"'
                          r'\s+name="([^"]*)"(?:\s+resource="([^"]*)")?', txt):
         out[int(m.group(1))] = (int(m.group(2)), m.group(3), m.group(4) or "")
+    import eden_shop
+    out[eden_shop.NPC_TYPE] = (TRADER, 'eden_buyback', out[eden_shop.ART_TYPE][2])
     return out
 
 

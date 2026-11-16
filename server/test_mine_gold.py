@@ -18,21 +18,20 @@ dead player like any loot (the owner: «любой лут должен пада�
 And Камал, on the first tier, gives a second quest beside the way out: the
 original's «Золотоискатель» (texts.xml 59932-59935) with ten bags where it
 said five. The bag is counted -- the journal is told each time the number
-moves -- nine bags are refused, ten are taken at the hand-in for exactly one
-ounce of gold (rew_gold 100: the purse is kept in hundredths), and it can be
-done again -- the next day: once a day since 2026-09-28 (per_day 1, the
-plan's gold taps), so the suite moves the first hand-in a day back. Камал
+moves -- nine bags are refused, ten are taken at the hand-in for exactly
+0.8 G (80 hundredths). Since 2026-11-16 it is one-off per character: old
+completions keep blocking another reward after the next daily reset. Камал
 takes both his quests back: the way out, handed in, still moves the player,
-takes nothing and is not counted against the day -- the sand's second
-hand-in is.
+takes nothing and is not counted against the day; neither is the one-off
+gold quest.
 
 In process: the tables and their rates (a fixed seed; the cap of two worked
 out exactly, as test_loot does), every other creature's table against the
 same table without the hand-made rows, the item frames and names, the
 death rule, and a corpse's bag through RoomCombat with a real database. On a
 socket: down through Рудо, one marauder killed and his bag emptied, the
-quest taken, filled, refused at nine, handed in at ten, taken and handed in
-again, the way up, and the sale at Борис's stall.
+quest taken, filled, refused at nine, handed in at ten and refused on a
+repeat attempt even after a day, the way up, and the sale at Борис's stall.
 
 Written against the code before the change it fails from the first table on
 -- no row of sand or emerald for either marauder, the bag worth 10 afro and
@@ -86,7 +85,7 @@ OLD_ADITS = 57                      # Шульц's «Старые штольни
 ADMIN_GUN, ROUNDS = 1534, 6092
 NOT_READY = 3                       # server.RES_NOT_READY
 DAILY_MAX = 10                      # server.DAILY_MAX
-OUNCE = 100                         # gold travels in hundredths (progression.GOLD_OUNCE)
+GOLD_REWARD = 80                    # 0.8 G, once per character
 DESIGNED = {WEAK: {SAND: .25, EMERALD: .133461}, BANDIT: {SAND: .25, EMERALD: .134471}}
 
 import testkit  # noqa: E402
@@ -439,10 +438,10 @@ try:
            for q in (UP, GOLD)])
     c.send("q_si;q_type=%d;" % GOLD)
     si = named(c.frames(), "q_si_bring_l_obj")
-    check("«Золотоискатель» asks for ten bags of sand and pays one ounce of gold, again and again",
+    check("«Золотоискатель» asks for ten bags of sand and pays 0.8 G once per character",
           [(p["obj_1"], p["obj_num_1"], p["mobs_1"], p["obj_2"], p["rew_gold"], p["rew_afro"],
             p["rew_obj"], p["repeatable"], p["rew_loc"]) for p in si],
-          [(SAND, 10, [WEAK, BANDIT], 0, OUNCE, 0, [], 1, 0)])
+          [(SAND, 10, [WEAK, BANDIT], 0, GOLD_REWARD, 0, [], 0, 0)])
     texts = [names.text(sid) for sid in quests.get(GOLD).string_ids()] if quests.get(GOLD) else []
     check("in the original's words, with ten for five",
           (texts[:1], [t.count("10 мешков") for t in texts[1:3]],
@@ -573,26 +572,24 @@ try:
     c.send("q_co;obj_idx=0;mob=%d;q_id=%d;" % (kamal["id"], Q))
     got = c.frames(0.8)
     gone = [str(p["obj"]) for p in named(got, "ss_obj_status") if p["status"] == 0]
-    # A repeatable quest: the day's count follows the purse, before the ack
-    # (server.DAILY_MAX counts repeatable hand-ins, and the journal reads it).
-    check("ten handed in: the bags leave the bag, the purse follows, the day's"
-          " count, then the ack",
+    # A one-off pays without spending one of the daily repeatable hand-ins.
+    check("ten handed in: the bags leave the bag, the purse follows, then the ack",
           ([n for n in answer(got) if n != "ss_obj_status"],
            len(gone), [(str(p["obj"]), p["size"]) for p in named(got, "ss_di_heap")],
            [p["res"] for p in named(got, "cmdAck")]),
-          (["ss_di_heap", "userInfo_Player", "q_sys", "cmdAck"], 6, [(heap2, 1)], [0]))
-    check("  ..paid in full: one ounce of gold, as the client shows it (floor(gold / 100))",
-          [(p["gold"] - GOLD0, p["gold"] // OUNCE - GOLD0 // OUNCE, p["afro"])
-           for p in named(got, "userInfo_Player")], [(OUNCE, 1, AFRO0)])
-    check("  ..and so in the database: ten bags gone of eleven, one ounce more",
-          (bag_of(CHAR, SAND), money(CHAR)), (1, (AFRO0, GOLD0 + OUNCE)))
+          (["ss_di_heap", "userInfo_Player", "cmdAck"], 6, [(heap2, 1)], [0]))
+    check("  ..paid in full: 0.8 G in hundredths, without rounding it to an ounce",
+          [(p["gold"] - GOLD0, p["afro"]) for p in named(got, "userInfo_Player")],
+          [(GOLD_REWARD, AFRO0)])
+    check("  ..and so in the database: ten bags gone of eleven, 0.8 G more",
+          (bag_of(CHAR, SAND), money(CHAR)), (1, (AFRO0, GOLD0 + GOLD_REWARD)))
     check("  ..the heap of four among them", heap4 in gone, True)
     c.send("q_list;")
     check("the quest is out of the log", named(c.frames(), "q_list"), [{"q_id": [], "q_types": []}])
 
-    # --- once a day, then again ------------------------------------------------------
+    # --- one reward for the entire character history -------------------------------
     c.send("q_status;q_type=%d;" % GOLD)
-    check("handed in, it is not on offer again today (per_day 1)",
+    check("handed in, it is not on offer again",
           [p["status"] for p in named(c.frames(), "q_status")], [0])
     probe = accounts.Store(DB)
     probe.db.execute("UPDATE char_quests_done SET done_at = done_at - 86400"
@@ -602,25 +599,14 @@ try:
     c.send("q_list;")  # Drop the display cache after the fixture's external SQL edit.
     c.frames(0.2)
     c.send("q_status;q_type=%d;" % GOLD)
-    check("its hand-in a day back, it is on offer again",
-          [p["status"] for p in named(c.frames(), "q_status")], [1])
+    check("its hand-in a day back, it is still unavailable",
+          [p["status"] for p in named(c.frames(), "q_status")], [0])
     c.send("q_st;mob=%d;q_idx=1;" % kamal["id"])
     got = c.frames(0.8)
-    check("taken again, it starts from the bag that was left over",
-          ([p["res"] for p in named(got, "cmdAck")], counts(got)), ([0], [([1], 0)]))
-    Q2 = named(got, "q_di_bring_l_obj")[0]["q_id"] if named(got, "q_di_bring_l_obj") else 0
-    got, _oid = give(c, SAND, 9)
-    check("nine more make ten", counts(got), [([10], 1)])
-    c.send("q_co;obj_idx=0;mob=%d;q_id=%d;" % (kamal["id"], Q2))
-    got = c.frames(0.8)
-    check("handed in again: both stacks gone, a second ounce, then the ack",
-          (answer(got), [p["gold"] - GOLD0 for p in named(got, "userInfo_Player")],
-           [p["res"] for p in named(got, "cmdAck")]),
-          (["ss_obj_status", "ss_obj_status", "userInfo_Player", "q_sys", "cmdAck"],
-           [2 * OUNCE], [0]))
-    check("  ..no sand left, two ounces in all", (bag_of(CHAR, SAND), money(CHAR)),
-          (0, (AFRO0, GOLD0 + 2 * OUNCE)))
-
+    check("taking it again is refused, with no extra reward or quest instance",
+          ([p["res"] for p in named(got, "cmdAck")], counts(got),
+           bag_of(CHAR, SAND), money(CHAR)),
+          ([4], [], 1, (AFRO0, GOLD0 + GOLD_REWARD)))
     # --- the way up takes nothing ------------------------------------------------------
     got, sand_oid = give(c, SAND, 1)
     check("with no quest counting the bag, a bag of sand is only a bag of sand", counts(got), [])
@@ -636,9 +622,9 @@ try:
           [("cmdAck", 0, None), ("lcall", None, MOUTH)])
     arrival, pos = enter(c)
     check("up at the mouth with the sand and the emeralds still on him",
-          (bag_of(CHAR, SAND), bag_of(CHAR, EMERALD)), (1, 2 + gems))
-    check("one hand-in counted against the day, the sand's second: the ways cost none",
-          [p["daily_available"] for p in named(arrival, "q_sys")], [DAILY_MAX - 1])
+          (bag_of(CHAR, SAND), bag_of(CHAR, EMERALD)), (2, 2 + gems))
+    check("the one-off gold quest and ways cost no daily hand-ins",
+          [p["daily_available"] for p in named(arrival, "q_sys")], [DAILY_MAX])
 
     # --- and sold at the Nubian market ---------------------------------------------------
     c.send("userMsg;entry=@/goto %d@;group=0;" % MARKET)
@@ -666,7 +652,7 @@ try:
     c.frames(0.3)
     check("sold, and the afro in the purse",
           (bag_of(CHAR, SAND), bag_of(CHAR, EMERALD), money(CHAR)),
-          (0, gems, (afro, GOLD0 + 2 * OUNCE)))
+          (1, gems, (afro, GOLD0 + GOLD_REWARD)))
     c.send("logout;")
     c.frames(0.5)
 except Exception:
@@ -686,8 +672,8 @@ finally:
 try:
     probe = accounts.Store(DB)
     if CHAR is not None:
-        check("the history holds the two hand-ins of the gold sand, the log nothing",
-              (probe.quests_done_since(CHAR, 0, [GOLD]), len(probe.quests(CHAR))), (2, 0))
+        check("the history holds one hand-in of the gold sand, the log nothing",
+              (probe.quests_done_since(CHAR, 0, [GOLD]), len(probe.quests(CHAR))), (1, 0))
     probe.close()
 except Exception:
     import traceback

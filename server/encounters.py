@@ -52,6 +52,7 @@ import asyncio
 import json
 import logging
 import math
+import eden_map
 import os
 import random
 import time
@@ -267,6 +268,10 @@ class Encounters:
     def allowed(self, sess):
         cid = sess.char_id
         if not cid or sess.closed:
+            return False
+        if (getattr(sess, 'eden_sentence', None) or
+                eden_map.cell_of(getattr(getattr(sess, 'loc', None), 'id', None)) is not None
+                or eden_map.inside_cell(getattr(sess, 'gx', None), getattr(sess, 'gy', None))):
             return False
         if time.time() < self.rest_until.get(cid, 0):
             return False

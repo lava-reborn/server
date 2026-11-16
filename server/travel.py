@@ -47,6 +47,7 @@ position; the Session applies the answer and sends the frames.
 """
 import json
 import math
+import eden_map
 import os
 from collections import namedtuple
 
@@ -419,6 +420,8 @@ def walk(gx, gy, dx, dy):
     is not trapped there: the cut only starts once the ray has been on open
     ground, so the first move always carries them out of the rock.
     """
+    if eden_map.inside_cell(gx, gy):
+        return gx, gy
     if not dx and not dy:
         return gx, gy
     x, y = int(math.floor(gx)), int(math.floor(gy))
@@ -438,6 +441,13 @@ def walk(gx, gy, dx, dy):
         else:
             t, y = next_y, y + step_y
             next_y += span_y
+        if t > 1.0:
+            return gx + dx, gy + dy
+        # Administrative ground never inherits the ordinary "walk out of
+        # rock" exception, including a leg ending exactly on its boundary.
+        if eden_map.inside_cell(x, y):
+            back = max(0.0, t - CLEARANCE / math.hypot(dx, dy))
+            return gx + dx * back, gy + dy * back
         if t >= 1.0:
             return gx + dx, gy + dy
         if world.passable(x, y):
@@ -708,6 +718,19 @@ def door_arrival(loc, from_loc_id):
 def plan_exit(loc, pos, gx, gy):
     """Where chWorld;to=1 from this cell leads. Raises Refused when it is
     not an exit cell, or a door whose far side is not known well enough."""
+    if eden_map.cell_of(loc.id) is not None:
+        # Plantation edges join only its nine local scenes. Ignore saved
+        # global coordinates and passage overrides when choosing the far
+        # side: neither can turn an internal exit into a way off the island.
+        side = side_at(loc, pos)
+        if side not in SIDES:
+            raise Refused("Здесь нет выхода")
+        nx, ny = neighbour(*eden_map.cell_of(loc.id), side)
+        target = eden_map.location_at(nx, ny)
+        if target is None:
+            raise Refused("За пределы плантации пройти нельзя")
+        dest = world.location(target)
+        return Exit(dest.id, arrival_cell(dest, OPPOSITE[side]), nx, ny)
     if loc.id in SCENE_IDS and world.location_at(gx, gy) != loc.id:
         # A scene of rock the player walked into rather than onto: whichever
         # way it lets them walk, the way out is back to the place the cell

@@ -26,6 +26,11 @@ def validate():
                   | set(raw.get('simulator_sources', ())))
     if not source_ids <= items.catalogue().keys():
         raise ValueError('Training content refers to an unknown item')
+    excluded = raw.get('excluded_sources', {})
+    excluded_ids = set(map(int, excluded))
+    if (not excluded_ids <= items.catalogue().keys() or excluded_ids & source_ids
+            or any(not isinstance(why, str) or not why.strip() for why in excluded.values())):
+        raise ValueError('Invalid excluded training source or rationale')
     if any(items.root_of(source) != raw['source_roots'][str(source)] for source in source_ids):
         raise ValueError('Training source item changed its root class')
     for key, record in raw['labels'].items():

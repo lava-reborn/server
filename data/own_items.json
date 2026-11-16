@@ -14,6 +14,7 @@
   "60006": {"name": "shirt_Bs_U_LVL_16_G_mod00", "like": 36057, "_what": "Жилет Тёмного Эха (G)"},
   "60007": {"name": "armor_Bs_U_LVL_16_G_mod00", "like": 36058, "_what": "Броня Тёмного Эха (G)"},
   "60008": {"name": "pants_Bs_U_LVL_16_G_mod00", "like": 36059, "_what": "Моторика Тёмного Эха (G)"},
-  "60009": {"name": "boots_Bs_U_LVL_16_G_mod00", "like": 36060, "_what": "Ступни Тёмного Эха (G)"}
+  "60009": {"name": "boots_Bs_U_LVL_16_G_mod00", "like": 36060, "_what": "Ступни Тёмного Эха (G)"},
+  "60010": {"name": "eden_banana_cleaver", "like": 6240, "_what": "Тесак плантации: local tool; independent of character skills"}
  }
 }

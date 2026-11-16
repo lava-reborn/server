@@ -2,6 +2,17 @@
 from avm_codegen import Compiler
 
 SOURCE = '''
+def __esActive():
+    panel = lol.core.SceneShifter._ref.UIPanels.trade.instance.content
+    return not not (panel and panel.trader and panel.trader.eden_shop)
+
+def __esNominal(item):
+    return _global.__esActive() and item and (item.rootID == 0 or item.rootID == 1 or item.rootID == 5)
+
+def __esTraderInfo(obj):
+    this.__esTraderInfoOrig(obj)
+    this.eden_shop = obj.param.eden_shop == 1
+
 def __gcInitialize(obj):
     this.__gcInitializeOrig(obj)
     this.g_restore_base = obj.g_restore_base
@@ -11,6 +22,8 @@ def __gcInitialize(obj):
     this.a_sale_cap = obj.a_sale_cap
     this.g_transfer = obj.g_transfer
     this.g_auction_base = obj.g_auction_base
+    this.eden_sale_unit = obj.eden_sale_unit
+    this.eden_sale_gold = obj.eden_sale_gold
 
 def __gcGetProp(prop):
     value = this.__gcGetPropOrig(prop)
@@ -42,6 +55,29 @@ def __gcShowCost(item, align):
     this.__gcShowCostOrig(item, align)
     if lol.gpui.StaffInterface.ssType != "trade":
         return
+    if _global.__esNominal(item) and this.showItemSellMod:
+        n = 1
+        if this.showHeapCount and item.getProp("size"):
+            n = item.getProp("size")
+        value = Math.floor(item.getProp("eden_sale_unit") * n * _global.__gcSaleQuality(item))
+        this.price_mc._visible = value > 0
+        if value <= 0:
+            return
+        gold = item.getProp("eden_sale_gold")
+        frame = 1
+        this.costType = "Афро"
+        prefix = "a"
+        if gold:
+            frame = 2
+            value = value / 100
+            this.costType = "Золото"
+            prefix = "g"
+        this.price_mc.gotoAndStop(frame)
+        this.mainCost = value
+        if not this.attachIconEnabled:
+            value = prefix + String(value)
+        this.price_mc.fontContainer.showValue(value)
+        return
     base = item.getProp("g_sale_unit")
     if not base:
         base = item.getProp("a_sale_unit")
@@ -68,6 +104,10 @@ def __gcAddSell(annotationArr):
     this.__gcAddSellOrig(annotationArr)
 
 def __gcCheckSell(item):
+    if _global.__esNominal(item):
+        if not item.getProp("eden_sale_unit") or _global.__gcSaleQuality(item) <= 0:
+            return "Скупщик не принимает этот предмет"
+        return
     if not _global.__moActive() and item.getProp("bp_sell"):
         return
     if not _global.__moActive() and item.getProp("g_sale_unit") > 0:
@@ -80,6 +120,11 @@ def __gcCheckSell(item):
 
 def __gcExchange(item, title, mode, showGold, selling):
     pan = this.__gcExchangeOrig(item, title, mode, showGold, selling)
+    if selling and _global.__esNominal(item):
+        pan.cost_num = item.getProp("eden_sale_unit")
+        pan.cost_mod = _global.__gcSaleQuality(item)
+        pan.showCostInGold = not not item.getProp("eden_sale_gold")
+        return pan
     unit = item.getProp("g_sale_unit")
     if not unit:
         unit = item.getProp("a_sale_unit")
@@ -136,7 +181,7 @@ def __gcAskSale():
         item = group[i].item
         if not item:
             return this.__gcAskSaleOrig()
-        if item.getProp("g_sale_unit"):
+        if _global.__esNominal(item) or item.getProp("g_sale_unit"):
             quoted = True
         elif item.getProp("g_cost") > 0:
             # Retain the native protection for sales outside the quote flow.
@@ -149,7 +194,7 @@ def __gcAskSale():
     return this.__gcAskSaleOrig()
 
 def __gcSell(item, quantity):
-    if not item.getProp("g_sale_unit") or _global.__moActive():
+    if (not item.getProp("g_sale_unit") and not _global.__esNominal(item)) or _global.__moActive():
         return this.__gcSellOrig(item, quantity)
     if this.__gcPending:
         this.applyTransfer(False)
@@ -184,8 +229,16 @@ def __gcQuote(obj):
         return
     dialog = lol.core.SceneShifter.openNewWindow("query").content
     this.__gcDialog = dialog
-    dialog.label = "Продать «" + pending.item.getProp("name") + "» за " + String(obj.param.price) + " афро? Количество: " + String(obj.param.count) + ". Введите ПРОДАТЬ для подтверждения."
-    _global.__gcConfirmInput(dialog, 7)
+    price = obj.param.price
+    currency = " афро"
+    if obj.param.eden_sale == 1 and obj.param.currency == 1:
+        price = price / 100
+        currency = " G"
+    pending.edenAfro = obj.param.eden_sale == 1 and obj.param.currency == 0
+    dialog.label = "Продать «" + pending.item.getProp("name") + "» за " + String(price) + currency + "? Количество: " + String(obj.param.count) + "."
+    if not pending.edenAfro:
+        dialog.label = dialog.label + " Введите ПРОДАТЬ для подтверждения."
+        _global.__gcConfirmInput(dialog, 7)
     dialog.addEventListener("click", this, this.__gcAnswer)
 
 def __gcAnswer(event):
@@ -194,7 +247,9 @@ def __gcAnswer(event):
     if not dialog or event.target != dialog:
         return
     dialog.removeEventListener("click", this, this.__gcAnswer)
-    text = dialog.__gcInput.text
+    text = "ПРОДАТЬ"
+    if not pending.edenAfro:
+        text = dialog.__gcInput.text
     this.__gcDialog = None
     this.__gcPending = None
     lol.core.SceneShifter.closeWindow("query")
@@ -352,6 +407,7 @@ def patches(Asm, undef):
     bodies = {name: (params, body) for name, params, body in functions}
     wraps = []
     for path, method, keep, helper in (
+        (('core', 'player', 'Trader'), 'userInfo', '__esTraderInfoOrig', '__esTraderInfo'),
         (('core', 'objects', 'Item'), 'initialize', '__gcInitializeOrig', '__gcInitialize'),
         (('core', 'objects', 'Item'), 'getProp', '__gcGetPropOrig', '__gcGetProp'),
         (('gpui', 'Annotation'), 'addSell', '__gcAddSellOrig', '__gcAddSell'),
@@ -376,4 +432,5 @@ def patches(Asm, undef):
         params, body = bodies[name]
         wraps.append((('core', 'player', 'Trade'), name, name + 'Orig', params, body))
     return dict(globals=[(name, params, body) for name, params, body in functions
-                         if name in ('__gcQuality', '__gcSaleQuality', '__gcConfirmInput')], wraps=tuple(wraps))
+                         if name in ('__gcQuality', '__gcSaleQuality', '__gcConfirmInput',
+                                     '__esActive', '__esNominal')], wraps=tuple(wraps))

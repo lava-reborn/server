@@ -1,6 +1,18 @@
 {
   "version": 1,
   "why": "Range-only aliases, archived equipment and private layouts. Never modify public locations or source item records.",
+  "excluded_sources": {
+    "4231": "Eden-only green-banana work ticket.",
+    "4232": "Eden-only ripe-banana work ticket.",
+    "4233": "Eden-only spoiled-banana work ticket.",
+    "4234": "Eden-only release pass.",
+    "4235": "Eden-only harvested ripe bananas.",
+    "4236": "Eden-only harvested green bananas.",
+    "4237": "Eden-only harvested spoiled bananas.",
+    "4304": "Eden-only work basket; its crafting reward is not range equipment.",
+    "4305": "Eden-only harvested palm leaf.",
+    "60010": "Eden-only harvesting tool; ordinary combat cannot use it."
+  },
   "labels": {
     "1569": {
       "name": "Излучатель",

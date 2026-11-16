@@ -1787,6 +1787,13 @@ class Inventory:
         if not row:
             self.ack(RES_NOT_FOUND)
             return
+        import eden
+        if eden.restricted_item(row["type_id"]):
+            # Work resources leave only through an authorised exchange or
+            # release cleanup, including legacy rows outside the plantation.
+            self.ack(RES_UNWORDED)
+            self.sess.answer("Предметы плантации Эдем нельзя удалить. Они изымаются при освобождении.")
+            return
         self.forget_reload(row["uniq"])
         self.store.delete_item(row["uniq"])
         self.ack(RES_OK)
@@ -2215,6 +2222,17 @@ class Inventory:
             self.ack(RES_NOT_FOUND)
             return None
         trader = getattr(self.trade, "trader_type", None)
+        import eden
+        import eden_shop
+        buyer = eden_shop.is_buyer(trader)
+        if eden.restricted_item(row['type_id']) and (
+                not buyer or row['type_id'] not in eden_shop.REPAIRABLE_LOCAL
+                or row['root'] != items.root_of(row['type_id'])):
+            self.ack(RES_REFUSED)
+            return None
+        if buyer and not eden_shop.available(self):
+            self.ack(RES_REFUSED)
+            return None
         if trophies.is_registrar(trader) and not trophies.keeps_stall(trader):
             self.ack(RES_REFUSED)
             return None
@@ -2232,7 +2250,13 @@ class Inventory:
                 if not self.store.lock_quest_character(self.char_id):
                     self.ack(RES_REFUSED)
                     return
-                row = self.find(p.get("obj"))
+                import eden_shop
+                if eden_shop.is_buyer(getattr(self.trade, 'trader_type', None)):
+                    row = self.repair_context(p)
+                    if row is None:
+                        return
+                else:
+                    row = self.find(p.get("obj"))
                 if not row or row["root"] not in items.BREAKABLE_ROOTS:
                     self.ack(RES_NOT_FOUND)
                     return
@@ -2283,6 +2307,10 @@ class Inventory:
         ss_obj_status;status=1 and the balance by a full userInfo_Player,
         payment and item creation committing together from the persisted purse.
         """
+        import eden_shop
+        if eden_shop.is_buyer(self.trade.trader_type):
+            self.ack(RES_REFUSED)
+            return
         stock = items.stock_for(self.trade.trader_type, self.trade.loc_id)
         try:
             index = int(str(p.get("obj", "")), 16)
@@ -2378,9 +2406,22 @@ class Inventory:
         if getattr(self.trade, "trader_type", None) in mortimer.NPC_TYPES:
             self.sell_gold_valuable(p)
             return
+        import eden_shop
+        import eden
+        buyer = eden_shop.is_buyer(getattr(self.trade, 'trader_type', None))
+        if buyer and not eden_shop.available(self):
+            self.ack(RES_REFUSED)
+            return
         row = self.find(p.get("obj"))
         if not row:
             self.ack(RES_NOT_FOUND)
+            return
+        if buyer and (eden.restricted_item(row['type_id'])
+                      or row['root'] != items.root_of(row['type_id'])):
+            self.ack(RES_REFUSED)
+            return
+        if buyer and eden_shop.nominal_item(row):
+            self.sell_eden_item(p)
             return
         if row["type_id"] in mortimer.VALUABLES:
             self.ack(RES_REFUSED)
@@ -2440,6 +2481,9 @@ class Inventory:
                 if self.find(p.get("obj")) != row:
                     self.ack(RES_REFUSED)
                     return
+                if buyer and not eden_shop.available(self):
+                    self.ack(RES_REFUSED)
+                    return
                 owner = self.store.character(self.char_id)
                 afro, gold = owner["afro"] + price, owner["gold"]
                 if heapable and n < row["count"]:
@@ -2468,6 +2512,17 @@ class Inventory:
     def gold_sale_terms(self, p):
         """Validate a bag item and quote the existing shop condition rules."""
         import gold_trade
+        import eden_shop
+        import eden
+        if eden_shop.is_buyer(getattr(self.trade, 'trader_type', None)):
+            if not eden_shop.available(self):
+                return None
+            row = self.find(p.get('obj'))
+            if row is not None and (eden.restricted_item(row['type_id'])
+                                    or row['root'] != items.root_of(row['type_id'])):
+                return None
+            if eden_shop.nominal_item(row):
+                return self.eden_sale_terms(p)
         trade = self.trade
         room = getattr(self.sess, "room", None)
         entry = room.npc(trade.npc_id) if trade and room else None
@@ -2505,7 +2560,74 @@ class Inventory:
             return
         token = secrets.token_hex(16)
         trade.sale_quote = dict(terms, token=token, expires=time.monotonic() + GOLD_SALE_QUOTE_SECONDS)
-        self.send("cmdAck", res=RES_OK, token=token, price=terms["price"], count=terms["n"])
+        extra = dict(eden_sale=1, currency=int(terms['gold'])) if 'gold' in terms else {}
+        self.send("cmdAck", res=RES_OK, token=token, price=terms["price"], count=terms["n"], **extra)
+
+    def eden_sale_terms(self, p):
+        """Nominal native-currency value at the plantation's actual counter."""
+        import eden_shop
+        if not eden_shop.available(self):
+            return None
+        row = self.find(p.get('obj'))
+        if row is None or row['slot'] != BAG:
+            return None
+        try:
+            n = int(p.get('param', 1) or 1)
+        except (TypeError, ValueError, OverflowError):
+            return None
+        if not 1 <= n <= row['count'] or (row['root'] not in items.HEAPABLE_ROOTS and n != 1):
+            return None
+        price, gold = eden_shop.sale_price(row, n)
+        if price <= 0:
+            return None
+        return dict(row=row, n=n, price=price, gold=gold)
+
+    def sell_eden_item(self, p):
+        """The quote, current item, native payout and removal commit once."""
+        trade = self.trade
+        quote = getattr(trade, 'sale_quote', None)
+        if trade is not None:
+            trade.sale_quote = None
+        if (not quote or 'gold' not in quote or p.get('confirmation') != 'ПРОДАТЬ'
+                or p.get('sale_token') != quote['token']
+                or time.monotonic() > quote['expires']):
+            self.ack(RES_REFUSED)
+            return
+        try:
+            with storage.atomic(self.store.db):
+                if not self.store.lock_quest_character(self.char_id):
+                    self.ack(RES_REFUSED)
+                    return
+                terms = self.eden_sale_terms(p)
+                if terms is None or terms != {k: quote[k] for k in ('row', 'n', 'price', 'gold')}:
+                    self.ack(RES_REFUSED)
+                    return
+                row, n, price = terms['row'], terms['n'], terms['price']
+                owner = self.store.character(self.char_id)
+                afro = owner['afro'] + (0 if terms['gold'] else price)
+                gold = owner['gold'] + (price if terms['gold'] else 0)
+                if n < row['count']:
+                    self.store.update_item(row['uniq'], count=row['count'] - n)
+                else:
+                    self.store.delete_item(row['uniq'])
+                with self.booked('eden_sale', row['type_id']):
+                    self.store.set_money(self.char_id, afro, gold)
+        except storage.CommitError:
+            self.close_after_uncertain_commit()
+            return
+        except Exception:
+            log.exception('Eden sale failed for character %s', self.char_id)
+            self.ack(RES_REFUSED)
+            return
+        character = self.sess.character()
+        character.afro, character.gold = afro, gold
+        self.ack(RES_OK)
+        if n < row['count']:
+            self.push_di(self.store.item(row['uniq']))
+        else:
+            self.forget_reload(row['uniq'])
+            self.push_status(row, 0)
+        self.push_money()
 
     def close_after_uncertain_commit(self):
         """Do not let logout overwrite a possibly committed purse."""
@@ -2700,6 +2822,10 @@ class Inventory:
         self.answer_once("open", self._open_bank, p)
 
     def _open_bank(self, p):
+        import eden
+        if eden.confined(self.sess):
+            self.ack(RES_NOT_FOUND)
+            return
         target = int(p.get("target", 0) or 0)
         room = self.sess.room
         entry = room.npc(target) if room is not None else None
@@ -2741,6 +2867,10 @@ class Inventory:
         return True
 
     def _bank_upd(self, code, p):
+        import eden
+        if eden.confined(self.sess):
+            self.ack(RES_NOT_FOUND)
+            return
         room = self.sess.room
         if room is None or room.npc(self.bank) is None:
             # The banker is gone from under the window. The session stays

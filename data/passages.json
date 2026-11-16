@@ -1132,90 +1132,1193 @@
     "target_loc_id": 637,
     "why": "DESIGNED topology on the files' own sides, as the quarries of Вади-Хальфа (626-630) and Донгола (631-635). The quarry of Абу-Хамед, «Каменоломня.», is five files with no map cell that open only by their sides: the centre, 637 AH_Stone_Mine_C, on all four; the north pit 636 (AH_Stone_Mine_N: Гюнтер the foreman, 985, and the healer Роуз, 728), south only; the south pit 639 (AH_Stone_Mine_S), north only; 638 (AH_Stone_Mine_E2), west only; 640 (AH_Stone_Mine_W2), east only. So each opening of the centre leads to the pit whose one opening faces it. The owner's Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»). Here: the west pit's one opening, east, back to the centre."
    }
+  },
+  "264": {
+   "W": {
+    "target_loc_id": 1390,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "E": {
+    "target_loc_id": 1381,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "S": {
+    "target_loc_id": 1383,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "265": {
+   "W": {
+    "target_loc_id": 1409,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "N": {
+    "target_loc_id": 1383,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "E": {
+    "target_loc_id": 1385,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "S": {
+    "target_loc_id": 1419,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "266": {
+   "W": {
+    "target_loc_id": 1385,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "N": {
+    "target_loc_id": 1384,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "E": {
+    "target_loc_id": 1410,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "S": {
+    "target_loc_id": 1421,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "267": {
+   "W": {
+    "target_loc_id": 1383,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "N": {
+    "target_loc_id": 1381,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "E": {
+    "target_loc_id": 1384,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "S": {
+    "target_loc_id": 1385,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1381": {
+   "W": {
+    "target_loc_id": 264,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "N": {
+    "target_loc_id": 1386,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "E": {
+    "target_loc_id": 1382,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "S": {
+    "target_loc_id": 267,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1382": {
+   "W": {
+    "target_loc_id": 1381,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "E": {
+    "target_loc_id": 1391,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "S": {
+    "target_loc_id": 1384,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1383": {
+   "W": {
+    "target_loc_id": 1399,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "N": {
+    "target_loc_id": 264,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "E": {
+    "target_loc_id": 267,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "S": {
+    "target_loc_id": 265,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1384": {
+   "W": {
+    "target_loc_id": 267,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "N": {
+    "target_loc_id": 1382,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "E": {
+    "target_loc_id": 1400,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "S": {
+    "target_loc_id": 266,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1385": {
+   "W": {
+    "target_loc_id": 265,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "N": {
+    "target_loc_id": 267,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "E": {
+    "target_loc_id": 266,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "S": {
+    "target_loc_id": 1420,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1386": {
+   "S": {
+    "target_loc_id": 1381,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1387": {
+   "E": {
+    "target_loc_id": 1388,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "S": {
+    "target_loc_id": 1391,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1388": {
+   "W": {
+    "target_loc_id": 1387,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "E": {
+    "target_loc_id": 1389,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "S": {
+    "target_loc_id": 1392,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1389": {
+   "W": {
+    "target_loc_id": 1388,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "S": {
+    "target_loc_id": 1393,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1390": {
+   "E": {
+    "target_loc_id": 264,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "S": {
+    "target_loc_id": 1399,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1391": {
+   "W": {
+    "target_loc_id": 1382,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "N": {
+    "target_loc_id": 1387,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "E": {
+    "target_loc_id": 1392,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "S": {
+    "target_loc_id": 1400,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1392": {
+   "W": {
+    "target_loc_id": 1391,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "N": {
+    "target_loc_id": 1388,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "E": {
+    "target_loc_id": 1393,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "S": {
+    "target_loc_id": 1401,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1393": {
+   "W": {
+    "target_loc_id": 1392,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "N": {
+    "target_loc_id": 1389,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "E": {
+    "target_loc_id": 1394,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "S": {
+    "target_loc_id": 1402,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1394": {
+   "W": {
+    "target_loc_id": 1393,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "E": {
+    "target_loc_id": 1395,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "S": {
+    "target_loc_id": 1403,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1395": {
+   "W": {
+    "target_loc_id": 1394,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "S": {
+    "target_loc_id": 1404,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1396": {
+   "E": {
+    "target_loc_id": 1397,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1397": {
+   "W": {
+    "target_loc_id": 1396,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "E": {
+    "target_loc_id": 1398,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "S": {
+    "target_loc_id": 1407,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1398": {
+   "W": {
+    "target_loc_id": 1397,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "E": {
+    "target_loc_id": 1399,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "S": {
+    "target_loc_id": 1408,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1399": {
+   "W": {
+    "target_loc_id": 1398,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "N": {
+    "target_loc_id": 1390,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "E": {
+    "target_loc_id": 1383,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "S": {
+    "target_loc_id": 1409,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1400": {
+   "W": {
+    "target_loc_id": 1384,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "N": {
+    "target_loc_id": 1391,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "E": {
+    "target_loc_id": 1401,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "S": {
+    "target_loc_id": 1410,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1401": {
+   "W": {
+    "target_loc_id": 1400,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "N": {
+    "target_loc_id": 1392,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "E": {
+    "target_loc_id": 1402,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "S": {
+    "target_loc_id": 1411,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1402": {
+   "W": {
+    "target_loc_id": 1401,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "N": {
+    "target_loc_id": 1393,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "E": {
+    "target_loc_id": 1403,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "S": {
+    "target_loc_id": 1412,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1403": {
+   "W": {
+    "target_loc_id": 1402,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "N": {
+    "target_loc_id": 1394,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "E": {
+    "target_loc_id": 1404,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "S": {
+    "target_loc_id": 1413,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1404": {
+   "W": {
+    "target_loc_id": 1403,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "N": {
+    "target_loc_id": 1395,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "E": {
+    "target_loc_id": 1405,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "S": {
+    "target_loc_id": 1414,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1405": {
+   "W": {
+    "target_loc_id": 1404,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "E": {
+    "target_loc_id": 1406,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "S": {
+    "target_loc_id": 1415,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1406": {
+   "W": {
+    "target_loc_id": 1405,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1407": {
+   "N": {
+    "target_loc_id": 1397,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "E": {
+    "target_loc_id": 1408,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "S": {
+    "target_loc_id": 1416,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1408": {
+   "W": {
+    "target_loc_id": 1407,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "N": {
+    "target_loc_id": 1398,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "E": {
+    "target_loc_id": 1409,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "S": {
+    "target_loc_id": 1417,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1409": {
+   "W": {
+    "target_loc_id": 1408,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "N": {
+    "target_loc_id": 1399,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "E": {
+    "target_loc_id": 265,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "S": {
+    "target_loc_id": 1418,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1410": {
+   "W": {
+    "target_loc_id": 266,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "N": {
+    "target_loc_id": 1400,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "E": {
+    "target_loc_id": 1411,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "S": {
+    "target_loc_id": 1422,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1411": {
+   "W": {
+    "target_loc_id": 1410,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "N": {
+    "target_loc_id": 1401,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "E": {
+    "target_loc_id": 1412,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "S": {
+    "target_loc_id": 1423,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1412": {
+   "W": {
+    "target_loc_id": 1411,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "N": {
+    "target_loc_id": 1402,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "E": {
+    "target_loc_id": 1413,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "S": {
+    "target_loc_id": 1424,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1413": {
+   "W": {
+    "target_loc_id": 1412,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "N": {
+    "target_loc_id": 1403,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "E": {
+    "target_loc_id": 1414,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "S": {
+    "target_loc_id": 1425,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1414": {
+   "W": {
+    "target_loc_id": 1413,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "N": {
+    "target_loc_id": 1404,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "E": {
+    "target_loc_id": 1415,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "S": {
+    "target_loc_id": 1426,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1415": {
+   "W": {
+    "target_loc_id": 1414,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "N": {
+    "target_loc_id": 1405,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1416": {
+   "N": {
+    "target_loc_id": 1407,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "E": {
+    "target_loc_id": 1417,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "S": {
+    "target_loc_id": 1427,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1417": {
+   "W": {
+    "target_loc_id": 1416,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "N": {
+    "target_loc_id": 1408,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "E": {
+    "target_loc_id": 1418,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "S": {
+    "target_loc_id": 1428,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1418": {
+   "W": {
+    "target_loc_id": 1417,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "N": {
+    "target_loc_id": 1409,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "E": {
+    "target_loc_id": 1419,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "S": {
+    "target_loc_id": 1429,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1419": {
+   "W": {
+    "target_loc_id": 1418,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "N": {
+    "target_loc_id": 265,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "E": {
+    "target_loc_id": 1420,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "S": {
+    "target_loc_id": 1430,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1420": {
+   "W": {
+    "target_loc_id": 1419,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "N": {
+    "target_loc_id": 1385,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "E": {
+    "target_loc_id": 1421,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "S": {
+    "target_loc_id": 1431,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1421": {
+   "W": {
+    "target_loc_id": 1420,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "N": {
+    "target_loc_id": 266,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "E": {
+    "target_loc_id": 1422,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "S": {
+    "target_loc_id": 1432,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1422": {
+   "W": {
+    "target_loc_id": 1421,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "N": {
+    "target_loc_id": 1410,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "E": {
+    "target_loc_id": 1423,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "S": {
+    "target_loc_id": 1433,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1423": {
+   "W": {
+    "target_loc_id": 1422,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "N": {
+    "target_loc_id": 1411,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "E": {
+    "target_loc_id": 1424,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "S": {
+    "target_loc_id": 1434,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1424": {
+   "W": {
+    "target_loc_id": 1423,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "N": {
+    "target_loc_id": 1412,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "E": {
+    "target_loc_id": 1425,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "S": {
+    "target_loc_id": 1435,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1425": {
+   "W": {
+    "target_loc_id": 1424,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "N": {
+    "target_loc_id": 1413,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "E": {
+    "target_loc_id": 1426,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "S": {
+    "target_loc_id": 1436,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1426": {
+   "W": {
+    "target_loc_id": 1425,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "N": {
+    "target_loc_id": 1414,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1427": {
+   "N": {
+    "target_loc_id": 1416,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "E": {
+    "target_loc_id": 1428,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1428": {
+   "W": {
+    "target_loc_id": 1427,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "N": {
+    "target_loc_id": 1417,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "E": {
+    "target_loc_id": 1429,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1429": {
+   "W": {
+    "target_loc_id": 1428,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "N": {
+    "target_loc_id": 1418,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "E": {
+    "target_loc_id": 1430,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1430": {
+   "W": {
+    "target_loc_id": 1429,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "N": {
+    "target_loc_id": 1419,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "E": {
+    "target_loc_id": 1431,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1431": {
+   "W": {
+    "target_loc_id": 1430,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "N": {
+    "target_loc_id": 1420,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "E": {
+    "target_loc_id": 1432,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1432": {
+   "W": {
+    "target_loc_id": 1431,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "N": {
+    "target_loc_id": 1421,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "E": {
+    "target_loc_id": 1433,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1433": {
+   "W": {
+    "target_loc_id": 1432,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "N": {
+    "target_loc_id": 1422,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "E": {
+    "target_loc_id": 1434,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1434": {
+   "W": {
+    "target_loc_id": 1433,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "N": {
+    "target_loc_id": 1423,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "E": {
+    "target_loc_id": 1435,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "S": {
+    "target_loc_id": 1437,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1435": {
+   "W": {
+    "target_loc_id": 1434,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "N": {
+    "target_loc_id": 1424,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "E": {
+    "target_loc_id": 1436,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "S": {
+    "target_loc_id": 1438,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1436": {
+   "W": {
+    "target_loc_id": 1435,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "N": {
+    "target_loc_id": 1425,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1437": {
+   "N": {
+    "target_loc_id": 1434,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "E": {
+    "target_loc_id": 1438,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
+  },
+  "1438": {
+   "W": {
+    "target_loc_id": 1437,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   },
+   "N": {
+    "target_loc_id": 1435,
+    "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
+   }
   }
  },
  "no_map": {
   "_": "Interiors left only by their own ways, never straight onto the global map: location -> why. The lcall's g_id carries the sublocation bit there, as a deadloc's does, so the client greys both map buttons out, and the server refuses chWorld to the map and /home (server/travel.py no_map, geo_id; server.py Session.cmd_chWorld, cmd_userMsg). A death still sends a player home. Their sides and quest ways work as anywhere. Each row says whether it is RECOVERED or DESIGNED.",
-  "732": {"why": "DESIGNED. Берт Гаммер's bunker, TIR_00: the course (1682 and its lessons) is walked once, and a button to the map in the middle of it would lose it for good -- the lessons' givers stand in rooms only the lessons lead to. The ways out are the lesson on (351) and «Прервать обучение» (358), back to the market."},
-  "1048": {"why": "DESIGNED. TIR_01, the pistols' range: as TIR_00 -- out by the lesson (352) or «Прервать обучение» (359)."},
-  "1233": {"why": "DESIGNED. TIR_02, the shotguns' range: out by the lesson (353) or «Прервать обучение» (360)."},
-  "1260": {"why": "DESIGNED. TIR_03, the sub-machine guns' range: out by the lesson (354) or «Прервать обучение» (361)."},
-  "1276": {"why": "DESIGNED. TIR_04, the assault rifles' range: out by the lesson (355) or «Прервать обучение» (362)."},
-  "1280": {"why": "DESIGNED. TIR_05, the machine guns' range: out by the lesson (356) or «Прервать обучение» (363)."},
-  "1282": {"why": "DESIGNED. TIR_06, the rifles' range: out by the last lesson (357) or «Прервать обучение» (364), both to the market."},
-  "626": {"why": "DESIGNED. The quarry's centre: the pick Сэм's work lends (403, 404) stays in the quarry (quests.json stay_in), and the way out is Сэм's «Покинуть каменоломню.» (402) in the north pit, reached by the sides ('sides')."},
-  "627": {"why": "DESIGNED. The quarry's north pit, where Равшан's contract (401) arrives and Сэм's «Покинуть каменоломню.» (402) leaves, back to Причал; its south side leads into the centre."},
-  "628": {"why": "DESIGNED. The quarry's south pit: its one side back to the centre."},
-  "629": {"why": "DESIGNED. The quarry's west pit: its one side back to the centre."},
-  "630": {"why": "DESIGNED. The quarry's east pit: its one side back to the centre."},
-  "644": {"why": "DESIGNED. The prison's western block (Prison_1_WH), entered by the western gate (161) at the uprising: the blocks are left only by Томас's «Выход» (163) in the centre, «При выходе отбирает все повязки» (the wiki's «Томас»), and a death, which sends home; their sides lead into each other ('sides')."},
-  "645": {"why": "DESIGNED. The prison's southern block (Prison_2_WH), entered by the southern gate (162): as 644."},
-  "646": {"why": "DESIGNED. The prison's centre block (Prison_3_WH): Томас (876) and his «Выход» (163) back to the yard, the godfather and the medics of the uprising; its four sides lead to the other four files."},
-  "647": {"why": "DESIGNED. The prison's northern cells (Prison_4_WH): the prisoners of the uprising; its one side back to the centre."},
-  "648": {"why": "DESIGNED. The prison's eastern cells (Prison_5_WH): the prisoners of the uprising; its one side back to the centre."},
-  "613": {"why": "DESIGNED (2026-10-09, the owner: «из нутри шахты надо запретить выходить на глобальную карту»). The Вади-Хальфа mine's first tier, VH_mine_lvl1: out only by its door up to the second entrance (158), or down. Every file under the three entrances is in this list: the mine is left by the doors it was entered by, never by the map button or /home in the middle of a raid, which would also land the player on whichever entrance's map cell he last stood on, not the one above him."},
-  "617": {"why": "DESIGNED. VH_mine_lvl2, the first tier's other file: up to the first entrance (154), or down (see 613)."},
-  "1012": {"why": "DESIGNED. VH_mine_lvl4, the second tier's east end: up to the third entrance (160) (see 613)."},
-  "1016": {"why": "DESIGNED. VH_mine_lvl5, the second tier's west end: up to 617 (see 613)."},
-  "1024": {"why": "DESIGNED. VH_mine_lvl6, the second tier's middle file (see 613)."},
-  "1215": {"why": "DESIGNED. VH_mine_lvl3, the third tier (see 613)."},
-  "1017": {"why": "DESIGNED. VH_mine_tunel1_horizont, the second tier's tunnels (see 613)."},
-  "1018": {"why": "DESIGNED. VH_mine_tunel2_horizont (see 613)."},
-  "1019": {"why": "DESIGNED. VH_mine_tunel3_horizont (see 613)."},
-  "618": {"why": "DESIGNED, as Вади-Хальфа's 644. The prison's western block (Prison_1), entered by the western gate at the uprising: the blocks are left only by Томас's «Выход» (163) in the centre and a death, which sends home; their sides lead into each other ('sides'). The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»)."},
-  "619": {"why": "DESIGNED. The prison's southern block (Prison_2), entered by the southern gate: as 618."},
-  "620": {"why": "DESIGNED. The prison's northern cells (Prison_4): the prisoners of the uprising; its one side back to the centre."},
-  "621": {"why": "DESIGNED. The prison's eastern cells (Prison_5): the prisoners of the uprising; its one side back to the centre."},
-  "622": {"why": "DESIGNED. The prison's centre block (Prison_3): Томас (876) and his «Выход» (163) back to the yard 159, the godfather and the medics of the uprising; its four sides lead to the other four files."},
-  "631": {"why": "DESIGNED, as Вади-Хальфа's 626. The quarry's centre: its sides lead into the pits, and the way out is Олег's «Покинуть каменоломню» in the north pit 632 ('quest'). The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»)."},
-  "632": {"why": "DESIGNED. The quarry's north pit, where Джамшут's way arrives and Олег's leaves, back to the new market 197; its south side leads into the centre. The healer Грегори (138) takes no home here (server.py home_here refuses a no_map place), as Деда Джоф in Вади-Хальфа's 627."},
-  "633": {"why": "DESIGNED. The quarry's south pit: its one side back to the centre."},
-  "634": {"why": "DESIGNED. The quarry's east pit: its one side back to the centre."},
-  "635": {"why": "DESIGNED. The quarry's west pit: its one side back to the centre."},
-  "614": {"why": "DESIGNED, as Вади-Хальфа's mine (613; 2026-10-09, the owner: «из нутри шахты надо запретить выходить на глобальную карту»). Донгола's mine's first tier, DN_mine_lvl1: out only by its door up to the second entrance (157), or down. Every file under the three entrances is in this list: the mine is left by the doors it was entered by, never by the map button or /home in the middle of a raid. The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»)."},
-  "616": {"why": "DESIGNED. DN_mine_lvl2, the first tier's other file: up to the first entrance (155), or down (see 614)."},
-  "1013": {"why": "DESIGNED. DN_mine_lvl4, the second tier's east end: up to the third entrance (161) (see 614)."},
-  "1015": {"why": "DESIGNED. DN_mine_lvl5, the second tier's west end: up to 616 (see 614)."},
-  "1023": {"why": "DESIGNED. DN_mine_lvl6, the second tier's middle file (see 614)."},
-  "1214": {"why": "DESIGNED. DN_mine_lvl3, the third tier (see 614)."},
-  "1020": {"why": "DESIGNED. DN_mine_tunel1_horizont, the second tier's tunnels (see 614)."},
-  "1021": {"why": "DESIGNED. DN_mine_tunel2_horizont (see 614)."},
-  "1022": {"why": "DESIGNED. DN_mine_tunel3_horizont (see 614)."},
-  "607": {"why": "DESIGNED. Донгола's sewers, «Донгола: Канализация.» (Dongola_Sewers01), under the town: in from the quarter 79 and out to it by quest ways ('quest'), into the collector 608 by its one side ('sides'), never onto the map. The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»)."},
-  "608": {"why": "DESIGNED. The collector (Dongola_Sewers02): its one side back to 607; the cellar 1009 by quest ways."},
-  "1009": {"why": "DESIGNED. The cellar (Dongola_Sewers03): no side and no door; in and out by quest ways from and to the collector 608."},
-  "702": {"why": "DESIGNED. Зона 49's cellar (DN_Zone49_Prison): no side and no door; joined to 703 by quest ways both ways, and to the surface by a way out ('quest'). The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»)."},
-  "703": {"why": "DESIGNED. Зона 49 (DN_Zone49_1): its one side, south, into 705 ('sides'); the cellar 702 by quest ways."},
-  "704": {"why": "DESIGNED. Зона 49 (DN_Zone49_2): its one side, east, into 703 ('sides'); entered by a quest way."},
-  "705": {"why": "DESIGNED. Зона 49 (DN_Zone49_3): its one side, north, back into 703 ('sides')."},
-  "649": {"why": "DESIGNED, as Вади-Хальфа's 644 and Донгола's 618. The prison's western block (Prison_1_AH), entered by the western gate at the uprising: the blocks are left only by Томас's «Выход» (163) in the centre and a death, which sends home; their sides lead into each other ('sides'). The owner's Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»)."},
-  "650": {"why": "DESIGNED. The prison's southern block (Prison_2_AH), entered by the southern gate (see 649)."},
-  "651": {"why": "DESIGNED. The prison's centre block (Prison_3_AH): Томас (876) and his «Выход» (163) back to the yard 177, the godfather and the medics of the uprising; its four sides lead to the other four files."},
-  "652": {"why": "DESIGNED. The prison's northern cells (Prison_4_AH): its one side back to the centre (see 649)."},
-  "653": {"why": "DESIGNED. The prison's eastern cells (Prison_5_AH): its one side back to the centre (see 649)."},
-  "637": {"why": "DESIGNED, as Вади-Хальфа's 626 and Донгола's 631. The quarry's centre: its sides lead into the pits, and the way out is Гюнтер's «Покинуть каменоломню» in the north pit 636 ('quest'). The owner's Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»)."},
-  "636": {"why": "DESIGNED. The quarry's north pit, where Ибрахим's way arrives and Гюнтер's leaves, back to the quarter 127; its south side leads into the centre. The healer Роуз (728) takes no home here (server.py home_here refuses a no_map place), as Грегори in Донгола's 632."},
-  "638": {"why": "DESIGNED. The quarry's east pit: its one side back to the centre."},
-  "639": {"why": "DESIGNED. The quarry's south pit: its one side back to the centre."},
-  "640": {"why": "DESIGNED. The quarry's west pit: its one side back to the centre."},
-  "615": {"why": "DESIGNED, as the mines of Вади-Хальфа (613; 2026-10-09, the owner: «из нутри шахты надо запретить выходить на глобальную карту») and Донгола (614). The Dark Mine's first tier, Top_Mine_lvl1: out only by its door up to the entrance 156, or down. Every tier under the entrance is in this list: the mine is left by the door it was entered by, never by the map button or /home in the middle of a raid. The owner's Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»)."},
-  "1014": {"why": "DESIGNED. Top_Mine_lvl2, the Dark Mine's second tier: up or down only (see 615)."},
-  "1216": {"why": "DESIGNED. Top_Mine_lvl3, the Dark Mine's third tier: up or down only (see 615)."},
-  "1254": {"why": "DESIGNED. Top_Mine_lvl4, the Dark Mine's fourth tier: up or down only (see 615)."},
-  "1273": {"why": "DESIGNED. Top_Mine_lvl5, the bottom of the Dark Mine: up only (see 615)."},
-  "1295": {"why": "DESIGNED. «Боевая Академия.» (Bunker_Univer): no side and no door of its own; entered by Охранник Илья's way from the quarter 127 and left by Илья's way back inside ('quest'), the lessons are taken here. The owner's Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате») (decision 26 of its plan)."},
-  "690": {"why": "DESIGNED. «Тафари» (Test_2), the first of the five places of Абимбола's bandits: no side and no door; Гатера's car brings a party in from the port 446 and «Что, обратно захотелось?» at the car (1693) takes it back ('quest'). A button to the map in the middle of the fight would leave the party's way back behind. The owner's Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате») (decision 27 of its plan)."},
-  "691": {"why": "DESIGNED. «Гвала» (Test_3): as 690."},
-  "692": {"why": "DESIGNED. «Гамюка» (Test_4): as 690."},
-  "693": {"why": "DESIGNED. «Абафо» (Test_5), Абрафо's: as 690."},
-  "694": {"why": "DESIGNED. «Джитинджи» (Test_6): as 690."}
+  "732": {
+   "why": "DESIGNED. Берт Гаммер's bunker, TIR_00: the course (1682 and its lessons) is walked once, and a button to the map in the middle of it would lose it for good -- the lessons' givers stand in rooms only the lessons lead to. The ways out are the lesson on (351) and «Прервать обучение» (358), back to the market."
+  },
+  "1048": {
+   "why": "DESIGNED. TIR_01, the pistols' range: as TIR_00 -- out by the lesson (352) or «Прервать обучение» (359)."
+  },
+  "1233": {
+   "why": "DESIGNED. TIR_02, the shotguns' range: out by the lesson (353) or «Прервать обучение» (360)."
+  },
+  "1260": {
+   "why": "DESIGNED. TIR_03, the sub-machine guns' range: out by the lesson (354) or «Прервать обучение» (361)."
+  },
+  "1276": {
+   "why": "DESIGNED. TIR_04, the assault rifles' range: out by the lesson (355) or «Прервать обучение» (362)."
+  },
+  "1280": {
+   "why": "DESIGNED. TIR_05, the machine guns' range: out by the lesson (356) or «Прервать обучение» (363)."
+  },
+  "1282": {
+   "why": "DESIGNED. TIR_06, the rifles' range: out by the last lesson (357) or «Прервать обучение» (364), both to the market."
+  },
+  "626": {
+   "why": "DESIGNED. The quarry's centre: the pick Сэм's work lends (403, 404) stays in the quarry (quests.json stay_in), and the way out is Сэм's «Покинуть каменоломню.» (402) in the north pit, reached by the sides ('sides')."
+  },
+  "627": {
+   "why": "DESIGNED. The quarry's north pit, where Равшан's contract (401) arrives and Сэм's «Покинуть каменоломню.» (402) leaves, back to Причал; its south side leads into the centre."
+  },
+  "628": {
+   "why": "DESIGNED. The quarry's south pit: its one side back to the centre."
+  },
+  "629": {
+   "why": "DESIGNED. The quarry's west pit: its one side back to the centre."
+  },
+  "630": {
+   "why": "DESIGNED. The quarry's east pit: its one side back to the centre."
+  },
+  "644": {
+   "why": "DESIGNED. The prison's western block (Prison_1_WH), entered by the western gate (161) at the uprising: the blocks are left only by Томас's «Выход» (163) in the centre, «При выходе отбирает все повязки» (the wiki's «Томас»), and a death, which sends home; their sides lead into each other ('sides')."
+  },
+  "645": {
+   "why": "DESIGNED. The prison's southern block (Prison_2_WH), entered by the southern gate (162): as 644."
+  },
+  "646": {
+   "why": "DESIGNED. The prison's centre block (Prison_3_WH): Томас (876) and his «Выход» (163) back to the yard, the godfather and the medics of the uprising; its four sides lead to the other four files."
+  },
+  "647": {
+   "why": "DESIGNED. The prison's northern cells (Prison_4_WH): the prisoners of the uprising; its one side back to the centre."
+  },
+  "648": {
+   "why": "DESIGNED. The prison's eastern cells (Prison_5_WH): the prisoners of the uprising; its one side back to the centre."
+  },
+  "613": {
+   "why": "DESIGNED (2026-10-09, the owner: «из нутри шахты надо запретить выходить на глобальную карту»). The Вади-Хальфа mine's first tier, VH_mine_lvl1: out only by its door up to the second entrance (158), or down. Every file under the three entrances is in this list: the mine is left by the doors it was entered by, never by the map button or /home in the middle of a raid, which would also land the player on whichever entrance's map cell he last stood on, not the one above him."
+  },
+  "617": {
+   "why": "DESIGNED. VH_mine_lvl2, the first tier's other file: up to the first entrance (154), or down (see 613)."
+  },
+  "1012": {
+   "why": "DESIGNED. VH_mine_lvl4, the second tier's east end: up to the third entrance (160) (see 613)."
+  },
+  "1016": {
+   "why": "DESIGNED. VH_mine_lvl5, the second tier's west end: up to 617 (see 613)."
+  },
+  "1024": {
+   "why": "DESIGNED. VH_mine_lvl6, the second tier's middle file (see 613)."
+  },
+  "1215": {
+   "why": "DESIGNED. VH_mine_lvl3, the third tier (see 613)."
+  },
+  "1017": {
+   "why": "DESIGNED. VH_mine_tunel1_horizont, the second tier's tunnels (see 613)."
+  },
+  "1018": {
+   "why": "DESIGNED. VH_mine_tunel2_horizont (see 613)."
+  },
+  "1019": {
+   "why": "DESIGNED. VH_mine_tunel3_horizont (see 613)."
+  },
+  "618": {
+   "why": "DESIGNED, as Вади-Хальфа's 644. The prison's western block (Prison_1), entered by the western gate at the uprising: the blocks are left only by Томас's «Выход» (163) in the centre and a death, which sends home; their sides lead into each other ('sides'). The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»)."
+  },
+  "619": {
+   "why": "DESIGNED. The prison's southern block (Prison_2), entered by the southern gate: as 618."
+  },
+  "620": {
+   "why": "DESIGNED. The prison's northern cells (Prison_4): the prisoners of the uprising; its one side back to the centre."
+  },
+  "621": {
+   "why": "DESIGNED. The prison's eastern cells (Prison_5): the prisoners of the uprising; its one side back to the centre."
+  },
+  "622": {
+   "why": "DESIGNED. The prison's centre block (Prison_3): Томас (876) and his «Выход» (163) back to the yard 159, the godfather and the medics of the uprising; its four sides lead to the other four files."
+  },
+  "631": {
+   "why": "DESIGNED, as Вади-Хальфа's 626. The quarry's centre: its sides lead into the pits, and the way out is Олег's «Покинуть каменоломню» in the north pit 632 ('quest'). The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»)."
+  },
+  "632": {
+   "why": "DESIGNED. The quarry's north pit, where Джамшут's way arrives and Олег's leaves, back to the new market 197; its south side leads into the centre. The healer Грегори (138) takes no home here (server.py home_here refuses a no_map place), as Деда Джоф in Вади-Хальфа's 627."
+  },
+  "633": {
+   "why": "DESIGNED. The quarry's south pit: its one side back to the centre."
+  },
+  "634": {
+   "why": "DESIGNED. The quarry's east pit: its one side back to the centre."
+  },
+  "635": {
+   "why": "DESIGNED. The quarry's west pit: its one side back to the centre."
+  },
+  "614": {
+   "why": "DESIGNED, as Вади-Хальфа's mine (613; 2026-10-09, the owner: «из нутри шахты надо запретить выходить на глобальную карту»). Донгола's mine's first tier, DN_mine_lvl1: out only by its door up to the second entrance (157), or down. Every file under the three entrances is in this list: the mine is left by the doors it was entered by, never by the map button or /home in the middle of a raid. The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»)."
+  },
+  "616": {
+   "why": "DESIGNED. DN_mine_lvl2, the first tier's other file: up to the first entrance (155), or down (see 614)."
+  },
+  "1013": {
+   "why": "DESIGNED. DN_mine_lvl4, the second tier's east end: up to the third entrance (161) (see 614)."
+  },
+  "1015": {
+   "why": "DESIGNED. DN_mine_lvl5, the second tier's west end: up to 616 (see 614)."
+  },
+  "1023": {
+   "why": "DESIGNED. DN_mine_lvl6, the second tier's middle file (see 614)."
+  },
+  "1214": {
+   "why": "DESIGNED. DN_mine_lvl3, the third tier (see 614)."
+  },
+  "1020": {
+   "why": "DESIGNED. DN_mine_tunel1_horizont, the second tier's tunnels (see 614)."
+  },
+  "1021": {
+   "why": "DESIGNED. DN_mine_tunel2_horizont (see 614)."
+  },
+  "1022": {
+   "why": "DESIGNED. DN_mine_tunel3_horizont (see 614)."
+  },
+  "607": {
+   "why": "DESIGNED. Донгола's sewers, «Донгола: Канализация.» (Dongola_Sewers01), under the town: in from the quarter 79 and out to it by quest ways ('quest'), into the collector 608 by its one side ('sides'), never onto the map. The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»)."
+  },
+  "608": {
+   "why": "DESIGNED. The collector (Dongola_Sewers02): its one side back to 607; the cellar 1009 by quest ways."
+  },
+  "1009": {
+   "why": "DESIGNED. The cellar (Dongola_Sewers03): no side and no door; in and out by quest ways from and to the collector 608."
+  },
+  "702": {
+   "why": "DESIGNED. Зона 49's cellar (DN_Zone49_Prison): no side and no door; joined to 703 by quest ways both ways, and to the surface by a way out ('quest'). The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»)."
+  },
+  "703": {
+   "why": "DESIGNED. Зона 49 (DN_Zone49_1): its one side, south, into 705 ('sides'); the cellar 702 by quest ways."
+  },
+  "704": {
+   "why": "DESIGNED. Зона 49 (DN_Zone49_2): its one side, east, into 703 ('sides'); entered by a quest way."
+  },
+  "705": {
+   "why": "DESIGNED. Зона 49 (DN_Zone49_3): its one side, north, back into 703 ('sides')."
+  },
+  "649": {
+   "why": "DESIGNED, as Вади-Хальфа's 644 and Донгола's 618. The prison's western block (Prison_1_AH), entered by the western gate at the uprising: the blocks are left only by Томас's «Выход» (163) in the centre and a death, which sends home; their sides lead into each other ('sides'). The owner's Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»)."
+  },
+  "650": {
+   "why": "DESIGNED. The prison's southern block (Prison_2_AH), entered by the southern gate (see 649)."
+  },
+  "651": {
+   "why": "DESIGNED. The prison's centre block (Prison_3_AH): Томас (876) and his «Выход» (163) back to the yard 177, the godfather and the medics of the uprising; its four sides lead to the other four files."
+  },
+  "652": {
+   "why": "DESIGNED. The prison's northern cells (Prison_4_AH): its one side back to the centre (see 649)."
+  },
+  "653": {
+   "why": "DESIGNED. The prison's eastern cells (Prison_5_AH): its one side back to the centre (see 649)."
+  },
+  "637": {
+   "why": "DESIGNED, as Вади-Хальфа's 626 and Донгола's 631. The quarry's centre: its sides lead into the pits, and the way out is Гюнтер's «Покинуть каменоломню» in the north pit 636 ('quest'). The owner's Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»)."
+  },
+  "636": {
+   "why": "DESIGNED. The quarry's north pit, where Ибрахим's way arrives and Гюнтер's leaves, back to the quarter 127; its south side leads into the centre. The healer Роуз (728) takes no home here (server.py home_here refuses a no_map place), as Грегори in Донгола's 632."
+  },
+  "638": {
+   "why": "DESIGNED. The quarry's east pit: its one side back to the centre."
+  },
+  "639": {
+   "why": "DESIGNED. The quarry's south pit: its one side back to the centre."
+  },
+  "640": {
+   "why": "DESIGNED. The quarry's west pit: its one side back to the centre."
+  },
+  "615": {
+   "why": "DESIGNED, as the mines of Вади-Хальфа (613; 2026-10-09, the owner: «из нутри шахты надо запретить выходить на глобальную карту») and Донгола (614). The Dark Mine's first tier, Top_Mine_lvl1: out only by its door up to the entrance 156, or down. Every tier under the entrance is in this list: the mine is left by the door it was entered by, never by the map button or /home in the middle of a raid. The owner's Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»)."
+  },
+  "1014": {
+   "why": "DESIGNED. Top_Mine_lvl2, the Dark Mine's second tier: up or down only (see 615)."
+  },
+  "1216": {
+   "why": "DESIGNED. Top_Mine_lvl3, the Dark Mine's third tier: up or down only (see 615)."
+  },
+  "1254": {
+   "why": "DESIGNED. Top_Mine_lvl4, the Dark Mine's fourth tier: up or down only (see 615)."
+  },
+  "1273": {
+   "why": "DESIGNED. Top_Mine_lvl5, the bottom of the Dark Mine: up only (see 615)."
+  },
+  "1295": {
+   "why": "DESIGNED. «Боевая Академия.» (Bunker_Univer): no side and no door of its own; entered by Охранник Илья's way from the quarter 127 and left by Илья's way back inside ('quest'), the lessons are taken here. The owner's Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате») (decision 26 of its plan)."
+  },
+  "690": {
+   "why": "DESIGNED. «Тафари» (Test_2), the first of the five places of Абимбола's bandits: no side and no door; Гатера's car brings a party in from the port 446 and «Что, обратно захотелось?» at the car (1693) takes it back ('quest'). A button to the map in the middle of the fight would leave the party's way back behind. The owner's Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате») (decision 27 of its plan)."
+  },
+  "691": {
+   "why": "DESIGNED. «Гвала» (Test_3): as 690."
+  },
+  "692": {
+   "why": "DESIGNED. «Гамюка» (Test_4): as 690."
+  },
+  "693": {
+   "why": "DESIGNED. «Абафо» (Test_5), Абрафо's: as 690."
+  },
+  "694": {
+   "why": "DESIGNED. «Джитинджи» (Test_6): as 690."
+  }
  },
  "walk_in": {},
  "quest": {
   "102": [
    {
     "quest": 146,
-    "cells": [[9, 83], [10, 83], [9, 84], [10, 84]],
+    "cells": [
+     [
+      9,
+      83
+     ],
+     [
+      10,
+      83
+     ],
+     [
+      9,
+      84
+     ],
+     [
+      10,
+      84
+     ]
+    ],
     "target_loc_id": 117,
     "why": "RECOVERED place and ride, DESIGNED way. 102 'Черный рынок Вади-Хальфы' (WH_Gold_Traders_old, map cell 5970,1730): Мастер Тиль (5) stands at (11,82) beside a car, O_Hummer1 at (8,84), whose body is the obstacles at 6-10 x 81-84. His «К шахте» (texts.xml 62707/62708, 'Нужно будет вернуться к шахте - говори.'; his step of the gold rush, 62700: 'туда как раз направлялся мой человек, может и тебя подвезти') is the ride to his driver at the gold mine: handed back to Тиль, it moves the player to 117 ('Пустошь', 6008,1742), where the driver (666) waits by his own car. The cells are the ground between the Hummer and Тиль, where a player driven back from the mine arrives (travel.door_arrival)."
    }
@@ -1223,7 +2326,24 @@
   "117": [
    {
     "quest": 143,
-    "cells": [[27, 60], [29, 60], [27, 61], [28, 61]],
+    "cells": [
+     [
+      27,
+      60
+     ],
+     [
+      29,
+      60
+     ],
+     [
+      27,
+      61
+     ],
+     [
+      28,
+      61
+     ]
+    ],
     "target_loc_id": 102,
     "why": "RECOVERED place and ride, DESIGNED way. 117 'Пустошь' (map cell 6008,1742, beside «Золотая шахта.» 116): Водитель Тиля (666, wh_gold_driver_1) stands at (29,62) beside his car, O_Bugcar1 at (28,60), whose body is the obstacles at 27-30 x 57-59. His «В Вади-Хальфу» (texts.xml 62705/62706, 'Нужно будет вернуться в Хальфу - говори.') is the ride back to Тиль's black market (102). The cells are the ground by the car, where a player driven out from Тиль arrives (travel.door_arrival)."
    }
@@ -1231,7 +2351,36 @@
   "153": [
    {
     "quest": 7,
-    "cells": [[47, 24], [48, 24], [46, 25], [47, 25], [48, 25], [47, 26], [48, 26]],
+    "cells": [
+     [
+      47,
+      24
+     ],
+     [
+      48,
+      24
+     ],
+     [
+      46,
+      25
+     ],
+     [
+      47,
+      25
+     ],
+     [
+      48,
+      25
+     ],
+     [
+      47,
+      26
+     ],
+     [
+      48,
+      26
+     ]
+    ],
     "target_loc_id": 612,
     "why": "RECOVERED way and place, DESIGNED workings. 153 'Скалы: Шахта' (Noob_mine_entrance, map cell 6273,1829) is the wiki's 'Старая шахта' with Рудо, 'шахтер в пятом поколении', at the mouth, and the wiki and the original's texts (59928-59931) say his quest 'Отправка в шахту' took people down: the file has no zone to go in by. It draws mine_entrance.png at (52,16) with rails running out of it to the south-west, and a pocket of inzones (43-49, 23-31) at the rails' end -- the cells a player came out of the mine onto. The cells here are the end of the rails, the walkable cells nearest the opening and outside that pocket: where the way is drawn, so a player coming up out of the mine arrives beside them. Handing the quest in to Рудо moves him down; walking onto the cells does nothing."
    }
@@ -1239,7 +2388,24 @@
   "612": [
    {
     "quest": 8,
-    "cells": [[49, 19], [48, 20], [49, 20], [50, 20]],
+    "cells": [
+     [
+      49,
+      19
+     ],
+     [
+      48,
+      20
+     ],
+     [
+      49,
+      20
+     ],
+     [
+      50,
+      20
+     ]
+    ],
     "target_loc_id": 153,
     "why": "RECOVERED way and place, DESIGNED workings. The first tier puts W_Pointer_Exit at (50,19), at the dead end of its north-east gallery, with its inzones (49-53, 21-25) just below -- where a player arrived from the surface -- and Камал beside them, whose quest 'Выведи меня отсюда' (texts 59940-59943) was the way out. No zone there either. The cells are the ones under the sign: a player coming down arrives beside them, and Камал's quest, handed back to him, leads to the mine's mouth."
    }
@@ -1247,7 +2413,24 @@
   "186": [
    {
     "quest": 43,
-    "cells": [[33, 36], [36, 36], [34, 37], [36, 37]],
+    "cells": [
+     [
+      33,
+      36
+     ],
+     [
+      36,
+      36
+     ],
+     [
+      34,
+      37
+     ],
+     [
+      36,
+      37
+     ]
+    ],
     "target_loc_id": 41,
     "why": "RECOVERED place, DESIGNED way. 186 'Караван' (NoobZone_Market, map cell 6271,1829), inside the owner's wall. Демир (5193), the driver, stands at (35,37) beside his car: O_Bugcar1 at (34,36), whose body is the obstacles at 33-37 x 33-36. His quest «В Хальфу!» (texts.xml 24434-24436, 'Пойдем, отвезу тебя в город.') is the ride out of the walled valley to Вади-Хальфа, the owner's decision (2026-09-26). The file draws no way out, so the cells are the ground around the car, where the ride starts: a player driven back from the city arrives nearest them (travel.door_arrival). Handing the quest in to Демир moves the player to Причал (41, 5965,1728), where the other Демир waits."
    }
@@ -1255,13 +2438,51 @@
   "41": [
    {
     "quest": 44,
-    "cells": [[28, 73], [29, 73], [30, 73], [28, 74], [29, 74]],
+    "cells": [
+     [
+      28,
+      73
+     ],
+     [
+      29,
+      73
+     ],
+     [
+      30,
+      73
+     ],
+     [
+      28,
+      74
+     ],
+     [
+      29,
+      74
+     ]
+    ],
     "target_loc_id": 186,
     "why": "RECOVERED place, DESIGNED way. 41 'Причал' of Вади-Хальфа (map cell 5965,1728): Демир (30, nz_Demir) stands at (27,73) beside a car, O_car02_vp at (30,75). His quest «Назад, в долину» (texts.xml 59870/59871) is the ride back into the valley, which the original closes 'после достижения третьего уровня любого навыка' (quests.json max_level 2). The cells are the ground by the car, where a player driven out of the valley arrives (travel.door_arrival). Handing the quest in to Демир moves the player to the caravan's village (186)."
    },
    {
     "quest": 401,
-    "cells": [[51, 17], [52, 19], [50, 17], [52, 16]],
+    "cells": [
+     [
+      51,
+      17
+     ],
+     [
+      52,
+      19
+     ],
+     [
+      50,
+      17
+     ],
+     [
+      52,
+      16
+     ]
+    ],
     "target_loc_id": 627,
     "why": "RECOVERED way (the wiki's «Работа в Каменоломне (Вади-Хальфа)», 5965x1728: «после выполнения задания Вас переместят в другое место»), DESIGNED place. 41 'Причал': Равшан, «Владелец каменоломни» (978), stands at (52,18); his contract takes the player into the quarry's north pit, 627, beside Большой Сэм. The quarry has no cell on the map (the wiki's 5961,1727 is the lake). The cells are the ground beside him, where a player leaving the quarry arrives."
    }
@@ -1269,7 +2490,24 @@
   "35": [
    {
     "quest": 1682,
-    "cells": [[54, 25], [55, 25], [54, 24], [56, 24]],
+    "cells": [
+     [
+      54,
+      25
+     ],
+     [
+      55,
+      25
+     ],
+     [
+      54,
+      24
+     ],
+     [
+      56,
+      24
+     ]
+    ],
     "target_loc_id": 732,
     "why": "RECOVERED way, DESIGNED place. 35 'Вади Хальфа: рынок', the old market: Берт Гаммер (2088, BertGammer_GoldMarket) stands at (55,24), and his «Тир Берта Гаммера» (59768: «Следуй за мной. Разговор продолжим в бункере.») takes the player into his bunker, TIR_00 (732). The file draws no way there; the cells are the ground at his feet, where a player who breaks the course off in TIR_00 comes back out (travel.door_arrival). Handed back to him, the quest moves the player (server.py Session.hand_in_way)."
    }
@@ -1277,13 +2515,47 @@
   "732": [
    {
     "quest": 351,
-    "cells": [[7, 29], [9, 30], [7, 28], [8, 27]],
+    "cells": [
+     [
+      7,
+      29
+     ],
+     [
+      9,
+      30
+     ],
+     [
+      7,
+      28
+     ],
+     [
+      8,
+      27
+     ]
+    ],
     "target_loc_id": 1048,
     "why": "RECOVERED place, DESIGNED way. TIR_00 (732), a range of Берт Гаммер's bunker, where his copy BertGammer_TI_0 (2089) stands at (8,29) in the booth: his lesson (351), handed back to him, leads on to the next range, TIR_01 (1048). The file draws no way; the cells are the booth's floor beside him, off its entries, which are where a player coming in stands."
    },
    {
     "quest": 358,
-    "cells": [[7, 29], [9, 30], [7, 28], [8, 27]],
+    "cells": [
+     [
+      7,
+      29
+     ],
+     [
+      9,
+      30
+     ],
+     [
+      7,
+      28
+     ],
+     [
+      8,
+      27
+     ]
+    ],
     "target_loc_id": 35,
     "why": "RECOVERED place and target (the wiki's «Прервать обучение»: «Вас переместят на Старый рынок Вади Хальфы»), DESIGNED way. TIR_00 (732): Берт's «Прервать обучение» (358), handed back to him (2089), leads back to the market (35). The same cells as the lesson's: the booth's floor beside him."
    }
@@ -1291,13 +2563,47 @@
   "1048": [
    {
     "quest": 352,
-    "cells": [[7, 29], [9, 30], [7, 28], [8, 27]],
+    "cells": [
+     [
+      7,
+      29
+     ],
+     [
+      9,
+      30
+     ],
+     [
+      7,
+      28
+     ],
+     [
+      8,
+      27
+     ]
+    ],
     "target_loc_id": 1233,
     "why": "RECOVERED place, DESIGNED way. TIR_01 (1048), a range of Берт Гаммер's bunker, where his copy BertGammer_TI_1 (2090) stands at (8,29) in the booth: his lesson (352), handed back to him, leads on to the next range, TIR_02 (1233). The file draws no way; the cells are the booth's floor beside him, off its entries, which are where a player coming in stands."
    },
    {
     "quest": 359,
-    "cells": [[7, 29], [9, 30], [7, 28], [8, 27]],
+    "cells": [
+     [
+      7,
+      29
+     ],
+     [
+      9,
+      30
+     ],
+     [
+      7,
+      28
+     ],
+     [
+      8,
+      27
+     ]
+    ],
     "target_loc_id": 35,
     "why": "RECOVERED place and target (the wiki's «Прервать обучение»: «Вас переместят на Старый рынок Вади Хальфы»), DESIGNED way. TIR_01 (1048): Берт's «Прервать обучение» (359), handed back to him (2090), leads back to the market (35). The same cells as the lesson's: the booth's floor beside him."
    }
@@ -1305,13 +2611,47 @@
   "1233": [
    {
     "quest": 353,
-    "cells": [[7, 29], [9, 30], [7, 28], [8, 27]],
+    "cells": [
+     [
+      7,
+      29
+     ],
+     [
+      9,
+      30
+     ],
+     [
+      7,
+      28
+     ],
+     [
+      8,
+      27
+     ]
+    ],
     "target_loc_id": 1260,
     "why": "RECOVERED place, DESIGNED way. TIR_02 (1233), a range of Берт Гаммер's bunker, where his copy BertGammer_TI_2 (2091) stands at (8,29) in the booth: his lesson (353), handed back to him, leads on to the next range, TIR_03 (1260). The file draws no way; the cells are the booth's floor beside him, off its entries, which are where a player coming in stands."
    },
    {
     "quest": 360,
-    "cells": [[7, 29], [9, 30], [7, 28], [8, 27]],
+    "cells": [
+     [
+      7,
+      29
+     ],
+     [
+      9,
+      30
+     ],
+     [
+      7,
+      28
+     ],
+     [
+      8,
+      27
+     ]
+    ],
     "target_loc_id": 35,
     "why": "RECOVERED place and target (the wiki's «Прервать обучение»: «Вас переместят на Старый рынок Вади Хальфы»), DESIGNED way. TIR_02 (1233): Берт's «Прервать обучение» (360), handed back to him (2091), leads back to the market (35). The same cells as the lesson's: the booth's floor beside him."
    }
@@ -1319,13 +2659,47 @@
   "1260": [
    {
     "quest": 354,
-    "cells": [[7, 29], [9, 30], [7, 28], [8, 27]],
+    "cells": [
+     [
+      7,
+      29
+     ],
+     [
+      9,
+      30
+     ],
+     [
+      7,
+      28
+     ],
+     [
+      8,
+      27
+     ]
+    ],
     "target_loc_id": 1276,
     "why": "RECOVERED place, DESIGNED way. TIR_03 (1260), a range of Берт Гаммер's bunker, where his copy BertGammer_TI_3 (2092) stands at (8,29) in the booth: his lesson (354), handed back to him, leads on to the next range, TIR_04 (1276). The file draws no way; the cells are the booth's floor beside him, off its entries, which are where a player coming in stands."
    },
    {
     "quest": 361,
-    "cells": [[7, 29], [9, 30], [7, 28], [8, 27]],
+    "cells": [
+     [
+      7,
+      29
+     ],
+     [
+      9,
+      30
+     ],
+     [
+      7,
+      28
+     ],
+     [
+      8,
+      27
+     ]
+    ],
     "target_loc_id": 35,
     "why": "RECOVERED place and target (the wiki's «Прервать обучение»: «Вас переместят на Старый рынок Вади Хальфы»), DESIGNED way. TIR_03 (1260): Берт's «Прервать обучение» (361), handed back to him (2092), leads back to the market (35). The same cells as the lesson's: the booth's floor beside him."
    }
@@ -1333,13 +2707,47 @@
   "1276": [
    {
     "quest": 355,
-    "cells": [[7, 29], [9, 30], [7, 28], [8, 27]],
+    "cells": [
+     [
+      7,
+      29
+     ],
+     [
+      9,
+      30
+     ],
+     [
+      7,
+      28
+     ],
+     [
+      8,
+      27
+     ]
+    ],
     "target_loc_id": 1280,
     "why": "RECOVERED place, DESIGNED way. TIR_04 (1276), a range of Берт Гаммер's bunker, where his copy BertGammer_TI_4 (2093) stands at (8,29) in the booth: his lesson (355), handed back to him, leads on to the next range, TIR_05 (1280). The file draws no way; the cells are the booth's floor beside him, off its entries, which are where a player coming in stands."
    },
    {
     "quest": 362,
-    "cells": [[7, 29], [9, 30], [7, 28], [8, 27]],
+    "cells": [
+     [
+      7,
+      29
+     ],
+     [
+      9,
+      30
+     ],
+     [
+      7,
+      28
+     ],
+     [
+      8,
+      27
+     ]
+    ],
     "target_loc_id": 35,
     "why": "RECOVERED place and target (the wiki's «Прервать обучение»: «Вас переместят на Старый рынок Вади Хальфы»), DESIGNED way. TIR_04 (1276): Берт's «Прервать обучение» (362), handed back to him (2093), leads back to the market (35). The same cells as the lesson's: the booth's floor beside him."
    }
@@ -1347,13 +2755,47 @@
   "1280": [
    {
     "quest": 356,
-    "cells": [[7, 29], [9, 30], [7, 28], [8, 27]],
+    "cells": [
+     [
+      7,
+      29
+     ],
+     [
+      9,
+      30
+     ],
+     [
+      7,
+      28
+     ],
+     [
+      8,
+      27
+     ]
+    ],
     "target_loc_id": 1282,
     "why": "RECOVERED place, DESIGNED way. TIR_05 (1280), a range of Берт Гаммер's bunker, where his copy BertGammer_TI_5 (2094) stands at (8,29) in the booth: his lesson (356), handed back to him, leads on to the next range, TIR_06 (1282). The file draws no way; the cells are the booth's floor beside him, off its entries, which are where a player coming in stands."
    },
    {
     "quest": 363,
-    "cells": [[7, 29], [9, 30], [7, 28], [8, 27]],
+    "cells": [
+     [
+      7,
+      29
+     ],
+     [
+      9,
+      30
+     ],
+     [
+      7,
+      28
+     ],
+     [
+      8,
+      27
+     ]
+    ],
     "target_loc_id": 35,
     "why": "RECOVERED place and target (the wiki's «Прервать обучение»: «Вас переместят на Старый рынок Вади Хальфы»), DESIGNED way. TIR_05 (1280): Берт's «Прервать обучение» (363), handed back to him (2094), leads back to the market (35). The same cells as the lesson's: the booth's floor beside him."
    }
@@ -1361,13 +2803,47 @@
   "1282": [
    {
     "quest": 357,
-    "cells": [[7, 29], [9, 30], [7, 28], [8, 27]],
+    "cells": [
+     [
+      7,
+      29
+     ],
+     [
+      9,
+      30
+     ],
+     [
+      7,
+      28
+     ],
+     [
+      8,
+      27
+     ]
+    ],
     "target_loc_id": 35,
     "why": "RECOVERED place, DESIGNED way. TIR_06 (1282), a range of Берт Гаммер's bunker, where his copy BertGammer_TI_6 (2095) stands at (8,29) in the booth: his lesson (357), handed back to him, leads back to the market (35): «Теперь время вернуться на рынок». The file draws no way; the cells are the booth's floor beside him, off its entries, which are where a player coming in stands."
    },
    {
     "quest": 364,
-    "cells": [[7, 29], [9, 30], [7, 28], [8, 27]],
+    "cells": [
+     [
+      7,
+      29
+     ],
+     [
+      9,
+      30
+     ],
+     [
+      7,
+      28
+     ],
+     [
+      8,
+      27
+     ]
+    ],
     "target_loc_id": 35,
     "why": "RECOVERED place and target (the wiki's «Прервать обучение»: «Вас переместят на Старый рынок Вади Хальфы»), DESIGNED way. TIR_06 (1282): Берт's «Прервать обучение» (364), handed back to him (2095), leads back to the market (35). The same cells as the lesson's: the booth's floor beside him."
    }
@@ -1375,7 +2851,24 @@
   "627": [
    {
     "quest": 402,
-    "cells": [[55, 17], [55, 18], [55, 19], [56, 19]],
+    "cells": [
+     [
+      55,
+      17
+     ],
+     [
+      55,
+      18
+     ],
+     [
+      55,
+      19
+     ],
+     [
+      56,
+      19
+     ]
+    ],
     "target_loc_id": 41,
     "why": "RECOVERED way (the wiki's «Покинуть каменоломню (Вади-Хальфа)»: «после выполнения задания Вас переместят в другое место»), DESIGNED place. 627 «Каменоломня.» (WH_Stone_Mine_N), the quarry's north pit: Большой Сэм (979) stands at (56,18), and his «Покинуть каменоломню.» leads back to Причал (41), where Равшан signs the contract. The cells are the ground beside him, where a player sent in by Равшан arrives."
    }
@@ -1383,7 +2876,24 @@
   "200": [
    {
     "quest": 406,
-    "cells": [[30, 57], [31, 58], [32, 58], [30, 58]],
+    "cells": [
+     [
+      30,
+      57
+     ],
+     [
+      31,
+      58
+     ],
+     [
+      32,
+      58
+     ],
+     [
+      30,
+      58
+     ]
+    ],
     "target_loc_id": 657,
     "why": "DESIGNED way, RECOVERED place. 200, the entrance of the town's copper mine, draws its door (DN_Backdoor05 at 33,50) with the gatekeeper (1328) in front of it at (31,57); the file has no zone to go in by. His quest takes the player down to the control room, 657. The cells are the ground at his feet, below the door, where a player coming up arrives."
    }
@@ -1391,7 +2901,24 @@
   "202": [
    {
     "quest": 407,
-    "cells": [[30, 57], [31, 58], [32, 58], [30, 58]],
+    "cells": [
+     [
+      30,
+      57
+     ],
+     [
+      31,
+      58
+     ],
+     [
+      32,
+      58
+     ],
+     [
+      30,
+      58
+     ]
+    ],
     "target_loc_id": 658,
     "why": "DESIGNED way, RECOVERED place. 202, the entrance of the town's lead mine, draws its door (DN_Backdoor05 at 33,50) with the gatekeeper (1320) in front of it at (31,57); the file has no zone to go in by. His quest takes the player down to the control room, 658. The cells are the ground at his feet, below the door, where a player coming up arrives."
    }
@@ -1399,7 +2926,24 @@
   "201": [
    {
     "quest": 408,
-    "cells": [[30, 57], [31, 58], [32, 58], [30, 58]],
+    "cells": [
+     [
+      30,
+      57
+     ],
+     [
+      31,
+      58
+     ],
+     [
+      32,
+      58
+     ],
+     [
+      30,
+      58
+     ]
+    ],
     "target_loc_id": 659,
     "why": "DESIGNED way, RECOVERED place. 201, the entrance of the town's nitre mine, draws its door (DN_Backdoor05 at 33,50) with the gatekeeper (1324) in front of it at (31,57); the file has no zone to go in by. His quest takes the player down to the control room, 659. The cells are the ground at his feet, below the door, where a player coming up arrives."
    }
@@ -1407,7 +2951,24 @@
   "657": [
    {
     "quest": 409,
-    "cells": [[12, 27], [13, 27], [14, 26], [13, 28]],
+    "cells": [
+     [
+      12,
+      27
+     ],
+     [
+      13,
+      27
+     ],
+     [
+      14,
+      26
+     ],
+     [
+      13,
+      28
+     ]
+    ],
     "target_loc_id": 200,
     "why": "DESIGNED way, RECOVERED place. 657 «Комната управления», the control room of the copper mine: «Выход из шахты/карьера» (1340) stands at (13,26), its door b leads on into the tiers and nothing leads up. His quest takes the player back to the surface, 200. The cells are the ground beside him, where a player coming down arrives."
    }
@@ -1415,7 +2976,24 @@
   "658": [
    {
     "quest": 410,
-    "cells": [[12, 27], [13, 27], [14, 26], [13, 28]],
+    "cells": [
+     [
+      12,
+      27
+     ],
+     [
+      13,
+      27
+     ],
+     [
+      14,
+      26
+     ],
+     [
+      13,
+      28
+     ]
+    ],
     "target_loc_id": 202,
     "why": "DESIGNED way, RECOVERED place. 658 «Комната управления», the control room of the lead mine: «Выход из шахты/карьера» (1332) stands at (13,26), its door b leads on into the tiers and nothing leads up. His quest takes the player back to the surface, 202. The cells are the ground beside him, where a player coming down arrives."
    }
@@ -1423,7 +3001,24 @@
   "659": [
    {
     "quest": 411,
-    "cells": [[12, 27], [13, 27], [14, 26], [13, 28]],
+    "cells": [
+     [
+      12,
+      27
+     ],
+     [
+      13,
+      27
+     ],
+     [
+      14,
+      26
+     ],
+     [
+      13,
+      28
+     ]
+    ],
     "target_loc_id": 201,
     "why": "DESIGNED way, RECOVERED place. 659 «Комната управления», the control room of the nitre mine: «Выход из шахты/карьера» (1336) stands at (13,26), its door b leads on into the tiers and nothing leads up. His quest takes the player back to the surface, 201. The cells are the ground beside him, where a player coming down arrives."
    }
@@ -1431,25 +3026,93 @@
   "37": [
    {
     "quest": 159,
-    "cells": [[30, 77], [31, 78], [32, 77], [30, 76]],
+    "cells": [
+     [
+      30,
+      77
+     ],
+     [
+      31,
+      78
+     ],
+     [
+      32,
+      77
+     ],
+     [
+      30,
+      76
+     ]
+    ],
     "target_loc_id": 176,
     "why": "RECOVERED way and time, DESIGNED place. 37 «Вади Хальфа: вокзал» (5967,1727): Хассир (105), «водитель», the station's driver («В другие города часто Хассир ездит», 50343), stands at (31,77). «Поехали!» (62262/62263: «Мне как раз по пути, подброшу тебя до нового работодателя ... В 12:00, 16:00 или 23:00 отправиться в тюрьму ... Вас отправят в тюрьму около Вади Хальфы») is the ride to the prison's yard (176, 5985,1744), open from a quarter of an hour before an uprising to its end (data/schedule.json prison_wh_gates). The cells are the ground by him, where a player driven back from the prison arrives (travel.door_arrival)."
    },
    {
     "quest": 273,
-    "cells": [[30, 78], [31, 79], [32, 78], [33, 77]],
+    "cells": [
+     [
+      30,
+      78
+     ],
+     [
+      31,
+      79
+     ],
+     [
+      32,
+      78
+     ],
+     [
+      33,
+      77
+     ]
+    ],
     "target_loc_id": 187,
     "why": "RECOVERED ride and texts, DESIGNED way. 37 «Вади Хальфа: вокзал» (5967,1727): Хассир (105, «Хассир водитель», the station's driver: «В другие города часто Хассир ездит», 50343; the tooltip «Вокзал Вади-Хальфы: ... Транспортировка в Абри») stands at (31,77). «Поездка в Абри» (46957-46960, 100 afro) is the ride to Абри's Портовый рынок (187, 5860,1835), the owner's «Открой у водителя на вокзале квест поездку в Абри» (2026-10-12). The cells are the ground south of him, beside the cells of his «Поехали!» (159), where a player driven back from Абри arrives (travel.door_arrival)."
    },
    {
     "quest": 279,
-    "cells": [[30, 78], [31, 79], [32, 78], [33, 77]],
+    "cells": [
+     [
+      30,
+      78
+     ],
+     [
+      31,
+      79
+     ],
+     [
+      32,
+      78
+     ],
+     [
+      33,
+      77
+     ]
+    ],
     "target_loc_id": 187,
     "why": "RECOVERED ride and texts, DESIGNED way. 37: Хассир's «Проездной в Абри» (46745, 61303, 47226, 59830), the same ride to 187 for the ticket 6544 instead of the fare; the same cells as «Поездка в Абри» (273)."
    },
    {
     "quest": 630,
-    "cells": [[30, 78], [31, 79], [32, 78], [33, 77]],
+    "cells": [
+     [
+      30,
+      78
+     ],
+     [
+      31,
+      79
+     ],
+     [
+      32,
+      78
+     ],
+     [
+      33,
+      77
+     ]
+    ],
     "target_loc_id": 49,
     "why": "RECOVERED ride and texts, DESIGNED way (the owner's «и потом сделай донголу тоже», 2026-10-13). 37 «Вади Хальфа: вокзал»: Хассир (105) stands at (31,77); «Поездка в Донголу» (630, 48539-48541, 200 afro) is the ride to Донгола's station (49, 5877,2010). The same ground as his ride to Абри (273): a player driven back from Донгола arrives there (travel.door_arrival)."
    }
@@ -1457,19 +3120,70 @@
   "176": [
    {
     "quest": 160,
-    "cells": [[31, 43], [32, 42], [32, 44], [33, 43]],
+    "cells": [
+     [
+      31,
+      43
+     ],
+     [
+      32,
+      42
+     ],
+     [
+      32,
+      44
+     ],
+     [
+      33,
+      43
+     ]
+    ],
     "target_loc_id": 37,
     "why": "RECOVERED way, DESIGNED giver and place. 176 «Тюремный двор» (Prison_Entrance_WH, 5985,1744): «Назад в Вади Хальфу» (62266/62267: «Могу подвезти до Вади Хальфы, садись!») is the ride back to the station (37); the yard has no driver, and the one who drives in and out is the supply man, «Снабженец Хальфы» (2180), at (32,43) -- DESIGNED. Any time. The cells are the ground by him, where a player driven to the prison arrives."
    },
    {
     "quest": 161,
-    "cells": [[16, 39], [17, 38], [15, 39], [16, 40]],
+    "cells": [
+     [
+      16,
+      39
+     ],
+     [
+      17,
+      38
+     ],
+     [
+      15,
+      39
+     ],
+     [
+      16,
+      40
+     ]
+    ],
     "target_loc_id": 644,
     "why": "RECOVERED way and time, DESIGNED place. 176 «Тюремный двор»: «Охранник<br>Западная сторона» (1791, uf_EnterMan_North_WH; the wiki: «Локации: Западный блок») at (16,38), and his «Тюрьма: западные ворота» (62275; start 62272, «в тюремных блоках восстание - двигай туда и стреляй во все, что движется»), handed back to him at the uprising (data/schedule.json prison_wh_gates), takes the player down into the western block (644, Prison_1_WH, by its ladder). The file draws no way; the cells are the ground at his feet."
    },
    {
     "quest": 162,
-    "cells": [[40, 38], [41, 37], [39, 38], [40, 39]],
+    "cells": [
+     [
+      40,
+      38
+     ],
+     [
+      41,
+      37
+     ],
+     [
+      39,
+      38
+     ],
+     [
+      40,
+      39
+     ]
+    ],
     "target_loc_id": 645,
     "why": "RECOVERED way and time, DESIGNED place. 176 «Тюремный двор»: «Охранник<br>Южная сторона» (1794, uf_EnterMan_South_WH; the wiki: «Локации: Южный блок») at (40,37), and his «Тюрьма: южные ворота» (62274, the same start), handed back to him at the uprising, takes the player down into the southern block (645, Prison_2_WH, by its ladder). The cells are the ground at his feet."
    }
@@ -1477,7 +3191,24 @@
   "646": [
    {
     "quest": 163,
-    "cells": [[30, 74], [31, 73], [31, 75], [32, 74]],
+    "cells": [
+     [
+      30,
+      74
+     ],
+     [
+      31,
+      73
+     ],
+     [
+      31,
+      75
+     ],
+     [
+      32,
+      74
+     ]
+    ],
     "target_loc_id": 176,
     "why": "RECOVERED way and giver, DESIGNED place. 646 «Тюрьма: Центральный блок.» (Prison_3_WH): «Томас<Br>Выход из тюрьмы» (876, uf_ExitMan, 62317; the wiki: «безопасно выводит из тюрьмы. При выходе отбирает все повязки») at (31,74), and his «Выход» (62276-62278, «Там еще кто-нибудь выходить будет?»), handed back to him, leads up to the yard (176) at any time; the armbands stay below (data/schedule.json keep_in). The cells are the ground at his feet."
    }
@@ -1485,25 +3216,93 @@
   "188": [
    {
     "quest": 452,
-    "cells": [[18, 88], [19, 88], [18, 89], [19, 89]],
+    "cells": [
+     [
+      18,
+      88
+     ],
+     [
+      19,
+      88
+     ],
+     [
+      18,
+      89
+     ],
+     [
+      19,
+      89
+     ]
+    ],
     "target_loc_id": 671,
     "why": "DESIGNED way, RECOVERED place. 188 «Абри: Жилой квартал»: the house's door «Дверь» (1394, ow_AbriDoor2) stands at (19,87) in the quarter's wall; «Вскрыть дверь» (texts.xml 46878-46881), handed in to it with the lockpicks, leads into the house, 671 «Особняк Барона», by its door 1262. The cells are the ground beside the door, where a player coming the other way arrives (travel.door_arrival)."
    },
    {
     "quest": 456,
-    "cells": [[32, 119], [32, 120], [33, 120], [32, 118]],
+    "cells": [
+     [
+      32,
+      119
+     ],
+     [
+      32,
+      120
+     ],
+     [
+      33,
+      120
+     ],
+     [
+      32,
+      118
+     ]
+    ],
     "target_loc_id": 671,
     "why": "DESIGNED way, RECOVERED place. 188: the garden gate «Садовые ворота» (1395, ow_AbriGate) at (33,119), Вальдес's car (1415) at (5,65); «Все в сад» (46892-46894), handed back to Вальдес, leads through the gate into 671, whose garden ends at the same gate (33,119). The cells are the ground beside the gate, where the way is drawn."
    },
    {
     "quest": 460,
-    "cells": [[6, 65], [5, 66], [6, 66], [7, 65]],
+    "cells": [
+     [
+      6,
+      65
+     ],
+     [
+      5,
+      66
+     ],
+     [
+      6,
+      66
+     ],
+     [
+      7,
+      65
+     ]
+    ],
     "target_loc_id": 672,
     "why": "DESIGNED way, RECOVERED place. 188: «Автомобиль Вальдеса» (1415) at (5,65); «План Б» (46904-46907, «Садись в машину, я присмотрел хорошее место для засады») drives to the road, 672 «Дорога в Абри», the quest copy at peace where the pit 1417 waits. The cells are the ground beside the car, where a player coming the other way arrives (travel.door_arrival)."
    },
    {
     "quest": 464,
-    "cells": [[18, 88], [19, 88], [18, 89], [19, 89]],
+    "cells": [
+     [
+      18,
+      88
+     ],
+     [
+      19,
+      88
+     ],
+     [
+      18,
+      89
+     ],
+     [
+      19,
+      89
+     ]
+    ],
     "target_loc_id": 671,
     "why": "DESIGNED way, RECOVERED place. 188: «Войти в дом» (46920-46922) at the house's door (1394, 19,87), the way in for the storm of the house (463). The cells are the ground beside the door, where a player coming the other way arrives (travel.door_arrival)."
    }
@@ -1511,19 +3310,70 @@
   "671": [
    {
     "quest": 453,
-    "cells": [[21, 89], [21, 90], [22, 88], [21, 91]],
+    "cells": [
+     [
+      21,
+      89
+     ],
+     [
+      21,
+      90
+     ],
+     [
+      22,
+      88
+     ],
+     [
+      21,
+      91
+     ]
+    ],
     "target_loc_id": 188,
     "why": "DESIGNED way, RECOVERED place. 671 «Особняк Барона» (Abri_Baron_house1): its door «Дверь» (1262, ow_AbriDoor) at (19,89), beside Родригес's body (1416, 27,91); «Плохие новости» (46882-46884, «вы покидаете дом»), handed back at the body, leads out by the door to the quarter, 188. The cells are the ground beside the door, where a player coming the other way arrives (travel.door_arrival)."
    },
    {
     "quest": 458,
-    "cells": [[35, 119], [35, 120], [36, 118], [36, 119]],
+    "cells": [
+     [
+      35,
+      119
+     ],
+     [
+      35,
+      120
+     ],
+     [
+      36,
+      118
+     ],
+     [
+      36,
+      119
+     ]
+    ],
     "target_loc_id": 188,
     "why": "DESIGNED way, RECOVERED place. 671: the garden gate (1395) at (33,119); «Обратно в город» (46898-46900, «покинуть сад») leads out to the quarter, 188. The cells are the ground beside the gate, where a player coming the other way arrives (travel.door_arrival)."
    },
    {
     "quest": 465,
-    "cells": [[21, 89], [21, 90], [22, 88], [21, 91]],
+    "cells": [
+     [
+      21,
+      89
+     ],
+     [
+      21,
+      90
+     ],
+     [
+      22,
+      88
+     ],
+     [
+      21,
+      91
+     ]
+    ],
     "target_loc_id": 188,
     "why": "DESIGNED way, RECOVERED place. 671: «Покинуть дом» (46923-46925) at the door 1262 (19,89), out to the quarter at any time: the house has no side out, and its door b goes upstairs."
    }
@@ -1531,7 +3381,24 @@
   "672": [
    {
     "quest": 461,
-    "cells": [[15, 107], [17, 107], [16, 108], [16, 106]],
+    "cells": [
+     [
+      15,
+      107
+     ],
+     [
+      17,
+      107
+     ],
+     [
+      16,
+      108
+     ],
+     [
+      16,
+      106
+     ]
+    ],
     "target_loc_id": 219,
     "why": "DESIGNED way, RECOVERED place. 672 «Дорога в Абри» (the quest copy, war 0, no way out of its own): «Небольшая ямка» (1417, Abri_BombPlace) at (16,107); «Заминировать дорогу» (46908-46911), the mine laid and the blast heard, leads to the road on the map, 219 (5876,1850), where the car stands among the survivors. The cells are the ground beside the pit, where a player coming the other way arrives (travel.door_arrival)."
    }
@@ -1539,7 +3406,24 @@
   "219": [
    {
     "quest": 462,
-    "cells": [[54, 51], [53, 52], [54, 52], [55, 51]],
+    "cells": [
+     [
+      54,
+      51
+     ],
+     [
+      53,
+      52
+     ],
+     [
+      54,
+      52
+     ],
+     [
+      55,
+      51
+     ]
+    ],
     "target_loc_id": 188,
     "why": "DESIGNED way, RECOVERED place. 219 «Дорога в Абри» (5876,1850): «Автомобиль Вальдеса» (1415) at (53,51); «Добить выживших» (46912-46915, «Садись в машину, вернемся в город») leads back to the quarter, 188. The cells are the ground beside the car, where a player coming the other way arrives (travel.door_arrival)."
    }
@@ -1547,31 +3431,116 @@
   "187": [
    {
     "quest": 473,
-    "cells": [[39, 71], [39, 72], [39, 73], [40, 71]],
+    "cells": [
+     [
+      39,
+      71
+     ],
+     [
+      39,
+      72
+     ],
+     [
+      39,
+      73
+     ],
+     [
+      40,
+      71
+     ]
+    ],
     "target_loc_id": 193,
     "why": "DESIGNED way, RECOVERED place. 187 «Портовый рынок»: Ведич (1174, Abri_Healer) stands at (38,71); «Заполучить амазонку (Часть 4)» (46978-46980, «Пойти вместе с Ведичем») takes the player to 193 «Пустошь» (Q_Abri_Healer, his copy 1178 at 36,63), beside the Амазонка's 192. The cells are the ground beside him, where a player coming the other way arrives (travel.door_arrival)."
    },
    {
     "quest": 274,
-    "cells": [[51, 90], [51, 91], [50, 92], [51, 92]],
+    "cells": [
+     [
+      51,
+      90
+     ],
+     [
+      51,
+      91
+     ],
+     [
+      50,
+      92
+     ],
+     [
+      51,
+      92
+     ]
+    ],
     "target_loc_id": 37,
     "why": "RECOVERED ride and texts, DESIGNED way. 187 «Портовый рынок» of Абри (5860,1835): Луиджи (1179, «Луиджи водитель», 46948) stands at (50,91) by his car (car1.png at 50,89, whose body is the obstacles 48-51 x 88-91). «Поездка в Вади Хальфу» (46961-46964, 400 afro) is the ride back to Вади-Хальфа's station (37). The cells are the ground by him, where a player driven out from Вади-Хальфа arrives (travel.door_arrival)."
    },
    {
     "quest": 280,
-    "cells": [[51, 90], [51, 91], [50, 92], [51, 92]],
+    "cells": [
+     [
+      51,
+      90
+     ],
+     [
+      51,
+      91
+     ],
+     [
+      50,
+      92
+     ],
+     [
+      51,
+      92
+     ]
+    ],
     "target_loc_id": 37,
     "why": "RECOVERED ride and texts, DESIGNED way. 187: Луиджи's «Проездной в Вади Хальфу» (46744, 61304, 47226, 59830), the same ride to 37 for the ticket 6545; the same cells as «Поездка в Вади Хальфу» (274)."
    },
    {
     "quest": 275,
-    "cells": [[51, 90], [51, 91], [50, 92], [51, 92]],
+    "cells": [
+     [
+      51,
+      90
+     ],
+     [
+      51,
+      91
+     ],
+     [
+      50,
+      92
+     ],
+     [
+      51,
+      92
+     ]
+    ],
     "target_loc_id": 49,
     "why": "RECOVERED ride and texts, DESIGNED way (the owner's «и потом сделай донголу тоже», 2026-10-13). 187 «Портовый рынок» of Абри: Луиджи (1179) stands at (50,91) by his car; «Поездка в Донголу» (275, 46965/46966, 100 afro) is the ride to Донгола's station (49). The same ground as his ride to Вади-Хальфа (274)."
    },
    {
     "quest": 281,
-    "cells": [[51, 90], [51, 91], [50, 92], [51, 92]],
+    "cells": [
+     [
+      51,
+      90
+     ],
+     [
+      51,
+      91
+     ],
+     [
+      50,
+      92
+     ],
+     [
+      51,
+      92
+     ]
+    ],
     "target_loc_id": 49,
     "why": "RECOVERED ride and texts, DESIGNED way (the owner's «и потом сделай донголу тоже», 2026-10-13). 187: Луиджи's «Проездной в Донголу» (281), the same ride to 49 for the ticket 6546; the same cells as «Поездка в Донголу» (275)."
    }
@@ -1579,7 +3548,24 @@
   "193": [
    {
     "quest": 474,
-    "cells": [[35, 63], [37, 63], [36, 64], [35, 64]],
+    "cells": [
+     [
+      35,
+      63
+     ],
+     [
+      37,
+      63
+     ],
+     [
+      36,
+      64
+     ],
+     [
+      35,
+      64
+     ]
+    ],
     "target_loc_id": 187,
     "why": "DESIGNED way, RECOVERED place. 193 «Пустошь»: Ведич's copy (1178, Abri_Healer_q) at (36,63); «С меня хватит!» (46981-46983) takes the player back to the market, 187, at any time. The cells are the ground beside him, where a player coming the other way arrives (travel.door_arrival)."
    }
@@ -1587,7 +3573,24 @@
   "205": [
    {
     "quest": 558,
-    "cells": [[30, 57], [31, 58], [32, 58], [30, 58]],
+    "cells": [
+     [
+      30,
+      57
+     ],
+     [
+      31,
+      58
+     ],
+     [
+      32,
+      58
+     ],
+     [
+      30,
+      58
+     ]
+    ],
     "target_loc_id": 662,
     "why": "DESIGNED way, RECOVERED place. 205, the entrance of Абри's mine of свинца, draws its door (31,57's gatekeeper 1321 in front of it) and no zone to go in by. His quest takes the player down to the control room, 662. The cells are the ground at his feet, below the door, where a player coming up arrives."
    }
@@ -1595,7 +3598,24 @@
   "662": [
    {
     "quest": 561,
-    "cells": [[12, 27], [13, 27], [14, 26], [13, 28]],
+    "cells": [
+     [
+      12,
+      27
+     ],
+     [
+      13,
+      27
+     ],
+     [
+      14,
+      26
+     ],
+     [
+      13,
+      28
+     ]
+    ],
     "target_loc_id": 205,
     "why": "DESIGNED way, RECOVERED place. 662 «Комната управления»: «Выход из шахты» (1333) stands at (13,26), its door b leads on into the tiers and nothing leads up. His quest takes the player back to the surface, 205. The cells are the ground beside him, where a player coming down arrives."
    }
@@ -1603,7 +3623,24 @@
   "204": [
    {
     "quest": 559,
-    "cells": [[30, 57], [31, 58], [32, 58], [30, 58]],
+    "cells": [
+     [
+      30,
+      57
+     ],
+     [
+      31,
+      58
+     ],
+     [
+      32,
+      58
+     ],
+     [
+      30,
+      58
+     ]
+    ],
     "target_loc_id": 661,
     "why": "DESIGNED way, RECOVERED place. 204, the entrance of Абри's mine of селитры, draws its door (31,57's gatekeeper 1325 in front of it) and no zone to go in by. His quest takes the player down to the control room, 661. The cells are the ground at his feet, below the door, where a player coming up arrives."
    }
@@ -1611,7 +3648,24 @@
   "661": [
    {
     "quest": 562,
-    "cells": [[12, 27], [13, 27], [14, 26], [13, 28]],
+    "cells": [
+     [
+      12,
+      27
+     ],
+     [
+      13,
+      27
+     ],
+     [
+      14,
+      26
+     ],
+     [
+      13,
+      28
+     ]
+    ],
     "target_loc_id": 204,
     "why": "DESIGNED way, RECOVERED place. 661 «Комната управления»: «Выход из шахты» (1337) stands at (13,26), its door b leads on into the tiers and nothing leads up. His quest takes the player back to the surface, 204. The cells are the ground beside him, where a player coming down arrives."
    }
@@ -1619,7 +3673,24 @@
   "203": [
    {
     "quest": 560,
-    "cells": [[30, 57], [31, 58], [32, 58], [30, 58]],
+    "cells": [
+     [
+      30,
+      57
+     ],
+     [
+      31,
+      58
+     ],
+     [
+      32,
+      58
+     ],
+     [
+      30,
+      58
+     ]
+    ],
     "target_loc_id": 660,
     "why": "DESIGNED way, RECOVERED place. 203, the entrance of Абри's mine of меди, draws its door (31,57's gatekeeper 1329 in front of it) and no zone to go in by. His quest takes the player down to the control room, 660. The cells are the ground at his feet, below the door, where a player coming up arrives."
    }
@@ -1627,7 +3698,24 @@
   "660": [
    {
     "quest": 563,
-    "cells": [[12, 27], [13, 27], [14, 26], [13, 28]],
+    "cells": [
+     [
+      12,
+      27
+     ],
+     [
+      13,
+      27
+     ],
+     [
+      14,
+      26
+     ],
+     [
+      13,
+      28
+     ]
+    ],
     "target_loc_id": 203,
     "why": "DESIGNED way, RECOVERED place. 660 «Комната управления»: «Выход из шахты» (1341) stands at (13,26), its door b leads on into the tiers and nothing leads up. His quest takes the player back to the surface, 203. The cells are the ground beside him, where a player coming down arrives."
    }
@@ -1635,43 +3723,162 @@
   "49": [
    {
     "quest": 631,
-    "cells": [[37, 46], [36, 47], [38, 47], [37, 48]],
+    "cells": [
+     [
+      37,
+      46
+     ],
+     [
+      36,
+      47
+     ],
+     [
+      38,
+      47
+     ],
+     [
+      37,
+      48
+     ]
+    ],
     "target_loc_id": 37,
     "why": "RECOVERED ride and texts, DESIGNED way (the owner's «и потом сделай донголу тоже», 2026-10-13). 49 «Донгола: Вокзал» (5877,2010): Нур-ад-Дин (156, «водитель», 48846) stands at (37,47) by the station's bus and car (bus.png, car2.png); «Поездка в Вади Хальфу» (631, 48542-48544, 150 afro) is the ride to Вади-Хальфа's station (37). The cells are the ground around him, where a player driven out from Вади-Хальфа arrives (travel.door_arrival)."
    },
    {
     "quest": 282,
-    "cells": [[37, 46], [36, 47], [38, 47], [37, 48]],
+    "cells": [
+     [
+      37,
+      46
+     ],
+     [
+      36,
+      47
+     ],
+     [
+      38,
+      47
+     ],
+     [
+      37,
+      48
+     ]
+    ],
     "target_loc_id": 187,
     "why": "RECOVERED ride and texts, DESIGNED way (the owner's «и потом сделай донголу тоже», 2026-10-13). 49: Нур-ад-Дин's «Проездной в Абри» (282), the ride to Абри's Портовый рынок (187) for the ticket 6547; the same cells as his other rides, where a player driven out from Абри arrives."
    },
    {
     "quest": 18100,
-    "cells": [[37, 46], [36, 47], [38, 47], [37, 48]],
+    "cells": [
+     [
+      37,
+      46
+     ],
+     [
+      36,
+      47
+     ],
+     [
+      38,
+      47
+     ],
+     [
+      37,
+      48
+     ]
+    ],
     "target_loc_id": 187,
     "why": "DESIGNED: owner gameplay release 2026-11-13, direct 100-afro ride without a pass from Nur-ad-Din at Dongola station to Abri port market; same safe boarding cells as ticket route 282."
    },
    {
     "quest": 632,
-    "cells": [[37, 46], [36, 47], [38, 47], [37, 48]],
+    "cells": [
+     [
+      37,
+      46
+     ],
+     [
+      36,
+      47
+     ],
+     [
+      38,
+      47
+     ],
+     [
+      37,
+      48
+     ]
+    ],
     "target_loc_id": 159,
     "why": "RECOVERED way and time, DESIGNED place (the owner's «и потом сделай донголу тоже», 2026-10-13). 49: Нур-ад-Дин's «Поехали!» (62262/62264, «Вас отправят в тюрьму около Донголы») is the ride to the prison's yard (159, 5903,1996), open from a quarter of an hour before an uprising to its end (data/schedule.json prison_dn_gates). The cells are his rides' ground, where a player driven back from the prison arrives."
    },
    {
     "quest": 650,
-    "cells": [[33, 79], [32, 80], [34, 80], [33, 81]],
+    "cells": [
+     [
+      33,
+      79
+     ],
+     [
+      32,
+      80
+     ],
+     [
+      34,
+      80
+     ],
+     [
+      33,
+      81
+     ]
+    ],
     "target_loc_id": 69,
     "why": "DESIGNED way, RECOVERED place (the owner's «и потом сделай донголу тоже», 2026-10-13). 49: Рашид (146) stands at (33,80); «Старые приятели (часть 6)» (48582-48584, «мы поедем туда, откуда можно будет пробраться в лагерь наших противников ... Что ж, в путь.») takes the player to «Старые приятели» (69, 5881,1999), where Рашид, Шамиль and the car stand. The cells are the ground beside him."
    },
    {
     "quest": 276,
-    "cells": [[37, 46], [36, 47], [38, 47], [37, 48]],
+    "cells": [
+     [
+      37,
+      46
+     ],
+     [
+      36,
+      47
+     ],
+     [
+      38,
+      47
+     ],
+     [
+      37,
+      48
+     ]
+    ],
     "target_loc_id": 126,
     "why": "RECOVERED ride and texts, DESIGNED way (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 49 «Донгола: Вокзал»: Нур-ад-Дин (156) at (37,47); «Поездка в Абу-Хамед» (276, 47239-47242, 0,25 G) is the ride to Абу-Хамед's station 126 (6182,1976). The cells are the ground at the driver's feet, where a player driven the other way arrives (travel.door_arrival)."
    },
    {
     "quest": 283,
-    "cells": [[37, 46], [36, 47], [38, 47], [37, 48]],
+    "cells": [
+     [
+      37,
+      46
+     ],
+     [
+      36,
+      47
+     ],
+     [
+      38,
+      47
+     ],
+     [
+      37,
+      48
+     ]
+    ],
     "target_loc_id": 126,
     "why": "RECOVERED ride and texts, DESIGNED way (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 49: Нур-ад-Дин's «Проездной в Абу-Хамед» (283), the same ride to 126 for the ticket 1567. The cells are the ground at the driver's feet, where a player driven the other way arrives (travel.door_arrival)."
    }
@@ -1679,7 +3886,24 @@
   "622": [
    {
     "quest": 163,
-    "cells": [[30, 74], [31, 73], [31, 75], [32, 74]],
+    "cells": [
+     [
+      30,
+      74
+     ],
+     [
+      31,
+      73
+     ],
+     [
+      31,
+      75
+     ],
+     [
+      32,
+      74
+     ]
+    ],
     "target_loc_id": 159,
     "why": "RECOVERED way and giver, DESIGNED place (the owner's «и потом сделай донголу тоже», 2026-10-13). 622 «Тюрьма: Центральный блок.» (Prison_3, Донгола's copy of 646): «Томас<Br>Выход из тюрьмы» (876, uf_ExitMan, 62317) at (31,74), and his «Выход» (163, 62276-62278), handed back to him, leads up to the yard (159) at any time; the armbands stay below (data/schedule.json keep_in). The row is Вади-Хальфа's, of the same Томас: without this record it is refused here (the rule of 'quest' above), and the blocks would have no way out. The cells are the ground at his feet, as under '646'."
    }
@@ -1687,19 +3911,70 @@
   "159": [
    {
     "quest": 633,
-    "cells": [[31, 43], [32, 42], [32, 44], [33, 43]],
+    "cells": [
+     [
+      31,
+      43
+     ],
+     [
+      32,
+      42
+     ],
+     [
+      32,
+      44
+     ],
+     [
+      33,
+      43
+     ]
+    ],
     "target_loc_id": 49,
     "why": "RECOVERED way, DESIGNED giver and place (the owner's «и потом сделай донголу тоже», 2026-10-13). 159 «Тюремный двор» (Prison_Entrance, 5903,1996): «Назад в Донголу» (62268/62269) is the ride back to the station (49); the supply man «Снабженец» (2181) at (32,43) drives, as 2180 in Вади-Хальфа's yard (160). The cells are the ground by him, where a player driven to the prison arrives."
    },
    {
     "quest": 634,
-    "cells": [[16, 39], [17, 38], [15, 39], [16, 40]],
+    "cells": [
+     [
+      16,
+      39
+     ],
+     [
+      17,
+      38
+     ],
+     [
+      15,
+      39
+     ],
+     [
+      16,
+      40
+     ]
+    ],
     "target_loc_id": 618,
     "why": "RECOVERED way and time, DESIGNED place (the owner's «и потом сделай донголу тоже», 2026-10-13). 159: «Охранник<Br>Западная сторона» (1792) at (16,38), and his «Тюрьма: западные ворота» (62275), handed back to him at the uprising (data/schedule.json prison_dn_gates), takes the player down into 618 (Prison_1). The cells are the ground at his feet, as 161's under '176'."
    },
    {
     "quest": 635,
-    "cells": [[40, 38], [41, 37], [39, 38], [40, 39]],
+    "cells": [
+     [
+      40,
+      38
+     ],
+     [
+      41,
+      37
+     ],
+     [
+      39,
+      38
+     ],
+     [
+      40,
+      39
+     ]
+    ],
     "target_loc_id": 619,
     "why": "RECOVERED way and time, DESIGNED place (the owner's «и потом сделай донголу тоже», 2026-10-13). 159: «Охранник<Br>Южная сторона» (1795) at (40,37), and his «Тюрьма: южные ворота» (62274), handed back to him at the uprising, takes the player down into 619 (Prison_2). The cells are the ground at his feet."
    }
@@ -1707,7 +3982,24 @@
   "208": [
    {
     "quest": 715,
-    "cells": [[30, 57], [31, 58], [32, 58], [30, 58]],
+    "cells": [
+     [
+      30,
+      57
+     ],
+     [
+      31,
+      58
+     ],
+     [
+      32,
+      58
+     ],
+     [
+      30,
+      58
+     ]
+    ],
     "target_loc_id": 663,
     "why": "DESIGNED way, RECOVERED place (the owner's «и потом сделай донголу тоже», 2026-10-13). 208, the entrance of Донгола's mine of меди (L307), draws its door with the gatekeeper (1330) in front of it at (31,57) and no zone to go in by. His quest takes the player down to the control room, 663. The cells are the ground at his feet, below the door, where a player coming up arrives."
    }
@@ -1715,7 +4007,24 @@
   "209": [
    {
     "quest": 716,
-    "cells": [[30, 57], [31, 58], [32, 58], [30, 58]],
+    "cells": [
+     [
+      30,
+      57
+     ],
+     [
+      31,
+      58
+     ],
+     [
+      32,
+      58
+     ],
+     [
+      30,
+      58
+     ]
+    ],
     "target_loc_id": 664,
     "why": "DESIGNED way, RECOVERED place (the owner's «и потом сделай донголу тоже», 2026-10-13). 209, the entrance of Донгола's mine of селитры (L309), draws its door with the gatekeeper (1326) in front of it at (31,57) and no zone to go in by. His quest takes the player down to the control room, 664. The cells are the ground at his feet, below the door, where a player coming up arrives."
    }
@@ -1723,7 +4032,24 @@
   "210": [
    {
     "quest": 717,
-    "cells": [[30, 57], [31, 58], [32, 58], [30, 58]],
+    "cells": [
+     [
+      30,
+      57
+     ],
+     [
+      31,
+      58
+     ],
+     [
+      32,
+      58
+     ],
+     [
+      30,
+      58
+     ]
+    ],
     "target_loc_id": 665,
     "why": "DESIGNED way, RECOVERED place (the owner's «и потом сделай донголу тоже», 2026-10-13). 210, the entrance of Донгола's mine of свинца (L308), draws its door with the gatekeeper (1322) in front of it at (31,57) and no zone to go in by. His quest takes the player down to the control room, 665. The cells are the ground at his feet, below the door, where a player coming up arrives."
    }
@@ -1731,7 +4057,24 @@
   "663": [
    {
     "quest": 718,
-    "cells": [[12, 27], [13, 27], [14, 26], [13, 28]],
+    "cells": [
+     [
+      12,
+      27
+     ],
+     [
+      13,
+      27
+     ],
+     [
+      14,
+      26
+     ],
+     [
+      13,
+      28
+     ]
+    ],
     "target_loc_id": 208,
     "why": "DESIGNED way, RECOVERED place (the owner's «и потом сделай донголу тоже», 2026-10-13). 663 «Комната управления»: «Выход из шахты/карьера» (1342) stands at (13,26), its door b leads on into the tiers and nothing leads up. His quest takes the player back to the surface, 208. The cells are the ground beside him, where a player coming down arrives."
    }
@@ -1739,7 +4082,24 @@
   "664": [
    {
     "quest": 719,
-    "cells": [[12, 27], [13, 27], [14, 26], [13, 28]],
+    "cells": [
+     [
+      12,
+      27
+     ],
+     [
+      13,
+      27
+     ],
+     [
+      14,
+      26
+     ],
+     [
+      13,
+      28
+     ]
+    ],
     "target_loc_id": 209,
     "why": "DESIGNED way, RECOVERED place (the owner's «и потом сделай донголу тоже», 2026-10-13). 664 «Комната управления»: «Выход из шахты/карьера» (1338) stands at (13,26), its door b leads on into the tiers and nothing leads up. His quest takes the player back to the surface, 209. The cells are the ground beside him, where a player coming down arrives."
    }
@@ -1747,7 +4107,24 @@
   "665": [
    {
     "quest": 720,
-    "cells": [[12, 27], [13, 27], [14, 26], [13, 28]],
+    "cells": [
+     [
+      12,
+      27
+     ],
+     [
+      13,
+      27
+     ],
+     [
+      14,
+      26
+     ],
+     [
+      13,
+      28
+     ]
+    ],
     "target_loc_id": 210,
     "why": "DESIGNED way, RECOVERED place (the owner's «и потом сделай донголу тоже», 2026-10-13). 665 «Комната управления»: «Выход из шахты/карьера» (1334) stands at (13,26), its door b leads on into the tiers and nothing leads up. His quest takes the player back to the surface, 210. The cells are the ground beside him, where a player coming down arrives."
    }
@@ -1755,7 +4132,24 @@
   "197": [
    {
     "quest": 708,
-    "cells": [[13, 89], [12, 90], [11, 90], [13, 90]],
+    "cells": [
+     [
+      13,
+      89
+     ],
+     [
+      12,
+      90
+     ],
+     [
+      11,
+      90
+     ],
+     [
+      13,
+      90
+     ]
+    ],
     "target_loc_id": 632,
     "why": "RECOVERED way (the wiki's «Работа в Каменоломне»: «после выполнения задания Вас переместят в другое место»), DESIGNED place (the owner's «и потом сделай донголу тоже», 2026-10-13). 197 «Донгола: Новый рынок»: Джамшут (982) stands at (12,89); his contract takes the player into the quarry's north pit, 632, beside Олег. The cells are the ground beside him, where a player leaving the quarry arrives."
    }
@@ -1763,7 +4157,24 @@
   "632": [
    {
     "quest": 709,
-    "cells": [[55, 18], [56, 19], [55, 17], [55, 19]],
+    "cells": [
+     [
+      55,
+      18
+     ],
+     [
+      56,
+      19
+     ],
+     [
+      55,
+      17
+     ],
+     [
+      55,
+      19
+     ]
+    ],
     "target_loc_id": 197,
     "why": "RECOVERED way, DESIGNED place (the owner's «и потом сделай донголу тоже», 2026-10-13). 632 «Каменоломня.» (DN_Stone_Mine_N), the quarry's north pit: Олег (983) stands at (56,18), and his «Покинуть каменоломню.» leads back to the Новый рынок (197), where Джамшут signs the contract. The cells are the ground beside him, where a player sent in by Джамшут arrives."
    }
@@ -1771,7 +4182,24 @@
   "69": [
    {
     "quest": 762,
-    "cells": [[40, 39], [39, 40], [40, 40], [41, 39]],
+    "cells": [
+     [
+      40,
+      39
+     ],
+     [
+      39,
+      40
+     ],
+     [
+      40,
+      40
+     ],
+     [
+      41,
+      39
+     ]
+    ],
     "target_loc_id": 150,
     "why": "DESIGNED way and place (the owner's «и потом сделай донголу тоже», 2026-10-13). 69 «Старые приятели» (Q_DN_starieprijateli): the car «Автомобиль» (148) at (39,39); «К лагерю работорговцев» (762) drives to the slavers' camp 150 (Q_DN_Slavers, no cell), part 7 of the chain. The cells are the ground beside the car."
    }
@@ -1779,13 +4207,47 @@
   "79": [
    {
     "quest": 697,
-    "cells": [[3, 25], [4, 26], [5, 24], [5, 26]],
+    "cells": [
+     [
+      3,
+      25
+     ],
+     [
+      4,
+      26
+     ],
+     [
+      5,
+      24
+     ],
+     [
+      5,
+      26
+     ]
+    ],
     "target_loc_id": 607,
     "why": "DESIGNED way, RECOVERED place (the owner's «и потом сделай донголу тоже», 2026-10-13). 79 «Донгола: Жилой квартал.»: Тариф (678, dn_PoliceManOutDoor) guards the one collector left open «рядом со мной» at (4,25); «Перед входом» (60013-60016, «Давай покажу тебе, как спуститься вниз») leads down into the sewer 607 (Dongola_Sewers01). The cells are the ground beside him, where a player coming up arrives."
    },
    {
     "quest": 706,
-    "cells": [[3, 25], [4, 26], [5, 24], [5, 26]],
+    "cells": [
+     [
+      3,
+      25
+     ],
+     [
+      4,
+      26
+     ],
+     [
+      5,
+      24
+     ],
+     [
+      5,
+      26
+     ]
+    ],
     "target_loc_id": 607,
     "why": "DESIGNED way, RECOVERED place (the owner's «и потом сделай донголу тоже», 2026-10-13). 79: Тариф's «Снова вниз» (706), the same way down as 697 for whoever went down once."
    }
@@ -1793,7 +4255,24 @@
   "607": [
    {
     "quest": 705,
-    "cells": [[2, 21], [2, 20], [2, 22], [3, 21]],
+    "cells": [
+     [
+      2,
+      21
+     ],
+     [
+      2,
+      20
+     ],
+     [
+      2,
+      22
+     ],
+     [
+      3,
+      21
+     ]
+    ],
     "target_loc_id": 79,
     "why": "RECOVERED way (60041-60043, «Что обратно собрался?»), DESIGNED place (the owner's «и потом сделай донголу тоже», 2026-10-13). 607 «Донгола: Канализация.» (Dongola_Sewers01): Тариф inside (674, dn_PoliceManInside) at (1,21); «На свежий воздух» leads up to the quarter 79. The cells are the ground beside him, where a player coming down arrives."
    }
@@ -1801,13 +4280,47 @@
   "608": [
    {
     "quest": 699,
-    "cells": [[41, 82], [40, 80], [40, 82], [42, 82]],
+    "cells": [
+     [
+      41,
+      82
+     ],
+     [
+      40,
+      80
+     ],
+     [
+      40,
+      82
+     ],
+     [
+      42,
+      82
+     ]
+    ],
     "target_loc_id": 1009,
     "why": "RECOVERED way (60025, «Давай, проходи в дверь»), DESIGNED place (the owner's «и потом сделай донголу тоже», 2026-10-13). 608 «Донгола: Коллектор.» (Dongola_Sewers02): Наим (675, dn_PoliceChiefInside) at (41,81); «Под прикрытием» leads into the cellar 1009 (Dongola_Sewers03). The cells are the ground beside him, where a player coming out of the cellar arrives."
    },
    {
     "quest": 704,
-    "cells": [[41, 82], [40, 80], [40, 82], [42, 82]],
+    "cells": [
+     [
+      41,
+      82
+     ],
+     [
+      40,
+      80
+     ],
+     [
+      40,
+      82
+     ],
+     [
+      42,
+      82
+     ]
+    ],
     "target_loc_id": 1009,
     "why": "RECOVERED way (60038-60040), DESIGNED place (the owner's «и потом сделай донголу тоже», 2026-10-13). 608: Наим's «Снова в подвал», the same way into the cellar for another envelope."
    }
@@ -1815,13 +4328,47 @@
   "1009": [
    {
     "quest": 700,
-    "cells": [[41, 95], [40, 96], [39, 94], [41, 94]],
+    "cells": [
+     [
+      41,
+      95
+     ],
+     [
+      40,
+      96
+     ],
+     [
+      39,
+      94
+     ],
+     [
+      41,
+      94
+     ]
+    ],
     "target_loc_id": 608,
     "why": "RECOVERED way (60029, «убегаете по тайному ходу обратно в канализации»), DESIGNED place (the owner's «и потом сделай донголу тоже», 2026-10-13). 1009 «Подвал» (Dongola_Sewers03): the box of parts (677) at (40,95); «Бери и беги!» leads back to the collector 608. The cells are the ground beside the box, where a player coming into the cellar arrives."
    },
    {
     "quest": 707,
-    "cells": [[41, 95], [40, 96], [39, 94], [41, 94]],
+    "cells": [
+     [
+      41,
+      95
+     ],
+     [
+      40,
+      96
+     ],
+     [
+      39,
+      94
+     ],
+     [
+      41,
+      94
+     ]
+    ],
     "target_loc_id": 608,
     "why": "DESIGNED way and place (the owner's «и потом сделай донголу тоже», 2026-10-13). 1009: «Тайный ход» at the box (677), the cellar's free way out to the collector 608."
    }
@@ -1829,7 +4376,24 @@
   "36": [
    {
     "quest": 733,
-    "cells": [[51, 30], [50, 31], [52, 31], [51, 32]],
+    "cells": [
+     [
+      51,
+      30
+     ],
+     [
+      50,
+      31
+     ],
+     [
+      52,
+      31
+     ],
+     [
+      51,
+      32
+     ]
+    ],
     "target_loc_id": 702,
     "why": "DESIGNED way, RECOVERED place (the owner's «и потом сделай донголу тоже», 2026-10-13). 36 «Вади Хальфа: жилой квартал»: Каспар (49, wh_Kaspar) at (51,31); «Мухаммед Ахмед (часть 10)» (47056-47058, «придется надеть мешок на голову») takes the player to the cellar of Zone 49, 702 (DN_Zone49_Prison), which no door or side reaches. The cells are the ground beside him."
    }
@@ -1837,7 +4401,24 @@
   "702": [
    {
     "quest": 741,
-    "cells": [[45, 106], [44, 107], [45, 108], [44, 106]],
+    "cells": [
+     [
+      45,
+      106
+     ],
+     [
+      44,
+      107
+     ],
+     [
+      45,
+      108
+     ],
+     [
+      44,
+      106
+     ]
+    ],
     "target_loc_id": 703,
     "why": "RECOVERED way («Давай наведаемся к ним еще раз»), DESIGNED place (the owner's «и потом сделай донголу тоже», 2026-10-13). 702 «Подвал» (DN_Zone49_Prison): Генри Джонс (1841) at (45,107); «Осмотр пирамиды» (47066-47068) leads into the first room of Zone 49, 703. The cells are the ground beside him, where a player coming back from the rooms arrives."
    }
@@ -1845,19 +4426,70 @@
   "703": [
    {
     "quest": 749,
-    "cells": [[7, 36], [6, 37], [7, 35], [5, 37]],
+    "cells": [
+     [
+      7,
+      36
+     ],
+     [
+      6,
+      37
+     ],
+     [
+      7,
+      35
+     ],
+     [
+      5,
+      37
+     ]
+    ],
     "target_loc_id": 702,
     "why": "DESIGNED way and place (the owner's «и потом сделай донголу тоже», 2026-10-13). 703 «Зона 49» (DN_Zone49_1): Генри Джонс (1842) at (6,36); «Назад в подвал» (749) leads back to the cellar 702. The cells are the ground beside him, where a player coming from the cellar arrives."
    },
    {
     "quest": 743,
-    "cells": [[7, 36], [6, 37], [7, 35], [5, 37]],
+    "cells": [
+     [
+      7,
+      36
+     ],
+     [
+      6,
+      37
+     ],
+     [
+      7,
+      35
+     ],
+     [
+      5,
+      37
+     ]
+    ],
     "target_loc_id": 255,
     "why": "RECOVERED way («я видел тут какой-то лаз ... Теперь в Абри»), DESIGNED place (the owner's «и потом сделай донголу тоже», 2026-10-13). 703: «В город за патронами» (47075-47077) leads to Абри's Трущобы (255)."
    },
    {
     "quest": 748,
-    "cells": [[7, 36], [6, 37], [7, 35], [5, 37]],
+    "cells": [
+     [
+      7,
+      36
+     ],
+     [
+      6,
+      37
+     ],
+     [
+      7,
+      35
+     ],
+     [
+      5,
+      37
+     ]
+    ],
     "target_loc_id": 49,
     "why": "DESIGNED way and place (the owner's «и потом сделай донголу тоже», 2026-10-13). 703 «Зона 49»: Генри Джонс (1842) at (6,36); «Выбраться наверх» (748), the Zone's free way out to Донгола's station (49)."
    }
@@ -1865,7 +4497,24 @@
   "704": [
    {
     "quest": 748,
-    "cells": [[7, 36], [6, 37], [7, 35], [5, 37]],
+    "cells": [
+     [
+      7,
+      36
+     ],
+     [
+      6,
+      37
+     ],
+     [
+      7,
+      35
+     ],
+     [
+      5,
+      37
+     ]
+    ],
     "target_loc_id": 49,
     "why": "DESIGNED way and place (the owner's «и потом сделай донголу тоже», 2026-10-13). 704 «Зона 49»: Генри Джонс (1842) at (6,36); «Выбраться наверх» (748), the Zone's free way out to Донгола's station (49)."
    }
@@ -1873,13 +4522,47 @@
   "705": [
    {
     "quest": 748,
-    "cells": [[7, 36], [6, 37], [7, 35], [5, 37]],
+    "cells": [
+     [
+      7,
+      36
+     ],
+     [
+      6,
+      37
+     ],
+     [
+      7,
+      35
+     ],
+     [
+      5,
+      37
+     ]
+    ],
     "target_loc_id": 49,
     "why": "DESIGNED way and place (the owner's «и потом сделай донголу тоже», 2026-10-13). 705 «Зона 49»: Генри Джонс (1842) at (6,36); «Выбраться наверх» (748), the Zone's free way out to Донгола's station (49)."
    },
    {
     "quest": 746,
-    "cells": [[7, 36], [6, 37], [7, 35], [5, 37]],
+    "cells": [
+     [
+      7,
+      36
+     ],
+     [
+      6,
+      37
+     ],
+     [
+      7,
+      35
+     ],
+     [
+      5,
+      37
+     ]
+    ],
     "target_loc_id": 49,
     "why": "RECOVERED way («На верх»), DESIGNED place (the owner's «и потом сделай донголу тоже», 2026-10-13). 705 «Зона 49» (DN_Zone49_3): «На верх» (47084-47086), the ten Selenites of the room killed, leads out to Донгола's station (49)."
    }
@@ -1887,7 +4570,24 @@
   "255": [
    {
     "quest": 744,
-    "cells": [[10, 118], [9, 119], [8, 119], [9, 120]],
+    "cells": [
+     [
+      10,
+      118
+     ],
+     [
+      9,
+      119
+     ],
+     [
+      8,
+      119
+     ],
+     [
+      9,
+      120
+     ]
+    ],
     "target_loc_id": 704,
     "why": "RECOVERED way («Путь в пирамиду»), DESIGNED place (the owner's «и потом сделай донголу тоже», 2026-10-13). 255 «Абри: Трущобы»: Генри Джонс (1843, AB_Djons3) at (9,118); «Путь в пирамиду» (47078-47080) leads back into Zone 49, its second room 704 (DN_Zone49_2). The cells are the ground beside him, where a player coming from the Zone arrives (743)."
    }
@@ -1895,19 +4595,70 @@
   "126": [
    {
     "quest": 277,
-    "cells": [[32, 72], [34, 72], [33, 73], [34, 71]],
+    "cells": [
+     [
+      32,
+      72
+     ],
+     [
+      34,
+      72
+     ],
+     [
+      33,
+      73
+     ],
+     [
+      34,
+      71
+     ]
+    ],
     "target_loc_id": 49,
     "why": "RECOVERED ride and texts, DESIGNED way (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 126 «Абухамед: Вокзал» (Abuhamed_RailMarket, 6182,1976): Веласкес (740, «Веласкес<Br>водитель», 47258) stands at (33,72); «Поездка в Донголу» (277, 46965/47222-47224, 0,10 G) is the ride to Донгола's station 49. The cells are the ground at the driver's feet, where a player driven the other way arrives (travel.door_arrival)."
    },
    {
     "quest": 284,
-    "cells": [[32, 72], [34, 72], [33, 73], [34, 71]],
+    "cells": [
+     [
+      32,
+      72
+     ],
+     [
+      34,
+      72
+     ],
+     [
+      33,
+      73
+     ],
+     [
+      34,
+      71
+     ]
+    ],
     "target_loc_id": 49,
     "why": "RECOVERED ride and texts, DESIGNED way (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 126: Веласкес's «Проездной в Донголу» (284), the same ride to 49 for the ticket 1639. The cells are the ground at the driver's feet, where a player driven the other way arrives (travel.door_arrival)."
    },
    {
     "quest": 880,
-    "cells": [[32, 72], [34, 72], [33, 73], [34, 71]],
+    "cells": [
+     [
+      32,
+      72
+     ],
+     [
+      34,
+      72
+     ],
+     [
+      33,
+      73
+     ],
+     [
+      34,
+      71
+     ]
+    ],
     "target_loc_id": 177,
     "why": "RECOVERED way and time, DESIGNED place (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 126: Веласкес's «Поехали!» (62262/62265, «Вас отправят в тюрьму около Абу-Хамеда») is the ride to the prison's yard (177, 6193,1966), open from a quarter of an hour before an uprising to its end (data/schedule.json prison_ah_gates). The cells are his rides' ground, where a player driven back from the prison arrives."
    }
@@ -1915,7 +4666,24 @@
   "651": [
    {
     "quest": 163,
-    "cells": [[31, 73], [30, 74], [32, 74], [31, 75]],
+    "cells": [
+     [
+      31,
+      73
+     ],
+     [
+      30,
+      74
+     ],
+     [
+      32,
+      74
+     ],
+     [
+      31,
+      75
+     ]
+    ],
     "target_loc_id": 177,
     "why": "RECOVERED way and giver, DESIGNED place (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 651 «Тюрьма: Центральный блок.» (Prison_3_AH, Абу-Хамед's copy of 646 and 622): «Томас<Br>Выход из тюрьмы» (876, uf_ExitMan, 62317) at (31,74), and his «Выход» (163, 62276-62278), handed back to him, leads up to the yard (177) at any time; the armbands stay below (data/schedule.json keep_in). The row is Вади-Хальфа's, of the same Томас: without this record it is refused here (the rule of 'quest' above), and the blocks would have no way out. The cells are the ground at his feet, as under '646' and '622'."
    }
@@ -1923,19 +4691,70 @@
   "177": [
    {
     "quest": 881,
-    "cells": [[32, 42], [31, 43], [33, 43], [32, 44]],
+    "cells": [
+     [
+      32,
+      42
+     ],
+     [
+      31,
+      43
+     ],
+     [
+      33,
+      43
+     ],
+     [
+      32,
+      44
+     ]
+    ],
     "target_loc_id": 126,
     "why": "RECOVERED way, DESIGNED giver and place (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 177 «Тюремный двор» (Prison_Entrance_AH, 6193,1966): «Назад в Абу-Хамед» (62270/62271) is the ride back to the station (126); the supply man «Снабженец» (880) at (32,43) drives, as 2180 and 2181 in the other yards. The cells are the ground by him, where a player driven to the prison arrives."
    },
    {
     "quest": 882,
-    "cells": [[17, 38], [16, 39], [17, 37], [15, 39]],
+    "cells": [
+     [
+      17,
+      38
+     ],
+     [
+      16,
+      39
+     ],
+     [
+      17,
+      37
+     ],
+     [
+      15,
+      39
+     ]
+    ],
     "target_loc_id": 649,
     "why": "RECOVERED way and time, DESIGNED place (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 177: «Охранник<Br>Западная сторона» (1793) at (16,38), and his «Тюрьма: западные ворота» (62275), handed back to him at the uprising (data/schedule.json prison_ah_gates), takes the player down into 649 (Prison_1_AH). The cells are the ground at his feet."
    },
    {
     "quest": 883,
-    "cells": [[41, 37], [40, 38], [39, 38], [41, 38]],
+    "cells": [
+     [
+      41,
+      37
+     ],
+     [
+      40,
+      38
+     ],
+     [
+      39,
+      38
+     ],
+     [
+      41,
+      38
+     ]
+    ],
     "target_loc_id": 650,
     "why": "RECOVERED way and time, DESIGNED place (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 177: «Охранник<Br>Южная сторона» (1796) at (40,37), and his «Тюрьма: южные ворота» (62274), handed back to him at the uprising, takes the player down into 650 (Prison_2_AH). The cells are the ground at his feet."
    }
@@ -1943,13 +4762,47 @@
   "127": [
    {
     "quest": 903,
-    "cells": [[51, 21], [50, 19], [52, 21], [51, 22]],
+    "cells": [
+     [
+      51,
+      21
+     ],
+     [
+      50,
+      19
+     ],
+     [
+      52,
+      21
+     ],
+     [
+      51,
+      22
+     ]
+    ],
     "target_loc_id": 636,
     "why": "RECOVERED way (the wiki's «Работа в Каменоломне»: «после выполнения задания Вас переместят в другое место»), DESIGNED place (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 127 «Абухамед: Жилой квартал»: Ибрахим (984) stands at (51,20); his contract takes the player into the quarry's north pit, 636, beside Гюнтер. The cells are the ground beside him, where a player leaving the quarry arrives."
    },
    {
     "quest": 965,
-    "cells": [[41, 11], [40, 12], [41, 12], [42, 11]],
+    "cells": [
+     [
+      41,
+      11
+     ],
+     [
+      40,
+      12
+     ],
+     [
+      41,
+      12
+     ],
+     [
+      42,
+      11
+     ]
+    ],
     "target_loc_id": 1295,
     "why": "RECOVERED way and giver (the wiki's «Вход в учебный центр»: «Учебный центр Абу-Хамеда»), DESIGNED place (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 127 «Абухамед: Жилой квартал»: Охранник Илья (1421) stands at (40,11); his way leads into the Боевая Академия (1295), which has no cell. The cells are the ground beside him, where a player leaving the Академия arrives."
    }
@@ -1957,7 +4810,24 @@
   "636": [
    {
     "quest": 904,
-    "cells": [[55, 18], [56, 19], [55, 17], [55, 19]],
+    "cells": [
+     [
+      55,
+      18
+     ],
+     [
+      56,
+      19
+     ],
+     [
+      55,
+      17
+     ],
+     [
+      55,
+      19
+     ]
+    ],
     "target_loc_id": 127,
     "why": "RECOVERED way, DESIGNED place (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 636 «Каменоломня.» (AH_Stone_Mine_N), the quarry's north pit: Гюнтер (985) stands at (56,18), and his «Покинуть каменоломню.» leads back to the Жилой квартал (127), where Ибрахим signs the contract. The cells are the ground beside him, where a player sent in by Ибрахим arrives."
    }
@@ -1965,7 +4835,24 @@
   "213": [
    {
     "quest": 910,
-    "cells": [[30, 57], [31, 58], [30, 58], [32, 58]],
+    "cells": [
+     [
+      30,
+      57
+     ],
+     [
+      31,
+      58
+     ],
+     [
+      30,
+      58
+     ],
+     [
+      32,
+      58
+     ]
+    ],
     "target_loc_id": 666,
     "why": "DESIGNED way, RECOVERED place (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 213, the entrance of Абу-Хамед's mine of меди (L317), draws its door with the gatekeeper (1331) in front of it at (31,57) and no zone to go in by. His quest takes the player down to the control room, 666. The cells are the ground at his feet, below the door, where a player coming up arrives."
    }
@@ -1973,7 +4860,24 @@
   "214": [
    {
     "quest": 911,
-    "cells": [[30, 57], [31, 58], [30, 58], [32, 58]],
+    "cells": [
+     [
+      30,
+      57
+     ],
+     [
+      31,
+      58
+     ],
+     [
+      30,
+      58
+     ],
+     [
+      32,
+      58
+     ]
+    ],
     "target_loc_id": 667,
     "why": "DESIGNED way, RECOVERED place (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 214, the entrance of Абу-Хамед's mine of селитры (L319), draws its door with the gatekeeper (1327) in front of it at (31,57) and no zone to go in by. His quest takes the player down to the control room, 667. The cells are the ground at his feet, below the door, where a player coming up arrives."
    }
@@ -1981,7 +4885,24 @@
   "215": [
    {
     "quest": 912,
-    "cells": [[30, 57], [31, 58], [30, 58], [32, 58]],
+    "cells": [
+     [
+      30,
+      57
+     ],
+     [
+      31,
+      58
+     ],
+     [
+      30,
+      58
+     ],
+     [
+      32,
+      58
+     ]
+    ],
     "target_loc_id": 668,
     "why": "DESIGNED way, RECOVERED place (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 215, the entrance of Абу-Хамед's mine of свинца (L318), draws its door with the gatekeeper (1323) in front of it at (31,57) and no zone to go in by. His quest takes the player down to the control room, 668. The cells are the ground at his feet, below the door, where a player coming up arrives."
    }
@@ -1989,7 +4910,24 @@
   "666": [
    {
     "quest": 913,
-    "cells": [[14, 26], [13, 27], [14, 25], [12, 27]],
+    "cells": [
+     [
+      14,
+      26
+     ],
+     [
+      13,
+      27
+     ],
+     [
+      14,
+      25
+     ],
+     [
+      12,
+      27
+     ]
+    ],
     "target_loc_id": 213,
     "why": "DESIGNED way, RECOVERED place (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 666 «Комната управления»: «Выход из шахты/карьера» (1343) stands at (13,26), its door b leads on into the tiers and nothing leads up. His quest takes the player back to the surface, 213. The cells are the ground beside him, where a player coming down arrives."
    }
@@ -1997,7 +4935,24 @@
   "667": [
    {
     "quest": 914,
-    "cells": [[14, 26], [13, 27], [14, 25], [12, 27]],
+    "cells": [
+     [
+      14,
+      26
+     ],
+     [
+      13,
+      27
+     ],
+     [
+      14,
+      25
+     ],
+     [
+      12,
+      27
+     ]
+    ],
     "target_loc_id": 214,
     "why": "DESIGNED way, RECOVERED place (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 667 «Комната управления»: «Выход из шахты/карьера» (1339) stands at (13,26), its door b leads on into the tiers and nothing leads up. His quest takes the player back to the surface, 214. The cells are the ground beside him, where a player coming down arrives."
    }
@@ -2005,7 +4960,24 @@
   "668": [
    {
     "quest": 915,
-    "cells": [[14, 26], [13, 27], [14, 25], [12, 27]],
+    "cells": [
+     [
+      14,
+      26
+     ],
+     [
+      13,
+      27
+     ],
+     [
+      14,
+      25
+     ],
+     [
+      12,
+      27
+     ]
+    ],
     "target_loc_id": 215,
     "why": "DESIGNED way, RECOVERED place (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 668 «Комната управления»: «Выход из шахты/карьера» (1335) stands at (13,26), its door b leads on into the tiers and nothing leads up. His quest takes the player back to the surface, 215. The cells are the ground beside him, where a player coming down arrives."
    }
@@ -2013,7 +4985,24 @@
   "1295": [
    {
     "quest": 966,
-    "cells": [[5, 43], [3, 45], [4, 46], [6, 43]],
+    "cells": [
+     [
+      5,
+      43
+     ],
+     [
+      3,
+      45
+     ],
+     [
+      4,
+      46
+     ],
+     [
+      6,
+      43
+     ]
+    ],
     "target_loc_id": 127,
     "why": "RECOVERED way and giver, DESIGNED place (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 1295 «Боевая Академия.»: Илья inside (1424) stands at (4,44); «Выход из обучающего центра» leads back to the Жилой квартал (127) at any time: the Академия's free way out (it has no side and no door). The cells are the ground beside him, where a player led in by Илья arrives."
    }
@@ -2021,31 +5010,116 @@
   "446": [
    {
     "quest": 949,
-    "cells": [[57, 68], [58, 69], [57, 67], [57, 69]],
+    "cells": [
+     [
+      57,
+      68
+     ],
+     [
+      58,
+      69
+     ],
+     [
+      57,
+      67
+     ],
+     [
+      57,
+      69
+     ]
+    ],
     "target_loc_id": 690,
     "why": "RECOVERED way, DESIGNED place (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 446 «Абухамед: Порт»: Гатера (1727) at (58,68); «Отправиться к Тафари» takes the player in his car to the hide-out 690 (Тафари), which has no cell and no side. The cells are the ground beside him, where a player driven back from a hide-out arrives."
    },
    {
     "quest": 950,
-    "cells": [[57, 68], [58, 69], [57, 67], [57, 69]],
+    "cells": [
+     [
+      57,
+      68
+     ],
+     [
+      58,
+      69
+     ],
+     [
+      57,
+      67
+     ],
+     [
+      57,
+      69
+     ]
+    ],
     "target_loc_id": 691,
     "why": "RECOVERED way, DESIGNED place (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 446 «Абухамед: Порт»: Гатера (1727) at (58,68); «Отправиться к Гвале» takes the player in his car to the hide-out 691 (Гвала), which has no cell and no side. The cells are the ground beside him, where a player driven back from a hide-out arrives."
    },
    {
     "quest": 951,
-    "cells": [[57, 68], [58, 69], [57, 67], [57, 69]],
+    "cells": [
+     [
+      57,
+      68
+     ],
+     [
+      58,
+      69
+     ],
+     [
+      57,
+      67
+     ],
+     [
+      57,
+      69
+     ]
+    ],
     "target_loc_id": 692,
     "why": "RECOVERED way, DESIGNED place (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 446 «Абухамед: Порт»: Гатера (1727) at (58,68); «Отправиться к Гамюке» takes the player in his car to the hide-out 692 (Гамюки), which has no cell and no side. The cells are the ground beside him, where a player driven back from a hide-out arrives."
    },
    {
     "quest": 952,
-    "cells": [[57, 68], [58, 69], [57, 67], [57, 69]],
+    "cells": [
+     [
+      57,
+      68
+     ],
+     [
+      58,
+      69
+     ],
+     [
+      57,
+      67
+     ],
+     [
+      57,
+      69
+     ]
+    ],
     "target_loc_id": 693,
     "why": "RECOVERED way, DESIGNED place (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 446 «Абухамед: Порт»: Гатера (1727) at (58,68); «Отправиться к Абрафо» takes the player in his car to the hide-out 693 (Абрафо), which has no cell and no side. The cells are the ground beside him, where a player driven back from a hide-out arrives."
    },
    {
     "quest": 953,
-    "cells": [[57, 68], [58, 69], [57, 67], [57, 69]],
+    "cells": [
+     [
+      57,
+      68
+     ],
+     [
+      58,
+      69
+     ],
+     [
+      57,
+      67
+     ],
+     [
+      57,
+      69
+     ]
+    ],
     "target_loc_id": 694,
     "why": "RECOVERED way, DESIGNED place (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 446 «Абухамед: Порт»: Гатера (1727) at (58,68); «Отправиться к Джитинджи» takes the player in his car to the hide-out 694 (Джитинджи), which has no cell and no side. The cells are the ground beside him, where a player driven back from a hide-out arrives."
    }
@@ -2053,7 +5127,24 @@
   "690": [
    {
     "quest": 954,
-    "cells": [[2, 64], [1, 65], [3, 65], [2, 66]],
+    "cells": [
+     [
+      2,
+      64
+     ],
+     [
+      1,
+      65
+     ],
+     [
+      3,
+      65
+     ],
+     [
+      2,
+      66
+     ]
+    ],
     "target_loc_id": 446,
     "why": "RECOVERED way and giver, DESIGNED place (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 690, Тафари's hide-out: Гатера's car (1693) stands at its edge; «Что, обратно захотелось?» (954, «Ну поехали. Довезу бесплатно.») drives back to the Причал 446 at any time, the hide-out's free way out (it has no side and no door). The cells are the ground by the car, where a player driven in arrives."
    }
@@ -2061,7 +5152,24 @@
   "691": [
    {
     "quest": 954,
-    "cells": [[2, 64], [1, 65], [3, 65], [2, 66]],
+    "cells": [
+     [
+      2,
+      64
+     ],
+     [
+      1,
+      65
+     ],
+     [
+      3,
+      65
+     ],
+     [
+      2,
+      66
+     ]
+    ],
     "target_loc_id": 446,
     "why": "RECOVERED way and giver, DESIGNED place (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 691, Гвала's hide-out: Гатера's car (1693) stands at its edge; «Что, обратно захотелось?» (954, «Ну поехали. Довезу бесплатно.») drives back to the Причал 446 at any time, the hide-out's free way out (it has no side and no door). The cells are the ground by the car, where a player driven in arrives."
    }
@@ -2069,7 +5177,24 @@
   "692": [
    {
     "quest": 954,
-    "cells": [[2, 66], [3, 67], [2, 68], [1, 66]],
+    "cells": [
+     [
+      2,
+      66
+     ],
+     [
+      3,
+      67
+     ],
+     [
+      2,
+      68
+     ],
+     [
+      1,
+      66
+     ]
+    ],
     "target_loc_id": 446,
     "why": "RECOVERED way and giver, DESIGNED place (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 692, Гамюка's hide-out: Гатера's car (1693) stands at its edge; «Что, обратно захотелось?» (954, «Ну поехали. Довезу бесплатно.») drives back to the Причал 446 at any time, the hide-out's free way out (it has no side and no door). The cells are the ground by the car, where a player driven in arrives."
    }
@@ -2077,7 +5202,24 @@
   "693": [
    {
     "quest": 954,
-    "cells": [[35, 56], [34, 57], [35, 55], [33, 57]],
+    "cells": [
+     [
+      35,
+      56
+     ],
+     [
+      34,
+      57
+     ],
+     [
+      35,
+      55
+     ],
+     [
+      33,
+      57
+     ]
+    ],
     "target_loc_id": 446,
     "why": "RECOVERED way and giver, DESIGNED place (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 693, Абрафо's hide-out: Гатера's car (1693) stands at its edge; «Что, обратно захотелось?» (954, «Ну поехали. Довезу бесплатно.») drives back to the Причал 446 at any time, the hide-out's free way out (it has no side and no door). The cells are the ground by the car, where a player driven in arrives."
    }
@@ -2085,9 +5227,212 @@
   "694": [
    {
     "quest": 954,
-    "cells": [[3, 60], [2, 61], [4, 61], [3, 62]],
+    "cells": [
+     [
+      3,
+      60
+     ],
+     [
+      2,
+      61
+     ],
+     [
+      4,
+      61
+     ],
+     [
+      3,
+      62
+     ]
+    ],
     "target_loc_id": 446,
     "why": "RECOVERED way and giver, DESIGNED place (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 694, Джитинджи's hide-out: Гатера's car (1693) stands at its edge; «Что, обратно захотелось?» (954, «Ну поехали. Довезу бесплатно.») drives back to the Причал 446 at any time, the hide-out's free way out (it has no side and no door). The cells are the ground by the car, where a player driven in arrives."
+   }
+  ],
+  "267": [
+   {
+    "quest": 18120,
+    "cells": [
+     [
+      39,
+      32
+     ],
+     [
+      38,
+      31
+     ],
+     [
+      38,
+      33
+     ],
+     [
+      37,
+      33
+     ],
+     [
+      40,
+      32
+     ],
+     [
+      39,
+      31
+     ]
+    ],
+    "target_loc_id": 1383,
+    "why": "DESIGNED internal route from foreman to the sorter west, south or east of town; no ordinary-world exit."
+   },
+   {
+    "quest": 18121,
+    "cells": [
+     [
+      39,
+      32
+     ],
+     [
+      38,
+      31
+     ],
+     [
+      38,
+      33
+     ],
+     [
+      37,
+      33
+     ],
+     [
+      40,
+      32
+     ],
+     [
+      39,
+      31
+     ]
+    ],
+    "target_loc_id": 1385,
+    "why": "DESIGNED internal route from foreman to the sorter west, south or east of town; no ordinary-world exit."
+   },
+   {
+    "quest": 18122,
+    "cells": [
+     [
+      39,
+      32
+     ],
+     [
+      38,
+      31
+     ],
+     [
+      38,
+      33
+     ],
+     [
+      37,
+      33
+     ],
+     [
+      40,
+      32
+     ],
+     [
+      39,
+      31
+     ]
+    ],
+    "target_loc_id": 1384,
+    "why": "DESIGNED internal route from foreman to the sorter west, south or east of town; no ordinary-world exit."
+   }
+  ],
+  "1383": [
+   {
+    "quest": 18123,
+    "cells": [
+     [
+      28,
+      42
+     ],
+     [
+      30,
+      42
+     ],
+     [
+      29,
+      41
+     ],
+     [
+      29,
+      43
+     ],
+     [
+      28,
+      43
+     ]
+    ],
+    "target_loc_id": 267,
+    "why": "DESIGNED internal route from relocated sorter to foreman; no ordinary-world exit."
+   }
+  ],
+  "1385": [
+   {
+    "quest": 18124,
+    "cells": [
+     [
+      28,
+      42
+     ],
+     [
+      30,
+      42
+     ],
+     [
+      29,
+      41
+     ],
+     [
+      29,
+      43
+     ],
+     [
+      28,
+      43
+     ]
+    ],
+    "target_loc_id": 267,
+    "why": "DESIGNED internal route from relocated sorter to foreman; no ordinary-world exit."
+   }
+  ],
+  "1384": [
+   {
+    "quest": 18125,
+    "cells": [
+     [
+      38,
+      51
+     ],
+     [
+      40,
+      51
+     ],
+     [
+      39,
+      50
+     ],
+     [
+      39,
+      52
+     ],
+     [
+      40,
+      52
+     ],
+     [
+      40,
+      50
+     ]
+    ],
+    "target_loc_id": 267,
+    "why": "DESIGNED internal route from relocated sorter to foreman; no ordinary-world exit."
    }
   ]
  }

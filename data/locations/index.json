@@ -4,5 +4,440 @@
   "why": "The server reads its location files from the original's slice of the client (/opt/lava/res), which no deploy changes, and the client from its own copy, which a release changes. A location of ours lives here so that one push brings it to both: server/world.py reads this folder before the original's (static_path), and client/build.py ships the same bytes into the release as locations/static/<id>.xml with a row in xml/loc_defs.xml, without which the client draws a desert where the server opens the file.",
   "rule": "A new place takes the first free id from 1381 (world.FIRST_NEW_ID) and stays below 8192 (NEW_ID_LIMIT); an id of the original's here replaces the original's file for both sides. 'from' is the location it was copied from, 'created' the day, 'why' the owner's word. Its exits go into data/exits_sides.json (data/build_exits_sides.py --only <id>), its ways in and out into data/passages.json, its inhabitants into data/placements.json. 262 «Тотем» is not here: its copy in client/files is the client's alone (client/files/README.md). server/test_locations.py and server/test_location_overrides.py hold every file here to these rules."
  },
- "locations": {}
+ "locations": {
+  "264": {
+   "title": "Плантация Эдем: северо-западный участок",
+   "from": 264,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "265": {
+   "title": "Плантация Эдем: юго-западный участок",
+   "from": 265,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "266": {
+   "title": "Плантация Эдем: юго-восточный участок",
+   "from": 266,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "267": {
+   "title": "Плантация Эдем: городишко",
+   "from": 267,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1381": {
+   "title": "Плантация Эдем: северный участок",
+   "from": 264,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1382": {
+   "title": "Плантация Эдем: северо-восточный участок",
+   "from": 266,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1383": {
+   "title": "Плантация Эдем: западный участок",
+   "from": 265,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1384": {
+   "title": "Плантация Эдем: восточный участок",
+   "from": 266,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1385": {
+   "title": "Плантация Эдем: южный участок",
+   "from": 265,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1386": {
+   "title": "Плантация Эдем: участок 5858,1927",
+   "from": 265,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1387": {
+   "title": "Плантация Эдем: участок 5860,1927",
+   "from": 264,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1388": {
+   "title": "Плантация Эдем: участок 5861,1927",
+   "from": 265,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1389": {
+   "title": "Плантация Эдем: участок 5862,1927",
+   "from": 266,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1390": {
+   "title": "Плантация Эдем: участок 5856,1928",
+   "from": 265,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1391": {
+   "title": "Плантация Эдем: участок 5860,1928",
+   "from": 266,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1392": {
+   "title": "Плантация Эдем: участок 5861,1928",
+   "from": 264,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1393": {
+   "title": "Плантация Эдем: участок 5862,1928",
+   "from": 265,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1394": {
+   "title": "Плантация Эдем: участок 5863,1928",
+   "from": 266,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1395": {
+   "title": "Плантация Эдем: участок 5864,1928",
+   "from": 264,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1396": {
+   "title": "Плантация Эдем: участок 5853,1929",
+   "from": 264,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1397": {
+   "title": "Плантация Эдем: участок 5854,1929",
+   "from": 265,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1398": {
+   "title": "Плантация Эдем: участок 5855,1929",
+   "from": 266,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1399": {
+   "title": "Плантация Эдем: участок 5856,1929",
+   "from": 264,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1400": {
+   "title": "Плантация Эдем: участок 5860,1929",
+   "from": 265,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1401": {
+   "title": "Плантация Эдем: участок 5861,1929",
+   "from": 266,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1402": {
+   "title": "Плантация Эдем: участок 5862,1929",
+   "from": 264,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1403": {
+   "title": "Плантация Эдем: участок 5863,1929",
+   "from": 265,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1404": {
+   "title": "Плантация Эдем: участок 5864,1929",
+   "from": 266,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1405": {
+   "title": "Плантация Эдем: участок 5865,1929",
+   "from": 264,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1406": {
+   "title": "Плантация Эдем: участок 5866,1929",
+   "from": 265,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1407": {
+   "title": "Плантация Эдем: участок 5854,1930",
+   "from": 264,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1408": {
+   "title": "Плантация Эдем: участок 5855,1930",
+   "from": 265,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1409": {
+   "title": "Плантация Эдем: участок 5856,1930",
+   "from": 266,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1410": {
+   "title": "Плантация Эдем: участок 5860,1930",
+   "from": 264,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1411": {
+   "title": "Плантация Эдем: участок 5861,1930",
+   "from": 265,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1412": {
+   "title": "Плантация Эдем: участок 5862,1930",
+   "from": 266,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1413": {
+   "title": "Плантация Эдем: участок 5863,1930",
+   "from": 264,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1414": {
+   "title": "Плантация Эдем: участок 5864,1930",
+   "from": 265,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1415": {
+   "title": "Плантация Эдем: участок 5865,1930",
+   "from": 266,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1416": {
+   "title": "Плантация Эдем: участок 5854,1931",
+   "from": 266,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1417": {
+   "title": "Плантация Эдем: участок 5855,1931",
+   "from": 264,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1418": {
+   "title": "Плантация Эдем: участок 5856,1931",
+   "from": 265,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1419": {
+   "title": "Плантация Эдем: участок 5857,1931",
+   "from": 266,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1420": {
+   "title": "Плантация Эдем: участок 5858,1931",
+   "from": 264,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1421": {
+   "title": "Плантация Эдем: участок 5859,1931",
+   "from": 265,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1422": {
+   "title": "Плантация Эдем: участок 5860,1931",
+   "from": 266,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1423": {
+   "title": "Плантация Эдем: участок 5861,1931",
+   "from": 264,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1424": {
+   "title": "Плантация Эдем: участок 5862,1931",
+   "from": 265,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1425": {
+   "title": "Плантация Эдем: участок 5863,1931",
+   "from": 266,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1426": {
+   "title": "Плантация Эдем: участок 5864,1931",
+   "from": 264,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1427": {
+   "title": "Плантация Эдем: участок 5854,1932",
+   "from": 265,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1428": {
+   "title": "Плантация Эдем: участок 5855,1932",
+   "from": 266,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1429": {
+   "title": "Плантация Эдем: участок 5856,1932",
+   "from": 264,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1430": {
+   "title": "Плантация Эдем: участок 5857,1932",
+   "from": 265,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1431": {
+   "title": "Плантация Эдем: участок 5858,1932",
+   "from": 266,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1432": {
+   "title": "Плантация Эдем: участок 5859,1932",
+   "from": 264,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1433": {
+   "title": "Плантация Эдем: участок 5860,1932",
+   "from": 265,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1434": {
+   "title": "Плантация Эдем: участок 5861,1932",
+   "from": 266,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1435": {
+   "title": "Плантация Эдем: участок 5862,1932",
+   "from": 264,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1436": {
+   "title": "Плантация Эдем: участок 5863,1932",
+   "from": 265,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1437": {
+   "title": "Плантация Эдем: участок 5861,1933",
+   "from": 265,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  },
+  "1438": {
+   "title": "Плантация Эдем: участок 5862,1933",
+   "from": 266,
+   "author": "Lava Reborn",
+   "created": "2026-11-16",
+   "why": "DESIGNED approved cell-center mask inside the user's Eden outline, 2026-11-16. RECOVERED existing Q_Prison artwork/geometry reused; only cardinal internal exits, no PvP. Global travel is allowed only inside the reviewed 62-cell mask. Twelve palms per work map."
+  }
+ }
 }

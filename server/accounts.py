@@ -54,6 +54,22 @@ CREATE TABLE IF NOT EXISTS char_training_profiles (
     char_id INTEGER PRIMARY KEY REFERENCES characters(id) ON DELETE CASCADE,
     data TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS char_eden (
+    char_id INTEGER PRIMARY KEY REFERENCES characters(id) ON DELETE CASCADE,
+    admin TEXT NOT NULL,
+    reason TEXT NOT NULL,
+    assigned_at INTEGER NOT NULL,
+    visit INTEGER NOT NULL,
+    return_loc INTEGER,
+    return_pos INTEGER,
+    return_gx REAL,
+    return_gy REAL,
+    return_on_map INTEGER NOT NULL DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS char_eden_visits (
+    char_id INTEGER PRIMARY KEY REFERENCES characters(id) ON DELETE CASCADE,
+    visits INTEGER NOT NULL
+);
 CREATE TABLE IF NOT EXISTS char_stats (
     char_id INTEGER NOT NULL REFERENCES characters(id),
     kind    TEXT    NOT NULL,      -- 'attrib' | 'skill' | 'spec'
@@ -377,6 +393,22 @@ CREATE TABLE IF NOT EXISTS ground (
     gy         INTEGER,
     cell       INTEGER NOT NULL,      -- the hex the bag lies on
     expires_at REAL    NOT NULL       -- the epoch second it goes
+);
+CREATE TABLE IF NOT EXISTS eden_ground (
+    -- A harvested resource belongs to the finishing worker's current visit.
+    -- Explicit cleanup is also required: storage intentionally disables FK
+    -- enforcement for the game's nobody/system owners on both backends.
+    uniq INTEGER PRIMARY KEY REFERENCES items(uniq) ON DELETE CASCADE,
+    owner_char INTEGER NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
+    visit INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS eden_ground_owner ON eden_ground (owner_char);
+CREATE TABLE IF NOT EXISTS eden_palm_state (
+    loc INTEGER NOT NULL,
+    home_cell INTEGER NOT NULL,
+    mob_type INTEGER NOT NULL,
+    respawn_at REAL NOT NULL,
+    PRIMARY KEY (loc, home_cell, mob_type)
 );
 CREATE TABLE IF NOT EXISTS boss_kills (
     -- A boss that keeps the hours (server/bosses.py), killed in its window,
