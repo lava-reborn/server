@@ -1096,6 +1096,14 @@ static class Launcher
         // once the check is over, if the release is still playable.
         bool wait = quiet && !sync.Playable;
         if (!sync.Playable && !wait) return;
+        // One game per computer (GameLock): a second game folder starts a
+        // second launcher, and that launcher must not start a second game.
+        if (!GameLock.Take(ProjectorPath()))
+        {
+            Notice.Show("Игра уже запущена",
+                "На этом компьютере уже идёт игра LAVA Online. Закройте её, прежде чем запускать новую.");
+            return;
+        }
         Disarm();
         launching = true;
         launchError = null;
@@ -1142,6 +1150,7 @@ static class Launcher
                 }
                 if (!sync.Playable)
                 {
+                    GameLock.Release();
                     Say(delegate { launching = false; Render(); });
                     return;
                 }
@@ -1149,6 +1158,7 @@ static class Launcher
             playerReady.WaitOne();
             if (player == null)
             {
+                GameLock.Release();
                 Say(delegate { launching = false; Render(); });
                 return;
             }
@@ -1161,6 +1171,7 @@ static class Launcher
                 // unpacked player, the disk filled -- the player has to be
                 // able to try again without closing the launcher.
                 Interlocked.Exchange(ref launched, 0);
+                GameLock.Release();
                 Say(delegate
                 {
                     launching = false;
@@ -1419,6 +1430,7 @@ static class Launcher
         gameProc = null;
         server = null;
         Interlocked.Exchange(ref launched, 0);
+        GameLock.Release();
         launching = false;
         inGame = false;
         Disarm();
@@ -1833,13 +1845,19 @@ static class Launcher
     // The projector is unpacked once and kept: it is 16 MB, and writing it out
     // on every start would be both slow and pointless. A size mismatch means a
     // half-written or older copy, so it is redone.
+    // Where every launcher on this computer unpacks the projector, whatever
+    // its game folder: one path, so GameLock can tell a running game by it.
+    static string ProjectorPath()
+    {
+        return Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "LavaOnline", "flashplayer.exe");
+    }
+
     static string Unpack()
     {
-        string dir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "LavaOnline");
-        Directory.CreateDirectory(dir);
-        string path = Path.Combine(dir, "flashplayer.exe");
+        string path = ProjectorPath();
+        Directory.CreateDirectory(Path.GetDirectoryName(path));
         using (Stream src = Open("fp32_sa.exe"))
         {
             if (!File.Exists(path) || new FileInfo(path).Length != src.Length)
@@ -1847,6 +1865,96 @@ static class Launcher
                     src.CopyTo(dst);
         }
         return path;
+    }
+
+    // One game per computer, for the owner's rule of 2026-11-16 against
+    // farming with several accounts at once. The folder lock (LockName)
+    // keeps two launchers off one folder's files and nothing more: a copied
+    // folder, or another one chosen in the window, starts a second launcher.
+    //
+    // Two checks, because each misses what the other sees:
+    //   * a named semaphore, Global\ so that another Windows user signed in
+    //     beside this one shares it, held from the press of Play until the
+    //     game has closed (Back). A semaphore, not a mutex: it is taken on
+    //     the window's thread and given back on whichever thread sees the
+    //     game end, and a mutex insists on one thread. A launcher that dies
+    //     with it held closes its handle with it, and as nobody else keeps
+    //     one open (a refused Take closes its own), the object goes too.
+    //   * the projector itself, running from ProjectorPath: a launcher killed
+    //     while its game plays has let the semaphore go, the game has not.
+    //     Another user's process cannot be read (MainModule throws) and is
+    //     skipped: the semaphore covers him while his launcher lives.
+    // Neither keeps out a second computer, a virtual machine or a rebuilt
+    // exe. The server does not see this check and cannot tell a launcher
+    // that skips it.
+    //
+    // Whatever cannot be made or read lets the game start: the lock never
+    // keeps out a player whose system refuses it.
+    static class GameLock
+    {
+        const string NAME = "LavaReborn-Game";
+        static Semaphore held;
+
+        public static bool Take(string projector)
+        {
+            if (held != null) return true;
+            if (Running(projector)) return false;
+            Semaphore s = Open();
+            if (s == null) return true;
+            bool got;
+            try { got = s.WaitOne(0); }
+            catch { got = false; }
+            if (!got)
+            {
+                s.Close();
+                return false;
+            }
+            held = s;
+            return true;
+        }
+
+        public static void Release()
+        {
+            Semaphore s = Interlocked.Exchange(ref held, null);
+            if (s == null) return;
+            try { s.Release(); } catch { }
+            s.Close();
+        }
+
+        static Semaphore Open()
+        {
+            foreach (string scope in new[] { @"Global\", @"Local\" })
+            {
+                try
+                {
+                    bool created;
+                    return new Semaphore(1, 1, scope + NAME, out created);
+                }
+                catch { }
+            }
+            return null;
+        }
+
+        static bool Running(string projector)
+        {
+            Process[] all;
+            try { all = Process.GetProcessesByName(Path.GetFileNameWithoutExtension(projector)); }
+            catch { return false; }
+            bool found = false;
+            foreach (Process p in all)
+            {
+                try
+                {
+                    if (!found && !p.HasExited &&
+                        string.Equals(Path.GetFullPath(p.MainModule.FileName), Path.GetFullPath(projector),
+                                      StringComparison.OrdinalIgnoreCase))
+                        found = true;
+                }
+                catch { }
+                p.Dispose();
+            }
+            return found;
+        }
     }
 
     static Image LoadImage(string name)
