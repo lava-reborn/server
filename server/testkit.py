@@ -208,7 +208,17 @@ def _gateway_port(host, port):
     env = dict(os.environ,
                GAME_GATEWAY_TCP_ADDR="127.0.0.1:%d" % entrance,
                GAME_GATEWAY_UPSTREAM_ADDR="%s:%d" % (host, port),
-               GAME_HTTP_ADDR="127.0.0.1:%d" % _free_port())
+               GAME_HTTP_ADDR="127.0.0.1:%d" % _free_port(),
+               # Nothing here uses the WebSocket entrance, but every
+               # gateway opens one: on its default port the second gateway
+               # of a parallel run would not start.
+               GAME_GATEWAY_WS_ADDR="127.0.0.1:0",
+               # The gateway's own limits are not what the suites are
+               # about, and they would get in the way: every socket of a
+               # suite comes from 127.0.0.1, and a suite may hold one
+               # without a login for as long as it likes.
+               GAME_GATEWAY_MAX_CONNS_PER_ADDR="0",
+               GAME_GATEWAY_LOGIN_TIMEOUT="0")
     report = os.environ.get("LAVA_TEST_REPORT")
     out = (open(re.sub(r"\.jsonl$", "", report) + ".gateway.log", "a")
            if report else subprocess.DEVNULL)
