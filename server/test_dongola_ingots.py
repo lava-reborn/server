@@ -500,6 +500,9 @@ try:
     c.send("actPlayer;")
     c.until(lambda f: f[0] == "lcall")
     arrival, pos = enter(c)
+    # Meet the gold minimum through the live session; keep combat skills unchanged.
+    c.send("userMsg;entry=@/skill 3 3@;group=0;")
+    c.frames()
 
     # --- Мортимер in the new market ---------------------------------------------------------
     check("the new market of Донгола: the room the player stands in",

@@ -419,6 +419,9 @@ try:
     c.send("actPlayer;")
     c.until(lambda f: f[0] == "lcall")
     arrival, pos = enter(c)
+    # Meet the gold minimum through the live session; keep combat skills unchanged.
+    c.send("userMsg;entry=@/skill 3 3@;group=0;")
+    c.frames()
     rudo = npc(arrival, RUDO)
     _took, got = way(c, rudo["id"])
     check("down through Рудо's quest, taken and handed back",

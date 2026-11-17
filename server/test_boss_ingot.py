@@ -323,9 +323,9 @@ if q:
     check("Джеррах gives it and takes it back, and nobody else; it is the first he gives",
           (q.give, q.take, quests.given_by(JERRAKH)[0]), ([JERRAKH], [JERRAKH], QUEST))
     check("two ingots of one ounce, the boss's whole drop; exactly 2 ounces of gold, "
-          "again and again, for anybody",
+          "again and again, from level three",
           (q.kind, q.objs, q.rew_gold, q.rew_afro, q.rew_obj, q.repeatable, q.level, q.rew_loc),
-          (quests.BRING_L_OBJ, [(INGOT, QUEST_INGOTS, [BOSS])], REWARD, 0, [], 1, 0, 0))
+          (quests.BRING_L_OBJ, [(INGOT, QUEST_INGOTS, [BOSS])], REWARD, 0, [], 1, 3, 0))
     check("its marks on the map: the camp to go to, Джеррах to hand it in to",
           (q.loc, q.finish_loc), (world.pack(*CAMP_CELL), world.pack(*WEST_CELL)))
     check("four texts of its own, every id in the launcher's table",
@@ -553,6 +553,9 @@ try:
     c.send("actPlayer;")
     c.until(lambda f: f[0] == "lcall")
     arrival, pos = enter(c)
+    # Meet the gold minimum through the live session; keep combat skills unchanged.
+    c.send("userMsg;entry=@/skill 3 3@;group=0;")
+    c.frames()
 
     # --- Джеррах gives the quest -----------------------------------------------------
     jerrakh = npc(arrival, JERRAKH)
