@@ -2432,7 +2432,8 @@
      ]
     ],
     "target_loc_id": 41,
-    "why": "RECOVERED place, DESIGNED way. 186 'Караван' (NoobZone_Market, map cell 6271,1829), inside the owner's wall. Демир (5193), the driver, stands at (35,37) beside his car: O_Bugcar1 at (34,36), whose body is the obstacles at 33-37 x 33-36. His quest «В Хальфу!» (texts.xml 24434-24436, 'Пойдем, отвезу тебя в город.') is the ride out of the walled valley to Вади-Хальфа, the owner's decision (2026-09-26). The file draws no way out, so the cells are the ground around the car, where the ride starts: a player driven back from the city arrives nearest them (travel.door_arrival). Handing the quest in to Демир moves the player to Причал (41, 5965,1728), where the other Демир waits."
+    "why": "RECOVERED place, DESIGNED way. 186 'Караван' (NoobZone_Market, map cell 6271,1829), inside the owner's wall. Демир (5193), the driver, stands at (35,37) beside his car: O_Bugcar1 at (34,36), whose body is the obstacles at 33-37 x 33-36. His quest «В Хальфу!» (texts.xml 24434-24436, 'Пойдем, отвезу тебя в город.') is the ride out of the walled valley to Вади-Хальфа, the owner's decision (2026-09-26). The file draws no way out, so the cells are the ground around the car, where the ride starts: a player driven back from the city arrives nearest them (travel.door_arrival). Handing the quest in to Демир moves the player to Причал (41, 5965,1728), where the other Демир waits.",
+    "set_home": true
    }
   ],
   "41": [
@@ -2461,7 +2462,8 @@
      ]
     ],
     "target_loc_id": 186,
-    "why": "RECOVERED place, DESIGNED way. 41 'Причал' of Вади-Хальфа (map cell 5965,1728): Демир (30, nz_Demir) stands at (27,73) beside a car, O_car02_vp at (30,75). His quest «Назад, в долину» (texts.xml 59870/59871) is the ride back into the valley, which the original closes 'после достижения третьего уровня любого навыка' (quests.json max_level 2). The cells are the ground by the car, where a player driven out of the valley arrives (travel.door_arrival). Handing the quest in to Демир moves the player to the caravan's village (186)."
+    "why": "RECOVERED place, DESIGNED way. 41 'Причал' of Вади-Хальфа (map cell 5965,1728): Демир (30, nz_Demir) stands at (27,73) beside a car, O_car02_vp at (30,75). His quest «Назад, в долину» (texts.xml 59870/59871) is the ride back into the valley, which the original closes 'после достижения третьего уровня любого навыка' (quests.json max_level 2). The cells are the ground by the car, where a player driven out of the valley arrives (travel.door_arrival). Handing the quest in to Демир moves the player to the caravan's village (186).",
+    "set_home": true
    },
    {
     "quest": 401,
@@ -3068,7 +3070,8 @@
      ]
     ],
     "target_loc_id": 187,
-    "why": "RECOVERED ride and texts, DESIGNED way. 37 «Вади Хальфа: вокзал» (5967,1727): Хассир (105, «Хассир водитель», the station's driver: «В другие города часто Хассир ездит», 50343; the tooltip «Вокзал Вади-Хальфы: ... Транспортировка в Абри») stands at (31,77). «Поездка в Абри» (46957-46960, 100 afro) is the ride to Абри's Портовый рынок (187, 5860,1835), the owner's «Открой у водителя на вокзале квест поездку в Абри» (2026-10-12). The cells are the ground south of him, beside the cells of his «Поехали!» (159), where a player driven back from Абри arrives (travel.door_arrival)."
+    "why": "RECOVERED ride and texts, DESIGNED way. 37 «Вади Хальфа: вокзал» (5967,1727): Хассир (105, «Хассир водитель», the station's driver: «В другие города часто Хассир ездит», 50343; the tooltip «Вокзал Вади-Хальфы: ... Транспортировка в Абри») stands at (31,77). «Поездка в Абри» (46957-46960, 100 afro) is the ride to Абри's Портовый рынок (187, 5860,1835), the owner's «Открой у водителя на вокзале квест поездку в Абри» (2026-10-12). The cells are the ground south of him, beside the cells of his «Поехали!» (159), where a player driven back from Абри arrives (travel.door_arrival).",
+    "set_home": true
    },
    {
     "quest": 279,
@@ -3091,7 +3094,8 @@
      ]
     ],
     "target_loc_id": 187,
-    "why": "RECOVERED ride and texts, DESIGNED way. 37: Хассир's «Проездной в Абри» (46745, 61303, 47226, 59830), the same ride to 187 for the ticket 6544 instead of the fare; the same cells as «Поездка в Абри» (273)."
+    "why": "RECOVERED ride and texts, DESIGNED way. 37: Хассир's «Проездной в Абри» (46745, 61303, 47226, 59830), the same ride to 187 for the ticket 6544 instead of the fare; the same cells as «Поездка в Абри» (273).",
+    "set_home": true
    },
    {
     "quest": 630,
@@ -3114,7 +3118,8 @@
      ]
     ],
     "target_loc_id": 49,
-    "why": "RECOVERED ride and texts, DESIGNED way (the owner's «и потом сделай донголу тоже», 2026-10-13). 37 «Вади Хальфа: вокзал»: Хассир (105) stands at (31,77); «Поездка в Донголу» (630, 48539-48541, 200 afro) is the ride to Донгола's station (49, 5877,2010). The same ground as his ride to Абри (273): a player driven back from Донгола arrives there (travel.door_arrival)."
+    "why": "RECOVERED ride and texts, DESIGNED way (the owner's «и потом сделай донголу тоже», 2026-10-13). 37 «Вади Хальфа: вокзал»: Хассир (105) stands at (31,77); «Поездка в Донголу» (630, 48539-48541, 200 afro) is the ride to Донгола's station (49, 5877,2010). The same ground as his ride to Абри (273): a player driven back from Донгола arrives there (travel.door_arrival).",
+    "set_home": true
    }
   ],
   "176": [
@@ -3473,7 +3478,8 @@
      ]
     ],
     "target_loc_id": 37,
-    "why": "RECOVERED ride and texts, DESIGNED way. 187 «Портовый рынок» of Абри (5860,1835): Луиджи (1179, «Луиджи водитель», 46948) stands at (50,91) by his car (car1.png at 50,89, whose body is the obstacles 48-51 x 88-91). «Поездка в Вади Хальфу» (46961-46964, 400 afro) is the ride back to Вади-Хальфа's station (37). The cells are the ground by him, where a player driven out from Вади-Хальфа arrives (travel.door_arrival)."
+    "why": "RECOVERED ride and texts, DESIGNED way. 187 «Портовый рынок» of Абри (5860,1835): Луиджи (1179, «Луиджи водитель», 46948) stands at (50,91) by his car (car1.png at 50,89, whose body is the obstacles 48-51 x 88-91). «Поездка в Вади Хальфу» (46961-46964, 400 afro) is the ride back to Вади-Хальфа's station (37). The cells are the ground by him, where a player driven out from Вади-Хальфа arrives (travel.door_arrival).",
+    "set_home": true
    },
    {
     "quest": 280,
@@ -3496,7 +3502,8 @@
      ]
     ],
     "target_loc_id": 37,
-    "why": "RECOVERED ride and texts, DESIGNED way. 187: Луиджи's «Проездной в Вади Хальфу» (46744, 61304, 47226, 59830), the same ride to 37 for the ticket 6545; the same cells as «Поездка в Вади Хальфу» (274)."
+    "why": "RECOVERED ride and texts, DESIGNED way. 187: Луиджи's «Проездной в Вади Хальфу» (46744, 61304, 47226, 59830), the same ride to 37 for the ticket 6545; the same cells as «Поездка в Вади Хальфу» (274).",
+    "set_home": true
    },
    {
     "quest": 275,
@@ -3519,7 +3526,8 @@
      ]
     ],
     "target_loc_id": 49,
-    "why": "RECOVERED ride and texts, DESIGNED way (the owner's «и потом сделай донголу тоже», 2026-10-13). 187 «Портовый рынок» of Абри: Луиджи (1179) stands at (50,91) by his car; «Поездка в Донголу» (275, 46965/46966, 100 afro) is the ride to Донгола's station (49). The same ground as his ride to Вади-Хальфа (274)."
+    "why": "RECOVERED ride and texts, DESIGNED way (the owner's «и потом сделай донголу тоже», 2026-10-13). 187 «Портовый рынок» of Абри: Луиджи (1179) stands at (50,91) by his car; «Поездка в Донголу» (275, 46965/46966, 100 afro) is the ride to Донгола's station (49). The same ground as his ride to Вади-Хальфа (274).",
+    "set_home": true
    },
    {
     "quest": 281,
@@ -3542,7 +3550,8 @@
      ]
     ],
     "target_loc_id": 49,
-    "why": "RECOVERED ride and texts, DESIGNED way (the owner's «и потом сделай донголу тоже», 2026-10-13). 187: Луиджи's «Проездной в Донголу» (281), the same ride to 49 for the ticket 6546; the same cells as «Поездка в Донголу» (275)."
+    "why": "RECOVERED ride and texts, DESIGNED way (the owner's «и потом сделай донголу тоже», 2026-10-13). 187: Луиджи's «Проездной в Донголу» (281), the same ride to 49 for the ticket 6546; the same cells as «Поездка в Донголу» (275).",
+    "set_home": true
    }
   ],
   "193": [
@@ -3742,7 +3751,8 @@
      ]
     ],
     "target_loc_id": 37,
-    "why": "RECOVERED ride and texts, DESIGNED way (the owner's «и потом сделай донголу тоже», 2026-10-13). 49 «Донгола: Вокзал» (5877,2010): Нур-ад-Дин (156, «водитель», 48846) stands at (37,47) by the station's bus and car (bus.png, car2.png); «Поездка в Вади Хальфу» (631, 48542-48544, 150 afro) is the ride to Вади-Хальфа's station (37). The cells are the ground around him, where a player driven out from Вади-Хальфа arrives (travel.door_arrival)."
+    "why": "RECOVERED ride and texts, DESIGNED way (the owner's «и потом сделай донголу тоже», 2026-10-13). 49 «Донгола: Вокзал» (5877,2010): Нур-ад-Дин (156, «водитель», 48846) stands at (37,47) by the station's bus and car (bus.png, car2.png); «Поездка в Вади Хальфу» (631, 48542-48544, 150 afro) is the ride to Вади-Хальфа's station (37). The cells are the ground around him, where a player driven out from Вади-Хальфа arrives (travel.door_arrival).",
+    "set_home": true
    },
    {
     "quest": 282,
@@ -3765,7 +3775,8 @@
      ]
     ],
     "target_loc_id": 187,
-    "why": "RECOVERED ride and texts, DESIGNED way (the owner's «и потом сделай донголу тоже», 2026-10-13). 49: Нур-ад-Дин's «Проездной в Абри» (282), the ride to Абри's Портовый рынок (187) for the ticket 6547; the same cells as his other rides, where a player driven out from Абри arrives."
+    "why": "RECOVERED ride and texts, DESIGNED way (the owner's «и потом сделай донголу тоже», 2026-10-13). 49: Нур-ад-Дин's «Проездной в Абри» (282), the ride to Абри's Портовый рынок (187) for the ticket 6547; the same cells as his other rides, where a player driven out from Абри arrives.",
+    "set_home": true
    },
    {
     "quest": 18100,
@@ -3788,7 +3799,8 @@
      ]
     ],
     "target_loc_id": 187,
-    "why": "DESIGNED: owner gameplay release 2026-11-13, direct 100-afro ride without a pass from Nur-ad-Din at Dongola station to Abri port market; same safe boarding cells as ticket route 282."
+    "why": "DESIGNED: owner gameplay release 2026-11-13, direct 100-afro ride without a pass from Nur-ad-Din at Dongola station to Abri port market; same safe boarding cells as ticket route 282.",
+    "set_home": true
    },
    {
     "quest": 632,
@@ -3857,7 +3869,8 @@
      ]
     ],
     "target_loc_id": 126,
-    "why": "RECOVERED ride and texts, DESIGNED way (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 49 «Донгола: Вокзал»: Нур-ад-Дин (156) at (37,47); «Поездка в Абу-Хамед» (276, 47239-47242, 0,25 G) is the ride to Абу-Хамед's station 126 (6182,1976). The cells are the ground at the driver's feet, where a player driven the other way arrives (travel.door_arrival)."
+    "why": "RECOVERED ride and texts, DESIGNED way (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 49 «Донгола: Вокзал»: Нур-ад-Дин (156) at (37,47); «Поездка в Абу-Хамед» (276, 47239-47242, 0,25 G) is the ride to Абу-Хамед's station 126 (6182,1976). The cells are the ground at the driver's feet, where a player driven the other way arrives (travel.door_arrival).",
+    "set_home": true
    },
    {
     "quest": 283,
@@ -3880,7 +3893,8 @@
      ]
     ],
     "target_loc_id": 126,
-    "why": "RECOVERED ride and texts, DESIGNED way (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 49: Нур-ад-Дин's «Проездной в Абу-Хамед» (283), the same ride to 126 for the ticket 1567. The cells are the ground at the driver's feet, where a player driven the other way arrives (travel.door_arrival)."
+    "why": "RECOVERED ride and texts, DESIGNED way (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 49: Нур-ад-Дин's «Проездной в Абу-Хамед» (283), the same ride to 126 for the ticket 1567. The cells are the ground at the driver's feet, where a player driven the other way arrives (travel.door_arrival).",
+    "set_home": true
    }
   ],
   "622": [
@@ -4614,7 +4628,8 @@
      ]
     ],
     "target_loc_id": 49,
-    "why": "RECOVERED ride and texts, DESIGNED way (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 126 «Абухамед: Вокзал» (Abuhamed_RailMarket, 6182,1976): Веласкес (740, «Веласкес<Br>водитель», 47258) stands at (33,72); «Поездка в Донголу» (277, 46965/47222-47224, 0,10 G) is the ride to Донгола's station 49. The cells are the ground at the driver's feet, where a player driven the other way arrives (travel.door_arrival)."
+    "why": "RECOVERED ride and texts, DESIGNED way (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 126 «Абухамед: Вокзал» (Abuhamed_RailMarket, 6182,1976): Веласкес (740, «Веласкес<Br>водитель», 47258) stands at (33,72); «Поездка в Донголу» (277, 46965/47222-47224, 0,10 G) is the ride to Донгола's station 49. The cells are the ground at the driver's feet, where a player driven the other way arrives (travel.door_arrival).",
+    "set_home": true
    },
    {
     "quest": 284,
@@ -4637,7 +4652,8 @@
      ]
     ],
     "target_loc_id": 49,
-    "why": "RECOVERED ride and texts, DESIGNED way (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 126: Веласкес's «Проездной в Донголу» (284), the same ride to 49 for the ticket 1639. The cells are the ground at the driver's feet, where a player driven the other way arrives (travel.door_arrival)."
+    "why": "RECOVERED ride and texts, DESIGNED way (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 126: Веласкес's «Проездной в Донголу» (284), the same ride to 49 for the ticket 1639. The cells are the ground at the driver's feet, where a player driven the other way arrives (travel.door_arrival).",
+    "set_home": true
    },
    {
     "quest": 880,

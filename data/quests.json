@@ -82,7 +82,7 @@
       "rew_afro": 0,
       "rew_gold": 80,
       "repeatable": 0,
-      "level": 0,
+      "level": 3,
       "q_type": 0,
       "why": "BALANCE 2026-11-16: approved once per character for the entire character history, reward 0.8 G (80 hundredths). Existing char_quests_done history is retained: any earlier completion, including the former daily version, exhausts this quest. Previously accepted but unpaid first attempts use the current reward; old active repeats can be cancelled without consuming their sand and cannot pay again. Ten bags of gold sand (2258) and marauder sources 836/837 are unchanged. own_texts prevents the original archive from restoring the old count, reward or repeatability note. This is character-wide, not account-wide; neither previous rewards nor balances are clawed back."
     },
@@ -103,7 +103,7 @@
       "rew_gold": 95,
       "repeatable": 1,
       "service": true,
-      "level": 0,
+      "level": 3,
       "q_type": 0,
       "why": "RECOVERED texts (texts.xml 49800 name, 49802 start: the no-residence copy, «комиссия ... 0,05 унции золота»; the file has no notfinish or finish for it), DESIGNED workings. Мортимер (1188, ow_GoldExchange, жилой квартал 36), the money-changer of the wiki's «Мортимер» («если нужно золотишко то Мортимер поможет»): bring the ingot, get its ounces on the account less the 0.05 the start names -- rew_gold 95 in hundredths (hscan decision 10). A service (service: true): repeatable, and neither counted nor refused by the daily limit. The ingot is taken from the bag at the hand-in. The start is the original's but for its opening words, «Как для лица не имеющего гражданства или вида на жительство, будет», which said that a citizen or a holder of a residence permit -- the premium of the dead server's -- would cash without the commission: out by the owner's cut of (P) (2026-09-30), since this server grants neither and charges the 0.05 to everybody; «Будет» opens the sentence instead, and own_texts keeps the original's from being laid back over it (server/quests.py _lay_original)."
     },
@@ -124,7 +124,7 @@
       "rew_gold": 495,
       "repeatable": 1,
       "service": true,
-      "level": 0,
+      "level": 3,
       "q_type": 0,
       "why": "RECOVERED texts (texts.xml 49796 name, 49807 start: the no-residence copy, «комиссия ... 0,05 унции золота»; the file has no notfinish or finish for it), DESIGNED workings. Мортимер (1188, ow_GoldExchange, жилой квартал 36), the money-changer of the wiki's «Мортимер» («если нужно золотишко то Мортимер поможет»): bring the ingot, get its ounces on the account less the 0.05 the start names -- rew_gold 495 in hundredths (hscan decision 10). A service (service: true): repeatable, and neither counted nor refused by the daily limit. The ingot is taken from the bag at the hand-in. The start is the original's but for its opening words, «Как для лица не имеющего гражданства или вида на жительство, будет», which said that a citizen or a holder of a residence permit -- the premium of the dead server's -- would cash without the commission: out by the owner's cut of (P) (2026-09-30), since this server grants neither and charges the 0.05 to everybody; «Будет» opens the sentence instead, and own_texts keeps the original's from being laid back over it (server/quests.py _lay_original)."
     },
@@ -145,7 +145,7 @@
       "rew_gold": 995,
       "repeatable": 1,
       "service": true,
-      "level": 0,
+      "level": 3,
       "q_type": 0,
       "why": "RECOVERED texts (texts.xml 49798 name, 49812 start: the no-residence copy, «комиссия ... 0,05 унции золота»; the file has no notfinish or finish for it), DESIGNED workings. Мортимер (1188, ow_GoldExchange, жилой квартал 36), the money-changer of the wiki's «Мортимер» («если нужно золотишко то Мортимер поможет»): bring the ingot, get its ounces on the account less the 0.05 the start names -- rew_gold 995 in hundredths (hscan decision 10). A service (service: true): repeatable, and neither counted nor refused by the daily limit. The ingot is taken from the bag at the hand-in. The start is the original's but for its opening words, «Как для лица не имеющего гражданства или вида на жительство, будет», which said that a citizen or a holder of a residence permit -- the premium of the dead server's -- would cash without the commission: out by the owner's cut of (P) (2026-09-30), since this server grants neither and charges the 0.05 to everybody; «Будет» opens the sentence instead, and own_texts keeps the original's from being laid back over it (server/quests.py _lay_original)."
     },
@@ -165,7 +165,7 @@
       "rew_gold": 0,
       "repeatable": 1,
       "service": true,
-      "level": 0,
+      "level": 3,
       "q_type": 0,
       "why": "RECOVERED texts (texts.xml 49817 name, 49818 start; no notfinish or finish in the file), DESIGNED workings. Мортимер's change of ingots, one ingot of 5 ounces (4796) into five of 1 (7620): the ingots asked for are taken from the bag at the hand-in and the others given (rew_obj). Ounce for ounce, no commission (the texts name none). A service (service: true): repeatable, outside the daily limit."
     },
@@ -185,7 +185,7 @@
       "rew_gold": 0,
       "repeatable": 1,
       "service": true,
-      "level": 0,
+      "level": 3,
       "q_type": 0,
       "why": "RECOVERED texts (texts.xml 49819 name, 49820 start; no notfinish or finish in the file), DESIGNED workings. Мортимер's change of ingots, one ingot of 10 ounces (4797) into ten of 1 (7620): the ingots asked for are taken from the bag at the hand-in and the others given (rew_obj). Ounce for ounce, no commission (the texts name none). A service (service: true): repeatable, outside the daily limit."
     },
@@ -205,7 +205,7 @@
       "rew_gold": 0,
       "repeatable": 1,
       "service": true,
-      "level": 0,
+      "level": 3,
       "q_type": 0,
       "why": "RECOVERED texts (texts.xml 49821 name, 49822 start; no notfinish or finish in the file), DESIGNED workings. Мортимер's change of ingots, five ingots of 1 ounce (7620) into one of 5 (4796): the ingots asked for are taken from the bag at the hand-in and the others given (rew_obj). Ounce for ounce, no commission (the texts name none). A service (service: true): repeatable, outside the daily limit."
     },
@@ -225,7 +225,7 @@
       "rew_gold": 0,
       "repeatable": 1,
       "service": true,
-      "level": 0,
+      "level": 3,
       "q_type": 0,
       "why": "RECOVERED texts (texts.xml 49823 name, 49824 start; no notfinish or finish in the file), DESIGNED workings. Мортимер's change of ingots, ten ingots of 1 ounce (7620) into one of 10 (4797): the ingots asked for are taken from the bag at the hand-in and the others given (rew_obj). Ounce for ounce, no commission (the texts name none). A service (service: true): repeatable, outside the daily limit."
     },
@@ -488,7 +488,7 @@
       "rew_afro": 0,
       "rew_gold": 200,
       "repeatable": 1,
-      "level": 0,
+      "level": 3,
       "q_type": 0,
       "loc": 51382064,
       "finish_loc": 51300129,

@@ -287,7 +287,8 @@ def walk_ins(loc):
 def quest_ways(loc):
     """[(cells, record)] of the ways a quest of this location's inhabitants
     takes a player: record["quest"] is the quest type, target_loc_id where
-    it leads.
+    it leads. set_home marks city carriers whose arrival also updates the
+    character's home; ordinary quest passages keep the existing home.
 
     The client has no way to go anywhere through a quest except the one the
     server makes: taking it is a q_st, a cmdAck and the q_di that journals

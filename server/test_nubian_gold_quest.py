@@ -41,6 +41,7 @@ class NubianGoldQuest(unittest.TestCase):
     def make_session(self, cid):
         s = session(self.store, char_id=cid)
         s.char = progression.Character.load(self.store, cid)
+        s.char.set_skill(progression.SHOOTING, 3)
         s.active = self.store.character(cid)
         s.closed, s.transport, s.room = False, None, None
         s.loc = NS(id=612, spawns=[])

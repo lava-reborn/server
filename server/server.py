@@ -3120,9 +3120,10 @@ class Session:
         drops out of the giver's offers and out of the taker's unfinished
         list alike (QuestInspector.getGQs/getTQs check quest.available), so
         a quest already in the log must stay available until handed in --
-        with one exception: a quest past its cap (max_level) is nobody's
-        above it, carried or not, or «Назад, в долину» taken at the second
-        level would stay a ticket back for good. The taker's window drops
+        unless its level requirement no longer holds. A quest past its cap
+        (max_level) is nobody's above it, carried or not, or «Назад, в долину»
+        taken at the second level would stay a ticket back for good. A raised
+        minimum also applies to old active quests. The taker's window drops
         it then, and the journal can still drop it (q_ca).
 
         A chain (need_quest, need_any) offers a quest only once what comes
@@ -3156,7 +3157,8 @@ class Session:
             return False
         if quest.type in residence.QUESTS and not residence.allowed(self.character(), residence.QUESTS[quest.type]):
             return False
-        if quests.acquisition_blocked(quest) or quest.over_cap(self.skill_level()):
+        if (quests.acquisition_blocked(quest) or quest.over_cap(self.skill_level())
+                or quest.level > self.skill_level()):
             return False
         carried = bool(self.char_id) and (quest.type in state.active if state is not None
                                         else STORE.has_quest(self.char_id, quest.type))
@@ -3176,8 +3178,6 @@ class Session:
             return False
         if carried:
             return True
-        if quest.level > self.skill_level():
-            return False
         # A craftsman's step (setcraft.py) only for the piece in the bag.
         if not setcraft.offered(quest, self.inv.bag_pieces):
             return False
@@ -3742,6 +3742,7 @@ class Session:
                 self.send("cmdAck", res=progression.ERR_TOO_FAR)
                 return
         if quests.acquisition_blocked(quest) or quest.over_cap(self.skill_level()) \
+                or quest.level > self.skill_level() \
                 or not events.quest_open(quest.type, True):
             self.send("cmdAck", res=RES_NOT_AVAILABLE)
             if quest.type in quests.DISABLED_ACADEMY_LESSONS:
@@ -4046,6 +4047,9 @@ class Session:
                 or self.combat.dead):
             self.refund_way(quest)
             return
+        if quest.over_cap(self.skill_level()) or quest.level > self.skill_level():
+            self.refund_way(quest)
+            return
         hold = self.hold_line("отправитесь")
         if hold is not None:
             reason, line = hold
@@ -4066,6 +4070,13 @@ class Session:
             self.say(str(why))
             self.refund_way(quest)
             return
+        if travel.quest_way(self.loc, quest.type).get('set_home'):
+            # Persist the ride and its home together before the lcall: a
+            # disconnect while loading must not keep the previous city home.
+            with storage.atomic(STORE.db):
+                STORE.save_position(self.char_id, dest.loc_id, dest.pos,
+                                    dest.gx, dest.gy, False)
+                STORE.set_home(self.char_id, dest.loc_id, dest.gx, dest.gy)
         self.cancel_travel()
         self.gx, self.gy = dest.gx, dest.gy
         self.loc = world.location(dest.loc_id)

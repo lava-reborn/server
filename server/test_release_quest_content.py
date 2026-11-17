@@ -242,6 +242,56 @@ class ReleaseQuests(unittest.TestCase):
         self.assertEqual([p['res'] for c,p in self.frames if c=='cmdAck'],[server.RES_NOT_AVAILABLE])
         self.assertFalse(self.store.quests(self.cid))
 
+    def test_gold_services_require_level_three_for_new_and_old_active_quests(self):
+        for qtype in (9, 10, *range(301, 308)):
+            with self.subTest(quest=qtype):
+                q = quests.get(qtype)
+                self.assertEqual(q.level, 3)
+                self.at(612 if qtype == 9 else 36, q.give[0])
+                for item, number in q.wants():
+                    self.give(item, number)
+                for skill in self.s.char.skill:
+                    skill[0] = 0
+                self.s.char.recalc()
+                before = (self.store.money(self.cid), self.s.inv.bag_pieces())
+                for level in (0, 2):
+                    self.s.char.set_skill(progression.SHOOTING, level)
+                    self.assertFalse(self.s.quest_available(q))
+                    self.frames.clear()
+                    self.s.cmd_q_st(dict(mob=1, q_idx=quests.given_by(q.give[0]).index(qtype)))
+                    self.assertEqual([p['res'] for c, p in self.frames if c == 'cmdAck'],
+                                     [server.RES_NOT_AVAILABLE])
+                progress = q.bag_progress(self.s.inv.bag_pieces())
+                qid = self.store.take_quest(self.cid, qtype, progress, q.is_complete(progress))
+                self.assertFalse(self.s.quest_available(q))
+                self.assertFalse(self.s.quest_available(q, self.s.quest_status_state(qtype)))
+                self.assertEqual(self.hand_in(qid), [server.RES_NOT_AVAILABLE])
+                self.assertEqual((self.store.money(self.cid), self.s.inv.bag_pieces()), before)
+                self.assertIsNotNone(self.store.quest(qid))
+                self.assertFalse(self.store.quest_done(self.cid, qtype))
+                # Any skill reaching three is sufficient; no administrator
+                # cancellation or second copy is needed for the old journal.
+                self.s.char.set_skill(progression.MEDICINE, 3)
+                self.assertTrue(self.s.quest_available(q))
+                self.assertTrue(self.s.quest_available(q, self.s.quest_status_state(qtype)))
+                self.assertEqual(self.hand_in(qid), [0])
+                self.assertIsNone(self.store.quest(qid))
+
+    def test_nubian_return_remains_closed_from_level_three_even_if_taken_earlier(self):
+        self.at(41, 30)
+        q = quests.get(44)
+        self.assertEqual(q.max_level, 2)
+        for skill in self.s.char.skill:
+            skill[0] = 0
+        self.s.char.set_skill(progression.SHOOTING, 2)
+        self.assertTrue(self.s.quest_available(q))
+        qid = self.take(q.type, 30)
+        self.s.char.set_skill(progression.SHOOTING, 3)
+        self.assertFalse(self.s.quest_available(q))
+        self.assertEqual(self.hand_in(qid), [server.RES_NOT_AVAILABLE])
+        self.assertIsNotNone(self.store.quest(qid))
+        self.assertEqual(self.moves, [])
+
 
 if __name__ == '__main__':
     run_cases(ReleaseQuests)

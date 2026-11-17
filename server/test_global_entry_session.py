@@ -6,6 +6,8 @@ from unittest.mock import Mock, patch
 import combat
 import location_entry
 import movement
+import quests
+import progression
 import rooms
 import server
 import travel
@@ -217,6 +219,105 @@ class GlobalEntrySessionTests(unittest.IsolatedAsyncioTestCase):
                         expected = travel.home(dict(saved), (server.START_LOC, server.GLOBAL_X, server.GLOBAL_Y))
                         self.assertEqual((self.s.loc.id, self.s.gx, self.s.gy), expected)
                     self.assertNotIn(self.s.pos, self.s.loc.obstacles)
+
+    def home(self):
+        row = self.store.character(self.s.char_id)
+        return row['home_loc'], row['home_gx'], row['home_gy']
+
+    def follow(self, origin, qtype):
+        self.s.loc = world.location(origin)
+        self.s.gx, self.s.gy = world.cell_of(origin)
+        self.s.pos = self.s.loc.entry_cell()
+        self.s.on_map = False
+        self.s.room = self.manager.get(origin)
+        self.s.hold_line = lambda _verb: None
+        self.s.follow_way(quests.get(qtype), self.s.room)
+
+    async def test_all_city_carriers_persist_destination_and_home_before_loading(self):
+        expected = {43, 44, 273, 274, 275, 276, 277, 279, 280, 281, 282, 283, 284,
+                    630, 631, 18100}
+        routes = [(int(origin), row) for origin, rows in travel._passages()['quest'].items()
+                  for row in rows if row.get('set_home')]
+        self.assertEqual({row['quest'] for _, row in routes}, expected)
+        for origin, row in routes:
+            with self.subTest(quest=row['quest']):
+                self.s.char.set_skill(progression.SHOOTING, 2 if row['quest'] == 44 else 17)
+                self.follow(origin, row['quest'])
+                target = (row['target_loc_id'], *world.cell_of(row['target_loc_id']))
+                self.assertEqual(self.home(), target)
+                saved = self.store.character(self.s.char_id)
+                self.assertEqual((saved['loc'], saved['gx'], saved['gy']), target)
+                self.s.cmd_lenter({'accept': 1})
+                self.assertEqual(travel.home(self.store.character(self.s.char_id), (0, 0, 0)), target)
+                self.s.go_home()
+                self.assertEqual((self.s.loc.id, self.s.gx, self.s.gy), target)
+                self.s.cmd_lenter({'accept': 1})
+
+    async def test_ordinary_quest_passages_do_not_bind_home(self):
+        before = self.home()
+        self.follow(153, 7)
+        self.s.cmd_lenter({'accept': 1})
+        self.assertEqual(self.home(), before)
+
+    async def test_failed_home_write_rolls_back_both_home_and_arrival_position(self):
+        before = dict(self.store.character(self.s.char_id))
+        write = self.store.set_home
+
+        def fail_after_write(*args):
+            write(*args)
+            raise RuntimeError('injected home write failure')
+
+        with patch.object(self.store, 'set_home', side_effect=fail_after_write):
+            with self.assertRaisesRegex(RuntimeError, 'home write failure'):
+                self.follow(37, 273)
+        after = dict(self.store.character(self.s.char_id))
+        for key in ('home_loc', 'home_gx', 'home_gy', 'loc', 'pos', 'gx', 'gy', 'on_map'):
+            self.assertEqual(after[key], before[key], key)
+        self.assertEqual(self.s.loc.id, 37)
+
+    async def test_cancelled_or_unavailable_ride_never_changes_home(self):
+        before = self.home()
+        self.s.loc = world.location(37)
+        self.s.gx, self.s.gy = world.cell_of(37)
+        self.s.on_map = False
+        self.s.room = self.manager.get(37)
+        self.s.hold_line = lambda _verb: None
+        for cancelled in (True, False):
+            self.s.closed = cancelled
+            with patch.object(travel, 'plan_quest_way', side_effect=travel.Refused('no destination')):
+                self.s.follow_way(quests.get(273), self.s.room)
+            self.assertEqual(self.home(), before)
+            self.assertEqual(self.s.loc.id, 37)
+
+    async def test_level_gain_while_waiting_cannot_bypass_nubian_return_cap(self):
+        before = self.home()
+        self.s.loc = world.location(41)
+        self.s.gx, self.s.gy = world.cell_of(41)
+        self.s.on_map = False
+        self.s.room = self.manager.get(41)
+        self.s.char.set_skill(progression.SHOOTING, 2)
+        self.s.hold_line = lambda _verb: ('combat', 'Wait for combat')
+        quest = quests.get(44)
+        self.s.follow_way(quest, self.s.room)
+        self.assertIsNotNone(self.s.way)
+        self.s.way.cancel()
+        self.s.char.set_skill(progression.SHOOTING, 3)
+        self.s.hold_line = lambda _verb: None
+        self.s.take_way(quest, self.s.room, frozenset())
+        self.assertEqual(self.home(), before)
+        self.assertEqual(self.s.loc.id, 41)
+        self.assertIsNone(self.s.way)
+
+    async def test_reconnect_before_loading_keeps_the_new_city_home(self):
+        self.follow(37, 273)
+        expected = (187, *world.cell_of(187))
+        saved = self.store.character(self.s.char_id)
+        self.assertEqual(travel.home(saved, (0, 0, 0)), expected)
+        pending = self.s.restore(saved)
+        self.s.enter_location(global_entry=pending)
+        self.s.cmd_lenter({'accept': 1})
+        self.s.go_home()
+        self.assertEqual((self.s.loc.id, self.s.gx, self.s.gy), expected)
 
 
 if __name__ == '__main__':
