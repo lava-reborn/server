@@ -25,12 +25,17 @@ class TrainingDisplay(unittest.IsolatedAsyncioTestCase):
 
     async def test_all_stock_has_existing_icon_without_using_a_different_model(self):
         self.enter()
+        aliases = own_items.icons(items.catalogue())
         seen = set()
         for post in layout.POSTS:
             for target in shop.stock(post):
                 source = copies.profile_source(target)
                 icon = display.icon_source(source)
-                self.assertTrue((Path(world.RES) / own_items.icon_path(*items.catalogue()[icon])).is_file(), source)
+                picture = own_items.icon_path(*items.catalogue()[icon])
+                # CI holds originals; the release builder copies own-item
+                # icons from these backing files into the client release.
+                original = aliases.get(picture, picture)
+                self.assertTrue((Path(world.RES) / original).is_file(), (source, icon, original))
                 self.assertEqual(items.root_of(source), items.root_of(icon))
                 if source != icon:
                     self.assertEqual(display.model(source), display.model(icon))

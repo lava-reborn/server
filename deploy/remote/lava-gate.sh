@@ -903,6 +903,19 @@ client_build() {
   [ -d "$CLIENT_ROOT/store" ] \
     || { WHY="no store at $CLIENT_ROOT/store -- import the original game first (client/README.md)"; return 1; }
   [ -f "$STAGE/tree/client/build.py" ] || { WHY="the tree carries no client/build.py"; return 1; }
+  # The separate build container does not inherit Compose's environment.
+  # Resolve the same opt-in as the game, passing only this public flag (not
+  # the .env or its database credentials) into the confined client build.
+  local training
+  if ! training=$(docker compose --project-directory "$APP_DIR" --env-file "$APP_DIR/.env" \
+         -f "$STAGE/tree/docker-compose.yml" config --format json \
+         2>> "$DLOG" | policy_python -c '
+import json, sys
+environment = json.load(sys.stdin)["services"]["game"].get("environment") or {}
+print("1" if str(environment.get("LAVA_TRAINING_GROUND", "0")) == "1" else "0")
+' 2>> "$DLOG"); then
+    WHY="could not resolve the client build's training flag"; return 1
+  fi
   rm -rf -- "$CLIENT_OUT"
   install -d -m 0755 "$CLIENT_OUT"
   # nobody on the server; the test layout (test_gate.sh) runs the gate as
@@ -919,7 +932,8 @@ client_build() {
          --memory 2g --pids-limit 256 --ulimit fsize=536870912:536870912 \
          -v "$STAGE/tree:/src:ro" -v "$CLIENT_ROOT/store:/store:ro" \
          -v "$RES_DIR:/res:ro" -v "$CLIENT_OUT:/out" \
-         -e HOME=/tmp -e PYTHONDONTWRITEBYTECODE=1 -w /src --entrypoint python3 \
+         -e HOME=/tmp -e PYTHONDONTWRITEBYTECODE=1 -e LAVA_TRAINING_GROUND="$training" \
+         -w /src --entrypoint python3 \
          "$CLIENT_IMAGE" /src/client/build.py release --tree /src --store /store \
          --res /res --out /out >> "$DLOG" 2>&1; then
     docker rm -f "$name" > /dev/null 2>&1
