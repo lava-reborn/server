@@ -51,6 +51,32 @@ class TrainingIconBuild(unittest.TestCase):
             with self.assertRaisesRegex(SystemExit, 'Unsupported training icon catalogue'):
                 build.check_training_icons()
 
+    def test_own_item_icon_is_generated_from_its_original_and_required_in_the_release(self):
+        with tempfile.TemporaryDirectory(prefix='icon-build-') as tmp:
+            root = Path(tmp)
+            (root / 'data').mkdir()
+            (root / 'data/own_items.json').write_text(json.dumps({
+                'items': {'60000': {'name': 'own_shotgun', 'like': 36866}}}))
+            (root / 'data/training_icons.json').write_text(json.dumps({
+                'version': 1, 'sources': {'60000': 60000}}))
+            original_icon = 'classes/FireArm/lamantin_shotgun_10_Blackwater/ico.swf'
+            generated_icon = 'classes/FireArm/own_shotgun/ico.swf'
+            original = {
+                'database/objects.xml': b'<data><object type_id="36866" root_type_id="0" name="lamantin_shotgun_10_Blackwater" /></data>',
+                original_icon: b'FWS-original-icon',
+            }
+            build = Build(tmp, None, None, str(root / 'out'))
+            self.addCleanup(shutil.rmtree, build.tmp, ignore_errors=True)
+            build.original = Mock(side_effect=original.__getitem__)
+            generated, _lines = build.gen_own_items(original)
+            self.assertEqual(generated[generated_icon], original[original_icon])
+            build.files = {path: ('unused-hash', len(data))
+                           for path, data in {**original, **generated}.items()}
+            build.check_training_icons()
+            del build.files[generated_icon]
+            with self.assertRaisesRegex(SystemExit, 'missing client icon'):
+                build.check_training_icons()
+
 
 if __name__ == '__main__':
     unittest.main()
