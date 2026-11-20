@@ -2,7 +2,11 @@
  "_": "Timed windows and what they open and close, read by server/events.py (its docstring has the format): windows (daily times, windows laid over another's openings, calendar dates), spawns (the creatures of a location's own file that stand only while a window is open), held_out (of a file's own, never), quests (rows on offer only while a window is open), loot (a thing creatures carry in certain places), keep_in (things that exist in certain places only). The clock is the bosses' (server/bosses.py: Moscow time, LAVA_BOSS_CLOCK for a test), and nothing here is remembered: a server restarted in a window is in it. World bosses spawn every two hours at even Moscow hours, the warehouse masters once a day at 20:00 (bosses.py); the rest keeps the times the map labels and the texts give. Every row says whether it is RECOVERED or DESIGNED.",
  "windows": {
   "prison_wh": {
-   "daily": ["13:00", "17:00", "21:00"],
+   "daily": [
+    "13:00",
+    "17:00",
+    "21:00"
+   ],
    "minutes": 30,
    "why": "RECOVERED. The uprising in Вади-Хальфа's prison (m8, the blocks 644-648 under the yard 176, 5985,1744): the yard's map label «Усиление режима в 12:00, 16:00 и 23:00» (res/database/locations.xml; the wiki's «Тюрьма Вади-Хальфы» the same), and the guard's call 62258: «каждый день в 12:00, 16:00 и 23:00 заключенным требуется усиленная охрана, длится это безобразие недолго, всего пол часа», its hint «\"Охранять\" заключенных нужно в течение 30 минут» (62272). The prisoners and the godfather stand while it is open. Not the bosses' 14/18/22: the owner's rule is for world bosses and camp chiefs, and the prison keeps the times its label gives. Owner update 2026-10-27: start at 13:00, 17:00, 21:00 Moscow time to avoid even-hour world boss starts; duration and relative gates/medic offsets unchanged."
   },
@@ -19,7 +23,11 @@
    "why": "RECOVERED. The medics who pay for the armbands, Джеф, Аль-Назир and Томпсон (877-879, the centre block 646), come for the last five minutes: «Сдать задание можно медикам, они появятся за 5 минут до завершения турнира» (62272, 62273)."
   },
   "prison_dn": {
-   "daily": ["13:00", "17:00", "21:00"],
+   "daily": [
+    "13:00",
+    "17:00",
+    "21:00"
+   ],
    "minutes": 30,
    "why": "RECOVERED (the owner's «и потом сделай донголу тоже», 2026-10-13). The uprising in Донгола's prison (m11, the blocks 618-622 under the yard 159, 5903,1996): the yard's map label «Тюрьма Донголы: Усиление режима в 12:00, 16:00 и 23:00» (res/database/locations.xml), the guard's call 62258 («каждый день в 12:00, 16:00 и 23:00 ... всего пол часа») and its hint «\"Охранять\" заключенных нужно в течение 30 минут», as Вади-Хальфа's prison_wh, at the same hours. Owner update 2026-10-27: start at 13:00, 17:00, 21:00 Moscow time to avoid even-hour world boss starts; duration and relative gates/medic offsets unchanged."
   },
@@ -36,7 +44,11 @@
    "why": "RECOVERED, as prison_wh_medics (the owner's «и потом сделай донголу тоже», 2026-10-13). The medics who pay for the armbands, Джеф, Аль-Назир and Томпсон (877-879, the centre block 622), come for the last five minutes: «Сдать задание можно медикам, они появятся за 5 минут до завершения турнира» (62272, 62273)."
   },
   "prison_ah": {
-   "daily": ["13:00", "17:00", "21:00"],
+   "daily": [
+    "13:00",
+    "17:00",
+    "21:00"
+   ],
    "minutes": 30,
    "why": "RECOVERED (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). The uprising in Абу-Хамед's prison (m19, the blocks 649-653 under the yard 177, 6193,1966): the yard's map label «Тюрьма Абу-Хамеда:<br>Усиление режима в 12:00, 16:00 и 23:00» (L154, res/database/locations.xml), the guard's call 62258 («каждый день в 12:00, 16:00 и 23:00 ... всего пол часа») and its hint «\"Охранять\" заключенных нужно в течение 30 минут», as Вади-Хальфа's prison_wh and Донгола's prison_dn, at the same hours. Owner update 2026-10-27: start at 13:00, 17:00, 21:00 Moscow time to avoid even-hour world boss starts; duration and relative gates/medic offsets unchanged."
   },
@@ -53,33 +65,82 @@
    "why": "RECOVERED, as prison_wh_medics and prison_dn_medics (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). The medics who pay for the armbands, Джеф, Аль-Назир and Томпсон (877-879, the centre block 651), come for the last five minutes: «Сдать задание можно медикам, они появятся за 5 минут до завершения турнира» (62272, 62273)."
   },
   "wh_box": {
-   "daily": ["19:00"],
+   "daily": [
+    "19:00"
+   ],
    "minutes": 60,
    "why": "RECOVERED. The money boxes of Вади-Хальфа's three склады 109-111: the map labels' «Дележ добычи с 19:00 до 20:00» (res/database/locations.xml 315-317). Opens the holders' daily rows (data/holdings.json, server/holdings.py); the warehouse master keeps an hour of his own and comes once a day, right after the box: 20:00 by default (bosses.WAREHOUSE_HOURS, LAVA_WAREHOUSE_HOURS; the owner's «на складах хозяин должен прриходить один раз!!!», 2026-10-12), so a clan collects at seven and defends at eight."
   },
   "wh_box_ah": {
-   "daily": ["19:00"],
+   "daily": [
+    "19:00"
+   ],
    "minutes": 15,
    "why": "RECOVERED (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 12). The money box of Абу-Хамед's Центр 128 (stok_AH_vostok): the map's L327 «Дележ добычи с 19:00 до 19:15» -- a quarter of an hour, shorter than the hour of Вади-Хальфа's and Донгола's boxes (wh_box, «с 19:00 до 20:00»), so a window of its own. Opens the holders' daily row 771 (data/holdings.json wh_ah_center, server/holdings.py)."
   },
   "ny": {
-   "dates": [["12-20", "01-15"]],
+   "dates": [
+    [
+     "12-20",
+     "01-15"
+    ]
+   ],
    "why": "RECOVERED dates, the owner's default (plan, decision 22): the New Year «План Новогодних праздников» (62256) runs from «20 декабря» (the towns' trees) to «15 января 2016 года — Отключение новогодних квестов». Nothing of Вади-Хальфа's band stands by it yet: of the band's New Year residents, the children 423/425, the refugee 1977 and the lottery men 662/711 stand all year by the owner's default 5 (server/world.py SEASON_KEPT), Ольсен 431 stands nowhere (the default names him, but SEASON_KEPT leaves him out of 35 and 104 until his stall has goods of its own), the tree and Дед Мороз's company (Npc_Commoner000780-797) stand in no file, and the rest of the event runs through Донгола and the admin bunkers. Абри's band has two (the owner's Абри, 2026-10-12): the New Year of 2014's Дайсон and Канализационный люк (2426, 2427) in the Жилой квартал 188, who stood there all year until then (their token 'ng' is none of world.EVENT_TOKENS) and now stand in this window only (spawns, below)."
   },
   "may9": {
-   "dates": [["05-09", "08-02"]],
+   "dates": [
+    [
+     "05-09",
+     "08-02"
+    ]
+   ],
    "why": "RECOVERED dates, the owner's default (plan, decision 22): from Victory Day to «Заказы принимаю до 2 августа» (46792-46800). The band's copy, 9may_*_WH (539-546, 571, 994, 995, level 6), is not stood in here: no way into it is recorded, its fighters' slots are empty, and its documents and awards have no item types found (see the handoff). Since 2026-10-13 every room of the event's war is out of the game (data/retired.json: the owner's cut of everything across the river; its staffs stood across the river), so the window has nobody to stand."
   },
   "halloween": {
-   "dates": [["10-30", "12-01"]],
+   "dates": [
+    [
+     "10-30",
+     "12-01"
+    ]
+   ],
    "why": "RECOVERED dates, the owner's default (plan, decision 22; the wiki's «Halloween 2015»). No creature of the band the client can draw belongs to it: the catacombs HW_cotakomb_*_WH put down types mobs.xml does not have."
   },
   "feb23": {
-   "dates": [["02-20", "02-26"]],
+   "dates": [
+    [
+     "02-20",
+     "02-26"
+    ]
+   ],
    "why": "DESIGNED dates, the owner's default (plan, decision 22: a week around the day). Its content (48959-48961, fevral23_exit 988 at 5851,1991) is around Абри and Мероэ, none of it in Вади-Хальфа's band."
   },
   "lusher_road1": {
-   "daily": ["00:00", "01:00", "02:00", "03:00", "04:00", "05:00", "06:00", "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00", "23:00"],
+   "daily": [
+    "00:00",
+    "01:00",
+    "02:00",
+    "03:00",
+    "04:00",
+    "05:00",
+    "06:00",
+    "07:00",
+    "08:00",
+    "09:00",
+    "10:00",
+    "11:00",
+    "12:00",
+    "13:00",
+    "14:00",
+    "15:00",
+    "16:00",
+    "17:00",
+    "18:00",
+    "19:00",
+    "20:00",
+    "21:00",
+    "22:00",
+    "23:00"
+   ],
    "minutes": 10,
    "why": "RECOVERED times, DESIGNED pairing (the owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»), decision 43 of its plan). Рашид's line sends the player to ambush Люшер's masters on the roads 144-146 («Пустошь: дорога», Q_DN_Road01-03), each master marked on the map in turn by the Сакиб of the road before: «Устрой засаду на Мастера Люшера. Он появляется в 00 минут каждый час в месте, отмеченном на твоей карте» (48683). The first master, on the first road (144), from the hour on; ten minutes, DESIGNED: the text gives no end, and at ten past the second comes."
   },
@@ -100,283 +161,453 @@
   {
    "window": "prison_wh",
    "loc": 647,
-   "types": [1113, 1114, 1115, 1116, 1117],
+   "types": [
+    1113,
+    1114,
+    1115,
+    1116,
+    1117
+   ],
    "why": "RECOVERED creatures and place, the window's time. The prisoners m8_uf_Competitor_1..5 («Заключенный», 60388; the wiki's «Северный блок» lists «Заключенный») in the northern cells (Prison_4_WH, «Тюрьма: Северные камеры»), ten of them: they break out when the uprising begins and are gone when it ends."
   },
   {
    "window": "prison_wh",
    "loc": 648,
-   "types": [1113, 1114, 1115, 1116, 1117],
+   "types": [
+    1113,
+    1114,
+    1115,
+    1116,
+    1117
+   ],
    "why": "RECOVERED creatures and place, the window's time. The prisoners of the eastern cells (Prison_5_WH, «Тюрьма: Восточные камеры»), ten of them, as the northern ones."
   },
   {
    "window": "ny",
    "loc": 188,
-   "types": [2426, 2427],
+   "types": [
+    2426,
+    2427
+   ],
    "why": "RECOVERED people and season, the owner's default for Абри (2026-10-12, decision 34 of its plan). NG_2014_Quest_NPC_1 and _2, «Дайсон» and «Канализационный<Br>люк» of the New Year of 2014 (60277/60278, data/orig_names_manual.json), in Абри's Жилой квартал (Abri_Settelment): the event's people stand only in its season, 20 December to 15 January. Their quests are not built (the plan's stage 9), so in the season they stand and say nothing."
   },
   {
    "window": "prison_wh",
    "loc": 646,
-   "types": [2173],
+   "types": [
+    2173
+   ],
    "why": "RECOVERED creature and place, the window's time. The godfather m8_uf_godfather_1, «Беглый каторжник<Br>Хранитель общака» (60387; the wiki's page of the name: «Центральный блок»), in the centre block (Prison_3_WH). A boss: he comes once an uprising, and killed he is gone until the next one."
   },
   {
    "window": "prison_wh_medics",
    "loc": 646,
-   "types": [877, 878, 879],
+   "types": [
+    877,
+    878,
+    879
+   ],
    "why": "RECOVERED people, place and time. uf_RewardMan_1..3, «Джеф<Br>Патологоанатом», «Аль-Назир<Br>Коронер», «Томпсон<Br>Судмедэксперт» (62318-62320; the wiki: «Центральный блок» тюрьмы), who take the armbands, for the last five minutes of the uprising."
   },
   {
    "window": "lusher_road1",
    "loc": 144,
-   "types": [817],
+   "types": [
+    817
+   ],
    "why": "RECOVERED creature and time, DESIGNED place (decision 43). m510_MasterLusher_1, «Мастер Люшера» (10609), on the first road 144 (5900,2017): he stands there only from the hour on (lusher_road1); the road's Сакиб (829) stands all the time."
   },
   {
    "window": "lusher_road2",
    "loc": 145,
-   "types": [818],
+   "types": [
+    818
+   ],
    "why": "The same for m510_MasterLusher_2 on the second road 145 (5894,2019), from ten past for five minutes (lusher_road2)."
   },
   {
    "window": "lusher_road3",
    "loc": 146,
-   "types": [819],
+   "types": [
+    819
+   ],
    "why": "The same for m510_MasterLusher_3 on the third road 146 (5876,2031), from twenty past for five minutes (lusher_road3)."
   },
   {
    "window": "prison_dn",
    "loc": 620,
-   "types": [932, 933, 934, 935, 936],
+   "types": [
+    932,
+    933,
+    934,
+    935,
+    936
+   ],
    "why": "RECOVERED creatures and place, the window's time (the owner's «и потом сделай донголу тоже», 2026-10-13). The prisoners m11_uf_Competitor_1..5 («Заключенный», 60388) in the northern cells (Prison_4, «Тюрьма: Северные камеры»), ten of them: they break out when the uprising begins and are gone when it ends, as 647's."
   },
   {
    "window": "prison_dn",
    "loc": 621,
-   "types": [932, 933, 934, 935, 936],
+   "types": [
+    932,
+    933,
+    934,
+    935,
+    936
+   ],
    "why": "RECOVERED creatures and place, the window's time (the owner's «и потом сделай донголу тоже», 2026-10-13). The prisoners of the eastern cells (Prison_5, «Тюрьма: Восточные камеры»), ten of them, as the northern ones."
   },
   {
    "window": "prison_dn",
    "loc": 622,
-   "types": [2174],
+   "types": [
+    2174
+   ],
    "why": "RECOVERED creature and place, the window's time (the owner's «и потом сделай донголу тоже», 2026-10-13). The godfather m11_uf_godfather_2, «Беглый каторжник<Br>Хранитель общака» (60387), in the centre block (Prison_3), as 2173 in 646: a boss, once an uprising."
   },
   {
    "window": "prison_dn_medics",
    "loc": 622,
-   "types": [877, 878, 879],
+   "types": [
+    877,
+    878,
+    879
+   ],
    "why": "RECOVERED people, place and time (the owner's «и потом сделай донголу тоже», 2026-10-13). Джеф, Аль-Назир and Томпсон (877-879) stand in Донгола's centre block too (its file), and take the armbands there for the last five minutes of its uprising."
   },
   {
    "window": "prison_ah",
    "loc": 652,
-   "types": [1118, 1119, 1120, 1121, 1122],
+   "types": [
+    1118,
+    1119,
+    1120,
+    1121,
+    1122
+   ],
    "why": "RECOVERED creatures and place, the window's time (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). The prisoners m19_uf_Competitor_1..5 («Заключенный», 60388) in the northern cells (Prison_4_AH, «Тюрьма: Северные камеры»), ten of them: they break out when the uprising begins and are gone when it ends, as 647's and 620's."
   },
   {
    "window": "prison_ah",
    "loc": 653,
-   "types": [1118, 1119, 1120, 1121, 1122],
+   "types": [
+    1118,
+    1119,
+    1120,
+    1121,
+    1122
+   ],
    "why": "RECOVERED creatures and place, the window's time (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). The prisoners of the eastern cells (Prison_5_AH, «Тюрьма: Восточные камеры»), ten of them, as the northern ones."
   },
   {
    "window": "prison_ah",
    "loc": 651,
-   "types": [2175],
+   "types": [
+    2175
+   ],
    "why": "RECOVERED creature and place, the window's time (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). The godfather m19_uf_godfather_3, «Беглый каторжник<Br>Хранитель общака» (60387), in the centre block (Prison_3_AH), as 2173 in 646 and 2174 in 622: a boss, once an uprising."
   },
   {
    "window": "prison_ah_medics",
    "loc": 651,
-   "types": [877, 878, 879],
+   "types": [
+    877,
+    878,
+    879
+   ],
    "why": "RECOVERED people, place and time (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). Джеф, Аль-Назир and Томпсон (877-879) stand in Абу-Хамед's centre block too (its file), and take the armbands there for the last five minutes of its uprising."
   }
  ],
  "held_out": [
   {
    "loc": 644,
-   "types": [2176],
+   "types": [
+    2176
+   ],
    "why": "DESIGNED. zapadlist_dvor, «Макисе Курису» (60386; the wiki: «злобный охранник, который наносит неприятные удары при помощи костыля», in the blocks a guard's way leads into), stands at the entrance of Prison_1_WH (titled «Северный блок»; west of the centre by its one opening, the wiki's «Западный блок», where the western gate leads). data/mob_types.json has it at level 20 by the highest place it stands in (the Абу-Хамед prison's), and nothing gives its level in Вади-Хальфа's: a level-20 hostile at the foot of the ladder of an m8 prison would kill whoever the gate lets in. Kept out until its level is known."
   },
   {
    "loc": 645,
-   "types": [2176],
+   "types": [
+    2176
+   ],
    "why": "DESIGNED. The same guard at the entrance of Prison_2_WH (titled «Восточный блок»; south of the centre by its one opening, the wiki's «Южный блок», where the southern gate leads), for the same reason."
   },
   {
    "loc": 378,
-   "types": [5162, 5163],
+   "types": [
+    5162,
+    5163
+   ],
    "why": "The owner's rule of 2026-10-10 («только по уровню городов») on the owner's Абри of 2026-10-12: the traders of Снаряжение Дредноута 17-18 ур and Снаряжение Паладина 19 ур (Npc_Trader000012/13, 10411/10412) sell nothing of Абри's band 8-12, so they do not stand in its clothing market (Sets_Market_Ab). The same types stand in the clothing markets of Донгола and Абу-Хамед (469, 467) as their files have them. The market itself is cut since (the owner's «и ещё убери локацию торговцы одеждой в Абри», 2026-10-12: data/retired.json); the row stays, as the cut assembly shop 1055's does, so the market stands as it stood if it comes back."
   },
   {
    "loc": 766,
-   "types": [2402],
+   "types": [
+    2402
+   ],
    "why": "The owner's Абри of 2026-10-12, decision 22 of its plan: «Банкомат<br>Золото и серебро» (NPC_gold_craft_bank, 62143) in the smelter (OreRefinery_Abri) changed the dump's paper notes for gold (49782-49797: one note to 1.2 G and the like) -- a tap of gold with no known source of the notes, so its exchange is cut, and the machine does not stand."
   },
   {
    "loc": 1055,
-   "types": [2402],
+   "types": [
+    2402
+   ],
    "why": "The same machine in the assembly shop (OreRefinery_Abri_Sorting), for the same reason as in 766. The shop itself is cut since (no door leads in: data/passages.json 766)."
   },
   {
    "loc": 188,
-   "types": [5105],
+   "types": [
+    5105
+   ],
    "why": "The owner's cut of Абри, 2026-10-12 («... улучшение сетов 10-12 ...»): Npc_Upgrader000003, «Рудольф<br>Обмен одежды на вырост [9-12]» (the original's name), the set upgrader of Абри's band in its Жилой квартал (Abri_Settelment), the one file he stands in. His window is empty, as every set upgrader's is since the cut of Вади-Хальфа (server/setcraft.py), and he gives and takes no quest: he was the service the order takes away and nothing else, so he does not stand. Вади-Хальфа's Генри ст stays where he is because he gives quests (104, 105, 119, 132)."
   },
   {
    "loc": 197,
-   "types": [5106],
+   "types": [
+    5106
+   ],
    "why": "The owner's cut of Донгола, 2026-10-13 («и потом сделай донголу тоже»: the cut of Абри's kinds, decision 11 of its plan, taken for him): Npc_Upgrader000004, «Адольф<br>Обмен одежды на вырост [13-16]» (10480), the set upgrader of Донгола's band in its new market. Nobody upgrades a set since 2026-10-09 (server/setcraft.py: the only slice is off), so his window was empty, and he gives and takes no quest; Абри's Рудольф 5105 is held out of 188 the same way."
   },
   {
    "loc": 50,
-   "types": [232],
+   "types": [
+    232
+   ],
    "why": "The same for dn_upg_muaz, «Муаз<br>Обмен одежды на вырост» (62324), in Донгола's old market: an empty window and no quest (decision 11)."
   },
   {
    "loc": 103,
-   "types": [5, 5113],
+   "types": [
+    5,
+    5113
+   ],
    "why": "The same for the black market of Донгола (decision 11): Simple_Upgrader «Мастер Тиль», whose window is empty since the set upgrade went off (2026-10-09) and whose quests are Вади-Хальфа's -- his way 146 is recorded under the town's black market 102 (data/passages.json quest), so here he would refuse it --; and Npc_Trader000002, the original's «Тестовый торгвец» (10401), a test trader with an empty stall (data/orig_names_manual.json 'none')."
   },
   {
    "loc": 445,
-   "types": [6560],
+   "types": [
+    6560
+   ],
    "why": "The same for Донгола's port (decision 10): Npc_Commoner000798, «Майор Свейн<br>Delta Force» (10350), the man of the clan base Delta Force, which is cut with all its files (data/retired.json): no quest, no service."
   },
   {
    "loc": 77,
-   "types": [4047, 6896],
+   "types": [
+    4047,
+    6896
+   ],
    "why": "Донгола's «Упавший спутник» (77, on 5877,2004 since the owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»), decision 12 of its plan): cosm_NPC_1 and Abri_Archa have no row, no wiki page and no role (data/orig_names_manual.json 'none'), and would show their internal names: the place is one to look at."
   },
   {
    "loc": 618,
-   "types": [2176],
+   "types": [
+    2176
+   ],
    "why": "DESIGNED, as Вади-Хальфа's 644 (above; the owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»), decision 46 of its plan): zapadlist_dvor, «Макисе Курису» (60386), the guard with the crutch, at the entrance of Донгола's Prison_1 («Тюрьма: Северный блок», the western gate's), where the gate leads in; his level 20 is the place's, and the blocks are for the uprising."
   },
   {
    "loc": 619,
-   "types": [2176],
+   "types": [
+    2176
+   ],
    "why": "The same guard at the entrance of Донгола's Prison_2 («Тюрьма: Восточный блок», the southern gate's), for the same reason."
   },
   {
    "loc": 96,
-   "types": [5110, 5111],
+   "types": [
+    5110,
+    5111
+   ],
    "why": "The same for Донгола's masters' camp of the assault rifles and machine guns (decision 11, by the review of 2026-10-14): Npc_Commoner000035 and 000036, «Мастер Ибн Аббас Фирас<Br>Улучшение пулеметов» and «Мастер Ибн аль-Хайтам<Br>Улучшение пулеметов» (9627, 9628, the commoners' family on its offset 9592), an older pair of machine-gun masters the wiki's «Лагерь Мастеров Донголы I» does not name. The camp's machine-gun upgrade is Подмастерье Али's 345 (A) and Мастер Гази's 385 (G) (data/build_weaponcraft.py); these two give and take no row and sell nothing, so a player would find two more machine-gun masters with empty windows. They stand in this file alone; the driver Абрам Васильевич 5109 of the same family stays (an empty window, UNDONE «Зафиксированные умолчания Донголы» 32)."
   },
   {
    "loc": 127,
-   "types": [5107],
+   "types": [
+    5107
+   ],
    "why": "The owner's cut of Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»: the cut of Абри's and Донгола's kinds, decision 9 of its plan, taken for him): Npc_Upgrader000005, «Ундольф<Br>Обмен одежды на вырост [17-20]» (10481), the set upgrader of Абу-Хамед's band in its Жилой квартал. Nobody upgrades a set since 2026-10-09 (server/setcraft.py: the only slice is off), so his window was empty, and he gives and takes no quest; Абри's Рудольф 5105 and Донгола's Адольф 5106 are held out the same way."
   },
   {
    "loc": 126,
-   "types": [7247],
+   "types": [
+    7247
+   ],
    "why": "The same for Абу-Хамед's station (decision 37): Npc_Trader000095 (art 1f_Arab_boroda), a trader with no row in the original and no role -- no stall of his own, no quest, no wiki page -- who would show his internal name (data/orig_names_manual.json 'none'), as Донгола's test trader 5113."
   },
   {
    "loc": 123,
-   "types": [6521],
+   "types": [
+    6521
+   ],
    "why": "The same for «Место крушения.» (Q_ufo_crash, on 6102,1848 since the owner's Абу-Хамед, decision 14 of its plan): Npc_Commoner000765, a money box whose row is 10357 «Ящик с деньгами<Br>Ангары Северного Альянса» -- the box of the hangars 288 across the river, which are cut --, with no quest and no service: the place is one to look at, as Донгола's «Упавший спутник» 77."
   },
   {
    "loc": 131,
-   "types": [7339],
+   "types": [
+    7339
+   ],
    "why": "The same for Абу-Хамед's masters' camp: UpGuns_Npc_Trader000031, whose row by its family's offset (51673) is the master (G) Гияс of the quarter 127, who stands there as ah_trmodif_assrifle_g (748); no stall, no window and no quest of his own (data/build_weaponcraft.py names the camp's masters by their own types), so a player would find either a second Гияс in the wrong place or a man under his internal name (data/orig_names_manual.json 'none')."
   },
   {
    "loc": 127,
-   "types": [7344],
+   "types": [
+    7344
+   ],
    "why": "The same for the quarter: UpGuns_Npc_Trader000036, whose row by the offset (51678) is the camp's apprentice (A) Катада, who stands in 131 as ah_modif_rifle (759) -- the mirror of 7339."
   },
   {
    "loc": 127,
-   "types": [7341],
+   "types": [
+    7341
+   ],
    "why": "The same for the quarter's twin of the rifles' master (decision 9 of the plan, by the integration of 2026-10-14, as Донгола's review held its masters' camp's two empty machine-gun masters 5110/5111 out of 96): UpGuns_Npc_Trader000033, «Мастер Зияд<Br>улучшение винтовок» (51675, the matcher's high), beside Мастер Зияд ah_trmodif_rifle_g (752) by the same row, who sells the town's rifle blueprints and does its rifle upgrades (data/build_weaponcraft.py). This one gives and takes no row and sells nothing (data/npcs.json stock, empty), so a player would find a second Мастер Зияд with an empty window beside the first. He stands in this file alone."
   },
   {
    "loc": 131,
-   "types": [7342],
+   "types": [
+    7342
+   ],
    "why": "The same for the masters' camp's twin of the assault rifles' apprentice: UpGuns_Npc_Trader000034, «Подмастерье Имран<Br>улучшение автоматов» (51676, the matcher's high), beside Подмастерье Имран ah_modif_assrifle (755) by the same row, who does the town's assault rifle upgrades (A); no row, no stall of his own. He stands in this file alone."
   }
  ],
  "quests": [
   {
    "window": "prison_wh_gates",
-   "types": [159, 161, 162],
+   "types": [
+    159,
+    161,
+    162
+   ],
    "gate": "both",
    "why": "RECOVERED times. The ride to the prison, «Поехали!» (62262/62263: «В 12:00, 16:00 или 23:00 отправиться в тюрьму»), and the guards' gates «Тюрьма: западные/южные ворота» (62275/62274) lead there only for the uprising, from a quarter of an hour before it."
   },
   {
    "window": "prison_wh_gates",
-   "types": [158],
+   "types": [
+    158
+   ],
    "gate": "hand_in",
    "why": "RECOVERED. «Охранник санатория особого режима» is taken at the station any time and handed in at the prison when the guard needs hands: «Доброволец? ... Сейчас этот зоопарк полезет наружу» (62259)."
   },
   {
    "window": "wh_box",
-   "types": [765, 766, 767],
+   "types": [
+    765,
+    766,
+    767
+   ],
    "gate": "both",
    "why": "RECOVERED times. «Патроны и афро владельцам склада», taken and handed in at the box only while the share-out lasts; who may take them is data/holdings.json's (data/quests.json holders)."
   },
   {
    "window": "prison_dn_gates",
-   "types": [632, 634, 635],
+   "types": [
+    632,
+    634,
+    635
+   ],
    "gate": "both",
    "why": "RECOVERED times (the owner's «и потом сделай донголу тоже», 2026-10-13). The ride to the prison, «Поехали!» (62262/62264: «В 12:00, 16:00 или 23:00 отправиться в тюрьму»), and the guards' gates «Тюрьма: западные/южные ворота» (62275/62274) lead there only for the uprising, from a quarter of an hour before it."
   },
   {
    "window": "prison_dn_gates",
-   "types": [636],
+   "types": [
+    636
+   ],
    "gate": "hand_in",
    "why": "RECOVERED (the owner's «и потом сделай донголу тоже», 2026-10-13). Донгола's «Охранник санатория особого режима» is taken at the station any time and handed in at the prison when the guard needs hands (62259), as 158."
   },
   {
    "window": "wh_box",
-   "types": [768, 769, 770],
+   "types": [
+    768,
+    769,
+    770
+   ],
    "gate": "both",
    "why": "RECOVERED times (the owner's «и потом сделай донголу тоже», 2026-10-13). Донгола's «Патроны и афро владельцам склада», taken and handed in at the box only while the share-out lasts: the labels L323-L325 «Дележ добычи с 19:00 до 20:00», the hour of Вади-Хальфа's (a row of its own, so that 765-767's stays as it is); who may take them is data/holdings.json's (holders)."
   },
   {
    "window": "prison_ah_gates",
-   "types": [880, 882, 883],
+   "types": [
+    880,
+    882,
+    883
+   ],
    "gate": "both",
    "why": "RECOVERED times (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). The ride to the prison, «Поехали!» (62262/62265: «В 12:00, 16:00 или 23:00 отправиться в тюрьму»), and the guards' gates «Тюрьма: западные/южные ворота» (62275/62274) lead there only for the uprising, from a quarter of an hour before it."
   },
   {
    "window": "prison_ah_gates",
-   "types": [884],
+   "types": [
+    884
+   ],
    "gate": "hand_in",
    "why": "RECOVERED (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). Абу-Хамед's «Охранник санатория особого режима» is taken at the station any time and handed in at the prison when the guard needs hands (62259), as 158 and 636."
   },
   {
    "window": "wh_box_ah",
-   "types": [771],
+   "types": [
+    771
+   ],
    "gate": "both",
    "why": "RECOVERED times (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). The Центр's «Патроны и афро владельцам склада» (771), taken and handed in at the box only while the share-out lasts: the label L327 «Дележ добычи с 19:00 до 19:15»; who may take it is data/holdings.json's (holders)."
   }
  ],
  "loot": [
   {
-   "locs": [646, 647, 648],
-   "mobs": [1113, 1114, 1115, 1116, 1117, 2173],
+   "locs": [
+    646,
+    647,
+    648
+   ],
+   "mobs": [
+    1113,
+    1114,
+    1115,
+    1116,
+    1117,
+    2173
+   ],
    "obj": 2476,
    "num": 1,
    "chance": 1.0,
    "why": "RECOVERED thing, DESIGNED chance. Red_Bandage, «Красная повязка ВХ» — «Красная повязка, сорванная с ваших соперников» (7323/7324): the proof the medics pay for («принесешь медикам доказательства отстрела урок», 62272). One on every prisoner and on the godfather, in the blocks only."
   },
   {
-   "locs": [620, 621, 622],
-   "mobs": [932, 933, 934, 935, 936, 2174],
+   "locs": [
+    620,
+    621,
+    622
+   ],
+   "mobs": [
+    932,
+    933,
+    934,
+    935,
+    936,
+    2174
+   ],
    "obj": 2476,
    "num": 1,
    "chance": 1.0,
    "why": "RECOVERED thing, DESIGNED chance, as the row of Вади-Хальфа's blocks (the owner's «и потом сделай донголу тоже», 2026-10-13): the prisoners and the godfather of Донгола's uprising carry the same Red_Bandage, «Красная повязка ВХ» (7323/7324), which Джеф, Аль-Назир and Томпсон take in both prisons (164-168, the plan's decision 26: Донгола's own 4165 Red_Bandage_DN is not used, and the player reads the band's name «ВХ» here too). One each, in the cells and the centre only."
   },
   {
-   "locs": [651, 652, 653],
-   "mobs": [1118, 1119, 1120, 1121, 1122, 2175],
+   "locs": [
+    651,
+    652,
+    653
+   ],
+   "mobs": [
+    1118,
+    1119,
+    1120,
+    1121,
+    1122,
+    2175
+   ],
    "obj": 2476,
    "num": 1,
    "chance": 1.0,
@@ -385,8 +616,105 @@
  ],
  "keep_in": [
   {
-   "types": [2476],
-   "locs": [644, 645, 646, 647, 648, 618, 619, 620, 621, 622, 649, 650, 651, 652, 653],
+   "types": [
+    4231,
+    4232,
+    4233,
+    4234,
+    4235,
+    4236,
+    4237,
+    4304,
+    4305,
+    60010
+   ],
+   "locs": [
+    264,
+    265,
+    266,
+    267,
+    1381,
+    1382,
+    1383,
+    1384,
+    1385,
+    1386,
+    1387,
+    1388,
+    1389,
+    1390,
+    1391,
+    1392,
+    1393,
+    1394,
+    1395,
+    1396,
+    1397,
+    1398,
+    1399,
+    1400,
+    1401,
+    1402,
+    1403,
+    1404,
+    1405,
+    1406,
+    1407,
+    1408,
+    1409,
+    1410,
+    1411,
+    1412,
+    1413,
+    1414,
+    1415,
+    1416,
+    1417,
+    1418,
+    1419,
+    1420,
+    1421,
+    1422,
+    1423,
+    1424,
+    1425,
+    1426,
+    1427,
+    1428,
+    1429,
+    1430,
+    1431,
+    1432,
+    1433,
+    1434,
+    1435,
+    1436,
+    1437,
+    1438
+   ],
+   "why": "RECOVERED Eden-only bananas, tickets, pass, leaves, basket and harvesting tool. Never mailed, traded, banked or carried outside the closed plantation; all ten types are reclaimed on departure."
+  },
+  {
+   "types": [
+    2476
+   ],
+   "locs": [
+    644,
+    645,
+    646,
+    647,
+    648,
+    618,
+    619,
+    620,
+    621,
+    622,
+    649,
+    650,
+    651,
+    652,
+    653
+   ],
    "why": "RECOVERED rule. Томас, who leads out of the prison, «При выходе отбирает все повязки» (the wiki's «Томас»): the armbands stay in the blocks, whichever way the player leaves -- Томас's «Выход», a death sent home, a login elsewhere. DESIGNED: and no other way either -- the frame of a thing kept in carries the quest flag and no exchange (server/events.py kept, items.static_info), so no letter, lot, barter or stall takes one out, and a death does not drop it. Since 2026-10-13 (the owner's «и потом сделай донголу тоже», 2026-10-13) the row holds Донгола's blocks too, 618-622: one row for the one armband of both prisons, since server/events.py take_back reads every keep_in row on its own -- a second row for 2476 would take the armbands away in Донгола's blocks for not being Вади-Хальфа's, and the other way round. The prisons touch nowhere: leaving either is leaving the row's places. Since 2026-10-14 (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14) the row holds Абу-Хамед's blocks too, 649-653, by the same rule: one row for the one armband of the three prisons. The prisons touch nowhere: leaving any is leaving the row's places."
   }
  ]

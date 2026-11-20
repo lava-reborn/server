@@ -114,7 +114,14 @@
   "883": "medium",
   "93": "medium",
   "979": "medium",
-  "985": "medium"
+  "985": "medium",
+   "1784": "high",
+   "1785": "high",
+   "1786": "high",
+   "1787": "high",
+   "1788": "high",
+   "1789": "high",
+   "1790": "high"
  },
  "internal": {
   "1005": "ow_Waron",
@@ -228,7 +235,14 @@
   "883": "auctioneer",
   "93": "wh_upg_Henry",
   "979": "WH_Stone_Brigadir",
-  "985": "AH_Stone_Brigadir"
+  "985": "AH_Stone_Brigadir",
+   "1784": "JM_prison_boss",
+   "1785": "JM_prison_mimiboss",
+   "1786": "JM_prison_sort_a",
+   "1787": "JM_prison_sort_b",
+   "1788": "JM_prison_sort_c",
+   "1789": "JM_prison_sort_d",
+   "1790": "qJM_prison_Palm"
  },
  "names": {
   "1005": "Варон",
@@ -342,7 +356,14 @@
   "883": "Хафиз",
   "93": "Генри",
   "979": "Большой Сэм",
-  "985": "Гюнтер"
+  "985": "Гюнтер",
+   "1784": "Люк<Br>Смотритель",
+   "1785": "Рон Деккер<Br>Бригадир",
+   "1786": "Эрл Коупен<Br>Сортировщик",
+   "1787": "Бо-лин Чен<Br>Сортировщик",
+   "1788": "Саша Бушков<Br>Сортировщик",
+   "1789": "Бен Ганн",
+   "1790": "Пальма"
  },
  "source": {
   "1005": "https://lava-online.fandom.com/ru/wiki/Варон",
@@ -456,6 +477,13 @@
   "883": "https://lava-online.fandom.com/ru/wiki/Хафиз",
   "93": "https://lava-online.fandom.com/ru/wiki/Генри",
   "979": "https://lava-online.fandom.com/ru/wiki/Большой_Сэм",
-  "985": "https://lava-online.fandom.com/ru/wiki/Гюнтер"
+  "985": "https://lava-online.fandom.com/ru/wiki/Гюнтер",
+   "1784": "https://lava-online.fandom.com/ru/wiki/Люк",
+   "1785": "https://lava-online.fandom.com/ru/wiki/Рон_Деккер",
+   "1786": "https://lava-online.fandom.com/ru/wiki/Эрл_Коупен",
+   "1787": "https://lava-online.fandom.com/ru/wiki/Бо-лин_Чен",
+   "1788": "https://lava-online.fandom.com/ru/wiki/Саша_Бушков",
+   "1789": "https://lava-online.fandom.com/ru/wiki/Бен_Ганн",
+   "1790": "https://lava-online.fandom.com/ru/wiki/Пальма"
  }
 }

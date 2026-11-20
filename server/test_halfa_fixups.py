@@ -15,8 +15,8 @@ the town before c_ga pays 4000 afro an ounce, each held here:
   2. Ольсен (431) sells nothing, the lottery man (662) the town's own
      ticket alone, at its own article's price;
   3. the gold taps: the black market's placeholder quests are gone, and
-     every row of the table that pays gold is a service, once a day, or an
-     ingot changed for its ounces;
+     every row of the table that pays gold is a service, once a day, a
+     one-off, or an ingot changed for its ounces;
   4. the journal of money: every change of a purse is a row -- source,
      character, level -- whose sum is the purse, and the report sums them;
   5. the engine's loose ends: c_ga answers any figure with one ack, and a
@@ -242,8 +242,8 @@ check("  ..LoteryKey by its own name and article: «Лотерейный бил�
 TABLE = quests.load(quests.PATH)
 check("the black market's placeholders 1-3, 5, 6 are out of the table; 4 stays",
       ([t for t in (1, 2, 3, 5, 6) if t in TABLE], 4 in TABLE), ([], True))
-check("«Золотоискатель» (9) pays its ounce once a day",
-      (TABLE[9].rew_gold, TABLE[9].repeatable, TABLE[9].per_day), (100, 1, 1))
+check("«Золотоискатель» (9) pays 0.8 G once per character",
+      (TABLE[9].rew_gold, TABLE[9].repeatable, TABLE[9].per_day), (80, 0, 0))
 check("«Обмен слитка» (10) stays: two ounces for the boss's two ingots of one",
       (TABLE[10].rew_gold, TABLE[10].wants()), (200, [(7620, 2)]))
 GOLD_ROWS = {t: q for t, q in TABLE.items() if q.rew_gold > 0}
@@ -251,13 +251,14 @@ INGOTS = set(items.GOLD_INGOTS)
 check("every row that pays gold asks for something or for kills (Фрэнк's raid, 221)"
       " -- none for a word passed on",
       [t for t, q in GOLD_ROWS.items() if not (q.wants() or q.mobs_kill)], [])
-check("and is a service (cashing), a once-a-day task, or an ingot changed for its ounces",
+check("and is a service (cashing), a once-a-day or one-off task, or an ingot changed for its ounces",
       [t for t, q in GOLD_ROWS.items()
-       if not (q.service or q.per_day or {o for o, _n in q.wants()} & INGOTS)], [])
+       if not (q.service or q.per_day or not q.repeatable or {o for o, _n in q.wants()} & INGOTS)], [])
 print("      the gold of the quest table: %s" % ", ".join(
     "%d «%s» %.2f G%s" % (t, q.name, q.rew_gold / 100.0,
                           " (service)" if q.service else
-                          " (once a day)" if q.per_day else " (for an ingot)")
+                          " (once a day)" if q.per_day else
+                          " (one-off)" if not q.repeatable else " (for an ingot)")
     for t, q in sorted(GOLD_ROWS.items())))
 
 # --- 5e. the gold belts --------------------------------------------------------------------
@@ -293,6 +294,7 @@ check("a kill quest with a fee pays it at the take; a delivery with one at the h
 class _XpSession(object):
     def __init__(self, ch):
         self.char, self.pushed = ch, []
+        self.loc = world.location(100)
 
     def character(self):
         return self.char

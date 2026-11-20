@@ -38,6 +38,7 @@ import jpeg_blocks as J  # noqa: E402
 import map_cells as M  # noqa: E402
 import map_labels  # noqa: E402
 from testkit import check, fails  # noqa: E402
+from test_eden_region import EXPECTED_CELLS  # noqa: E402
 
 MECHANIC = "the map's squares of retired places"
 
@@ -150,7 +151,8 @@ try:
     check("  ..and the pirates' squares by Абу-Хамед, where the camp 432 stood on the first, stay: the"
           " pirates' camp 132 and its chief's place 133 stand on them since 2026-10-14",
           sorted(c for c in [(6160, 1975), (6161, 1973)] if c in plan.cells), [])
-    live = {cell(k) for k in load_json("data", "settlements.json")["cells"]}
+    import eden_map
+    live = {cell(k) for k in load_json("data", "settlements.json")["cells"]} | set(eden_map.CELL_TO_LOC)
     check("no square goes from a cell a place still stands on (data/settlements.json)",
           sorted(set(plan.cells) & live), [])
     hidden = {(x, y) for x, y, _was, new in map_labels.load() if new is None}
@@ -158,12 +160,18 @@ try:
                        and c not in plan.bare)
     check("every hidden name with no place under it is decided: its square goes, stays with a why, or the"
           " picture has none there ('bare', with its why)", undecided, [])
-    check("  ..the 'bare' ones are the forty names with no place and no square: across the river"
-          " Доктор «Д»'s columns, Эван's pasture and quarry, the north-west corner's six, the island «Эдем»'s"
-          " four; by Донгола its three (P) remnants and «Лагерь экспедиции»; by Абу-Хамед Delta Force's"
+    check("  ..the 'bare' ones are the thirty-six names with no place and no square: across the river"
+          " Доктор «Д»'s columns, Эван's pasture and quarry, the north-west corner's six;"
+          " by Донгола its three (P) remnants and «Лагерь экспедиции»; by Абу-Хамед Delta Force's"
           " warehouse and Инсар's stop",
           (len(plan.bare), sorted(set(plan.bare) - hidden), sorted(set(plan.bare) & live)),
-          (40, [], []))
+          (36, [], []))
+    eden_cells = EXPECTED_CELLS
+    check("only Eden's town has the standard green marker; its sixty-one work cells are not painted",
+          {c: colour for c, (colour, _why) in plan.paint.items() if c in eden_cells},
+          {(5858, 1929): 'green'})
+    check("none of the sixty-two Eden cells is erased, bare or kept as a removed place",
+          sorted(eden_cells & (set(plan.cells) | set(plan.bare) | set(plan.keep))), [])
     check("  ..the kimberlite pipe's goes too, on the owner's word of 2026-10-10; nothing is kept now",
           (sorted(plan.keep), "owner" in plan.cells.get((6265, 1821), "")), ([], True))
     check("  ..and the farm's cell keeps its square: only the New Year name over it is hidden",
@@ -245,9 +253,9 @@ try:
           " picture, 12726, which no client has; by Донгола its cut's (16055, and 16311 a pixel past"
           " 5878,2015) and the three clan bases' (15801, 16057, 16314); by Абу-Хамед its cut's and its clan"
           " bases' (15039 the green mark, 15552 and 15553 ВЭС, 15554 Доктор «Д», 15806 ZEON, 15807 СМЕРШ,"
-          " 15808 the abandoned base, 16062 and 16063 the nameless pair)",
+          " 15808 the abandoned base, 16062 and 16063 the nameless pair); Eden's town marker15543",
           plan.tiles(), [12726, 12982, 13753, 13754, 14010, 14011, 14266, 14267, 14531, 14774, 14775, 14777,
-                         15032, 15039, 15288, 15552, 15553, 15554, 15801, 15806, 15807, 15808, 15809, 15811,
+                         15032, 15039, 15288, 15543, 15552, 15553, 15554, 15801, 15806, 15807, 15808, 15809, 15811,
                          16054, 16055, 16057, 16062, 16063, 16064, 16311, 16314])
     # The camps across the river had each a war zone painted round them
     # (the owner, 2026-10-12: «ты с карты не убрал лагеря за рекой»): a red
@@ -827,8 +835,8 @@ try:
           [load_paint(p) for p in ({"25,15": {"colour": "pink", "why": "t"}}, {"25,15": {"colour": "red"}},
                                    {"10,10": {"colour": "red", "why": "t"}})], ["refused"] * 3)
     import world
-    check("every cell the repository paints on holds a place of ours (data/settlements.json,"
-          " data/locations)", [c for c in plan.paint if world.settlements().get(c) not in world.overlay_ids()],
+    check("every cell the repository paints on holds a place of ours (the canonical world mapping,"
+          " data/locations)", [c for c in plan.paint if world.location_at(*c) not in world.overlay_ids()],
           [])
 
     # --- the real map ------------------------------------------------------------------------------

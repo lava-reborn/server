@@ -41,6 +41,9 @@ import clans
 import combat
 import craft
 import encounters
+import eden
+import eden_map
+import eden_shop
 import events
 import holdings
 import inventory
@@ -69,6 +72,7 @@ import travel
 import trophies
 import upgrader
 import world
+import location_entry
 from training import api as training_ground
 from protocol import BigUInt, FrameReader, RawList, decode, frame, Str
 
@@ -632,14 +636,14 @@ class Session:
                 fn(params)
         except Exception:
             log.exception("  !!    handler for %r failed", cmd)
-            if cmd in {"hello", "login", "newPers", "selPers", "actPlayer", "lenter"}:
+            if cmd in {"hello", "login", "newPers", "selPers", "actPlayer", "lenter", "chWorld"}:
                 # Entry has several different reply contracts, and may have
                 # already sent success. A second ACK would corrupt FIFO;
                 # disconnect so the client can retry instead of waiting forever.
                 # A partially loaded character must not overwrite its durable
                 # position or state with this session's initial defaults.
                 self._failed_entry_before_presence = ONLINE.by_char.get(self.char_id) is not self
-                if cmd == 'lenter' and self.char_id:
+                if cmd in {'lenter', 'chWorld'} and self.char_id:
                     # Do not persist an unaccepted destination and trap the
                     # next login there. Preserve character/money changes; only
                     # the location falls back to the last completed entry.
@@ -854,8 +858,11 @@ class Session:
             CLANS.offline(self)
             if (self.char_id and not getattr(self, "_failed_entry_before_presence", False)
                     and not getattr(self, '_failed_location_entry', False)):
-                STORE.save_position(self.char_id, self.loc.id, self.pos,
-                                    self.gx, self.gy, self.on_map)
+                if getattr(self, 'eden_sentence', None):
+                    self.save_place()
+                else:
+                    STORE.save_position(self.char_id, self.loc.id, self.pos,
+                                        self.gx, self.gy, self.on_map)
             if self.char and not getattr(self, "_failed_entry_before_presence", False):
                 self.char.save(STORE)
         finally:
@@ -1268,7 +1275,7 @@ class Session:
                     STORE.save_character_state(c["id"], kit=1)
                     log.info("  ..    starter kit handed to %s", c["name"])
                 self.load_character(c["id"])
-                self.restore(c)
+                global_entry = self.restore(c)
                 break
         else:
             # A socket that never logged in, or names a slot it does not
@@ -1277,7 +1284,7 @@ class Session:
             # so anything else is not the client.
             log.warning("  ??    selPers without a character, ignoring")
             return
-        self.enter_location()
+        self.enter_location(global_entry=global_entry)
 
     def restore(self, c):
         """Put the character back where it was left.
@@ -1290,6 +1297,23 @@ class Session:
         for a character made before starts were drawn -- never whatever an
         earlier newPers on this socket left in the session.
         """
+        map_point = None
+        if c['on_map']:
+            try:
+                point = float(c['gx']), float(c['gy'])
+                valid = all(math.isfinite(value) and value >= 0 for value in point)
+            except (TypeError, ValueError, OverflowError):
+                valid = False
+            if valid:
+                map_point = point
+            else:
+                # Older rows may have on_map=1 but NULL coordinates. Do not
+                # make every subsequent login fail on floor(NULL).
+                loc_id, gx, gy = travel.home(c, (START_LOC, GLOBAL_X, GLOBAL_Y))
+                c = dict(c)
+                c.update(loc=loc_id, pos=None, gx=gx, gy=gy, on_map=0)
+        self.eden_sentence, c = eden.restore_state(
+            STORE, self.char_id, c, travel.home(c, (START_LOC, GLOBAL_X, GLOBAL_Y)))
         loc_id, pos = c["loc"], c["pos"]
         if loc_id is None:
             loc_id, self.gx, self.gy = travel.home(c, (START_LOC, GLOBAL_X, GLOBAL_Y))
@@ -1301,14 +1325,18 @@ class Session:
         # the one saved with them is the last they walked out of, possibly
         # cells away -- and the server must not think them still on the
         # map, or their first chWorld re-enters instead of leaving.
-        if c["on_map"]:
-            self.gx, self.gy = int(round(self.gx)), int(round(self.gy))
+        if map_point and (c['on_map'] or
+                (self.eden_sentence and eden_map.inside_cell(*map_point))):
+            self.gx, self.gy = math.floor(map_point[0]), math.floor(map_point[1])
             loc_id, pos = travel.destination(self.gx, self.gy), None
+        else:
+            map_point = None
         self.on_map = False
         if loc_id is not None:
             try:
                 self.loc = world.location(loc_id)
             except (KeyError, OSError) as exc:
+                map_point = None
                 log.warning("  ..    location %s unreadable (%s), starting over",
                             loc_id, exc)
                 home, self.gx, self.gy = travel.home(c, (START_LOC, GLOBAL_X, GLOBAL_Y))
@@ -1344,6 +1372,12 @@ class Session:
             log.info("  ..    left on the walk-in at %d in %s, back beside it"
                      " at %d", self.pos, self.loc.file, beside)
             self.pos = beside
+        if map_point is not None:
+            # Login also opens a local scene after a logout on the map.
+            # Keep its fraction rather than rounding into the next square;
+            # cmd_lenter rechecks live occupants after the artwork loads.
+            self.pos = location_entry.choose(self.loc, *map_point)
+            return (self.loc.id, self.gx, self.gy, *map_point)
 
     def cmd_actPlayer(self, p):
         if not self.char_id:
@@ -1353,7 +1387,13 @@ class Session:
         self.enter_location()
 
     # --- world -----------------------------------------------------------
-    def enter_location(self):
+    def enter_location(self, *, global_entry=None):
+        # Only an explicit map arrival carries its fractional entry point.
+        # Doors, quests and resurrection keep their own placement rules.
+        self._global_entry = global_entry
+        if getattr(self, "eden_sentence", None) or eden.inside(self.loc):
+            eden.enforce(self, STORE, travel.home(
+                STORE.character(self.char_id), (START_LOC, GLOBAL_X, GLOBAL_Y)))
         # A move during reconnect loading starts a fresh location, so its
         # lenter must not reuse the previous body's AP ceiling or snapshot.
         self.resume_loading = False
@@ -1378,7 +1418,7 @@ class Session:
             # One attempt per selected character/session, including a failed
             # restore. Ordinary location changes must not retry a broken save.
             self.training_resume_char = self.char_id
-            if training_ground.resume(self) or self.closed:
+            if (not getattr(self, "eden_sentence", None) and training_ground.resume(self)) or self.closed:
                 return
         # ie != 1 means the client must confirm with lenter;accept=1 once it
         # has finished loading the location's XML and artwork. ws is the
@@ -1442,8 +1482,11 @@ class Session:
         location he last entered at worst; the cell within it and a walk on
         the map are still close()'s."""
         if self.char_id and self.loc is not None:
-            STORE.save_position(self.char_id, self.loc.id, self.pos,
-                                self.gx, self.gy, self.on_map)
+            loc_id, pos, gx, gy = self.loc.id, self.pos, self.gx, self.gy
+            if getattr(self, 'eden_sentence', None) and self.on_map:
+                gx, gy = eden_map.clamp(*self.current_pos(), self.loc.id)
+                loc_id, pos = eden_map.location_at(gx, gy), None
+            STORE.save_position(self.char_id, loc_id, pos, gx, gy, self.on_map)
 
     def cmd_lenter(self, p):
         """Answer the client's "I have loaded, let me in".
@@ -1453,6 +1496,9 @@ class Session:
         the failure path only.
         """
         self._quest_status_snapshot = None
+        if self.on_map and getattr(self, 'eden_sentence', None):
+            self.send('cmdAck', res=RES_NO_WAY)
+            return
         if not self.char_id:
             # Not a player: nothing to put in a room. The refusal is the one
             # case where lenter is acknowledged (see above).
@@ -1467,7 +1513,22 @@ class Session:
         if not self.resume_loading:
             destination = ROOMS.get(self.room_key())
             combat.room_combat(destination, STORE).keep_hours()
-            self.pos = movement.get(destination).free_cell(self.pos, exclude=self)
+            pending = getattr(self, '_global_entry', None)
+            if pending and pending[:3] == (self.loc.id, self.gx, self.gy):
+                # Loading artwork can take seconds. Recheck both the entry
+                # and its escape route against actors that arrived meanwhile.
+                try:
+                    self.pos = location_entry.choose(self.loc, *pending[3:],
+                        occupied=movement.get(destination).occupied(exclude=self))
+                except location_entry.NoSafeEntry:
+                    # lcall has already replaced the client's old location.
+                    # Refuse lenter, then let handle() close without saving
+                    # an unaccepted spawn; reconnect uses the last safe place.
+                    self.send('cmdAck', res=RES_NO_WAY)
+                    raise
+            else:
+                self.pos = movement.get(destination).free_cell(self.pos, exclude=self)
+            self._global_entry = None
         amax = (self.combat.ap_max if self.resume_loading
                 else self.character().ap_ceiling)
         self.combat.amax_sent = amax
@@ -1503,6 +1564,8 @@ class Session:
     def room_key(self):
         """Which room this location is, for us: see travel.room_key -- or the
         room of the pack that waylaid the player here (encounters.py)."""
+        if eden.inside(self.loc):
+            return travel.room_key(self.loc, self.gx, self.gy)
         return ENCOUNTERS.room_key(self) or travel.room_key(self.loc, self.gx, self.gy)
 
     def enter_room(self):
@@ -1535,9 +1598,11 @@ class Session:
         # taken: res=39 instead, and nothing moves -- checked before any
         # door, or a fight could be walked out of. Run out, the way is open,
         # whatever is still after the player (combat.Fighter.in_combat).
+        sentence = getattr(self, 'eden_sentence', None)
+        through_exit = not self.on_map and int(p.get("to", 0) or 0) == 1
         if self.combat.refuse_leave():
             return
-        if not self.on_map and int(p.get("to", 0) or 0) == 1:
+        if through_exit:
             self.leave_through_exit()
             return
         if (not self.on_map and self.combat.duels
@@ -1547,7 +1612,7 @@ class Session:
             # if a stale or modified client asks from the middle of the room.
             self.send("cmdAck", res=RES_NO_WAY)
             return
-        if not self.on_map and travel.no_map(self.loc.id):
+        if not self.on_map and travel.no_map(self.loc.id) and not sentence:
             # An interior left only by its own ways (travel.no_map): the
             # client greys both map buttons out there (travel.geo_id) -- but
             # its LocationInterface.init lights the top one again, and its
@@ -1558,10 +1623,10 @@ class Session:
             # 2026-10-09, in the Вади-Хальфа mine).
             self.send("cmdAck", res=RES_NO_WAY)
             return
-        self.send("cmdAck", res=0)
         if self.on_map:
-            self.enter_cell()
+            self.enter_cell(acknowledge=True)
         else:
+            self.send("cmdAck", res=0)
             # Leaving puts the player back on the cell the location stands
             # on -- or the nearest one the map has, from a location beyond
             # its edge: the client disables both map buttons there, but
@@ -1571,6 +1636,8 @@ class Session:
             self.cancel_travel()
             self.leave_room()
             self.gx, self.gy = travel.clamp(self.gx, self.gy)
+            if sentence:
+                self.gx, self.gy = eden_map.cell_of(self.loc.id) or eden_map.CENTER_CELL
             self.send("gmap", x=self.gx, y=self.gy, v_rad=VIEW_RADIUS)
             self.send_marks()
             # Only after gmap: newUser is an offset from the client's own
@@ -1680,23 +1747,52 @@ class Session:
                                                 int(p.get("id", -1)))
         self.send("cmdAck", res=0 if ok else RES_NO_SUCH)
 
-    def enter_cell(self):
+    def enter_cell(self, *, acknowledge=False, oriented=True):
         """Walk into whatever occupies the cell under the player.
 
-        Every cell leads somewhere, so there is nothing to refuse here: the
-        86 named cells lead into their settlement, and the rest into open
-        desert, which is its own location id. The player stops travelling and
-        the cell is rounded to a whole one, because that is the cell the map
-        has been drawing them on and the one they expect to walk into.
+        The fractional map position selects an escapable local entry. Keep
+        the player on the map if all such entries are occupied; never fall
+        back to a wall or an enclosed yard. Interceptions use their own pair
+        of positions and deliberately retain the ordinary entry policy.
         """
         x, y = self.current_pos()
+        if getattr(self, 'eden_sentence', None):
+            x, y = eden_map.clamp(x, y, self.loc.id)
+        gx, gy = math.floor(x), math.floor(y)
+        destination = world.location_at(gx, gy)
+        loc = world.location(destination)
+        pending = None
+        if oriented and not (not getattr(self, 'eden_sentence', None) and eden.inside(destination)):
+            room = ROOMS.get(travel.room_key(loc, gx, gy))
+            combat.room_combat(room, STORE).keep_hours()
+            try:
+                pos = location_entry.choose(loc, x, y,
+                    occupied=movement.get(room).occupied(exclude=self))
+            except location_entry.NoSafeEntry:
+                if acknowledge:
+                    self.send('cmdAck', res=RES_NO_WAY)
+                self.say('Нет свободного безопасного входа в локацию. Попробуйте позже.')
+                return False
+            pending = (loc.id, gx, gy, x, y)
+        else:
+            pos = loc.entry_cell()
+        if acknowledge:
+            self.send('cmdAck', res=0)
         self.cancel_travel()
         # The cell under a position is its floor on the client
         # (DisplayGlobalMap.as:207): the icon sits at the square's corner.
-        self.gx, self.gy = int(math.floor(x)), int(math.floor(y))
+        self.gx, self.gy = gx, gy
         self.on_map = False
         GMAP.leave(self)
-        self.go_to(world.location_at(self.gx, self.gy))
+        if not getattr(self, 'eden_sentence', None) and eden.inside(destination):
+            self.go_home()
+            return True
+        if not oriented:
+            self.go_to(destination)
+            return True
+        self.loc, self.pos = loc, pos
+        self.enter_location(global_entry=pending)
+        return True
 
     def go_to(self, loc_id):
         """Open a location and put the player at one of its own entry cells."""
@@ -1818,6 +1914,9 @@ class Session:
                            round(self.gx), round(self.gy)), group)
             return
         if text.startswith("/home"):
+            if eden.confined(self):
+                self.answer("С плантации Эдем можно выйти только после освобождения.", group)
+                return
             # The same journey resurrect will make, on demand: the way to
             # check a registered home without dying for it. Not out of a
             # fight, though, or it would be the way round the exit timer
@@ -2094,6 +2193,8 @@ class Session:
         """Start running down another player on the map."""
         self.stop_chase()
         other = ONLINE.by_pid(pid) if pid else None
+        if eden.confined(self) or (other is not None and eden.confined(other)):
+            return
         if other is None or other is self or not other.on_map:
             # Gone into a location, logged out, or never there. The client
             # has no frame for a refused interception (GlobalMap.interceptAck
@@ -2199,6 +2300,9 @@ class Session:
         then уход от врага по локациям) -- and in the Nubian valley they
         cannot, which this does not overrule either.
         """
+        if eden.confined(self) or eden.confined(other) or eden_map.inside_cell(ox, oy):
+            self.stop_chase()
+            return
         gx, gy = math.floor(ox), math.floor(oy)
         loc = world.location(world.location_at(gx, gy))
         positions = None
@@ -2220,7 +2324,7 @@ class Session:
         other.say("%s настиг вас." % self.nick)
         # The pursuer goes in first, so the cell is resolved from the
         # position that was just confirmed to both clients.
-        self.enter_cell()
+        self.enter_cell(oriented=False)
         if other.on_map and not other.closed:
             other.cancel_travel()
             other.gx, other.gy = self.gx, self.gy
@@ -2245,12 +2349,17 @@ class Session:
         logging out, being stopped by the lake, or simply pointing somewhere
         else. One place, rather than a stop_chase beside every one of them.
         """
+        if (self.on_map and getattr(self, 'eden_sentence', None) and self.leg):
+            # close() cancels before save_place(). Preserve the confined
+            # position while its endpoint and interpolation still exist.
+            self.gx, self.gy = self.current_pos()
         self.stop_chase()
         ENCOUNTERS.disarm(self)
         if self.arrival:
             self.arrival.cancel()
             self.arrival = None
         self.leg = None
+        self._eden_leg_end = None
 
     def cmd_moveTo(self, p):
         if self.on_map:
@@ -2288,12 +2397,19 @@ class Session:
         # the client has been extrapolating since the last moveAck, so a stale
         # origin here sends them somewhere neither side expects.
         self.gx, self.gy = self.current_pos()
+        sentence = getattr(self, 'eden_sentence', None)
+        if not sentence and eden_map.inside_cell(self.gx, self.gy):
+            self.go_home()
+            return
         dist = (dx * dx + dy * dy) ** 0.5
         if dist < 0.01:
             return
         # Only as far as the ground allows (world.passable: the lake and the
         # rectangle): the leg ends just inside the last open cell.
-        tx, ty = travel.walk(self.gx, self.gy, dx, dy)
+        if sentence:
+            tx, ty = eden_map.walk(self.gx, self.gy, dx, dy, self.loc.id)
+        else:
+            tx, ty = travel.walk(self.gx, self.gy, dx, dy)
         dx, dy = tx - self.gx, ty - self.gy
         dist = (dx * dx + dy * dy) ** 0.5
         if dist < 0.01:
@@ -2321,6 +2437,7 @@ class Session:
 
         loop = asyncio.get_running_loop()
         self.leg = (loop.time(), self.gx, self.gy, vx, vy)
+        self._eden_leg_end = (tx, ty) if sentence else None
         if self.arrival:
             self.arrival.cancel()
         self.arrival = loop.call_later(dist / speed, self.arrive, tx, ty)
@@ -2339,14 +2456,41 @@ class Session:
     def current_pos(self):
         """Where the player is now, matching the client's own extrapolation."""
         if not self.leg:
-            return self.gx, self.gy
-        started, sx, sy, vx, vy = self.leg
-        dt = asyncio.get_running_loop().time() - started
-        return sx + vx * dt, sy + vy * dt
+            position = self.gx, self.gy
+        else:
+            started, sx, sy, vx, vy = self.leg
+            dt = asyncio.get_running_loop().time() - started
+            if self.on_map and getattr(self, 'eden_sentence', None):
+                dt = max(0, dt)
+                end = getattr(self, '_eden_leg_end', None)
+                if end is None:
+                    # A legacy leg has no saved endpoint. Traversing its ray
+                    # still stops at the first closed edge, even if a delayed
+                    # callback would extrapolate across a concave gap.
+                    return eden_map.walk(sx, sy, vx * dt, vy * dt, self.loc.id)
+                speed = math.hypot(vx, vy)
+                duration = math.hypot(end[0] - sx, end[1] - sy) / speed if speed else 0
+                if dt >= duration:
+                    # The event loop can process a command before an overdue
+                    # arrival callback. Never overshoot then clamp back to the
+                    # source scene (or jump through a closed gap to open land).
+                    return eden_map.clamp(*end, self.loc.id)
+            position = sx + vx * dt, sy + vy * dt
+        if self.on_map and getattr(self, 'eden_sentence', None):
+            return eden_map.clamp(*position, self.loc.id)
+        return position
 
     def arrive(self, tx, ty):
         self.arrival = None
         self.leg = None
+        self._eden_leg_end = None
+        if getattr(self, 'eden_sentence', None):
+            tx, ty = eden_map.clamp(tx, ty, self.loc.id)
+        elif eden_map.inside_cell(tx, ty):
+            # An old island arrival must not move a released character back.
+            if self.on_map:
+                self.go_home()
+            return
         self.gx, self.gy = tx, ty
         # zero speed is how the client is told to stop; it has no other signal
         self.send("userMove", id=0, dx=self.gx, dy=self.gy, vx=0, vy=0, t=0)
@@ -2508,6 +2652,8 @@ class Session:
                           # with these and the server charges with the same.
                           pmod=inventory.PMOD, smod=inventory.SMOD,
                           rmod=inventory.repair_rmod(self.room.loc.id, type_id))
+            if eden_shop.is_buyer(type_id):
+                params.update(res=eden_shop.ART_TYPE, type_list=[], eden_shop=1)
             if trophies.is_registrar(type_id):
                 # A trophy registrar sells and mends nothing: its only
                 # service is "regTrophy" (NPCService.openService) -- but
@@ -2708,6 +2854,7 @@ class Session:
         command, params = info
         import gold_trade
         params = dict(params, **gold_trade.client_fields(type_id))
+        params.update(eden_shop.client_fields(type_id))
         self.send(command, **params)
 
     def windows_gone(self):
@@ -2973,9 +3120,10 @@ class Session:
         drops out of the giver's offers and out of the taker's unfinished
         list alike (QuestInspector.getGQs/getTQs check quest.available), so
         a quest already in the log must stay available until handed in --
-        with one exception: a quest past its cap (max_level) is nobody's
-        above it, carried or not, or «Назад, в долину» taken at the second
-        level would stay a ticket back for good. The taker's window drops
+        unless its level requirement no longer holds. A quest past its cap
+        (max_level) is nobody's above it, carried or not, or «Назад, в долину»
+        taken at the second level would stay a ticket back for good. A raised
+        minimum also applies to old active quests. The taker's window drops
         it then, and the journal can still drop it (q_ca).
 
         A chain (need_quest, need_any) offers a quest only once what comes
@@ -3001,16 +3149,25 @@ class Session:
         does keep_lent taking all of it back away from its stay_in): a
         lesson dropped by mistake is the player's to take again at once.
         """
+        if not eden.allowed(self, quest):
+            return False
         if quest.type == training_ground.EXIT_QUEST:
             return False
         if quest.type == training_ground.ENTRY_QUEST and not training_ground.entry_available(self):
             return False
         if quest.type in residence.QUESTS and not residence.allowed(self.character(), residence.QUESTS[quest.type]):
             return False
-        if quests.acquisition_blocked(quest) or quest.over_cap(self.skill_level()):
+        if (quests.acquisition_blocked(quest) or quest.over_cap(self.skill_level())
+                or quest.level > self.skill_level()):
             return False
         carried = bool(self.char_id) and (quest.type in state.active if state is not None
                                         else STORE.has_quest(self.char_id, quest.type))
+        done = state.done if state is not None else lambda t: STORE.quest_done(self.char_id, t)
+        # A previously repeatable quest may have become one-off while its
+        # next instance was still in the journal. History wins over it;
+        # cancellation remains available and does not consume its inputs.
+        if self.char_id and not quest.repeatable and done(quest.type):
+            return False
         # A row a timed window keeps (events.py, data/schedule.json quests):
         # on offer -- and, carried, at its taker's -- only while it is open.
         if not events.quest_open(quest.type, carried):
@@ -3021,8 +3178,6 @@ class Session:
             return False
         if carried:
             return True
-        if quest.level > self.skill_level():
-            return False
         # A craftsman's step (setcraft.py) only for the piece in the bag.
         if not setcraft.offered(quest, self.inv.bag_pieces):
             return False
@@ -3039,9 +3194,6 @@ class Session:
                        else STORE.lent_at(self.char_id, quest.type))
             if lent_at is not None and lent_at >= self.day_start():
                 return False
-        done = state.done if state is not None else lambda t: STORE.quest_done(self.char_id, t)
-        if not quest.repeatable and done(quest.type):
-            return False
         if quest.per_day and quest.done_for_today(state.today(quest.type) if state is not None
                 else STORE.quests_done_since(self.char_id, self.day_start(), [quest.type])):
             return False
@@ -3172,6 +3324,9 @@ class Session:
         and the bag holds what a craft row asks beyond its things (a
         salvage's broken gun, craft.ready), which is told and refused the
         same way."""
+        quest = eden.priced(quest, getattr(self, "eden_sentence", None))
+        if not eden.allowed(self, quest):
+            return False
         if quest.type == training_ground.EXIT_QUEST:
             return False
         if quest.type == training_ground.ENTRY_QUEST and not training_ground.entry_available(self):
@@ -3284,6 +3439,8 @@ class Session:
         quest = quests.get(int(p.get("q_type", 0)))
         cmd, params = quest.si_frame() if quest else quests.stub_si(p.get("q_type", 0))
         self.send(cmd, **params)
+        if quest and quest.type in (eden.GOLD_EXIT, eden.AFRO_EXIT) and getattr(self, "eden_sentence", None):
+            self.answer(eden.price_text(self.eden_sentence))
 
     def cmd_q_di(self, p):
         """Progress of one instance. Only the character's own are known.
@@ -3356,9 +3513,17 @@ class Session:
         if isinstance(failed, (storage.CommitError, residence.StaleState)):
             # A lost database reply can mean COMMIT already succeeded. Never
             # save the old purse/stats over it or continue with stale items.
+            eden_exit = bool(way and way[1].type in eden.EXIT_QUESTS)
+            if eden_exit:
+                self._failed_location_entry = True
             try:
                 self.char = progression.Character.load(STORE, self.char_id)
-                if way is not None and STORE.quest(way[0]) is None:
+                if eden_exit:
+                    # The release may have committed, including its fee and
+                    # home position. Never save this socket's old Eden body.
+                    self.eden_sentence = eden.assigned(STORE, self.char_id)
+                if (way is not None and way[1].type not in eden.EXIT_QUESTS
+                        and STORE.quest(way[0]) is None):
                     # The paid trip committed but will not run on this socket.
                     self.refund_way(way[1])
             except Exception:
@@ -3550,6 +3715,22 @@ class Session:
         if not quest or npc_type not in quest.take:
             self.send("cmdAck", res=RES_WRONG_NPC)
             return
+        if quest.type in eden.QUESTS:
+            # Both placement and sentence are checked again under the quest
+            # character lock. A forged/stale journal cannot pay for an escape.
+            sentence = eden.assigned(STORE, self.char_id)
+            npc = self.room.npc(int(p.get("mob", 0))) if self.room else None
+            if not sentence or not eden.inside(self.loc):
+                self.send("cmdAck", res=RES_NO_SUCH)
+                return
+            if not eden.allowed(self, quest, sentence=sentence):
+                self.send("cmdAck", res=RES_NOT_AVAILABLE)
+                return
+            if not npc or not progression.within_reach(
+                    self.live_cell(), npc[0], self.loc.width, self.loc.height):
+                self.send("cmdAck", res=progression.ERR_TOO_FAR)
+                return
+            quest = eden.priced(quest, sentence)
         why = residence.refusal(self.character(), quest.type, p)
         if why:
             self.send("cmdAck", res=RES_NOT_AVAILABLE)
@@ -3561,12 +3742,20 @@ class Session:
                 self.send("cmdAck", res=progression.ERR_TOO_FAR)
                 return
         if quests.acquisition_blocked(quest) or quest.over_cap(self.skill_level()) \
+                or quest.level > self.skill_level() \
                 or not events.quest_open(quest.type, True):
             self.send("cmdAck", res=RES_NOT_AVAILABLE)
             if quest.type in quests.DISABLED_ACADEMY_LESSONS:
                 self.answer("Учебные занятия на получение опыта отключены. Задание можно отменить в журнале.")
             elif quest.type in quests.TEMPORARILY_DISABLED_QUESTS:
                 self.answer("Задания на получение компонентов и сборку Паладина временно отключены.")
+            return
+        # Read live history while quest_write holds the character lock,
+        # before taking any input or paying anything. This also closes old
+        # active instances after a repeatable quest becomes one-off.
+        if not quest.repeatable and STORE.quest_done(self.char_id, quest.type):
+            self.send("cmdAck", res=RES_NOT_AVAILABLE)
+            self.answer("Это задание уже выполнено этим персонажем. Повторная награда недоступна.")
             return
         # A warehouse box's row: the hand-in asks the holders' gate again
         # (holdings.box_refusal) -- a member who took it at half past seven
@@ -3597,8 +3786,9 @@ class Session:
                 self.send("cmdAck", res=RES_NOT_AVAILABLE)
                 self.answer(str(why))
                 return
-        way = training_entry or travel.is_quest_way(quest.type)
-        if way and not training_entry:
+        eden_exit = quest.type in eden.EXIT_QUESTS
+        way = training_entry or eden_exit or travel.is_quest_way(quest.type)
+        if way and not (training_entry or eden_exit):
             try:
                 travel.plan_quest_way(self.loc, quest.type,
                                       round(self.gx), round(self.gy))
@@ -3696,6 +3886,9 @@ class Session:
                  ", drawn %s" % (drawn,) if drawn else "",
                  quest.rew_xp or "-",
                  ", spec xp %s" % quest.rew_spec_xp if quest.rew_spec_xp else "")
+        if eden_exit:
+            eden.complete_release(self, STORE, travel.home(
+                STORE.character(self.char_id), (START_LOC, GLOBAL_X, GLOBAL_Y)))
         self.send("cmdAck", res=0)
         if way:
             return q_id, quest
@@ -3769,6 +3962,9 @@ class Session:
         hand-in paid a reward too. The rest of the hand-in stands -- the
         history, a reward -- as before.
         """
+        if quest.type in eden.EXIT_QUESTS:
+            eden.departure(self, STORE)
+            return
         if quest.type == training_ground.ENTRY_QUEST:
             try:
                 training_ground.enter_from_quest(self)
@@ -3851,6 +4047,9 @@ class Session:
                 or self.combat.dead):
             self.refund_way(quest)
             return
+        if quest.over_cap(self.skill_level()) or quest.level > self.skill_level():
+            self.refund_way(quest)
+            return
         hold = self.hold_line("отправитесь")
         if hold is not None:
             reason, line = hold
@@ -3871,6 +4070,13 @@ class Session:
             self.say(str(why))
             self.refund_way(quest)
             return
+        if travel.quest_way(self.loc, quest.type).get('set_home'):
+            # Persist the ride and its home together before the lcall: a
+            # disconnect while loading must not keep the previous city home.
+            with storage.atomic(STORE.db):
+                STORE.save_position(self.char_id, dest.loc_id, dest.pos,
+                                    dest.gx, dest.gy, False)
+                STORE.set_home(self.char_id, dest.loc_id, dest.gx, dest.gy)
         self.cancel_travel()
         self.gx, self.gy = dest.gx, dest.gy
         self.loc = world.location(dest.loc_id)
@@ -4725,6 +4931,22 @@ def apply_admin_action(row):
 
     if row["char_id"] is None:
         return "действию нужен персонаж"
+
+    if kind in ("eden", "eden_release"):
+        try:
+            return eden.admin_apply(STORE, row, sess, travel.home(
+                STORE.character(row["char_id"]), (START_LOC, GLOBAL_X, GLOBAL_Y)))
+        except storage.CommitError:
+            if sess is not None:
+                # A lost COMMIT reply must not leave an ordinary online body
+                # while the durable sentence already confines its character.
+                try:
+                    sess.char = progression.Character.load(STORE, sess.char_id)
+                    sess.eden_sentence = eden.assigned(STORE, sess.char_id)
+                finally:
+                    sess._failed_location_entry = True
+                    sess.close(force=True)
+            raise
 
     if sess is not None:
         if kind == "money":

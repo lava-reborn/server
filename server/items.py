@@ -1530,6 +1530,12 @@ def wiki_names():
     for t, name in craft.item_names().items():
         if t in catalogue():
             out.setdefault(t, name)
+    # Recovered objects without a wiki-to-type match still have a hand-made
+    # record (loot_manual). Keep its words beside its numerical overlay,
+    # without replacing an existing wiki or original name.
+    for t, rec in loot_manual().items():
+        if t in catalogue() and rec.get("name_ru"):
+            out.setdefault(t, clean_text(rec["name_ru"]))
     return out
 
 
@@ -1551,6 +1557,10 @@ def wiki_descs():
             out[t] = text
     for t, text in craft.item_descs().items():         # as wiki_names
         if t in catalogue():
+            out.setdefault(t, text)
+    for t, rec in loot_manual().items():
+        text = clean_text(rec.get("desc_ru", ""))
+        if text and t in catalogue():
             out.setdefault(t, text)
     return out
 

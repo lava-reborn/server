@@ -22,6 +22,7 @@ import logging
 from collections import namedtuple
 
 import camp_elites
+import eden
 
 import names
 import travel
@@ -384,7 +385,8 @@ def placement_problems(mob_types, table=None):
             root = mob_types[type_id][0]
             if world.retired_creature(type_id):
                 out.append("%s: a creature out of the game (data/retired.json)" % what)
-            if world.creature_role(type_id) == "object":
+            if world.creature_role(type_id) == "object" \
+                    and not (eden.inside(loc) and type_id in eden.PALMS):
                 out.append("%s: a loot box or a heap of ore, not an inhabitant" % what)
             if root == world.MOB and not loc.war:
                 out.append("%s: a hostile creature in a location at peace" % what)

@@ -409,7 +409,8 @@ OPS = {
     "getvar": 0x1C, "gettime": 0x34, "delete": 0x3A, "definelocal": 0x3C, "callfunc": 0x3D, "return": 0x3E,
     "add2": 0x47, "less2": 0x48, "equals2": 0x49, "getmember": 0x4E,
     "setmember": 0x4F, "callmethod": 0x52, "newmethod": 0x53,
-    "modulo": 0x3F, "duplicate": 0x4C, "typeof": 0x44, "try": 0x8F, "initarray": 0x42, "initobject": 0x43, "newobject": 0x40,
+    "modulo": 0x3F, "duplicate": 0x4C, "stackswap": 0x4D, "enumerate2": 0x55,
+    "typeof": 0x44, "try": 0x8F, "initarray": 0x42, "initobject": 0x43, "newobject": 0x40,
 }
 
 
@@ -3349,6 +3350,8 @@ def injected(training=None):
     wraps += inventory_controls['wraps']
     from quest_window_client import patches as quest_window_patches
     wraps += quest_window_patches(Asm, UNDEF)['wraps']
+    from eden_inventory_client import patches as eden_inventory_patches
+    wraps += eden_inventory_patches(Asm, UNDEF)['wraps']
     from restore_price_client import patches as restore_patches
     restoration = restore_patches(Asm, UNDEF)
     for name, params, body in restoration["globals"]:

@@ -14,6 +14,7 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(os.path.dirname(HERE), "server"))
 import world  # noqa: E402
+import eden  # noqa: E402
 
 FILES = ["npc_names.json", "npc_wiki.json", "trader_stock_wiki.json",
          "loot_wiki.json", "mob_types.json", "mob_curves.json",
@@ -45,7 +46,9 @@ def main():
     names = data["npc_names.json"]["names"]
     for tid, name in names.items():
         assert int(tid) in mt, "npc_names: type %s not in mobs.xml" % tid
-        assert mt[int(tid)][0] != 0, "npc_names: type %s is a mob, not an NPC" % tid
+        if mt[int(tid)][0] == world.MOB:
+            assert int(tid) in eden.PALMS and world.creature_role(int(tid)) == "object", \
+                "npc_names: type %s is a mob, not an NPC or an Eden palm" % tid
         assert name.strip(), "npc_names: empty name for %s" % tid
     for tid, name in ORIGINAL.items():
         assert names.get(tid) == name, "npc_names: original entry %s changed" % tid

@@ -15,6 +15,25 @@ from testkit import check, fails  # noqa: E402
 RES = os.environ.get("LAVA_RES", "/mnt/c/Users/gmkrt/OneDrive/Desktop/LAVA/res")
 raw = open(os.path.join(RES, "database", "locations.xml"), "rb").read()
 edits = M.load()
+EDEN_PRIOR = {
+    (5857, 1928): 'Плантация Эдем<br>Сортировщик гнилых бананов',
+    (5857, 1930): 'Плантация Эдем<br>Сортировщик зрелых бананов',
+    (5859, 1930): 'Плантация Эдем<br>Сортировщик зелёных бананов',
+}
+OLD_COMPATIBILITY = {(x, y, prior) for (x, y), old in EDEN_PRIOR.items()
+                     for prior in (old, 'Плантация Эдем<br>Сортировщик бананов')}
+SPECIALISTS = {(5857, 1929): 'Плантация Эдем<br>Сортировщик гнилых бананов',
+               (5858, 1930): 'Плантация Эдем<br>Сортировщик зрелых бананов',
+               (5859, 1929): 'Плантация Эдем<br>Сортировщик зелёных бананов'}
+COMPATIBILITY = OLD_COMPATIBILITY | {
+    (*cell, 'Плантация Эдем<br>Сортировщик бананов') for cell in SPECIALISTS}
+check("the six Eden compatibility rules hide only exact obsolete overlay rows",
+      {(x, y, was) for x, y, was, new in edits
+       if was is not None and was.startswith('Плантация Эдем<br>Сортировщик') and new is None},
+      OLD_COMPATIBILITY)
+check("the three exact generic overlay labels become specialist names on the current cells",
+      {(x, y): new for x, y, was, new in edits
+       if (x, y, was) in COMPATIBILITY and new is not None}, SPECIALISTS)
 
 WAREHOUSE_LEVELS = {(5998, 1697): 8, (6002, 1738): 8, (5957, 1743): 12,
                     (5913, 1976): 12, (5931, 2031): 16, (5883, 2060): 16,
@@ -40,6 +59,10 @@ def rows_at(doc, x, y, was):
 
 print("every edit names one row the client really has")
 for x, y, was, new in edits:
+    if (x, y, was) in COMPATIBILITY:
+        check("the original has no later Eden overlay text at (%d,%d)" % (x, y),
+              rows_at(raw, x, y, was), [])
+        continue
     if was is None:
         # An added row (a place of ours put on the map) names a cell that
         # has no row of its text yet.
@@ -50,14 +73,28 @@ for x, y, was, new in edits:
 
 print("the real file")
 out, changed = M.apply(raw)
-check("every edit applied", changed, len(edits))
+# A recovery fallback adds a canonical row only when its historical retext
+# could not provide it. Both rules are intentional; they are one change on
+# the original file, not two copies of its label.
+retexted = {(x, y, new) for x, y, was, new in edits
+            if was is not None and new is not None and (x, y, was) not in COMPATIBILITY}
+fallbacks = {(x, y, new) for x, y, was, new in edits if was is None} & retexted
+check("the only retext/add fallback is the restored Eden town label",
+      sorted((x, y) for x, y, _text in fallbacks),
+      [(5858, 1929)])
+check("every original edit applied once; matching recovery fallbacks add no duplicate",
+      changed, len(edits) - len(fallbacks) - len(COMPATIBILITY))
 tree = rows_at(raw, 6266, 1822, "Новогодняя Елка")
 check("the farm's New Year label is gone", rows_at(out, 6266, 1822, "Новогодняя Елка"), [])
 check("the farm's own name is still there, and is now the cell's only one",
       len(rows_at(out, 6266, 1822, "Ферма Говарда Хаксли <BR>Здесь можно найти задания.")), 1)
 want = raw
 for x, y, was, new in edits:
+    if (x, y, was) in COMPATIBILITY:
+        continue
     if was is None:
+        if rows_at(want, x, y, new):
+            continue
         end = want.rfind(b"</data>")
         want = want[:end] + b'<location x="%d" y="%d" text="%s" />\n' % (
             x, y, M.escape(new).encode("utf-8")) + want[end:]
@@ -71,6 +108,7 @@ for x, y, was, new in edits:
                                              b'text="' + M.escape(new).encode("utf-8") + b'"', 1), 1)
 check("nothing else moved: the file less the hidden rows, the retexted ones retexted in place",
       out, want)
+check("a second application leaves the complete edited file byte-identical", M.apply(out), (out, 0))
 # And the slums of Абри lose theirs, a line of their name (the owner's Абри,
 # 2026-10-12: a name of the map knows no season; server/test_abri_cut.py),
 # Донгола's pier its own (the owner's Донгола, 2026-10-13;

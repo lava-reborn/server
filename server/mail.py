@@ -39,9 +39,11 @@ import time
 import unicodedata
 
 import accounts
+import eden
 import inventory
 import gold_trade
 import items
+import mortimer
 import rooms
 import storage
 from protocol import BigUInt, Str, every
@@ -100,11 +102,14 @@ FLAG_OUTBOX = 1 << 7
 # cmdAck codes the client words (MailInspector.*Ack)
 RES_OK = 0
 RES_BAN = 2
-RES_REFUSED = 3            # nothing on screen, the client only skips ctml
+RES_REFUSED = 3            # generic failure; ErrorReport also displays a server error
 RES_NO_ADDRESSEE = 34      # "Игрок <..> не найден"
 RES_NO_LETTER = 35
 RES_NOTHING_TO_TAKE = 36
 RES_NOT_IN_CLAN = 37
+# This send failure has no generic ErrorReport message or window listener.
+# As with clan refusals, give the real policy reason separately in chat.
+RES_PARCEL_REFUSED = 37
 
 # ctml codes (MailInspector.sendMailControlPacket_XMC / getObjectsControlPacket_XMC)
 CODE_NONE = 0              # no case matches: an empty slot
@@ -124,6 +129,11 @@ SUBJECT_MAX = 120          # MailInterface.__sendLetter: subj.substr(0, 120)
 # players by the auction alone, as ingots, and gold earned on a second
 # character would otherwise be posted to the first and cashed.
 GOLD_BY_POST = False
+
+# Gold loot, not purchased G equipment: the same valuables Mortimer buys,
+# his sand, and every supported ingot denomination. Restrict new player
+# mail only; old parcels and auction deliveries must remain claimable.
+GOLD_LOOT_NOT_POSTABLE = frozenset(items.GOLD_INGOTS) | mortimer.VALUABLES | {mortimer.SAND}
 
 # Tariffs (svml), in the order MailParam reads them: letter, express
 # letter, clan, express clan, per kg, express per kg, order, express
@@ -164,9 +174,10 @@ def postable(type_id):
     does not change hands, as at the barter and the auction (the owner's
     cut of (P), 2026-09-30), nor one the owner took out by name
     (items.out_of_game, data/retired.json items: Steyr TMP and Chang Feng,
-    2026-10-14). Gold items use the same binding rule as barter."""
+    2026-10-14). Purchased G equipment follows barter's binding rule, but
+    gold loot cannot be posted even when it may otherwise be traded."""
     from barter import tradable
-    return tradable(type_id)
+    return type_id not in GOLD_LOOT_NOT_POSTABLE and tradable(type_id)
 
 
 def stamp(when):
@@ -364,6 +375,11 @@ class Mail:
         if not self.char_id:
             self.ack(RES_REFUSED)
             return
+        if eden.confined(self.sess) and (
+                every(p, "item") or _money(p.get("afro")) or _money(p.get("gold"))):
+            self.ack(RES_PARCEL_REFUSED)
+            self.sess.answer("На плантации Эдем нельзя отправлять вещи или деньги по почте.")
+            return
         kind = int(p.get("type", 0) or 0)
         if kind in (CLAN, CLAN_EXPRESS):
             self.clan_letter(p, kind)
@@ -398,6 +414,10 @@ class Mail:
         rows = []
         for text in oids:
             row = self.sess.inv.find(text)
+            if row is not None and row["type_id"] in GOLD_LOOT_NOT_POSTABLE:
+                self.ack(RES_PARCEL_REFUSED)
+                self.sess.answer("Слитки, золотой песок и золотые ценности нельзя пересылать почтой.")
+                return
             if row is None or not postable(row["type_id"]):
                 # The window only offers what the bag holds and what may
                 # change hands, so this is a modified client or a stale id;
@@ -567,7 +587,18 @@ class Mail:
                 if self.side_of(row) != "in":
                     self.ack(RES_NO_LETTER)
                     return
+                if attached(row) and eden.confined(self.sess):
+                    self.ack(RES_PARCEL_REFUSED)
+                    self.sess.answer("На плантации Эдем нельзя получать вещи или деньги по почте. Вложения сохранены.")
+                    return
                 snaps = json.loads(row["items_json"])
+                if any(eden.restricted_item(s["type_id"]) for s in snaps):
+                    # Legacy or administratively imported parcels must not
+                    # smuggle plantation property out after a release. Keep
+                    # the whole parcel and any payment unchanged for review.
+                    self.ack(RES_PARCEL_REFUSED)
+                    self.sess.answer("Вложение содержит местные предметы Эдема. Получение недоступно, письмо сохранено.")
+                    return
                 if any(items.acquisition_blocked(s["type_id"]) for s in snaps):
                     self.ack(RES_REFUSED)
                     self.sess.answer("Получение оружия и брони выше 17 уровня временно недоступно. Вложения сохранены.")
@@ -658,6 +689,15 @@ class Mail:
         its list that are gone here. The window asks one letter at a time.
         """
         ids = every(p, "id")
+        if eden.confined(self.sess):
+            for text in ids:
+                row = self.store.mail_letter(letter_id(text))
+                if self.side_of(row) == "in" and attached(row):
+                    # Refusing a parcel normally sends it back. That must
+                    # not become another way to transfer goods from Eden.
+                    self.ack(RES_PARCEL_REFUSED)
+                    self.sess.answer("На плантации Эдем нельзя возвращать или удалять письма с вложениями. Письмо сохранено.")
+                    return
         for text in ids:
             row = self.store.mail_letter(letter_id(text))
             if self.side_of(row) == "in" and row["from_char"] == SYSTEM_SENDER \

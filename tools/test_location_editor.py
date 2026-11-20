@@ -676,9 +676,9 @@ check("set_rows: a table written as json.dumps(indent=1) gets its row the same w
 same = []
 for i in (0, 1, 35, 102, 266, 522, 673, 1380):
     m = E.load_model(i)
-    same.append((i, m["state"], E.model_bytes(m) == open(E.original_path(i), "rb").read()))
-check("the model of an original file writes it back byte for byte", same,
-      [(i, "original", True) for i in (0, 1, 35, 102, 266, 522, 673, 1380)])
+    same.append((i, m["state"], E.model_bytes(m) == open(E.file_of(i), "rb").read()))
+check("the effective file, original or overlay, writes back byte for byte", same,
+      [(i, "ours" if E.is_ours(i) else "original", True) for i in (0, 1, 35, 102, 266, 522, 673, 1380)])
 m102 = E.load_model(102)
 loc102 = world.location(102)
 check("the model agrees with the server's reading: walls, entries, spawns",

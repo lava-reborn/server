@@ -30,6 +30,7 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(os.path.dirname(HERE), "server"))
+import eden_map  # noqa: E402
 import travel  # noqa: E402
 import world  # noqa: E402
 
@@ -147,17 +148,20 @@ def main():
                 for y, row in enumerate(rows) for x, ch in enumerate(row)
                 if (gx0 + x, gy0 + y) not in repairs
                 and (gx0 + x, gy0 + y) not in hand
-                and world.passable(gx0 + x, gy0 + y) is not (ch in PASSABLE)]
+                and world.passable(gx0 + x, gy0 + y) is not
+                (ch in PASSABLE and not eden_map.inside_cell(gx0 + x, gy0 + y))]
     assert not disagree, \
         "terrain: world.passable disagrees with the picture at %d cells: %s" % (
             len(disagree), disagree[:10])
     # A repair opens what the picture called rock, and a hand-drawn wall
     # closes it again: the order is hand, then repairs, then the picture.
     overruled = [c for c in repairs if not world.passable(*c)]
-    assert all(c in hand for c in overruled), \
+    assert all(c in hand or eden_map.inside_cell(*c) for c in overruled), \
         "terrain: a cell a location file calls its own exit is blocked by" \
         " neither a hand nor anything else: %s" % (
-            [c for c in overruled if c not in hand][:6],)
+            [c for c in overruled if c not in hand and not eden_map.inside_cell(*c)][:6],)
+    assert all(not world.passable(*c) for c in eden_map.CELL_TO_LOC), \
+        "terrain: ordinary travel can enter the administrative Eden region"
     rock_cells = [(gx0 + x, gy0 + y)
                   for y, row in enumerate(rows) for x, ch in enumerate(row)
                   if ch == "#"]

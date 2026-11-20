@@ -373,7 +373,8 @@ try:
     AH_BLOCKS, AH_CELLS = [649, 650, 651, 652, 653], (651, 652, 653)
     check("the armbands stay in the blocks, and drop only there, off the prisoners and the"
           " godfather, one each (with Донгола's and Абу-Хамед's prisons beside)",
-          (SCHEDULE.keep_in, sorted(k for k in SCHEDULE.loot
+          ([(things, locs) for things, locs in SCHEDULE.keep_in if BAND in things],
+           sorted(k for k in SCHEDULE.loot
                                     if k[0] not in DN_CELLS + AH_CELLS)),
           ([(frozenset([BAND]), frozenset(BLOCKS + DN_BLOCKS + AH_BLOCKS))],
            sorted((loc, mob) for loc in (CENTRE, NORTH_CELLS, EAST_CELLS)

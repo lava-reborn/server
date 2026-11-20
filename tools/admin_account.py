@@ -76,6 +76,11 @@ CHILDREN = (
     ("map_marks", "char_id = ?", 1),
     ("char_quests", "char_id = ?", 1),
     ("char_quests_done", "char_id = ?", 1),
+    ("ground", "uniq IN (SELECT uniq FROM eden_ground WHERE owner_char = ?)", 1),
+    ("items", "char_id = 0 AND uniq IN (SELECT uniq FROM eden_ground WHERE owner_char = ?)", 1),
+    ("eden_ground", "owner_char = ?", 1),
+    ("char_eden", "char_id = ?", 1),
+    ("char_eden_visits", "char_id = ?", 1),
     # Trophies (server/trophies.py): the collection, the entries deleted
     # from it (kept, nobody's, for the hour's pay mark of the killer), and
     # the words of a trophy that is a thing in this character's hands --

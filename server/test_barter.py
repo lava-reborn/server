@@ -725,6 +725,9 @@ try:
     a.send("chWorld;")
     a.until(lambda f: f[0] == "lcall")
     enter(a)
+    # Returning from the map selects an entrance from the map position.
+    # Rejoin the exchange partner by walking before testing logout cleanup.
+    testkit.walk_to(a, pos)
     drain(a, b, c)
 
     # --- logging out mid-barter -------------------------------------------------------------

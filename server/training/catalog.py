@@ -75,6 +75,7 @@ def item_line(type_id):
 @lru_cache(maxsize=1)
 def item_catalogue():
     eligible, rewards = obtainable_sources()
+    excluded = set(map(int, content.data().get('excluded_sources', {})))
     extra = {t for info in sets.SETS.values() if info['level'] <= MAX_LEVEL
              for t in info['members'].values()}
     extra.update(t for info in training_sets.records().values() if info['level'] <= MAX_LEVEL
@@ -94,7 +95,9 @@ def item_catalogue():
     extra.update(t for t, info in items.wiki().items() if items.root_of(t) == items.HEAL
                  and any(word in items.catalogue()[t][1].casefold() for word in
                          ('newyear', 'valentine', 'oct31', 'march', 'may9', 'june', 'ny20', 'febr')))
-    eligible = eligible | extra
+    # Obtaining an item through a quest does not make place-bound work tools
+    # range equipment. Exclude before family expansion and after all sources.
+    eligible = (eligible | extra) - excluded
     # P counterparts are offered only inside the sandbox. Do not enumerate the
     # thousands of unused/placeholder premium templates as usable equipment.
     families = {item_family(items.catalogue()[t][1]) for t in eligible
@@ -104,7 +107,7 @@ def item_catalogue():
                            item_family(name) in families or
                            root in (items.HEAL, items.AMMO) and
                            (t in items.wiki() or t in items.heal_manual()))}
-    eligible = eligible | premium_sources
+    eligible = (eligible | premium_sources) - excluded
     mod_labels = {}
     for rec in craft.rows().values():
         if rec.get('family') == 'upgrade' and rec.get('line') in ('A', 'G'):

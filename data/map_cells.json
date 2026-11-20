@@ -135,7 +135,9 @@
    "seams": []}
  ],
  "keep": {},
- "paint": {},
+ "paint": {
+  "5858,1929": {"colour": "green", "why": "The owner's Eden update, 2026-11-16: mark only the recovered town with the standard green settlement square; all sixty-one work cells retain the original photograph."}
+ },
  "bare": {
   "5941,1696": "The owner's cut of everything across the river, 2026-10-13 («все локации за рекой не нужны»): «Бункер Доктора \"Д\"» in Доктор «Д»'s column of names on the far bank by Вади-Хальфа, hidden with the column; no place under it, no square in the picture.",
   "5941,1698": "The owner's cut of everything across the river, 2026-10-13 («все локации за рекой не нужны»): «Ущелье Смерти» in Доктор «Д»'s column of names on the far bank by Вади-Хальфа, hidden with the column; no place under it, no square in the picture.",
@@ -167,10 +169,6 @@
   "5833,1607": "The owner's cut of everything across the river, 2026-10-13 («все локации за рекой не нужны»): «Западные Предгорья.» in the north-west corner of the map beyond the lake, an older drawing of the valley, hidden with the corner's eight names; no place under it, no square in the picture.",
   "5834,1607": "The owner's cut of everything across the river, 2026-10-13 («все локации за рекой не нужны»): «Западный Посёлок.» in the north-west corner of the map beyond the lake, an older drawing of the valley, hidden with the corner's eight names; no place under it, no square in the picture.",
   "5840,1607": "The owner's cut of everything across the river, 2026-10-13 («все локации за рекой не нужны»): «Нубийский Рынок» in the north-west corner of the map beyond the lake, an older drawing of the valley, hidden with the corner's eight names; no place under it, no square in the picture.",
-  "5858,1929": "The owner's cut of everything across the river, 2026-10-13 («все локации за рекой не нужны»): «Плантация \"Эдем\"» on the island in the Nile north of Керма, on the owner's wall, hidden with the island's four names; no file of it, no square in the picture.",
-  "5857,1928": "The owner's cut of everything across the river, 2026-10-13 («все локации за рекой не нужны»): «Сортировщик гнилых бананов» on the island in the Nile north of Керма, on the owner's wall, hidden with the island's four names; no file of it, no square in the picture.",
-  "5857,1930": "The owner's cut of everything across the river, 2026-10-13 («все локации за рекой не нужны»): «Сортировщик хороших бананов» on the island in the Nile north of Керма, on the owner's wall, hidden with the island's four names; no file of it, no square in the picture.",
-  "5859,1930": "The owner's cut of everything across the river, 2026-10-13 («все локации за рекой не нужны»): «Сортировщик зеленых бананов» on the island in the Nile north of Керма, on the owner's wall, hidden with the island's four names; no file of it, no square in the picture.",
   "5912,1993": "The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже», decision 13 of its plan): a remnant of (P) whose name is hidden (data/map_labels.json); «Песчаная Кобра». The picture has no square on the cell.",
   "5885,2035": "The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже», decision 13 of its plan): a remnant of (P) whose name is hidden (data/map_labels.json); «Еретик Альберт», below the ДСР's camp. The picture has no square on the cell.",
   "5873,2008": "The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже», decision 13 of its plan): a remnant of (P) whose name is hidden (data/map_labels.json); «Побережье», above Донгола's own coast 105. The picture has no square on the cell.",

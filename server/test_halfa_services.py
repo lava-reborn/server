@@ -193,9 +193,9 @@ try:
           ([], []))
     rows = {t: quests.get(t) for t in range(CASH_1, LOTTERY_G + 1)}
     check("Мортимер's seven rows are his, services, repeatable, their strings preloaded",
-          [(q.give, q.take, q.service, q.repeatable, all(names.known(i) for i in q.string_ids()))
+          [(q.give, q.take, q.service, q.repeatable, q.level, all(names.known(i) for i in q.string_ids()))
            for t, q in sorted(rows.items()) if t < LOTTERY],
-          [([MORTIMER], [MORTIMER], True, 1, True)] * 7)
+          [([MORTIMER], [MORTIMER], True, 1, 3, True)] * 7)
     check("  ..cashing: an ingot for its ounces less 0.05",
           [(q.wants(), q.rew_gold) for q in (rows[CASH_1], rows[CASH_5], rows[CASH_10])],
           [([(INGOT_1, 1)], 95), ([(INGOT_5, 1)], 495), ([(INGOT_10, 1)], 995)])
@@ -398,6 +398,9 @@ try:
     c.send("actPlayer;")
     c.until(lambda f: f[0] == "lcall")
     got = arrive(c)
+    # Meet the gold minimum through the live session; keep combat skills unchanged.
+    c.send("userMsg;entry=@/skill 3 3@;group=0;")
+    c.frames()
     here = infos(got)
     # --- the healer, «Прописка» ---------------------------------------------------------
     kind, healer = here.get(HEALER, ("", {}))

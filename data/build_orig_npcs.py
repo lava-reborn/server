@@ -83,6 +83,7 @@ import json
 import os
 import re
 import sys
+import xml.etree.ElementTree as ET
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(os.path.dirname(HERE), "server"))
@@ -916,10 +917,14 @@ def load_creatures():
     """type_id -> root, internal name, art folder (mobs.xml) and a trusted level."""
     levels = read_json(os.path.join(HERE, "mob_types.json"))["types"]
     out = {}
-    for t, (root, internal, res) in world.mob_types().items():
+    # This is original-data recovery, not the live registry augmented with
+    # our own NPC aliases (for example Eden's separate buyback counter).
+    source = ET.fromstring(world._read(os.path.join(world.RES, "database", "mobs.xml")))
+    for row in source.iter("mob"):
+        t, root = int(row.get("type_id")), int(row.get("root_type_id"))
         j = levels.get(str(t), {})
         lvl = j.get("level") if j.get("level_source") in LEVEL_SOURCES else None
-        out[t] = dict(root=root, internal=internal, res=res, level=lvl)
+        out[t] = dict(root=root, internal=row.get("name"), res=row.get("resource") or "", level=lvl)
     return out
 
 

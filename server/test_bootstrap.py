@@ -113,8 +113,12 @@ try:
     tile = map_cells.tile_path(14010)
     if os.path.isfile(os.path.join(res_dir, *tile.split("/"))):
         painted, _report = map_cells.apply(map_cells.reader(res_dir))
-        check('a map tile with a retired place\'s square comes painted over',
-              post('/res/' + tile), (200, painted[tile]))
+        with open(os.path.join(res_dir, *tile.split("/")), "rb") as fh:
+            original = fh.read()
+        # apply returns changed tiles only; an already clean picture is
+        # served byte for byte, just like an unrelated one below.
+        check('a map tile is served as the release paints it, or unchanged when already clean',
+              post('/res/' + tile), (200, painted.get(tile, original)))
         plain = map_cells.tile_path(14012)
         with open(os.path.join(res_dir, *plain.split("/")), "rb") as fh:
             check('  ..and a tile with none of them as it is', post('/res/' + plain), (200, fh.read()))
@@ -241,12 +245,13 @@ try:
         for mine, like in sorted(icons.items()):
             with open(os.path.join(world.RES, *like.split("/")), "rb") as fh:
                 served_icons[mine] = get("/res/" + mine) == fh.read()
-        check("each one's icon served, its quest piece's picture byte for byte:"
+        check("each one's icon served, its original's picture byte for byte:"
               " classes/WearItem/helm_Bs_U_LVL_12_G_mod00/ico.swf and the four others, and"
-              " since 2026-10-14 Тёмное Эхо (G)'s five, helm_Bs_U_LVL_16_G_mod00 ...",
+              " Тёмное Эхо (G)'s five, and the Eden cleaver",
               served_icons, dict.fromkeys(["classes/WearItem/%s_Bs_U_LVL_%d_G_mod00/ico.swf"
                                            % (s, lvl) for lvl in (12, 16)
-                                           for s in ("helm", "shirt", "armor", "pants", "boots")],
+                                           for s in ("helm", "shirt", "armor", "pants", "boots")]
+                                          + ["classes/ColdArm/eden_banana_cleaver/ico.swf"],
                                           True))
     else:
         print("  --  no quest pieces' icons in %s; the check of ours is skipped" % world.RES)

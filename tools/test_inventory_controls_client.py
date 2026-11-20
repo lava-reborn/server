@@ -412,6 +412,9 @@ class InventoryControls(unittest.TestCase):
     def test_shift_sale_keeps_real_gold_quote_guard_in_chain(self):
         panel, bag = self.owner('TradeInterface')
         spec = gold_patches(w.Asm, w.UNDEF)
+        for name, args, body in spec['globals']:
+            if name in ('__esActive', '__esNominal'):
+                self.env['_global'][name] = Function(args, body.assemble(), self.env)
         ask = next(Function(args, body.assemble(), self.env)
                    for path, method, keep, args, body in spec['wraps'] if method == 'askTradeItem')
         self.env['_global']['__moActive'] = lambda: False

@@ -249,10 +249,16 @@ check("set pieces are types the client has, all of them clothing",
       [t for t in pieces if cat.get(t, (None,))[0] != items.WEAR], [])
 check("hand-made cold-arm numbers are for cold arms the client has",
       [t for t in cold if cat.get(t, (None,))[0] != items.COLD_ARM], [])
-check("the hand-made loot numbers -- the mine's sand and emeralds, the gold ingots of "
+eden_loot = {4231, 4232, 4233, 4234, 4235, 4236, 4237, 4304, 60010}
+check("Eden's local item overlays keep their catalogue roots",
+      {t: cat.get(t, (None,))[0] for t in eden_loot if t in loot},
+      {t: items.WEAR if t == 4304 else items.COLD_ARM if t == 60010 else items.TRASH
+       for t in eden_loot})
+check("the other hand-made loot numbers -- the mine's sand and emeralds, the gold ingots of "
       "1, 5 and 10 ounces -- are for simple objects the client has and the wiki lacks",
-      (sorted(t for t in loot if t != 4203),
-       [t for t in loot if t != 4203 and (cat.get(t, (None,))[0] != items.TRASH or t in wiki)]),
+      (sorted(t for t in loot if t != 4203 and t not in eden_loot),
+       [t for t in loot if t != 4203 and t not in eden_loot
+        and (cat.get(t, (None,))[0] != items.TRASH or t in wiki)]),
       ([2258, 3159, 4796, 4797, 7620], []))
 check("the academy quest knife has only a death-drop override; its wiki data stays intact",
       (cat[4203][0], 4203 in wiki,

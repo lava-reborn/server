@@ -160,6 +160,13 @@ def execute(code, env):
             else: stack.append(fn)
         elif op == 0x4C:
             stack.append(stack[-1])
+        elif op == 0x4D:  # StackSwap
+            stack[-2], stack[-1] = stack[-1], stack[-2]
+        elif op == 0x55:  # Enumerate2: sparse property keys and a null sentinel.
+            obj = stack.pop()
+            stack.append(None)
+            stack.extend(list(obj) if isinstance(obj, dict) else
+                         [str(i) for i, value in enumerate(obj) if value is not None])
         elif op == 0x44:
             v = stack.pop()
             stack.append('undefined' if v is None else 'boolean' if isinstance(v, bool)

@@ -165,7 +165,9 @@ for (key, qtype), rec in sorted(WAYS.items()):
     # is nobody's to stand beside.
     if not q.give and not q.take:
         continue
-    here = {s for _, s in loc.spawns}
+    # Authored placements stand beside the file's own inhabitants too
+    # (the Eden sorters are deliberately supplied by that table).
+    here = {s for _, s in loc.spawns} | {r["type"] for r in world.placed_in(key)}
     check("%s: given by somebody who stands here" % key,
           bool(q.give) and all(t in here for t in q.give), True)
     # And by nobody anywhere else: the way is asked of the room it is handed

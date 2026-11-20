@@ -23,7 +23,7 @@ class CombatXpCap(unittest.TestCase):
         spec = 2 if skill == p.SHOOTING else 0
         ch.spec[spec] = [0, 0, p.spec_xp_max(0)]
         f = combat.Fighter.__new__(combat.Fighter)
-        f.sess = NS(character=lambda: ch, push_vitals=lambda: None)
+        f.sess = NS(loc=NS(id=100), character=lambda: ch, push_vitals=lambda: None)
         f.stats_changed = lambda changed: None
         return f, ch, spec
 

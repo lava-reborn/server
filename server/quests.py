@@ -1039,8 +1039,8 @@ def _say_per_day():
     """Append daily notes and skill goals after the original overlay.
 
     The original's own dailies say it in their text; the rows this server
-    made daily (DESIGNED per_day: «Золотоискатель», the prison's armbands,
-    the quarry's stones) did not, and the client has no flag to say it for
+    made daily (DESIGNED per_day: the prison's armbands, the quarry's
+    stones) did not, and the client has no flag to say it for
     them: Quest.repeatable alone makes it print «Задание является
     повторяемым», and a quest handed in today is simply not offered
     (server.py Session.quest_available), so a player read «повторяемым»,

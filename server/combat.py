@@ -43,6 +43,9 @@ from collections import namedtuple
 import action_animation
 import battle_medicine
 import bosses
+import eden
+import eden_harvest
+import eden_ground
 import events
 import holdings
 import inventory
@@ -1698,6 +1701,8 @@ class Fighter:
                 self.ack(inventory.RES_NOT_FOUND)
                 return
             hexcell = tid
+        if eden_harvest.try_attack(self, row, target, hexcell):
+            return
         if row is None or row["root"] == items.COLD_ARM:
             self.strike_with(row, target, hexcell)
             return
@@ -1763,11 +1768,15 @@ class Fighter:
                                          num_shots=weapon.num_shots)))
         # The aim bar on the client runs fire_times[cur_mode] from faAim to
         # the first faShot (WeaponPan.aim); the burst waits the same.
+        args = (row["uniq"], target, hexcell, weapon, cost, rounds)
+        palm_cycle = eden_harvest.attack_cycle(rc, target)
+        if palm_cycle is not None:
+            args += (palm_cycle,)
         Fighter.schedule_action(self, revision, "aim",
             pace.paced(si.get("fire_times", [700])[mode] / 1000.0),
-            self.fire_now, row["uniq"], target, hexcell, weapon, cost, rounds)
+            self.fire_now, *args)
 
-    def fire_now(self, uniq, target, hexcell, weapon, cost, rounds=None):
+    def fire_now(self, uniq, target, hexcell, weapon, cost, rounds=None, palm_cycle=None):
         """The burst, after the aim. num_shots pairs go out come what may:
         the client has already counted them from faAim. rounds is what the
         pull takes from the magazine (one for a shotgun's charge of shot,
@@ -1776,6 +1785,10 @@ class Fighter:
         self.aim = None
         rc = self.rc
         if rc is None or self.dead:
+            return
+        if palm_cycle is not None and not eden_harvest.same_cycle(rc, target, palm_cycle):
+            Fighter.action_cancelled(self, stop_aim=True)
+            self.c_ap()
             return
         if target is not None and target.is_player and Fighter.allied(self, target):
             Fighter.action_cancelled(self, stop_aim=True)
@@ -1914,6 +1927,9 @@ class Fighter:
         # a fist has no uniq and wears nothing.
         args = (target, hexcell, bounds, spec, cost,
                 row["uniq"] if row is not None else None)
+        palm_cycle = eden_harvest.attack_cycle(rc, target)
+        if palm_cycle is not None:
+            args += (palm_cycle,)
         if delay:
             # The strike bar runs strike_time from the send to caHit/caMiss
             # (WeaponPan.strike); a fist has none and lands at once.
@@ -1922,10 +1938,14 @@ class Fighter:
         else:
             Fighter.finish_action(self, revision, "strike", self.strike_now, args)
 
-    def strike_now(self, target, hexcell, dmg_range, spec, cost, uniq=None):
+    def strike_now(self, target, hexcell, dmg_range, spec, cost, uniq=None, palm_cycle=None):
         self.strike = None
         rc = self.rc
         if rc is None or self.dead:
+            return
+        if palm_cycle is not None and not eden_harvest.same_cycle(rc, target, palm_cycle):
+            Fighter.action_cancelled(self, stop_aim=True)
+            self.c_ap()
             return
         if target is not None and target.is_player and Fighter.allied(self, target):
             Fighter.action_cancelled(self, stop_aim=True)
@@ -1963,6 +1983,7 @@ class Fighter:
                 fields['no_war'] = 1
             rc.room.broadcast(("caHit", fields))
             rc.hit_landed(self, target)
+            eden_harvest.before_native_damage(rc, target)
             killed = target.apply_damage(h, s)
             rc.push_vitals(target)
         else:
@@ -2189,6 +2210,8 @@ class Fighter:
         Стрельба 6 picking up a knife is a beginner with the blade, and the
         level-1 dog has to teach the knife (test_combat pins it).
         """
+        if eden_harvest.is_palm(self.sess.loc, target):
+            return
         st = getattr(target, "stats", None)
         if st is None or dealt <= 0:
             return
@@ -2521,7 +2544,8 @@ class Fighter:
         if bag is None:
             return []
         rows = [self.store.item(u) for u in bag.uniqs]
-        return [r for r in rows if r is not None]
+        return [r for r in rows if r is not None
+                and eden_ground.visible(self, r, bag.cell)]
 
     def ss_upd(self, p):
         """Loot.UPD_*: 1 to the bag, 2 back to the ground, 3 everything,
@@ -2543,6 +2567,9 @@ class Fighter:
             return True
         Fighter.stop_movement(self)
         bag = rc.loot.get(self.loot) if rc is not None else None
+        if bag is not None and eden.inside(loc):
+            eden_ground.refresh_bag(rc, bag)
+            bag = rc.loot.get(self.loot)
         # A session on the player's own cell outlives its bag (close_bag):
         # the window or the equipment's drop is still open on the client,
         # and the next thing put down there puts a new bag down.
@@ -2559,6 +2586,12 @@ class Fighter:
             if row is None or row["uniq"] not in bag.uniqs:
                 self.ack(inventory.RES_NOT_FOUND)
                 return True
+            if eden.restricted_item(row["type_id"]):
+                if tuple(parsed[1:]) != (row['type_id'], row['root']):
+                    self.ack(inventory.RES_NOT_FOUND)
+                else:
+                    eden_ground.take(self, bag, [row])
+                return True
             if items.acquisition_blocked(row["type_id"]):
                 self.ack(inventory.RES_REFUSED)
                 return True
@@ -2574,8 +2607,10 @@ class Fighter:
             if row is None:
                 self.ack(inventory.RES_NOT_FOUND)
                 return True
-            if gold_item(row["type_id"]):
+            if eden.restricted_item(row["type_id"]) or gold_item(row["type_id"]):
                 # A shared ground bag must not bypass gold gear's binding.
+                # Plantation property cannot be handed to another worker or
+                # left behind to outlive its owner's release and cleanup.
                 # Refuse before changing ownership or creating a bag; the
                 # failed transfer ack restores the item on the client.
                 self.ack(inventory.RES_REFUSED)
@@ -2597,6 +2632,9 @@ class Fighter:
             rc.add_to_bag(self.loot, [row])
         elif code == 3:
             rows = self.session_items()
+            if any(eden.restricted_item(r['type_id']) for r in rows):
+                eden_ground.take(self, bag, rows)
+                return True
             if any(items.acquisition_blocked(r["type_id"]) for r in rows):
                 self.ack(inventory.RES_REFUSED)
                 return True
@@ -2691,6 +2729,7 @@ class RoomCombat:
         self.store = store
         self.mobs = {eid: mobs.Mob(eid, npc.type_id, npc.cell)
                      for eid, npc in room.npcs.items() if npc.root == world.MOB}
+        eden_harvest.prepare_room(self)
         # The ones that keep hours instead of the respawn timer (bosses.py):
         # keep_hours brings them in and sends them away.
         self.bosses = [m for m in self.mobs.values() if bosses.keeps_hours(m.type_id)]
@@ -2833,6 +2872,8 @@ class RoomCombat:
 
     def regen_mob(self, mob, t):
         """Camp bosses recover by elapsed quiet minutes, even while a room sleeps."""
+        if eden_harvest.is_palm(self.room.loc, mob):
+            return
         if not mob.alive or mob.target is not None:
             return
         boss = bosses.uses_camp_recovery(self.room.loc.id, mob.type_id)
@@ -3198,6 +3239,7 @@ class RoomCombat:
         try:
             for body, (h, s, hits, _sp) in struck.items():
                 pool = 0 if body.is_player else body.hp
+                eden_harvest.before_native_damage(self, body)
                 killed = body.apply_damage(h, s)
                 if body is target:
                     result = (h, s, hits, killed)
@@ -3305,6 +3347,8 @@ class RoomCombat:
 
     # --- death, corpse, bag, respawn ----------------------------------------------------
     def kill(self, victim, killer, *, blueprint_killer_level=None):
+        if eden_harvest.native_kill(self, victim, killer):
+            return
         if victim.is_player:
             victim.die(killer)
             if killer is not None and killer.is_player and killer is not victim:
@@ -3499,6 +3543,7 @@ class RoomCombat:
             if r["uniq"] not in bag.uniqs:
                 bag.uniqs.append(r["uniq"])
             bag.until[r["uniq"]] = until[r["uniq"]]
+        eden_ground.remember(self, bag, rows)
         self.arm_bag(bag)
 
     def arm_bag(self, bag):
@@ -3633,6 +3678,8 @@ class RoomCombat:
                 for f in viewers:
                     f.ran_out += shown
             self.store.sweep_ground(gone, LOOT_OWNER)
+            if eden.inside(self.room.loc):
+                eden_ground.sweep_metadata(self.store)
             for uniq in gone:
                 bag.uniqs.remove(uniq)
                 bag.until.pop(uniq, None)
@@ -3822,6 +3869,7 @@ def restore_ground(rooms_, store, now=None):
     is cleared (Store.clear_ground), and so is a thing whose room cannot be
     built any more. Returns (cleared, put back)."""
     swept = store.clear_ground(LOOT_OWNER, now)
+    eden_ground.sweep_metadata(store)
     by_place = {}
     for row in store.on_ground(LOOT_OWNER):
         by_place.setdefault((row["loc"], row["gx"], row["gy"]), []).append(row)
