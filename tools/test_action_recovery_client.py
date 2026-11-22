@@ -38,12 +38,12 @@ class ActionRecoveryClient(unittest.TestCase):
         self.call('__bfRecovery',None,dict(param=dict(id=0,recovery_ms=120)))
         return scene,figure
 
-    def test_stalled_firing_releases_last_move_once_after_server_floor(self):
+    def test_stalled_firing_releases_last_deferred_input_once_after_server_floor(self):
         _,figure=self.stalled_shot()
-        owner=dict(__bfRequestMoveOrig=lambda cell,splice:self.executed.append(cell))
-        self.call('__bfRequest0',owner,'old',None)
+        owner=dict(__bfRequestHealOrig=lambda cell:self.executed.append(cell))
+        self.call('__bfRequest4',owner,'old')
         self.now=800
-        self.call('__bfRequest0',owner,'last',None)
+        self.call('__bfRequest4',owner,'last')
         self.now=1099
         self.call('__bfDrainInput',None)
         self.assertNotIn('last',self.executed)
@@ -58,8 +58,8 @@ class ActionRecoveryClient(unittest.TestCase):
 
     def test_watchdog_does_not_cut_slow_but_progressing_firing(self):
         _,figure=self.stalled_shot()
-        owner=dict(__bfRequestMoveOrig=lambda *args:self.executed.append('move'))
-        self.call('__bfRequest0',owner,'cell',None)
+        owner=dict(__bfRequestHealOrig=lambda *args:self.executed.append('move'))
+        self.call('__bfRequest4',owner,'cell')
         for now,frame in ((900,1),(1700,2),(2500,0),(3300,1)):
             self.now=now
             figure['currentFrameNumber']=frame
@@ -116,8 +116,8 @@ class ActionRecoveryClient(unittest.TestCase):
 
     def test_new_firing_bundle_gets_its_own_progress_deadline(self):
         scene,figure=self.stalled_shot()
-        owner=dict(__bfRequestMoveOrig=lambda *args:self.executed.append('move'))
-        self.call('__bfRequest0',owner,'cell',None)
+        owner=dict(__bfRequestHealOrig=lambda *args:self.executed.append('move'))
+        self.call('__bfRequest4',owner,'cell')
         self.now=1000
         self.call('__bfVisualFlush',None,scene,figure,False)
         self.call('__bfAim',scene,dict(aim=0,num_shots=1,seq=2))
@@ -150,8 +150,8 @@ class ActionRecoveryClient(unittest.TestCase):
         _,figure,sounds,traces,_=self.fx.confirmed_volley(count=9)
         figure.update(id=0,behavior='fire',currentFrameNumber=0,onEnterFrame=True)
         self.global_['__bfOwnerFigure']=figure
-        owner=dict(__bfRequestMoveOrig=lambda *args:self.executed.append('move'))
-        self.call('__bfRequest0',owner,'cell',None)
+        owner=dict(__bfRequestHealOrig=lambda *args:self.executed.append('move'))
+        self.call('__bfRequest4',owner,'cell')
         self.now=1100
         self.call('__bfDrainInput',None)
         self.call('__bfDrainInput',None)
@@ -205,16 +205,16 @@ class ActionRecoveryClient(unittest.TestCase):
         self.assertEqual(self.executed.count('fire'), 1)
         self.assertEqual(self.executed.count('swap'),1)
 
-    def test_last_move_runs_on_final_firing_frame_without_waiting_for_fire_out(self):
+    def test_deferred_medicine_runs_on_final_firing_frame_without_waiting_for_fire_out(self):
         scene,figure=self.fx.scene()
         figure.update(id=0,behavior='fire',animationEnabled=True,isActive=True,
                       onEnterFrame=True,__bfScene=scene)
         self.call('__bfAim',scene,dict(aim=0,num_shots=1,seq=1))
         self.call('__bfFire',scene,dict(gunnerID=0,access=True,seq=1))
         self.call('__bfRecovery',None,dict(param=dict(id=0,recovery_ms=120)))
-        owner=dict(__bfRequestMoveOrig=lambda c,splice:self.executed.append(c))
-        self.call('__bfRequest0',owner,'first',None)
-        self.call('__bfRequest0',owner,'last',None)
+        owner=dict(__bfRequestHealOrig=lambda c:self.executed.append(c))
+        self.call('__bfRequest4',owner,'first')
+        self.call('__bfRequest4',owner,'last')
         self.assertEqual(len(self.timers),1)
         self.now=219
         self.call('__bfDrainInput',None)
@@ -282,27 +282,24 @@ class ActionRecoveryClient(unittest.TestCase):
         self.call('__bfClearInput',None)
         self.assertIsNone(self.global_['__bfMoveIntent'])
 
-    def test_clicks_during_shot_keep_latest_destination_and_rebuild_at_execution(self):
+    def test_move_after_shot_is_sent_once_immediately_without_timer_or_replay(self):
         state=dict(cell=10)
         owner=dict(__bfRequestMoveOrig=lambda cell,splice:
                    self.executed.append((state['cell'],cell,splice)))
         self.global_['__bfRecoveryUntil']=500
-        for target in range(20,40):
-            self.call('__bfRequest0',owner,target,False)
-        self.assertEqual(len(self.timers),1)
-        self.assertFalse(any(isinstance(x,tuple) for x in self.executed))
-        # Authoritative state may update while the committed animation finishes.
+        self.call('__bfRequest0',owner,20,False)
+        self.assertEqual([x for x in self.executed if isinstance(x,tuple)], [(10,20,False)])
+        self.assertFalse(self.timers)
         state['cell']=11
         self.now=500
         self.call('__bfDrainInput',None)
         self.call('__bfDrainInput',None)
         moves=[x for x in self.executed if isinstance(x,tuple)]
-        self.assertEqual(moves,[(11,39,False)])
+        self.assertEqual(moves,[(10,20,False)])
         self.assertIsNone(self.global_['__bfInputTimer'])
-        # Subsequent rerouting uses the unchanged native entry point immediately.
         self.call('__bfRequest0',owner,50,True)
         self.assertEqual(self.executed[-1],(11,50,True))
-        self.assertEqual(len(self.timers),1)
+        self.assertFalse(self.timers)
 
     def test_auto_fire_does_not_wait_for_previous_cosmetic_sequence(self):
         activator=dict(__bfRequestFireOrig=lambda a,b:self.executed.append('fire'))
@@ -352,8 +349,8 @@ class ActionRecoveryClient(unittest.TestCase):
 
     def test_location_change_discards_pending_input_and_timer(self):
         self.global_['__bfRecoveryUntil']=500
-        owner=dict(__bfRequestMoveOrig=lambda a,b:self.executed.append('move'))
-        self.call('__bfRequest0',owner,'cell',None)
+        owner=dict(__bfRequestHealOrig=lambda a:self.executed.append('move'))
+        self.call('__bfRequest4',owner,'cell')
         self.master['currentLocation']={"new":True}
         self.now=600
         self.call('__bfDrainInput',None)

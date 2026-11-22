@@ -71,7 +71,7 @@ class ActionRecovery(unittest.IsolatedAsyncioTestCase):
             self.assertTrue(any(n=='actionCancel' and p.get('stop_aim')
                                 for n,p in seat.writer.frames))
 
-    async def test_committed_shot_allows_next_aim_while_move_and_heal_keep_their_locks(self):
+    async def test_committed_shot_allows_move_and_next_aim_without_refunding_shot(self):
         callback,args,when=self.complete_shot()
         expected=action_animation.duration_ms(self.a,items.params_of(25566),1)
         self.assertEqual(self.case.store.item(self.gun['uniq'])['ammo_count'],7)
@@ -80,18 +80,16 @@ class ActionRecovery(unittest.IsolatedAsyncioTestCase):
         medicine=self.a.inv.create(6055)
         with self.case.at(when+.01):
             self.a.writer.frames.clear()
-            self.a.move_in_location(dict(path=[0,1]))
-            self.assertIsNone(self.a.walk)
+            self.a.handle('moveTo', dict(path=[0,1]))
+            self.assertIsNotNone(self.a.walk)
             self.a.combat.use_fire(dict(obj=inventory.oid_of(self.gun),target='1%08x'%self.b.pid))
             self.a.combat.use_heal(dict(obj=inventory.oid_of(medicine)),inventory.USE_IDLE)
             self.assertIsNotNone(self.a.combat.aim)
             self.assertIsNone(self.a.combat.healing)
-            self.assertEqual(self.a.writer.frames[0][0],'breakMv')
-            retry=self.a.writer.frames[0][1]['recovery_ms']
-            self.assertGreater(retry,0)
-            self.assertLessEqual(retry,expected)
+            self.assertFalse(any(name == 'breakMv' for name, _p in self.a.writer.frames))
             acknowledgements=[p for n,p in self.a.writer.frames if n=='cmdAck']
-            self.assertEqual([p['res'] for p in acknowledgements], [inventory.RES_OK, inventory.RES_NOT_READY])
+            self.assertEqual([p['res'] for p in acknowledgements],
+                             [inventory.RES_OK, inventory.RES_OK, inventory.RES_NOT_READY])
             callback(*args)  # Replayed completion is inert, including its recovery.
             self.assertEqual(self.a.combat.recovery_until,ends)
         self.assertEqual(self.case.store.item(self.gun['uniq'])['ammo_count'],7)
@@ -104,11 +102,13 @@ class ActionRecovery(unittest.IsolatedAsyncioTestCase):
         _,_,when=self.complete_shot()
         self.assertEqual(self.case.store.item(self.gun['uniq'])['ammo_count'],7)
         with self.case.at(when):
-            self.a.combat.use_fire(dict(obj=inventory.oid_of(self.gun),target='1%08x'%self.b.pid))
+            self.a.handle('ss_use', dict(type=inventory.USE_FIRE, obj=inventory.oid_of(self.gun),
+                                        target='1%08x' % self.b.pid))
             timer = self.a.combat.aim
             self.assertIsNotNone(timer)
         with self.case.at(when+.001):
-            self.a.combat.use_fire(dict(obj=inventory.oid_of(self.gun),target='1%08x'%self.b.pid))
+            self.a.handle('ss_use', dict(type=inventory.USE_FIRE, obj=inventory.oid_of(self.gun),
+                                        target='1%08x' % self.b.pid))
             self.assertIs(self.a.combat.aim, timer)
         self.assertEqual(self.case.store.item(self.gun['uniq'])['ammo_count'],7)
 

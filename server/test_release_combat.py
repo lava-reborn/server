@@ -434,13 +434,16 @@ class ReleaseCatalogue(unittest.TestCase):
         with patch.object(effects, 'multiplier', return_value=3):
             self.assertEqual(multiplier(), 1)
 
-    def test_live_sets_match_pinned_simulator_health_stamina_and_armour(self):
+    def test_other_live_sets_match_pinned_simulator_health_stamina_and_armour(self):
         import battle_balance
         import sets
         frozen = battle_balance.data()
+        # These reviewed live-only targets have their own exact totals and
+        # partial-set coverage in test_release_sets. The range stays frozen.
+        late_sets = {10961, 10965, 11002, 11004}
         for key, fields in frozen['equipment'].items():
             t = int(key)
-            if items.root_of(t) != items.WEAR or not sets.set_of(t):
+            if items.root_of(t) != items.WEAR or not sets.set_of(t) or sets.set_of(t) in late_sets:
                 continue
             params = items.params_of(t)
             for name in ('armor_class', 'bonus_hp', 'bonus_st'):
@@ -448,7 +451,7 @@ class ReleaseCatalogue(unittest.TestCase):
                     self.assertEqual(params[name], fields[name], (t, name))
         for key, bonuses in frozen['sets'].items():
             set_id = int(key)
-            if set_id not in sets.SETS:
+            if set_id not in sets.SETS or set_id in late_sets:
                 continue
             frame = sets.frame(set_id)
             for count, row in bonuses.items():

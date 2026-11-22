@@ -234,6 +234,15 @@ def __bfRequest{i}({args}):
             remember = '''    master = lol.core.Master.getInstance()
     _global.__bfMoveIntent = {"owner":this, "args":[cell, spliceNum], "location":master.currentLocation, "retried":False}
 '''
+            source += f'''
+def __bfRequest{i}({args}):
+{stop_auto}{remember}    _global.__bfPendingInput = None
+    if _global.__bfInputTimer:
+        clearInterval(_global.__bfInputTimer)
+    _global.__bfInputTimer = None
+    return this.{keep}({args})
+'''
+            continue
         source += f'''
 def __bfRequest{i}({args}):
 {stop_auto}{remember}    if _global.__bfDefer(this, "{keep}", [{args}]):

@@ -8116,52 +8116,70 @@
     "10749": {
       "bonus_hp": 24,
       "armor_class": 31,
-      "bonus_st": 66
+      "bonus_st": 66,
+      "bonus_od": 7,
+      "bonus_cp": 3
     },
     "10750": {
       "bonus_hp": 24,
       "armor_class": 23,
-      "bonus_st": 114
+      "bonus_st": 114,
+      "bonus_od": 7
     },
     "10751": {
       "bonus_hp": 24,
       "armor_class": 274,
-      "bonus_st": 71
+      "bonus_st": 71,
+      "bonus_od": 7
     },
     "10752": {
       "bonus_hp": 24,
       "armor_class": 23,
-      "bonus_st": 109
+      "bonus_st": 109,
+      "bonus_od": 7,
+      "bonus_ce": 3
     },
     "10753": {
       "bonus_hp": 24,
       "armor_class": 13,
-      "bonus_st": 38
+      "bonus_st": 38,
+      "bonus_od": 7,
+      "bonus_cp": 2,
+      "bonus_ce": 2
     },
     "10769": {
       "bonus_hp": 26,
       "armor_class": 36,
-      "bonus_st": 72
+      "bonus_st": 72,
+      "bonus_od": 8
     },
     "10770": {
       "bonus_hp": 26,
       "armor_class": 31,
-      "bonus_st": 123
+      "bonus_st": 123,
+      "bonus_od": 8
     },
     "10771": {
       "bonus_hp": 26,
       "armor_class": 345,
-      "bonus_st": 77
+      "bonus_st": 77,
+      "bonus_od": 8,
+      "bonus_cp": 3
     },
     "10772": {
       "bonus_hp": 26,
       "armor_class": 31,
-      "bonus_st": 118
+      "bonus_st": 118,
+      "bonus_od": 8,
+      "bonus_ce": 3
     },
     "10773": {
       "bonus_hp": 26,
       "armor_class": 16,
-      "bonus_st": 41
+      "bonus_st": 41,
+      "bonus_od": 8,
+      "bonus_cp": 2,
+      "bonus_ce": 2
     },
     "10899": {
       "bonus_hp": 3,
@@ -18262,10 +18280,13 @@
         "st": 75
       },
       "4": {
-        "hp": 50
+        "hp": 50,
+        "od": 10,
+        "ce": 14
       },
       "5": {
-        "st": 124
+        "st": 124,
+        "cp": 14
       }
     },
     "10965": {
@@ -18277,10 +18298,13 @@
         "st": 95
       },
       "4": {
-        "hp": 50
+        "hp": 50,
+        "od": 15,
+        "ce": 16
       },
       "5": {
-        "st": 160
+        "st": 160,
+        "cp": 16
       }
     },
     "11125": {

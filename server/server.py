@@ -627,7 +627,7 @@ class Session:
             return
         # Dead: the client's own filter lets only resurrect through
         # (FilterManager.createDSFilter), so this is the server's copy of it.
-        if self.combat.blocks(cmd, expects_ack(cmd, params)):
+        if self.combat.blocks(cmd, expects_ack(cmd, params), params):
             return
         fn = getattr(self, "cmd_" + cmd, None)
         if not fn:
@@ -4547,8 +4547,6 @@ class Session:
         The walk animation starts solely from a server userMove, including for
         the player who asked.
         """
-        if combat.Fighter.refuse_recovery(self.combat, moving=True):
-            return
         path = p.get("path")
         # Location.movePlayer registers a cmdAck handler for every single step
         # it asks for. Leaving those unanswered does not stall movement, since

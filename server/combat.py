@@ -211,7 +211,7 @@ BAG_DROP_CHANCE = int(os.environ.get("LAVA_BAG_DROP", "30"))
 #
 # Everything else is an action, and the client's own filter
 # (FilterManager.createDSFilter) never sends one while dead.
-RECOVERY_COMMANDS = frozenset(('moveTo', 'ss_use', 'ss_move', 'chWorld', 'ss_create'))
+RECOVERY_COMMANDS = frozenset(('ss_use', 'ss_move', 'chWorld', 'ss_create'))
 
 DEAD_PASSES = frozenset((
     "hello", "login", "logout", "selPers", "newPers", "actPlayer", "lenter",
@@ -1380,15 +1380,16 @@ class Fighter:
         except Exception:
             log.exception("  !!    combat close failed")
 
-    def blocks(self, cmd, wants_ack):
+    def blocks(self, cmd, wants_ack, params=None):
         """The dead filter (FilterManager.createDSFilter): the client sends
         nothing but resurrect while dead, so an action that arrives anyway
         came from a modified one and is refused -- with an ack where one is
         owed, and an empty page for a search that waits on its own queue,
         so every queue stays in step. What still goes through, and why, is
         DEAD_PASSES."""
-        if not self.dead and cmd in RECOVERY_COMMANDS:
-            if Fighter.refuse_recovery(self, moving=cmd == 'moveTo'):
+        firing = cmd == 'ss_use' and (params or {}).get('type') in (inventory.USE_FIRE, '16')
+        if not self.dead and cmd in RECOVERY_COMMANDS and not firing:
+            if Fighter.refuse_recovery(self):
                 return True
         if not self.dead or cmd in DEAD_PASSES:
             return False
@@ -1657,7 +1658,7 @@ class Fighter:
         """type=16: a shot with the primary firearm, or a strike with a blade
         or the bare fist (obj=x0, ItemActivator.strike)."""
         # A committed shot's cosmetic sequence must not delay the next aim.
-        # Movement/healing/swaps keep their own committed-action checks.
+        # Healing/reloading/swaps keep their own committed-action checks.
         sess = self.sess
         rc = self.rc
         if rc is None or sess.on_map or self.dead:

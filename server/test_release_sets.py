@@ -1,5 +1,6 @@
 """Declared armour levels, client warnings and gear-independent combat XP."""
 import json
+from itertools import product
 import logging
 import os
 from pathlib import Path
@@ -88,6 +89,50 @@ class ReleaseSets(unittest.TestCase):
         before = json.dumps(doc, sort_keys=True)
         set_release_rules.apply(doc['sets'])
         self.assertEqual(json.dumps(doc, sort_keys=True), before)
+
+    def test_echo_and_sturm_full_sets_have_the_approved_progression(self):
+        # Count actual item frames and cumulative K=2..5 bonuses, as worn.
+        expected = {10961: (230, 780, 550, 60, 32, 32),
+                    10965: (248, 875, 650, 70, 35, 35),
+                    11002: (250, 850, 624, 65, 34, 34),
+                    11004: (270, 953, 730, 75, 38, 38)}
+        for sid, values in expected.items():
+            rows = self.set_rows(sid)
+            bonus = inventory.gear_bonus(rows)
+            armour = sum(items.params_of(r['type_id'])['armor_class'] for r in rows)
+            self.assertEqual((bonus['hp'], bonus['st'], armour, bonus['od'],
+                              bonus['cp'], bonus['ce']), values, sid)
+
+    @staticmethod
+    def set_rows(sid):
+        return [dict(type_id=t, root=items.WEAR, slot=slot, brk=1)
+                for slot, t in zip(inventory.SET_SLOTS, sets.SETS[sid]['members'].values())]
+
+    def test_mixed_late_sets_do_not_exceed_complete_sturm(self):
+        for echo, sturm in ((10961, 11002), (10965, 11004)):
+            low, high = self.set_rows(echo), self.set_rows(sturm)
+            ceiling = inventory.gear_bonus(high)
+            for choices in product((0, 1), repeat=5):
+                rows = [(low, high)[pick][i] for i, pick in enumerate(choices)]
+                actual = inventory.gear_bonus(rows)
+                for key in sets.SCALARS:
+                    self.assertLessEqual(actual[key], ceiling[key], (echo, choices, key))
+
+    def test_partial_echo_bonuses_are_monotonic_and_broken_parts_do_not_count(self):
+        for sid in (10961, 10965):
+            rows = self.set_rows(sid)
+            full = inventory.gear_bonus(rows)
+            for choices in product((0, 1), repeat=5):
+                partial = [r for r, keep in zip(rows, choices) if keep]
+                actual = inventory.gear_bonus(partial)
+                for key in sets.SCALARS:
+                    self.assertLessEqual(actual[key], full[key], (sid, choices, key))
+                broken = [dict(r, brk=keep) for r, keep in zip(rows, choices)]
+                total = inventory.gear_bonus(broken)
+                counted = sets.bonuses([r['type_id'] for r in partial])
+                for key in sets.SCALARS:
+                    own = sum(items.params_of(r['type_id'])['bonus_' + key] for r in rows)
+                    self.assertEqual(total[key], own + counted[key], (sid, choices, key))
 
     def test_client_armour_has_no_level_warning(self):
         target = dict(currDDOperation=dict(fromItem=dict(rootID=items.WEAR)),
