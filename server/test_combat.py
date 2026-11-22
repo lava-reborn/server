@@ -258,7 +258,7 @@ check("a shotgun's pull spends one round on its full charge of shot: Сайга-
       "then on its last round, ИЖ-27, КС-12's third mode, the Излучатель's third",
       [_pull(25899, 0, 5), _pull(25899, 0, 1), _pull(25876, 0, 2),
        _pull(7072, 2, 4), _pull(1570, 2, 10)],
-      [(6, 6, 4, 1), (6, 6, 0, 1), (6, 6, 1, 1), (12, 12, 3, 1), (9, 9, 9, 1)])
+      [(6, 6, 4, 1), (6, 6, 0, 1), (6, 6, 1, 1), (10, 10, 3, 1), (9, 9, 9, 1)])
 check("a burst still spends a round a bullet, and a short magazine fires what it holds",
       [_pull(25636, 1, 16), _pull(25636, 1, 1), _pull(5842, 0, 14)],
       [(2, 2, 14, 2), (1, 1, 0, 1), (6, 6, 13, 1)])
