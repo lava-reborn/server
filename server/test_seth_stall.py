@@ -72,6 +72,10 @@ WALTHER, KS, ST = 25636, 6092, 6104
 HELM, SHIRT, ARMOR, PANTS, BOOTS = 10179, 10180, 10181, 10182, 10183
 ALPHA, OMEGA = 4181, 3208
 STALL = [WALTHER, KS, ST, SHIRT, PANTS, BOOTS, HELM, ARMOR, ALPHA, OMEGA]
+# The combat release adds the other four qualities of his pistol's calibre.
+# Keep the original shopping basket independent of the live wire indices.
+LIVE_STALL = [WALTHER, KS, ST, 6116, 6140, 6164, 6152,
+              SHIRT, PANTS, BOOTS, HELM, ARMOR, ALPHA, OMEGA]
 # Rounds are bought by the number, anything else one at a time.
 ROUNDS = 20
 # What each costs, worked out by hand from the frames (pmod 1): the pistol
@@ -98,7 +102,7 @@ check("  ..standing in «Арена Нубии» (167), the cell 6270x1831",
       (world.location_at(*ARENA_CELL), [t for _c, t in world.location(ARENA).spawns]),
       (ARENA, [SETH]))
 check("his stall is the wiki page's list, in its order: the data/npcs.json entry",
-      (npcs.stock(SETH), items.stock_for(SETH)), (STALL, STALL))
+      (npcs.stock(SETH), items.stock_for(SETH)), (STALL, LIVE_STALL))
 check("  ..each by the name the player reads",
       [names.text(items.STRING_ID_OFFSET + t) for t in STALL],
       ["Walther P99$Пистолет", "9мм НАТО $КС", "9мм НАТО $СТ", "Рубашка", "Джинсы",
@@ -290,19 +294,20 @@ try:
     info = stalls[0] if stalls else {}
     check("  ..trading his list, in its order, and mending (the page's «Ремонт»)",
           (as_list(info.get("type_list")), info.get("can_trade"), info.get("can_repair")),
-          (STALL, 1, 1))
+          (LIVE_STALL, 1, 1))
     npc = info.get("id")
 
     # What the window asks for each thing on the stall.
     frames = {}
-    for t in STALL:
+    for t in LIVE_STALL:
         c.send("ss_get_si;type=%d;" % t)
         cmd = FRAME[items.root_of(t)]
         got = named(c.until(cmd), cmd)
         frames[t] = got[0] if got else {}
     check("every thing on the stall answers its window, under its own name and price",
           {t: (p.get("type"), p.get("name"), p.get("cost"), p.get("g_cost")) for t, p in frames.items()},
-          {t: (t, items.STRING_ID_OFFSET + t, items.params_of(t)["cost"], 0) for t in STALL})
+          {t: (t, items.STRING_ID_OFFSET + t, items.params_of(t)["cost"],
+               items.params_of(t)["g_cost"]) for t in LIVE_STALL})
     off = {}
     for t in ARTICLE:
         p = frames[t]
@@ -328,7 +333,8 @@ try:
     afro = purse()
     check("the purse starts at LAVA_START_AFRO", afro, START_AFRO)
     bought, charged = {}, {}
-    for idx, t in enumerate(STALL):
+    for t in STALL:
+        idx = LIVE_STALL.index(t)
         n = ROUNDS if items.root_of(t) == items.AMMO else 1
         c.send("ss_upd;param=%d;obj=x%x;s_status=1;" % (n, idx))
         got = c.frames(0.8)

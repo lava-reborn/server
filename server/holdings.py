@@ -72,11 +72,11 @@ What the holders get, in the site's room only:
             and sells nothing (may_repair, inventory.Inventory.repair). The
             flags of the other cities' warehouses mend for anybody, as
             before;
-  the box   the daily «Патроны и афро владельцам склада» (data/quests.json
-            765-767, holders), at the box from 19:00 to 20:00 (data/
-            schedule.json wh_box): to a member of the holding clan of a
-            day's standing, one character of an account a day (box_refusal,
-            asked at the take and at the hand-in).
+  the box   the shared daily ingots (data/quests.json, gold_quest), at the
+            box from 19:00 to 20:00 (data/schedule.json wh_box): to a member
+            of the holding clan of a day's standing with treasury rights.
+            The site/day claim is atomic with the grant. The former
+            personal ammo/afro quests 765-771 remain closed even in old journals.
 
 What is said. Nothing in the chat (the owner, 2026-10-09: no lines of the
 server's about captures): every outcome -- a capture, a defence, a kill that
@@ -689,10 +689,17 @@ def refresh(room, s):
     id and the client asks its rows again, the new holders finding the
     offer and the old ones losing it."""
     _resend_flag(room, s)
+    _touch_quests(s)
+
+
+def _touch_quests(s):
     if s.box:
         events.touch(s.box)
     if s.rent_quest:
         events.touch(s.flag)
+    import quests
+    if s.loc == quests.LABORANT_LOC:
+        events.touch(quests.LABORANT_NPC)
 
 
 def _resend_flag(room, s):
@@ -714,10 +721,7 @@ def changed(sessions, s):
             seen.append(room)
     for room in seen:
         _resend_flag(room, s)
-    if s.box:
-        events.touch(s.box)
-    if s.rent_quest:
-        events.touch(s.flag)
+    _touch_quests(s)
 
 
 # --- from outside the kill -------------------------------------------------------------------

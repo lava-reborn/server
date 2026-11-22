@@ -114,8 +114,10 @@ HAND = {184: [(1135, [56, 88], False)],
         289: [(2367, [28, 69], False), (2368, [14, 95], False), (2369, [20, 13], False),
               (2370, [20, 85], False), (2371, [36, 114], False), (2372, [23, 9], False),
               (2373, [24, 80], False), (2374, [41, 38], False)],
-        118: [(7454, [32, 26], False)],
-        382: [(7451, [39, 37], False), (4428, [41, 38], False)]}
+        118: [(7454, [32, 26], False), (4829, [24, 25], False),
+              (4829, [40, 21], False), (4829, [39, 32], False)],
+        382: [(7451, [39, 37], False), (4428, [41, 38], False),
+              (4828, [30, 37], False), (4828, [46, 31], False), (4828, [46, 43], False)]}
 # The approved plantation restores these four original IDs through overlays.
 # Keep them explicit: new or changed ordinary-world hand rows still fail.
 for _lid, _cells in {

@@ -462,8 +462,8 @@ CREATE TABLE IF NOT EXISTS clan_holding_log (
     slot     REAL
 );
 CREATE TABLE IF NOT EXISTS clan_holding_claims (
-    -- One clan-gold payout per warehouse and reset day, even if ownership
-    -- changes or its clan disbands. Personal box rewards remain separate.
+    -- One ingot payout per warehouse and reset day, even if ownership
+    -- changes or its clan disbands. The old personal box rows are closed.
     site TEXT NOT NULL,
     day INTEGER NOT NULL,
     clan_id INTEGER NOT NULL,

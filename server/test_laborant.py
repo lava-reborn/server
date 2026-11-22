@@ -272,6 +272,21 @@ class Laborant(unittest.TestCase):
         self.assertEqual(reloaded.inv.bag_pieces(), {3741: 2})
         self.assertTrue(self.native(self.other).quest_available(quests.get(quests.LABORANT_DETAIL)))
 
+    def test_live_ownership_change_refreshes_laborant_offer_without_relogin(self):
+        other_id, _ = self.store.create_character(self.s.active['account_id'], 'LabRival', 0, '1')
+        rival = self.store.clan_create(other_id, 'Lab rival', 'lab-rival', '', None)
+        site = holdings.site('wh_ah_center')
+        previous = self.lab()
+        holdings.order_hold(self.store, [self.s], site, rival)
+        events.keep(self.rc)
+        self.assertNotEqual(self.lab(), previous)
+        self.assertFalse(self.s.quest_available(quests.get(quests.LABORANT_DETAIL)))
+        previous = self.lab()
+        holdings.order_hold(self.store, [self.s], site, self.clan)
+        events.keep(self.rc)
+        self.assertNotEqual(self.lab(), previous)
+        self.assertTrue(self.s.quest_available(quests.get(quests.LABORANT_DETAIL)))
+
     def test_all_seven_real_native_handins_create_exact_outputs_once(self):
         for kind, (_base, output) in quests.LABORANT_RECIPES.items():
             with self.subTest(quest=kind):

@@ -139,11 +139,12 @@ class ClanBases(unittest.TestCase):
     def test_scoped_health_configuration_rejects_nonfinite_or_excessive_values(self):
         rec = dict(loc=118, boss=7454, flag=4427, min_level=16, title="base")
         self.assertEqual(holdings.Site("default", rec).health_scale, 1)
-        for value in (0, -1, 101, float("nan"), float("inf"), -float("inf")):
-            with self.subTest(value=value), self.assertRaises(ValueError):
-                holdings.Site("invalid", dict(rec, health_scale=value))
-        for value in (1, 30, 100):
-            self.assertEqual(holdings.Site("valid", dict(rec, health_scale=value)).health_scale, value)
+        for field in ('health_scale', 'guard_health_scale'):
+            for value in (0, -1, 101, float("nan"), float("inf"), -float("inf")):
+                with self.subTest(field=field, value=value), self.assertRaises(ValueError):
+                    holdings.Site("invalid", dict(rec, **{field: value}))
+            for value in (1, 30, 100):
+                self.assertEqual(getattr(holdings.Site("valid", dict(rec, **{field: value})), field), value)
 
     def test_payment_persists_once_and_expires_at_next_battle(self):
         self.assertEqual(self.capture(), (None, "ok"))
