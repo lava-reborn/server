@@ -167,6 +167,8 @@ try:
     ids |= {items.DESC_ID_OFFSET + t for t in items.wiki_descs()}
     import orig_texts                                  # noqa: E402
     ids |= {items.DESC_ID_OFFSET + t for t in orig_texts.item_descs()}
+    # The finite PvP quest reward has an explicit description of its own.
+    ids.add(items.DESC_ID_OFFSET + items.POISON_SYRINGE)
     # Blueprint applicability descriptions are generated even where the
     # original client had no bonus description for that type.
     import craft

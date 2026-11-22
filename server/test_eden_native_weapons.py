@@ -138,12 +138,18 @@ class EdenNativeWeaponTests(unittest.IsolatedAsyncioTestCase):
         self.assertGreater(self.f.recovery_until, self.case.clock)
         hp = self.palm.hp
         self.attack(live)
-        self.assertEqual([p['res'] for c, p in self.frames if c == 'cmdAck'][-1], inventory.RES_NOT_READY)
+        self.assertEqual([p['res'] for c, p in self.frames if c == 'cmdAck'][-1], inventory.RES_OK)
+        next_shot = self.case.pending
+        self.assertEqual(next_shot[1], 'aim')
+        self.assertNotEqual(next_shot[0], saved[0])
         self.assertEqual(self.store.item(row['uniq']), live)
         self.assertEqual(self.palm.hp, hp)
         self.finish(saved)  # Consumed timer cannot pay or hit twice.
         self.assertEqual(self.store.item(row['uniq']), live)
         self.assertEqual(self.palm.hp, hp)
+        self.finish(next_shot)
+        self.assertEqual(self.store.item(row['uniq'])['ammo_count'], row['ammo_count'] - 2 * rounds)
+        self.assertLess(self.palm.hp, hp)
         self.assertEqual(self.skill_state(), before)
         self.assertEqual(self.palm.xp_ledger, {})
 
