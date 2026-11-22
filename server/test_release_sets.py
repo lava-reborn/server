@@ -92,10 +92,10 @@ class ReleaseSets(unittest.TestCase):
 
     def test_echo_and_sturm_full_sets_have_the_approved_progression(self):
         # Count actual item frames and cumulative K=2..5 bonuses, as worn.
-        expected = {10961: (230, 780, 550, 60, 32, 32),
-                    10965: (248, 875, 650, 70, 35, 35),
-                    11002: (250, 850, 624, 65, 34, 34),
-                    11004: (270, 953, 730, 75, 38, 38)}
+        expected = {10961: (215, 730, 460, 50, 32, 32),
+                    10965: (235, 845, 552, 55, 35, 35),
+                    11002: (250, 850, 610, 65, 34, 34),
+                    11004: (270, 953, 710, 75, 38, 38)}
         for sid, values in expected.items():
             rows = self.set_rows(sid)
             bonus = inventory.gear_bonus(rows)

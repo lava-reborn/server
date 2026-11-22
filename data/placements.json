@@ -15962,50 +15962,82 @@
    {
     "type": 2312,
     "cell": [
-     12,
-     21
+     35,
+     31
     ],
-    "why": "DESIGNED approved six outer base soldiers, 2026-11-22. Native mob type; HP/SP one quarter of the bodyguards, local damage scale. Weekly death checkpoints and owner friendliness reuse the base defender rules; no repeatable farm."
+    "why": "DESIGNED owner-marked outer guards, 2026-11-23. Safe reachable hexes with bypass routes; native guardian appearance and automatic weapon, owner-friendly, five-minute respawn outside capture."
+   },
+   {
+    "type": 2312,
+    "cell": [
+     35,
+     43
+    ],
+    "why": "DESIGNED owner-marked outer guards, 2026-11-23. Safe reachable hexes with bypass routes; native guardian appearance and automatic weapon, owner-friendly, five-minute respawn outside capture."
+   },
+   {
+    "type": 2312,
+    "cell": [
+     26,
+     49
+    ],
+    "why": "DESIGNED owner-marked outer guards, 2026-11-23. Safe reachable hexes with bypass routes; native guardian appearance and automatic weapon, owner-friendly, five-minute respawn outside capture."
+   },
+   {
+    "type": 2312,
+    "cell": [
+     5,
+     55
+    ],
+    "why": "DESIGNED owner-marked outer guards, 2026-11-23. Safe reachable hexes with bypass routes; native guardian appearance and automatic weapon, owner-friendly, five-minute respawn outside capture."
    },
    {
     "type": 2312,
     "cell": [
      52,
-     23
-    ],
-    "why": "DESIGNED approved six outer base soldiers, 2026-11-22. Native mob type; HP/SP one quarter of the bodyguards, local damage scale. Weekly death checkpoints and owner friendliness reuse the base defender rules; no repeatable farm."
-   },
-   {
-    "type": 2312,
-    "cell": [
-     12,
      64
     ],
-    "why": "DESIGNED approved six outer base soldiers, 2026-11-22. Native mob type; HP/SP one quarter of the bodyguards, local damage scale. Weekly death checkpoints and owner friendliness reuse the base defender rules; no repeatable farm."
-   },
-   {
-    "type": 2312,
-    "cell": [
-     52,
-     64
-    ],
-    "why": "DESIGNED approved six outer base soldiers, 2026-11-22. Native mob type; HP/SP one quarter of the bodyguards, local damage scale. Weekly death checkpoints and owner friendliness reuse the base defender rules; no repeatable farm."
+    "why": "DESIGNED owner-marked outer guards, 2026-11-23. Safe reachable hexes with bypass routes; native guardian appearance and automatic weapon, owner-friendly, five-minute respawn outside capture."
    },
    {
     "type": 2312,
     "cell": [
      12,
-     105
+     71
     ],
-    "why": "DESIGNED approved six outer base soldiers, 2026-11-22. Native mob type; HP/SP one quarter of the bodyguards, local damage scale. Weekly death checkpoints and owner friendliness reuse the base defender rules; no repeatable farm."
+    "why": "DESIGNED owner-marked outer guards, 2026-11-23. Safe reachable hexes with bypass routes; native guardian appearance and automatic weapon, owner-friendly, five-minute respawn outside capture."
    },
    {
     "type": 2312,
     "cell": [
-     52,
+     38,
+     70
+    ],
+    "why": "DESIGNED owner-marked outer guards, 2026-11-23. Safe reachable hexes with bypass routes; native guardian appearance and automatic weapon, owner-friendly, five-minute respawn outside capture."
+   },
+   {
+    "type": 2312,
+    "cell": [
+     24,
+     85
+    ],
+    "why": "DESIGNED owner-marked outer guards, 2026-11-23. Safe reachable hexes with bypass routes; native guardian appearance and automatic weapon, owner-friendly, five-minute respawn outside capture."
+   },
+   {
+    "type": 2312,
+    "cell": [
+     11,
      105
     ],
-    "why": "DESIGNED approved six outer base soldiers, 2026-11-22. Native mob type; HP/SP one quarter of the bodyguards, local damage scale. Weekly death checkpoints and owner friendliness reuse the base defender rules; no repeatable farm."
+    "why": "DESIGNED owner-marked outer guards, 2026-11-23. Safe reachable hexes with bypass routes; native guardian appearance and automatic weapon, owner-friendly, five-minute respawn outside capture."
+   },
+   {
+    "type": 2312,
+    "cell": [
+     51,
+     105
+    ],
+    "why": "DESIGNED owner-marked outer guards, 2026-11-23. Safe reachable hexes with bypass routes; native guardian appearance and automatic weapon, owner-friendly, five-minute respawn outside capture."
    }
   ],
   "111": [
@@ -16170,50 +16202,82 @@
     {
       "type": 918,
       "cell": [
-        12,
-        21
+        35,
+        31
       ],
-      "why": "DESIGNED approved six outer base soldiers, 2026-11-22. Native mob type; HP/SP one quarter of the bodyguards, local damage scale. Weekly death checkpoints and owner friendliness reuse the base defender rules; no repeatable farm."
+      "why": "DESIGNED owner-marked outer guards, 2026-11-23. Safe reachable hexes with bypass routes; native guardian appearance and automatic weapon, owner-friendly, five-minute respawn outside capture."
+    },
+    {
+      "type": 918,
+      "cell": [
+        35,
+        43
+      ],
+      "why": "DESIGNED owner-marked outer guards, 2026-11-23. Safe reachable hexes with bypass routes; native guardian appearance and automatic weapon, owner-friendly, five-minute respawn outside capture."
+    },
+    {
+      "type": 918,
+      "cell": [
+        26,
+        49
+      ],
+      "why": "DESIGNED owner-marked outer guards, 2026-11-23. Safe reachable hexes with bypass routes; native guardian appearance and automatic weapon, owner-friendly, five-minute respawn outside capture."
+    },
+    {
+      "type": 918,
+      "cell": [
+        5,
+        55
+      ],
+      "why": "DESIGNED owner-marked outer guards, 2026-11-23. Safe reachable hexes with bypass routes; native guardian appearance and automatic weapon, owner-friendly, five-minute respawn outside capture."
     },
     {
       "type": 918,
       "cell": [
         52,
-        23
-      ],
-      "why": "DESIGNED approved six outer base soldiers, 2026-11-22. Native mob type; HP/SP one quarter of the bodyguards, local damage scale. Weekly death checkpoints and owner friendliness reuse the base defender rules; no repeatable farm."
-    },
-    {
-      "type": 918,
-      "cell": [
-        12,
         64
       ],
-      "why": "DESIGNED approved six outer base soldiers, 2026-11-22. Native mob type; HP/SP one quarter of the bodyguards, local damage scale. Weekly death checkpoints and owner friendliness reuse the base defender rules; no repeatable farm."
-    },
-    {
-      "type": 918,
-      "cell": [
-        52,
-        64
-      ],
-      "why": "DESIGNED approved six outer base soldiers, 2026-11-22. Native mob type; HP/SP one quarter of the bodyguards, local damage scale. Weekly death checkpoints and owner friendliness reuse the base defender rules; no repeatable farm."
+      "why": "DESIGNED owner-marked outer guards, 2026-11-23. Safe reachable hexes with bypass routes; native guardian appearance and automatic weapon, owner-friendly, five-minute respawn outside capture."
     },
     {
       "type": 918,
       "cell": [
         12,
-        105
+        71
       ],
-      "why": "DESIGNED approved six outer base soldiers, 2026-11-22. Native mob type; HP/SP one quarter of the bodyguards, local damage scale. Weekly death checkpoints and owner friendliness reuse the base defender rules; no repeatable farm."
+      "why": "DESIGNED owner-marked outer guards, 2026-11-23. Safe reachable hexes with bypass routes; native guardian appearance and automatic weapon, owner-friendly, five-minute respawn outside capture."
     },
     {
       "type": 918,
       "cell": [
-        52,
+        38,
+        70
+      ],
+      "why": "DESIGNED owner-marked outer guards, 2026-11-23. Safe reachable hexes with bypass routes; native guardian appearance and automatic weapon, owner-friendly, five-minute respawn outside capture."
+    },
+    {
+      "type": 918,
+      "cell": [
+        24,
+        85
+      ],
+      "why": "DESIGNED owner-marked outer guards, 2026-11-23. Safe reachable hexes with bypass routes; native guardian appearance and automatic weapon, owner-friendly, five-minute respawn outside capture."
+    },
+    {
+      "type": 918,
+      "cell": [
+        11,
         105
       ],
-      "why": "DESIGNED approved six outer base soldiers, 2026-11-22. Native mob type; HP/SP one quarter of the bodyguards, local damage scale. Weekly death checkpoints and owner friendliness reuse the base defender rules; no repeatable farm."
+      "why": "DESIGNED owner-marked outer guards, 2026-11-23. Safe reachable hexes with bypass routes; native guardian appearance and automatic weapon, owner-friendly, five-minute respawn outside capture."
+    },
+    {
+      "type": 918,
+      "cell": [
+        51,
+        105
+      ],
+      "why": "DESIGNED owner-marked outer guards, 2026-11-23. Safe reachable hexes with bypass routes; native guardian appearance and automatic weapon, owner-friendly, five-minute respawn outside capture."
     }
   ],
   "185": [

@@ -57,6 +57,30 @@ class StatPipeline(unittest.IsolatedAsyncioTestCase):
                     if f.aim:
                         f.aim.cancel()
 
+    async def test_all_collectible_svd_modes_use_the_reviewed_damage_in_native_aim(self):
+        for gun in (7065, 7066, 7067, 7068, 7069):
+            si = items.params_of(gun)
+            for mode, enabled in enumerate(si['fire_mods']):
+                if not enabled:
+                    continue
+                with self.subTest(gun=gun, mode=mode):
+                    f, ch, _, _, _, row = attack_fixture(gun)
+                    for spec in ch.spec:
+                        spec[0] = 5
+                    row.update(cur_mode=mode, ammo_type=si['comp_array'][1], ammo_count=20)
+                    ammo = items.params_of(row['ammo_type'])
+                    try:
+                        combat.Fighter.use_fire(f, dict(obj='weapon', target='000000005'))
+                        self.assertIsNotNone(f.aim)
+                        shot = f.aim._args[-1][3]
+                        power = 1 + .03 * max(0, ch.attr(progression.INTELLECT) - 5)
+                        self.assertEqual((shot.dmin, shot.dmax), tuple(
+                            max(1, round(si[field][mode] * power * ammo['dam_mod']))
+                            for field in ('h_damage_min', 'h_damage_max')))
+                        self.assertEqual(shot.num_shots, si['fire_mods'][mode])
+                    finally:
+                        combat.Fighter.cancel_timers(f)
+
     def test_overlevel_gun_keeps_damage_and_loses_no_more_than_fifteen_percent_accuracy(self):
         weapon = combat.Weapon(1, 1000, 2000, 2, 5, 20, 1, .1, 0, None, None,
                                sdmin=500, sdmax=1000)

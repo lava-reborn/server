@@ -119,7 +119,48 @@ def ordinary_plus_three():
     return MappingProxyType(factors)
 
 
+@lru_cache(maxsize=1)
+def ordinary_mob_pressure():
+    """Live camp pressure; private range, bosses and site copies stay separate."""
+    raw = json.loads(PATH.with_name('combat_balance.json').read_text(encoding='utf-8'))
+    row = raw['ordinary_mob_pressure']
+    fields = {'damage_scale', 'high_gap_damage_scale', 'stamina_ratio', 'senior_stamina_ratio',
+              'stamina_levels', 'crit_bounds'}
+    bounds = row.get('crit_bounds', ())
+    if (raw['source_commit'] != data()['source_commit'] or set(row) != fields
+            or len(row['stamina_levels']) != 2
+            or any(type(v) is not int for v in row['stamina_levels'])
+            or not 1 <= row['stamina_levels'][0] < row['stamina_levels'][1] <= 20
+            or any(isinstance(row[k], bool) or not isinstance(row[k], (int, float))
+                   or not math.isfinite(row[k]) or not 0 <= row[k] <= 5
+                   for k in ('damage_scale', 'high_gap_damage_scale', 'stamina_ratio', 'senior_stamina_ratio'))
+            or not .5 <= row['damage_scale'] <= 2 or not 1 <= row['high_gap_damage_scale'] <= 3
+            or len(bounds) != 6
+            or any(len(pair) != 2 or any(type(v) is not int for v in pair)
+                   or not 0 <= pair[0] <= pair[1] <= 25 for pair in bounds)
+            or any(bounds[i][j] > bounds[i + 1][j] for i in range(5) for j in range(2))):
+        raise ValueError('Invalid ordinary mob pressure')
+    return MappingProxyType(dict(row, crit_bounds=tuple(tuple(pair) for pair in bounds),
+                                 stamina_levels=tuple(row['stamina_levels'])))
+
+
+def ordinary_attacker(shooter, target, ordinary):
+    return (ordinary and not shooter.is_player and target.is_player
+            and getattr(shooter.stats, 'role', None) in ('mob', 'animal', 'turret')
+            and not getattr(shooter, '_holding_prepared', False))
+
+
 def split(shooter, target, damage, piercing, critical, stamina_left, stamina_damage=0, melee=False, rifle=False, ordinary=False):
+    if ordinary_attacker(shooter, target, ordinary):
+        pressure = ordinary_mob_pressure()
+        scale = pressure['damage_scale']
+        if level(shooter) - level(target) >= 5:
+            scale *= pressure['high_gap_damage_scale']
+        damage = max(1, int(damage * scale)) if damage > 0 else 0
+        low, high = pressure['stamina_levels']
+        step = max(0, min(1, (level(shooter) - low) / (high - low)))
+        ratio = pressure['stamina_ratio'] + step * (pressure['senior_stamina_ratio'] - pressure['stamina_ratio'])
+        stamina_damage = int(stamina_damage * scale) + int(damage * ratio)
     if shooter.is_player and not target.is_player and getattr(target.stats, 'role', None) != 'object':
         player_level = level(shooter)
         gap = level(target) - player_level
@@ -135,7 +176,8 @@ def split(shooter, target, damage, piercing, critical, stamina_left, stamina_dam
         if ordinary and gap == 2:
             factor = ordinary_plus_two().get(player_level, factor)
         elif ordinary and gap == 3 and getattr(target.stats, 'role', None) in ('mob', 'animal', 'turret'):
-            factor = ordinary_plus_two().get(player_level, factors.get(2, 1)) * ordinary_plus_three()['player_damage_ratio']
+            factor = max(factors.get(GAP_MAX, 1), ordinary_plus_two().get(player_level, factors.get(2, 1))
+                         * ordinary_plus_three()['player_damage_ratio'])
         damage = max(1, int(damage * factor)) if damage > 0 else 0
         stamina_damage = int(stamina_damage * factor)
     elif (ordinary and not shooter.is_player and target.is_player
@@ -162,11 +204,12 @@ def critical(shooter, target, chance, optimal=True, *, ordinary=False):
         return False
     chance = max(0, min(100, chance))
     if not shooter.is_player and target.is_player:
-        chance = max(MOB_CRIT_FLOOR, chance)
-        if (ordinary and getattr(shooter.stats, 'role', None) in ('mob', 'animal', 'turret')
-                and 1 <= level(shooter) - level(target) <= 2
-                and not getattr(shooter, '_holding_prepared', False)):
-            chance *= .5
+        if ordinary_attacker(shooter, target, ordinary):
+            gap = max(0, min(5, level(shooter) - level(target)))
+            low, high = ordinary_mob_pressure()['crit_bounds'][gap]
+            chance = max(low, min(high, chance))
+        else:
+            chance = max(MOB_CRIT_FLOOR, chance)
     if ordinary and not optimal:
         chance *= .5
     import combat

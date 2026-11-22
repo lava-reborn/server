@@ -20,14 +20,14 @@
     },
     "7066": {
       "h_damage_min": [
-        135,
+        113,
         0,
-        120
+        134
       ],
       "h_damage_max": [
-        316,
+        264,
         0,
-        331
+        369
       ]
     },
     "24989": {
@@ -5353,6 +5353,54 @@
         10,
         6
       ]
+    },
+    "7065": {
+      "h_damage_min": [
+        59,
+        0,
+        87
+      ],
+      "h_damage_max": [
+        181,
+        0,
+        231
+      ]
+    },
+    "7067": {
+      "h_damage_min": [
+        163,
+        0,
+        131
+      ],
+      "h_damage_max": [
+        438,
+        0,
+        450
+      ]
+    },
+    "7068": {
+      "h_damage_min": [
+        89,
+        0,
+        120
+      ],
+      "h_damage_max": [
+        381,
+        0,
+        424
+      ]
+    },
+    "7069": {
+      "h_damage_min": [
+        173,
+        0,
+        193
+      ],
+      "h_damage_max": [
+        614,
+        0,
+        716
+      ]
     }
   },
   "previous_equipment": {
@@ -8276,43 +8324,53 @@
     },
     "11289": {
       "bonus_hp": 28,
-      "bonus_st": 80
+      "bonus_st": 80,
+      "armor_class": 43
     },
     "11290": {
       "bonus_hp": 28,
-      "bonus_st": 135
+      "bonus_st": 135,
+      "armor_class": 45
     },
     "11291": {
       "bonus_hp": 28,
-      "bonus_st": 85
+      "bonus_st": 85,
+      "armor_class": 469
     },
     "11292": {
       "bonus_hp": 28,
-      "bonus_st": 130
+      "bonus_st": 130,
+      "armor_class": 45
     },
     "11293": {
       "bonus_hp": 28,
-      "bonus_st": 45
+      "bonus_st": 45,
+      "armor_class": 22
     },
     "11309": {
       "bonus_hp": 30,
-      "bonus_st": 84
+      "bonus_st": 84,
+      "armor_class": 48
     },
     "11310": {
       "bonus_hp": 30,
-      "bonus_st": 144
+      "bonus_st": 144,
+      "armor_class": 55
     },
     "11311": {
       "bonus_hp": 30,
-      "bonus_st": 89
+      "bonus_st": 89,
+      "armor_class": 547
     },
     "11312": {
       "bonus_hp": 30,
-      "bonus_st": 136
+      "bonus_st": 136,
+      "armor_class": 55
     },
     "11313": {
       "bonus_hp": 30,
-      "bonus_st": 47
+      "bonus_st": 47,
+      "armor_class": 25
     },
     "11349": {
       "bonus_hp": 14,
@@ -18122,6 +18180,54 @@
         239,
         0
       ]
+    },
+    "7065": {
+      "h_damage_min": [
+        77,
+        0,
+        114
+      ],
+      "h_damage_max": [
+        235,
+        0,
+        298
+      ]
+    },
+    "7067": {
+      "h_damage_min": [
+        125,
+        0,
+        135
+      ],
+      "h_damage_max": [
+        337,
+        0,
+        459
+      ]
+    },
+    "7068": {
+      "h_damage_min": [
+        105,
+        0,
+        158
+      ],
+      "h_damage_max": [
+        449,
+        0,
+        554
+      ]
+    },
+    "7069": {
+      "h_damage_min": [
+        145,
+        0,
+        191
+      ],
+      "h_damage_max": [
+        515,
+        0,
+        601
+      ]
     }
   },
   "previous_sets": {
@@ -18355,8 +18461,8 @@
     }
   },
   "ordinary_plus_three": {
-    "player_damage_ratio": 0.725,
-    "mob_damage_ratio": 0.875
+    "player_damage_ratio": 0.5,
+    "mob_damage_ratio": 1.0
   },
   "ordinary_plus_two": {
     "2": 0.9634,
@@ -18766,5 +18872,41 @@
     "9:machinegun": 47,
     "9:pistol": 46,
     "9:smg": 95
+  },
+  "ordinary_mob_pressure": {
+    "damage_scale": 1.25,
+    "stamina_ratio": 1.0,
+    "senior_stamina_ratio": 3.0,
+    "crit_bounds": [
+      [
+        1,
+        3
+      ],
+      [
+        1,
+        3
+      ],
+      [
+        3,
+        8
+      ],
+      [
+        5,
+        12
+      ],
+      [
+        7,
+        16
+      ],
+      [
+        9,
+        20
+      ]
+    ],
+    "stamina_levels": [
+      13,
+      18
+    ],
+    "high_gap_damage_scale": 1.75
   }
 }

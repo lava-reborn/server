@@ -5,10 +5,10 @@ second ownership system. Their original surfaces/interiors share one site.
 The Saturday 20:00–21:00 Moscow kill grants a payment reservation; the
 winning clan pays 1,500,000 afro from its treasury by 21:15, then owns the
 benefits until next Saturday 19:55, five minutes before the battle. Each week needs a new capture
-and payment. Three bodyguards and six outer soldiers must die before the
+and payment. Three bodyguards and ten outer guards must die before the
 master appears. One clan may reserve/lease one base; warehouses do not count.
 Paid bases keep their defenders between battles, immune to their own clan.
-Only the six ordinary soldiers return five minutes after death; the existing
+Only the ten ordinary guards return five minutes after death; the existing
 boss checkpoints also hold that deadline across restarts. Capture waves do
 not respawn, including after an early payment in the same battle window.
 At least three living clan members of the site's minimum level must be in
@@ -238,8 +238,12 @@ def prepare_room(rc):
             scale, damage = s.guard_health_scale, s.guard_damage_scale
         else:
             scale, damage = s.troop_health_scale, s.troop_damage_scale
-        target.stats = mobs.MobStats(target.type_id, balanced=False)
+        # Outer guards retain their entity types and death checkpoints, but
+        # carry the same automatic weapon as this base's original guardian.
+        source = s.guards[0] if s.kind == 'base' and target.type_id in s.troops else target.type_id
+        target.stats = mobs.MobStats(source, balanced=False)
         battle_balance.configure_mob(target.stats, health_scale=scale, damage_scale=damage, site=True)
+        target.stats.type_id = target.type_id
         target.hp, target.sp = target.stats.hp_max, target.stats.sp_max
         target._holding_prepared = True
 
@@ -340,7 +344,7 @@ def defender_friendly(rc, mob, fighter):
 
 
 def soldier_respawns(store, loc_id, type_id, now=None):
-    """The six outer soldiers return between battles, including neutral bases."""
+    """Outer guards return between battles, including neutral bases."""
     s = guard_site(loc_id, type_id)
     if s is None or s.kind != 'base' or type_id not in s.troops:
         return False
@@ -767,7 +771,7 @@ def _touch_quests(s):
 
 def _resend_flag(room, s):
     for eid, npc in list(room.npcs.items()):
-        if npc.type_id == s.flag:
+        if npc.type_id == s.flag or (s.kind == 'base' and npc.type_id in s.guards + s.troops):
             for sess in list(room.players):
                 sess.send_npc_info(eid)
 

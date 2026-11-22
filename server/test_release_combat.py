@@ -285,28 +285,76 @@ class TimedItems(unittest.IsolatedAsyncioTestCase):
 
 
 class ReleaseCatalogue(unittest.TestCase):
-    def test_plus_one_mob_critical_chance_is_halved_without_changing_bosses_or_range(self):
+    def test_collectible_svd_damage_is_capped_at_five_percent_over_matching_gold_rifle(self):
+        references = {7065: 25756, 7066: 25785, 7067: 25804, 7068: 25820, 7069: 25836}
+        sources = {t for t, (root, name) in items.catalogue().items()
+                   if root == items.FIRE_ARM and name.startswith('lamantin_rifle_')}
+        self.assertEqual(sources, set(references))
+        for source, reference in references.items():
+            with self.subTest(source=source):
+                current, gold = items.params_of(source), items.params_of(reference)
+                self.assertEqual(inventory.item_level(source), inventory.item_level(reference))
+                self.assertGreater(gold['g_cost'], 0)
+                self.assertEqual(current['fire_mods'], gold['fire_mods'])
+                for field in ('h_damage_min', 'h_damage_max', 'st_damage_min', 'st_damage_max'):
+                    self.assertEqual(current[field], [value * 105 // 100 for value in gold[field]])
+                    for actual, base in zip(current[field], gold[field]):
+                        self.assertLessEqual(actual * 100, base * 105)
+                        self.assertGreaterEqual(actual, base)
+
+    def test_collectible_svd_handling_and_original_range_frames_are_preserved(self):
+        import battle_balance
+        from training import balance
+        damage = {'h_damage_min', 'h_damage_max', 'st_damage_min', 'st_damage_max'}
+        for source in (7065, 7066, 7067, 7068, 7069):
+            with self.subTest(source=source):
+                current = items.params_of(source)
+                frozen = battle_balance.data()['equipment'][str(source)]
+                for field in frozen.keys() - damage:
+                    self.assertEqual(current[field], frozen[field], (source, field))
+                old = balance.before_release(source, copy.deepcopy(current))
+                original = items.wiki()[source]
+                for field in damage:
+                    self.assertEqual(old[field], original[field], (source, field))
+
+    def test_mob_critical_pressure_grows_after_plus_one_and_excludes_sites_and_range(self):
         import battle_balance
         player = NS(is_player=True, character=lambda: NS(level=12))
         mob = NS(is_player=False, stats=NS(level=13, role='mob'))
         with patch.object(combat, 'roll', return_value=False) as roll:
-            battle_balance.critical(mob, player, 20, ordinary=True)
-            roll.assert_called_with(10)
-            battle_balance.critical(mob, player, 0, ordinary=True)
-            roll.assert_called_with(2.5)
+            for gap, floor, ceiling in ((-1, 1, 3), (0, 1, 3), (1, 1, 3),
+                                        (2, 3, 8), (3, 5, 12), (4, 7, 16), (5, 9, 20), (6, 9, 20)):
+                mob.stats.level = 12 + gap
+                battle_balance.critical(mob, player, 20, ordinary=True)
+                roll.assert_called_with(ceiling)
+                battle_balance.critical(mob, player, 0, ordinary=True)
+                roll.assert_called_with(floor)
+                battle_balance.critical(mob, player, 20, optimal=False, ordinary=True)
+                roll.assert_called_with(ceiling / 2)
             battle_balance.critical(mob, player, 20)
             roll.assert_called_with(20)
             mob._holding_prepared = True
             battle_balance.critical(mob, player, 20, ordinary=True)
             roll.assert_called_with(20)
             mob._holding_prepared = False
-            mob.stats.level = 14
+            mob.stats.role = 'boss'
             battle_balance.critical(mob, player, 20, ordinary=True)
-            roll.assert_called_with(10)
-            for role, level in (('boss', 13), ('mob', 12), ('mob', 15)):
-                mob.stats.role, mob.stats.level = role, level
-                battle_balance.critical(mob, player, 20, ordinary=True)
-                roll.assert_called_with(20)
+            roll.assert_called_with(20)
+
+    def test_mob_stamina_pressure_uses_existing_overflow_and_preserves_private_boss_and_pvp(self):
+        import battle_balance
+        player = NS(is_player=True, character=lambda: NS(level=14), armor=lambda: 0)
+        mob = NS(is_player=False, stats=NS(level=13, role='mob'), armor=lambda: 0)
+        self.assertEqual(battle_balance.split(mob, player, 100, 1, False, 500, 20, ordinary=True), (125, 150))
+        self.assertEqual(battle_balance.split(mob, player, 100, 1, False, 50, 20, ordinary=True), (225, 50))
+        mob.stats.level = 18
+        self.assertEqual(battle_balance.split(mob, player, 100, 1, False, 500, 20, ordinary=True), (125, 400))
+        self.assertEqual(battle_balance.split(mob, player, 100, 1, True, 500, 20, ordinary=True), (125, 125))
+        for role, site in (('boss', False), ('mob', True)):
+            mob.stats.role, mob._holding_prepared = role, site
+            self.assertEqual(battle_balance.split(mob, player, 100, 1, False, 500, 20, ordinary=True), (100, 20))
+        self.assertEqual(battle_balance.split(mob, player, 100, 1, False, 500, 20), (100, 20))
+        self.assertEqual(battle_balance.split(player, player, 100, 1, False, 500, 20, ordinary=True), (100, 20))
 
     def test_outside_optimal_critical_chance_is_half_for_ordinary_fire(self):
         import battle_balance
@@ -471,7 +519,7 @@ class ReleaseCatalogue(unittest.TestCase):
     def test_difficulty_steps_keep_plus_five_as_the_previous_plus_four(self):
         import battle_balance
         shooter = NS(is_player=True, character=lambda: NS(level=16))
-        for gap, expected in ((0, 10000), (1, 10000), (2, 8590), (3, 7775), (4, 5636), (5, 500), (6, 500)):
+        for gap, expected in ((0, 10000), (1, 10000), (2, 8590), (3, 7775), (4, 3887), (5, 500), (6, 500)):
             target = NS(is_player=False, stats=NS(level=16 + gap, role='mob'), armor=lambda: 0)
             self.assertEqual(battle_balance.split(shooter, target, 10000, 1, False, 0, ordinary=True),
                              (expected, 0))
@@ -501,14 +549,17 @@ class ReleaseCatalogue(unittest.TestCase):
                 native = battle_balance.split(mob, player, 1000, 1, False, 10000, 200)
                 ordinary = battle_balance.split(mob, player, 1000, 1, False, 10000, 200, ordinary=True)
                 if role in ('mob', 'animal', 'turret'):
-                    self.assertEqual(ordinary, (875, 175))
+                    ratio = 1 + 2 * max(0, min(1, (mob.stats.level - 13) / 5))
+                    self.assertEqual(ordinary, (1250, 250 + int(1250 * ratio)))
                 else:
                     self.assertEqual(ordinary, native)
-                # Other gaps retain their previous incoming damage.
+                # The pressure curve is shared by every ordinary level gap.
                 for gap in (0, 1, 2, 3, 5):
                     mob.stats.level = level + gap
-                    self.assertEqual(battle_balance.split(mob, player, 1000, 1, False, 10000, 200, ordinary=True),
-                                     battle_balance.split(mob, player, 1000, 1, False, 10000, 200))
+                    ratio = 1 + 2 * max(0, min(1, (mob.stats.level - 13) / 5))
+                    scale = 2.1875 if gap >= 5 else 1.25
+                    expected = (int(1000 * scale), int(200 * scale) + int(int(1000 * scale) * ratio)) if role in ('mob', 'animal', 'turret') else (1000, 200)
+                    self.assertEqual(battle_balance.split(mob, player, 1000, 1, False, 10000, 200, ordinary=True), expected)
             other = NS(is_player=True, character=lambda: NS(level=level + 3), armor=lambda: 0)
             self.assertEqual(battle_balance.split(other, player, 1000, 1, False, 10000, 200, ordinary=True),
                              battle_balance.split(other, player, 1000, 1, False, 10000, 200))

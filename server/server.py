@@ -2759,6 +2759,14 @@ class Session:
                 params.update(can_trade=0, can_repair=1 if mends else 0)
                 if holder is not None:
                     params.update(clan=int(holder["clan_id"]))
+        elif root == world.MOB:
+            base = holdings.guard_site(self.room.loc.id, type_id)
+            if base is not None and base.kind == 'base':
+                # Native name/model and ClanInfo, scoped to this base only.
+                params.update(name=base.guards[0], res=base.guards[0])
+                holder = holdings.paid_holder(STORE, base)
+                if holder is not None:
+                    params.update(clan=int(holder['clan_id']))
         elif root == world.UPGRADER:
             # What its window turns into what, and for how many hundredths
             # of an ounce (upgrader.lists): the recipes a weapons master

@@ -167,8 +167,8 @@ class ClanBaseWorldTests(unittest.TestCase):
             with self.subTest(lid=lid):
                 self.assertEqual(Counter(t for _cell, t in world.location(lid).spawns), expected)
         placed = {lid: Counter(r['type'] for r in world.placed_in(lid)) for lid in STAFF}
-        self.assertEqual(placed, {118: Counter({7454: 1, 4829: 3, 2312: 6}),
-                                  1442: Counter({7451: 1, 4828: 3, 918: 6}),
+        self.assertEqual(placed, {118: Counter({7454: 1, 4829: 3, 2312: 10}),
+                                  1442: Counter({7451: 1, 4828: 3, 918: 10}),
                                   609: Counter({989: 1}), 1443: Counter({989: 1})})
         self.assertIsNone(rooms.check_placements(world.mob_types()))
 
@@ -179,7 +179,7 @@ class ClanBaseWorldTests(unittest.TestCase):
                 cells = [r['cell'][1] * loc.width + r['cell'][0]
                          for r in world.placed_in(site.loc)
                          if r['type'] in site.guards + site.troops]
-                self.assertEqual(len(cells), 9 if site.kind == 'base' else 2)
+                self.assertEqual(len(cells), 13 if site.kind == 'base' else 2)
                 exits = travel.exit_sides(loc)
                 self.assertTrue(exits)
                 accessible = set()
@@ -194,8 +194,8 @@ class ClanBaseWorldTests(unittest.TestCase):
                 if site.kind == 'base':
                     soldiers = [r['cell'] for r in world.placed_in(site.loc)
                                 if r['type'] in site.troops]
-                    self.assertEqual(len(soldiers), 6)
-                    self.assertEqual(sum(x < loc.width / 2 for x, _y in soldiers), 3)
+                    self.assertEqual(len(soldiers), 10)
+                    self.assertGreaterEqual(sum(x < loc.width / 2 for x, _y in soldiers), 4)
                     self.assertGreater(max(y for _x, y in soldiers) - min(y for _x, y in soldiers),
                                        loc.height / 2)
 
