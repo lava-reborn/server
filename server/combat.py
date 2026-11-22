@@ -1992,7 +1992,8 @@ class Fighter:
         killed = False
         reach = (target is not None and target.present(rc)
                  and mobs.adjacent(self.cell, target.cell, loc))
-        hit = reach and roll(melee_hit_chance(ch, spec) - target.dodge_melee())
+        hit = (reach and not holdings.defender_friendly(rc, target, self)
+               and roll(melee_hit_chance(ch, spec) - target.dodge_melee()))
         if hit:
             crit = rc.melee_critical(self, target, melee_crit(ch, spec) - target.crit_evade_melee())
             dmg = RNG.randint(dmg_range[0], dmg_range[1])
@@ -3378,6 +3379,10 @@ class RoomCombat:
                 continue
             fates = []
             for n, body in enumerate(chain):
+                # A paid clan's own guard still stops its bullet, but takes
+                # no harm, including free aim and a penetrating round.
+                if holdings.defender_friendly(self, body, shooter):
+                    break
                 rec = struck.setdefault(body, [0, 0, 0, body.sp_now()])
                 d = mobs.hex_distance(shooter.cell, body.cell, width)
                 optimal = weapon.opt_lo <= d <= weapon.opt_hi
@@ -3473,7 +3478,12 @@ class RoomCombat:
             if mob.slot is not None and holdings.guard_site(self.room.loc.id, mob.type_id) is not None:
                 # Reuse the site's boss checkpoint before the corpse timer:
                 # a reconnect or restart must not resurrect cleared guards.
-                self.store.boss_killed(self.boss_spot(mob), mob.slot)
+                with storage.atomic(self.store.db):
+                    self.store.boss_killed(self.boss_spot(mob), mob.slot)
+                    if holdings.soldier_respawns(self.store, self.room.loc.id, mob.type_id):
+                        deadline = bosses.clock() + holdings.BASE_SOLDIER_RESPAWN
+                        self.store.boss_killed(self.boss_spot(mob) + ':respawn', deadline)
+                        mob.base_respawn_at = deadline
             mob.capture = holdings.snapshot(self, mob, killer)
             if mob.capture is not None and holdings.base_for(self.room.loc.id, mob.type_id):
                 holdings.settle(self, mob)
@@ -3845,6 +3855,20 @@ class RoomCombat:
             sess.send_npc_info(mob.eid)
 
     # --- bosses and their hours ----------------------------------------------------------
+    def boss_slots(self, t):
+        """Weekly battle and paid occupation reuse distinct death checkpoints."""
+        due = {m.eid: bosses.slot_of(m.type_id, t, self.room.loc.id) for m in self.bosses}
+        base = holdings.base_for(self.room.loc.id)
+        held = holdings.paid_holder(self.store, base, t) if base is not None else None
+        if held is not None and holdings.battle_slot(base, t) is None:
+            # The battle's end identifies its occupation phase. Early rent
+            # payment must not restore a cleared wave before capture closes.
+            slot = float(held['slot']) + events.table().window(base.battle).minutes * 60
+            for mob in self.bosses:
+                if mob.type_id in base.guards + base.troops:
+                    due[mob.eid] = slot
+        return due
+
     def keep_hours(self):
         """The room's bosses in step with the clock (bosses.py).
 
@@ -3879,21 +3903,34 @@ class RoomCombat:
         if not self.bosses:
             return
         now = bosses.clock()
+        due_slots = self.boss_slots(now)
         for mob in self.bosses:
-            due = bosses.slot_of(mob.type_id, now, self.room.loc.id)
+            due = due_slots[mob.eid]
             base = holdings.base_for(self.room.loc.id, mob.type_id)
             if base is not None and due is not None and not holdings.guards_cleared(self, base, due):
                 if mob.alive:
                     self.boss_leaves(mob)
                 continue
             if mob.away:
-                if due is not None and due != mob.slot:
+                deadline = getattr(mob, 'base_respawn_at', None)
+                if due is not None and (due != mob.slot or deadline is not None and now >= deadline):
                     self.boss_arrives(mob, due)
             elif not mob.alive:
                 continue
             elif due is not None:
                 if due != mob.slot:
-                    if (mob.slot is not None and not self.room.players
+                    guard = holdings.guard_site(self.room.loc.id, mob.type_id)
+                    if mob.slot is not None and guard is not None and guard.kind == 'base':
+                        # A new battle must not inherit an occupation guard
+                        # kept wounded/in combat across the five-minute gap.
+                        if mob.aim is not None:
+                            mob.aim.cancel()
+                            mob.aim = None
+                        movement.get(self.room).forget(mob)
+                        self.room.broadcast(('actionCancel', dict(id=mob.eid, stop_aim=1)))
+                        self.boss_leaves(mob)
+                        self.boss_arrives(mob, due)
+                    elif (mob.slot is not None and not self.room.players
                             and mob.target is None and mob.aim is None):
                         self.boss_leaves(mob)
                         self.boss_arrives(mob, due)
@@ -3911,6 +3948,7 @@ class RoomCombat:
         """Its window open: back on its own cell, whole, the way a respawn
         does it, and its escort with it (escort_back)."""
         mob.slot, mob.away = due, False
+        mob.base_respawn_at = None
         self.respawn(mob)
         log.info("  ..    boss %d (%s) arrives in %s",
                  mob.eid, mob.stats.name, self.room.loc.title)
@@ -3977,11 +4015,12 @@ class RoomCombat:
         now = bosses.clock()
         # Each boss's own window (bosses.slot_of): a warehouse master's is
         # his day's hour.
-        due = {m.eid: bosses.slot_of(m.type_id, now, self.room.loc.id) for m in self.bosses}
+        due = self.boss_slots(now)
         if all(d is None for d in due.values()):
             return
         try:
-            killed = read([self.boss_spot(m) for m in self.bosses])
+            killed = read([key for m in self.bosses
+                           for key in (self.boss_spot(m), self.boss_spot(m) + ':respawn')])
         except Exception:
             log.exception("  !!    the bosses killed in %s could not be read",
                           self.room.loc.title)
@@ -3989,6 +4028,12 @@ class RoomCombat:
         for mob in self.bosses:
             slot = due[mob.eid]
             if slot is not None and killed.get(self.boss_spot(mob)) == slot:
+                if holdings.soldier_respawns(self.store, self.room.loc.id, mob.type_id, now):
+                    deadline = killed.get(self.boss_spot(mob) + ':respawn')
+                    if deadline is not None and deadline >= slot:
+                        if now >= deadline:
+                            continue
+                        mob.base_respawn_at = deadline
                 mob.alive, mob.away, mob.slot = False, True, slot
                 self.room.npcs.pop(mob.eid, None)
                 log.info("  ..    boss %d (%s) of %s was killed in this window before"

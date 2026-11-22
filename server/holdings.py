@@ -7,6 +7,10 @@ winning clan pays 1,500,000 afro from its treasury by 21:15, then owns the
 benefits until next Saturday 19:55, five minutes before the battle. Each week needs a new capture
 and payment. Three bodyguards and six outer soldiers must die before the
 master appears. One clan may reserve/lease one base; warehouses do not count.
+Paid bases keep their defenders between battles, immune to their own clan.
+Only the six ordinary soldiers return five minutes after death; the existing
+boss checkpoints also hold that deadline across restarts. Capture waves do
+not respawn, including after an early payment in the same battle window.
 At least three living clan members of the site's minimum level must be in
 the boss's room at the kill; only one of them needs to hurt him. Capture and weekly
 boss-death record commit at the kill, before the corpse timer. Everything
@@ -114,6 +118,7 @@ PATH = os.path.join(HERE, "data", "holdings.json")
 HOW = ("capture", "defend", "none", "admin", "disband", "rent", "expire")
 BASE_SQUAD = 3
 BASE_RESET_LEAD = 5 * 60
+BASE_SOLDIER_RESPAWN = 5 * 60
 
 
 class Site(object):
@@ -321,12 +326,22 @@ def paid_base_for(store, loc_id, char_id, now=None):
 
 def defender_friendly(rc, mob, fighter):
     """Only a paid base's own defenders spare its current clan members."""
-    if not getattr(fighter, 'is_player', False):
+    if not getattr(fighter, 'is_player', False) or getattr(mob, 'is_player', False):
         return False
-    s = base_for(rc.room.loc.id, mob.type_id) or guard_site(rc.room.loc.id, mob.type_id)
+    loc_id = getattr(rc.room.loc, 'id', None)
+    s = base_for(loc_id, mob.type_id) or guard_site(loc_id, mob.type_id)
     if s is None or s.kind != 'base':
         return False
     return member_of(rc.store, paid_holder(rc.store, s), fighter.sess.char_id)
+
+
+def soldier_respawns(store, loc_id, type_id, now=None):
+    """Only the six ordinary soldiers return between paid base battles."""
+    s = guard_site(loc_id, type_id)
+    if s is None or s.kind != 'base' or type_id not in s.troops:
+        return False
+    now = bosses.clock() if now is None else now
+    return battle_slot(s, now) is None and paid_holder(store, s, now) is not None
 
 
 def rent_refusal(store, s, char_id, loc_id=None, now=None):

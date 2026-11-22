@@ -1923,10 +1923,13 @@ class Session:
         # LAVA_CHEATS is set by no script that serves anybody: not run.sh,
         # not the compose file, not the deployment.
         if CHEATS and text.split(" ")[0] in ("/goto", "/give", "/money",
-                                             "/skill", "/spec"):
+                                             "/skill", "/spec", "/base-respawn"):
             args = text.split()[1:]
             try:
-                if text.startswith("/goto"):
+                if text.startswith("/base-respawn"):
+                    out = ("Используйте /base-respawn без аргументов."
+                           if args else self.admin_base_respawn())
+                elif text.startswith("/goto"):
                     if len(args) >= 2:
                         out = self.admin_goto(None, args[0], args[1])
                     else:
@@ -2186,6 +2189,32 @@ class Session:
         self.send_player_info()
         return "%s: %s на %d дн., скорость x%s" % (
             self.nick, vehicle["name"], days, vehicle["speed_mod"])
+
+    def admin_base_respawn(self):
+        """Local cheats only: restore this base's native scheduled wave."""
+        if not CHEATS or self.room is None or self.room.combat is None:
+            return "Команда доступна только в локальном тестовом комплекте."
+        base = holdings.base_for(self.loc.id)
+        if base is None or self.loc.id != base.loc:
+            return "Войдите на поверхность клановой базы: /goto 382 или /goto 118."
+        rc = self.room.combat
+        due = rc.boss_slots(bosses.clock())
+        if not any(slot is not None for slot in due.values()):
+            return "Сначала откройте тестовое окно захвата или оплатите аренду базы."
+        if (self.room.ws or any(m.target is not None or m.aim is not None
+                               or not m.alive and not m.away for m in rc.bosses)):
+            return "Дождитесь конца боя и исчезновения тел."
+        with storage.atomic(STORE.db):
+            for mob in rc.bosses:
+                STORE.db.execute("DELETE FROM boss_kills WHERE spot IN (?, ?)",
+                                 (rc.boss_spot(mob), rc.boss_spot(mob) + ':respawn'))
+        for mob in rc.bosses:
+            if mob.alive:
+                rc.boss_leaves(mob)
+            mob.slot = None
+            mob.base_respawn_at = None
+        rc.keep_hours()
+        return "Охрана восстановлена; хозяин появится после зачистки в окно захвата."
 
     def admin_goto(self, loc_id=None, gx=None, gy=None):
         """Open a location, or the one standing on a map cell.

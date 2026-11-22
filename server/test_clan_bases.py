@@ -33,7 +33,7 @@ import storage
 import rooms
 import world
 from test_quest_state import session
-from testkit import run_cases
+from testkit import attack_fixture, run_cases
 
 
 SLOT = datetime(2026, 11, 21, 20, tzinfo=bosses.ZONE).timestamp()
@@ -195,6 +195,199 @@ class ClanBases(unittest.TestCase):
                     self.assertIsNot(soldier.stats, original)
                     self.assertTrue(bosses.keeps_hours(soldier.type_id, base.loc))
                     self.assertFalse(bosses.keeps_hours(soldier.type_id, 0))
+
+    def test_paid_occupation_restores_defenders_and_keeps_its_own_death_checkpoint(self):
+        async def check(base):
+            self.now = SLOT + 10
+            self.capture(base)
+            self.pay(base)
+            self.now = SLOT + 7200
+            room = rooms.Room(world.location(base.loc), rooms.IdAllocator(), world.mob_types())
+            rc = combat.RoomCombat(room, self.store)
+            rc.keep_hours()
+            defenders = [m for m in rc.mobs.values() if m.type_id in base.guards + base.troops]
+            self.assertEqual(sum(m.alive and not m.away for m in defenders), 9)
+            self.assertTrue(next(m for m in rc.mobs.values() if m.type_id == base.boss).away)
+            self.assertTrue(all(m.slot == SLOT + 3600 for m in defenders))
+            rc.kill(defenders[0], None)
+            restored = combat.RoomCombat(
+                rooms.Room(world.location(base.loc), rooms.IdAllocator(), world.mob_types()), self.store)
+            restored.keep_hours()
+            self.assertEqual(sum(m.alive and not m.away for m in restored.mobs.values()
+                                 if m.type_id in base.guards + base.troops), 8)
+            self.now = SLOT + 7 * 86400 - 300
+            restored.keep_hours()
+            self.assertFalse(any(m.alive and not m.away for m in restored.mobs.values()))
+            self.now += 300
+            restored.keep_hours()
+            self.assertEqual(sum(m.alive and not m.away for m in restored.mobs.values()
+                                 if m.type_id in base.guards + base.troops), 9)
+            self.store.holding_clear(base.key, 'admin')
+        for base in (self.base, holdings.site('base_dn')):
+            with self.subTest(base=base.key):
+                asyncio.run(check(base))
+
+    def test_owner_bullets_and_free_aim_cannot_harm_paid_defenders(self):
+        self.capture()
+        self.pay()
+        room = rooms.Room(world.location(self.base.loc), rooms.IdAllocator(), world.mob_types())
+        rc = combat.RoomCombat(room, self.store)
+        target = next(m for m in rc.mobs.values() if m.type_id in self.base.troops)
+        shooter = NS(is_player=True, sess=NS(char_id=self.cid), cell=target.cell-1)
+        weapon = combat.Weapon(1, 10, 10, 0, 10, 20, 0, 0, 25, 0, 0)
+        rc.bodies = lambda *args: {}
+        rc.bullet_damage = Mock(return_value=(7, 9))
+        rc.ranged_critical = Mock(return_value=False)
+        with patch.object(combat, 'shot_wall', return_value=None), \
+                patch.object(combat, 'bodies_between', return_value=[]), \
+                patch.object(combat, 'bullet_offset', return_value=0), \
+                patch.object(combat, 'flight', return_value=([target], None)):
+            for aim in (target, None):
+                self.assertEqual(rc.resolve(shooter, aim, target.cell, weapon, 1)[1], {})
+            rc.bullet_damage.assert_not_called()
+            stranger = mobs.Mob(9999, 918, target.cell - 1)
+            struck = rc.resolve(shooter, stranger, stranger.cell, weapon._replace(through=True), 1)[1]
+            self.assertEqual(set(struck), {stranger})
+            self.assertEqual(struck[stranger][:2], [7, 9])
+            self.assertEqual(rc.bullet_damage.call_count, 1)
+            with patch.object(self.store, 'clan_member', return_value=None):
+                self.assertEqual(rc.resolve(shooter, target, target.cell, weapon, 1)[1][target][:2], [7, 9])
+
+    def test_new_battle_resets_a_wounded_occupation_guard_and_cancels_old_attack(self):
+        self.capture()
+        self.pay()
+        self.now = SLOT + 7200
+        room = rooms.Room(world.location(self.base.loc), rooms.IdAllocator(), world.mob_types())
+        rc = combat.RoomCombat(room, self.store)
+        rc.keep_hours()
+        guard = next(m for m in rc.mobs.values() if m.type_id in self.base.guards)
+        guard.hp = guard.sp = 1
+        pending = guard.aim = Mock()
+        guard.target = NS()
+        self.now = SLOT + 7 * 86400
+        rc.keep_hours()
+        pending.cancel.assert_called_once_with()
+        self.assertIsNone(guard.aim)
+        self.assertIsNone(guard.target)
+        self.assertEqual((guard.hp, guard.sp), (7200, 7200))
+        self.assertEqual(guard.slot, self.now)
+
+    def test_owner_melee_cannot_harm_paid_defenders(self):
+        self.capture()
+        self.pay()
+        room = rooms.Room(world.location(self.base.loc), rooms.IdAllocator(), world.mob_types())
+        rc = combat.RoomCombat(room, self.store)
+        target = next(m for m in rc.mobs.values() if m.type_id in self.base.guards)
+        fighter, _ch, _room, _used, _frames, _row = attack_fixture(6241)
+        fighter.rc, fighter.sess.loc = rc, room.loc
+        fighter.sess.char_id = self.cid
+        fighter.hold_stats = fighter.release_stats = lambda: None
+        fighter.award_xp = Mock()
+        fighter.store = self.store
+        target.apply_damage = Mock(return_value=False)
+        rc.melee_damage = Mock(return_value=(1, 1))
+        rc.after_hostile = Mock()
+        with patch.object(mobs, 'adjacent', return_value=True), \
+                patch.object(target, 'present', return_value=True), \
+                patch.object(combat, 'roll', return_value=True):
+            combat.Fighter.strike_now(fighter, target, None, (1, 1), combat.SPEC_BLADE, 0)
+        target.apply_damage.assert_not_called()
+        rc.melee_damage.assert_not_called()
+        fighter.award_xp.assert_not_called()
+
+    def test_paid_soldier_returns_after_five_minutes_across_restart_but_bodyguard_does_not(self):
+        async def check(base):
+            self.now = SLOT + 10
+            self.capture(base)
+            self.pay(base)
+            self.now = SLOT + 7200
+            room = rooms.Room(world.location(base.loc), rooms.IdAllocator(), world.mob_types())
+            rc = combat.RoomCombat(room, self.store)
+            rc.keep_hours()
+            soldier = next(m for m in rc.bosses if m.type_id in base.troops)
+            guard = next(m for m in rc.bosses if m.type_id in base.guards)
+            for mob in (soldier, guard):
+                rc.kill(mob, None)
+                rc.corpse_gone(mob, [])
+            self.assertEqual(soldier.base_respawn_at, self.now + 300)
+            self.now += 299
+            rc.keep_hours()
+            self.assertTrue(soldier.away)
+            restarted = combat.RoomCombat(
+                rooms.Room(world.location(base.loc), rooms.IdAllocator(), world.mob_types()), self.store)
+            restarted.keep_hours()
+            s = next(m for m in restarted.bosses if m.home == soldier.home and m.type_id == soldier.type_id)
+            g = next(m for m in restarted.bosses if m.home == guard.home and m.type_id == guard.type_id)
+            self.assertTrue(s.away)
+            self.assertTrue(g.away)
+            self.now += 1
+            restarted.keep_hours()
+            self.assertTrue(s.alive and not s.away)
+            self.assertEqual(s.hp, s.stats.hp_max)
+            self.assertIsNone(s.base_respawn_at)
+            self.assertTrue(g.away)
+            after = combat.RoomCombat(
+                rooms.Room(world.location(base.loc), rooms.IdAllocator(), world.mob_types()), self.store)
+            after.keep_hours()
+            self.assertEqual(sum(m.alive and not m.away for m in after.bosses
+                                 if m.type_id in base.troops), 6)
+            self.store.holding_clear(base.key, 'admin')
+        for base in (self.base, holdings.site('base_dn')):
+            with self.subTest(base=base.key):
+                asyncio.run(check(base))
+
+    def test_capture_soldier_never_returns_after_five_minutes_or_early_rent_payment(self):
+        async def check():
+            self.now = SLOT
+            room = rooms.Room(world.location(self.base.loc), rooms.IdAllocator(), world.mob_types())
+            rc = combat.RoomCombat(room, self.store)
+            rc.keep_hours()
+            defenders = [m for m in rc.bosses if m.type_id in self.base.guards + self.base.troops]
+            for mob in defenders:
+                rc.kill(mob, None)
+                rc.corpse_gone(mob, [])
+            self.now += 301
+            rc.keep_hours()
+            self.assertTrue(all(m.away for m in defenders))
+            self.assertFalse(any(key.endswith(':respawn') for key in self.store.boss_kills(
+                [rc.boss_spot(m) + ':respawn' for m in defenders])))
+            self.capture()
+            self.pay()
+            self.now += 301
+            rc.keep_hours()
+            self.assertTrue(all(m.away for m in defenders))
+            self.now = SLOT + 3600
+            rc.keep_hours()
+            self.assertTrue(all(m.alive and not m.away for m in defenders))
+        asyncio.run(check())
+
+    def test_local_base_respawn_restores_wave_and_is_not_a_production_command(self):
+        self.now = SLOT
+        s, _frames = self.native()
+        room = rooms.Room(world.location(self.base.loc), rooms.IdAllocator(), world.mob_types())
+        rc = combat.RoomCombat(room, self.store)
+        room.combat, s.room, s.loc = rc, room, room.loc
+        rc.keep_hours()
+        guard = next(m for m in rc.mobs.values() if m.type_id in self.base.guards)
+        self.store.boss_killed(rc.boss_spot(guard), SLOT)
+        rc.boss_leaves(guard)
+        guard.slot = SLOT
+        with patch.object(server, 'CHEATS', False):
+            self.assertIn('локальном', s.admin_base_respawn())
+            self.assertTrue(guard.away)
+        with patch.object(server, 'CHEATS', True):
+            s.answer = lambda text, *args: _frames.append(('answer', dict(text=text)))
+            s.cmd_userMsg(dict(group=0, entry='/base-respawn'))
+            self.assertTrue(any('восстановлена' in p.get('text', '') for n, p in _frames if n == 'answer'))
+            self.assertEqual(sum(m.alive and not m.away for m in rc.mobs.values()
+                                 if m.type_id in self.base.guards + self.base.troops), 9)
+            self.assertTrue(next(m for m in rc.mobs.values() if m.type_id == self.base.boss).away)
+            self.assertEqual(self.store.boss_kills([rc.boss_spot(guard)]), {})
+            room.ws = True
+            self.assertIn('конца боя', s.admin_base_respawn())
+            room.ws = False
+            s.loc = world.location(128)
+            self.assertIn('поверхность', s.admin_base_respawn())
 
     def test_daily_warehouse_guards_checkpoint_restart_and_next_day(self):
         async def check(site):
