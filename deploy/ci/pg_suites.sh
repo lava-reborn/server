@@ -49,6 +49,10 @@ SUITES=(storage_pg clans clan_admin clan_diplomacy clan_mail clan_treasury groun
 # The stop announced ahead (server/stopwarn.py): its stop_plan table, and the
 # game, the panel and the command line meeting in one database.
 SUITES+=(stopwarn)
+# Native base rent, warehouse ingots and laboratory CAS/rollback transactions.
+# This suite deliberately honours LAVA_DB_URL; SQLite-only unit/race suites
+# remain in the ordinary shards.
+SUITES+=(holdings)
 mkdir -p "$OUT"
 : > "$OUT/results"
 rm -f "$OUT/results.rerun"
