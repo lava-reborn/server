@@ -231,8 +231,12 @@ class TrainingResume(unittest.IsolatedAsyncioTestCase):
         old = self.s
         ground = self.enter()
         selected = dict(self.store.character(old.char_id))
-        session = self.next_session()
+        # selPers is the first selection on a new connection. A fixture
+        # already holding char_id/char correctly rejects a second choice.
+        session = server.Session(fixtures.Writer(), 'second-socket')
+        session.training_protocol = 1
         session.characters = [selected]
+        self.s = session
         directory = rooms.Directory()
         directory.add(old)
         with patch.object(server, 'ONLINE', directory), \

@@ -373,6 +373,7 @@ try:
     got = a.frames()
     check("Alice leaves for the map",
           [f.split(";")[0] for f in got], ["cmdAck", "gmap", "marks"])
+    alice_map = (param(got[1], "x"), param(got[1], "y"))
     check("Bob sees her go", b.frames(), ["lch;lostUser=%d;" % pid_a])
     check("and Alice, alone on the map, hears nothing", a.frames(0.3), [])
 
@@ -380,18 +381,19 @@ try:
     got = b.frames()
     check("Bob leaves for the map",
           [f.split(";")[0] for f in got], ["cmdAck", "gmap", "marks", "newUser", "userMove"])
+    bob_map = (param(got[1], "x"), param(got[1], "y"))
     # newUser is an offset the client subtracts from its own cell
     # (GlobalMap.newUser: x = my.x - dx): same cell, zero offset.
     # cmdAck, gmap, marks, then the neighbours
     check("Alice appears beside him", got[3],
           "newUser;id=%d;dx=0;dy=0;" % pid_a)
     check("standing still at her absolute cell",
-          got[4], "userMove;id=%d;dx=5970;dy=1730;vx=0;vy=0;t=0;" % pid_a)
+          got[4], "userMove;id=%d;dx=%s;dy=%s;vx=0;vy=0;t=0;" % ((pid_a,) + alice_map))
     got = a.frames()
     # the first heartbeat may already follow within the window
     check("Bob appears beside her", got[:2],
           ["newUser;id=%d;dx=0;dy=0;" % pid_b,
-           "userMove;id=%d;dx=5970;dy=1730;vx=0;vy=0;t=0;" % pid_b])
+           "userMove;id=%d;dx=%s;dy=%s;vx=0;vy=0;t=0;" % ((pid_b,) + bob_map)])
 
     # Heartbeat: a figure on the client fades after 3 s without a userMove
     # and is removed after 6 (MapObject.checkLive), so each side must hear
@@ -419,7 +421,9 @@ try:
     check("westward", any("vx=-0.35;vy=0;" in f for f in got), True)
     got = [f for f in b.frames(4) if f.startswith("userMove;id=%d;" % pid_a)]
     check("and arrive one cell west",
-          any("dx=5969;dy=1730;vx=0;vy=0;" in f for f in got), True)
+          any((float(param(f, "dx")), float(param(f, "dy")), param(f, "vx"), param(f, "vy"))
+              == (round(float(alice_map[0]) - 1, 2), float(alice_map[1]), "0", "0")
+              for f in got), True)
     a.frames(0.2)
 
     # --- перехват: the map's shift-click menu -------------------------------

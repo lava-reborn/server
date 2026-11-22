@@ -141,6 +141,18 @@ class GoldPurchaseClient(unittest.TestCase):
         self.answer()
         self.assertEqual(self.bought, [(25218, 500)])
 
+    def test_base_discount_uses_native_ceil_for_rounds_and_single_medicine(self):
+        for root, price, n in ((3, 2, 1), (3, 2, 20), (3, 2, 5000), (2, 105, 1)):
+            with self.subTest(root=root, price=price, n=n):
+                self.setUp()
+                self.pan['trader']['pmod'] = 0.9
+                item = self.item(root=root, gold=price)
+                self.methods['buy'].invoke(self.trade, [item, n])
+                expected = math.ceil(price * n * 0.9) / 100
+                self.assertIn(str(expected) + ' G', self.trade['__gcBuyDialog']['label'])
+                self.answer()
+                self.assertEqual(self.bought, [(25218, n)])
+
     def test_invalid_ammo_count_cannot_open_purchase_dialog(self):
         for n in (0, -1, 1.5, None):
             self.methods['buy'].invoke(self.trade, [self.item(root=3), n])

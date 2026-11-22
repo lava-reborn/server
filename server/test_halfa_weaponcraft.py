@@ -131,16 +131,14 @@ def stood(loc_id):
 
 # --- in process: the table ----------------------------------------------------------------
 try:
-    check("blueprint upgrades and decoding stay open through level 20; other craft services keep Вади-Хальфа's band (or the valley's"
-          " 0-4 at its whetstone, Абри's 6-20 at its own, Донгола's 9-16 since 2026-10-13,"
-          " Абу-Хамед's 17-20 since 2026-10-14) in 10000-10999, of the loaded table",
+    check("upgrades, decoding and sharpening accept the output level minus three through 20;"
+          " assembly and salvage retain city bands; all generated rows are loaded",
           sorted({(r["repeatable"], r["service"], r["level"], r["max_level"],
                    10000 <= r["type"] <= 10999, quests.get(r["type"]) is not None)
                   for r in ROWS}),
-          [(1, True, 0, 4, True, True), (1, True, 0, 8, True, True), (1, True, 0, 20, True, True),
-           (1, True, 6, 20, True, True), (1, True, 9, 16, True, True), (1, True, 9, 20, True, True),
-           (1, True, 16, 20, True, True), (1, True, 17, 20, True, True)])
-    check("  ..Abri keeps its existing whetstone recipes, now for player levels 6-20",
+          sorted([(1, True, level, 20, True, True) for level in range(18)]
+                 + [(1, True, 0, 8, True, True), (1, True, 9, 16, True, True)]))
+    check("  ..Abri keeps its existing whetstone recipes",
           sorted({(r["craft"]["family"], tuple(r["give"])) for r in ROWS
                   if city_of(r) == "abri"}),
           [("knife", (ABRI_WHETSTONE,))])
@@ -729,6 +727,9 @@ try:
     c.send("actPlayer;")
     c.until(lambda f: f[0] == "lcall")
     arrive(c)
+    c.send("userMsg;entry=@/skill 1 3@;group=0;")
+    check("craft fixture reaches level three: a level-six knife is within the +3 limit",
+          acks(c.frames()), [0])
     c.send("userMsg;entry=@/money 100000 0@;group=0;")
     c.frames()
 

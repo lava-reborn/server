@@ -40,7 +40,7 @@ class TrainingFighter(combat.Fighter):
 
     def medicine_cooldown_seconds(self):
         return (training_formulas.cooldown_seconds(self.character()) if self.sess.ground.rules.simulator_formulas
-                else combat.battle_medicine.COOLDOWN_SECONDS)
+                else 4.0)
 
     def healing_spec(self, vitals):
         if self.sess.ground.rules.combat_v2:

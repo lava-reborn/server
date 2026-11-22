@@ -864,8 +864,9 @@ class TrainingGround(unittest.IsolatedAsyncioTestCase):
         g.start('mob')
         spawned=g.room.combat.mobs[g.mob_eid]
         self.assertIsNot(spawned.stats,original)
-        self.assertEqual(spawned.hp,hp*2)
-        self.assertEqual(spawned.stats.dmg_min,round(damage*1.5))
+        legacy=mobs.MobStats(g.mob_type, balanced=False)
+        self.assertEqual(spawned.hp,legacy.hp_max*2)
+        self.assertEqual(spawned.stats.dmg_min,round(legacy.dmg_min*1.5))
         self.assertEqual(original.hp_max,hp)
         self.assertEqual(original.dmg_min,damage)
         self.unchanged()

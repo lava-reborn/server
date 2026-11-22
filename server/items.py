@@ -332,9 +332,21 @@ def stock_for(trader_type, loc_id=None):
     reads own_stock instead, the list without those copies: what it saves is
     the owner's choice, and the rule stays a rule.
     """
+    chosen = _shop_stock(trader_type, loc_id)
+    owners = shop_bands.stock_owners(loc_id) if loc_id in shop_bands.CITY_OF else {}
+    return [t for t in chosen if owners.get(t, trader_type) == trader_type]
+
+
+# Existing coupons still redeem, but selling an unlimited discounted supply
+# lets their gold ammunition be cashed out far above the purchase price.
+DISCOUNT_AMMO_COUPONS = frozenset((6294, 6295, 6296))
+
+
+def _shop_stock(trader_type, loc_id):
+    """Unallocated stock; shared by the displayed list and the location owner map."""
     chosen = shop_bands.apply(trader_type, loc_id, with_gold_pouches(_own_list(trader_type)))
     return [t for t in chosen if not out_of_game(t) and not acquisition_blocked(t)
-            and not upgrade_blueprint_blocked(t)]
+            and not upgrade_blueprint_blocked(t) and t not in DISCOUNT_AMMO_COUPONS]
 
 
 def own_stock(trader_type):
@@ -526,6 +538,7 @@ def upgrade_blueprint_blocked(type_id):
 
 BATTLE_HEAL_AP_MULTIPLIER = 2.5
 BATTLE_HEAL_AFRO_AP_MULTIPLIER = 1.5
+GOLD_VALENTINES = (1069, 1070, 1071, 1072)
 
 
 def battle_medicine(type_id):
@@ -559,6 +572,9 @@ STIMULANT_UNAVAILABLE = (
 def stimulant_unavailable(type_id):
     """Block only HEAL items promising an unimplemented temporary effect."""
     if item_templates.supports_effects(type_id):
+        return False
+    import effects
+    if effects.definition(type_id) is not None:
         return False
     if STIMULANT_EFFECTS_ENABLED or root_of(type_id) != HEAL:
         return False
@@ -1010,8 +1026,9 @@ OWN_ARTICLE_PRICE.update((t, 100) for t in CRAT_TOOLS)
 # 6700 afro (the owner's Абри, 2026-10-12; RECOVERED: the article's own
 # rule). It keeps its use: strength and dexterity +1 for an hour, two bites.
 # Bagira's usable Bone Knife, not the separate ritual quest object 3944.
-PERSONAL_QUEST_REWARDS = frozenset({3941})
-QUEST_GIFTS_UNSOLD = frozenset({3914})
+# The lab's daily equipment part cannot be pooled from other characters.
+PERSONAL_QUEST_REWARDS = frozenset({3941, quests.LABORANT_PART})
+QUEST_GIFTS_UNSOLD = frozenset({3914, quests.LABORANT_PART})
 
 # Things a quest asks for that fall only for it (mobs.QUEST_TIER) and that the
 # wiki prices for a stall: no price either (cost 0). «Алмаз» (5545), the
@@ -1053,9 +1070,9 @@ MINER_WEAR = {first + k: sets.SETS[like]["members"][slot]
 # arguing with the balance. Ours, and openly so; nothing sells it.
 ADMIN_GUN = 1534
 
-# Owner 2026-10-27: the collectible PMM variants of levels 4 and 5.
+# All PMM variants use the same ten-round magazine.
 # Capacity is type metadata, so existing instances get the same limit.
-PMM_CLIP_SIZES = {7056: 7, 7057: 7}
+PMM_CLIP_SIZES = {7055: 10, 7056: 10, 7057: 10, 7058: 10}
 
 # Ordinary collectible KS-12, latest owner decision 2026-10-27:
 # Keep x2 of the original AP cost, except level 5 -> 32 and level 9 -> 27.
@@ -1220,7 +1237,8 @@ def static_info(type_id):
         # A gold round costs the owner's hundredth, the pack its rounds'
         # worth (GOLD_AMMO_ROUND).
         if root_of(type_id) == AMMO and gold_round(info[1]):
-            info[1]["g_cost"] = GOLD_AMMO_ROUND * info[1]["sell_num"]
+            price = 2 if catalogue()[type_id][1].endswith(('_EK_G', '_BB_G')) else GOLD_AMMO_ROUND
+            info[1]["g_cost"] = price * info[1]["sell_num"]
         # Gift rounds must remain affordable through the ordinary client.
         if type_id == STARTER_ROUNDS:
             info[1].update(cost=AMMO_PACK, g_cost=0)
@@ -1243,12 +1261,18 @@ def static_info(type_id):
         # Owner, 2026-10-29: smuggled PKM 7051 again requires learned spec 0.
         # Ordinary/gold variants, modifications and other guns keep their
         # previous requirements, including a learned spec at level zero.
-        if root_of(type_id) == FIRE_ARM and info[1].get("weapon_type") == MACHINEGUN:
+        if root_of(type_id) == FIRE_ARM:
             level = max(info[1].get("need_skills") or [0])
-            if 16 <= level <= 20:
-                required = level - 16
+            requirement = None
+            if info[1].get("weapon_type") == MACHINEGUN and 16 <= level <= 20:
+                requirement = (6, level - 16)
+            elif catalogue()[type_id][1].startswith('lamantin_shotgun_') and level >= 7:
+                # The ordinary shotgun ladder through 12; KS-12 at 15 needs IV.
+                requirement = (3, 1 if level == 7 else 2 if level < 10 else 3 if level < 15 else 4)
+            if requirement is not None:
+                spec, required = requirement
                 mask = info[1].get("need_specs_m", 0) or 0
-                bit = 1 << 6  # PersAttributes: Ручные пулеметы.
+                bit = 1 << spec  # PersAttributes order.
                 offset = (mask & (bit - 1)).bit_count()
                 values = list(info[1].get("need_specs") or [])
                 values.extend([0] * max(0, mask.bit_count() - len(values)))
@@ -1263,11 +1287,19 @@ def static_info(type_id):
             costs = list(info[1]["fire_costs"])
             costs[2] = KS12_FIRE_COSTS[type_id]
             info[1]["fire_costs"] = costs
+        import battle_balance
+        for field, value in battle_balance.equipment_changes().get(type_id, {}).items():
+            info[1][field] = list(value) if isinstance(value, list) else value
         # Last, so neither the design nor the wiki can argue with it.
         admin = ADMIN_OVERRIDES.get(type_id)
         if admin:
             info[1].update(admin)
         if root_of(type_id) == HEAL:
+            import effects
+            effect = effects.definition(type_id)
+            if effect is not None:
+                info[1].update(bonus_act_time=effect['duration'],
+                               effects=[effects.FIRST + type_id], effects_prob=[100])
             name = catalogue()[type_id][1]
             if name.startswith("Med_Battle_") and (name.endswith('_A') or '_G' in name):
                 multiplier = (BATTLE_HEAL_AFRO_AP_MULTIPLIER if name.endswith('_A')
@@ -1563,6 +1595,18 @@ def wiki_descs():
         if text and t in catalogue():
             out.setdefault(t, text)
     return out
+
+
+def equipment_level_text(type_id):
+    """Explain the equip allowance without suggesting an upper wearing limit."""
+    if root_of(type_id) not in (WEAR, FIRE_ARM, COLD_ARM) or item_templates.contains(type_id):
+        return ""
+    si = params_of(type_id) or {}
+    level = max(si.get("need_skills") or [0]) if si.get("need_skills_m") else 0
+    if level <= 0 or not (si.get("cost", 0) or si.get("g_cost", 0)):
+        return ""
+    return ("Можно надеть с %d-го уровня. Без ускоренного износа — с %d-го."
+            % (max(0, level - 3), level))
 
 
 def preload():

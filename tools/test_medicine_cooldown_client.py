@@ -84,6 +84,24 @@ class MedicineCooldownClient(unittest.TestCase):
         self.assertEqual(len(self.timers),1)
         self.assertTrue(self.draw) # cross drawn only on creation
 
+    def test_full_server_cooldown_remains_visible_until_medicine_is_ready(self):
+        import battle_medicine
+        remaining = int(battle_medicine.COOLDOWN_SECONDS * 1000)
+        self.assertEqual(remaining, 6000)
+        self.call('__bfMedInit',self.view)
+        self.notify(remaining)
+        icon=self.created[0]
+        self.assertEqual(icon['EstimateTime']['text'],'00:06')
+        for stamp,text in ((3000,'00:04'),(5000,'00:02'),(6999,'00:01')):
+            self.now=stamp
+            self.call('__bfMedTick')
+            self.assertEqual(icon['EstimateTime']['text'],text)
+            self.assertEqual(self.removed,[])
+        self.now=7000
+        self.call('__bfMedTick')
+        self.assertEqual(self.removed,[icon])
+        self.assertIsNone(self.global_['__bfMedTimer'])
+
     def test_collapse_reopen_and_old_unload_preserve_deadline_and_new_view(self):
         self.call('__bfMedInit',self.view)
         self.notify()

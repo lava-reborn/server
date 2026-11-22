@@ -166,7 +166,7 @@ def food_or_water(t):
     Not bandages and injectors (Med_Battle_), energy drinks
     (Med_Battle_Rest_) or kits (Med_Pacific_HR_)."""
     internal = cat[t][1]
-    return internal.startswith(FOOD) or not internal.startswith("Med_")
+    return internal.startswith(FOOD) or (not internal.startswith("Med_") and not items.params_of(t).get("bonus_act_time"))
 
 
 HASANI_STALL = items.stock_for(HASANI, PLACE[HASANI])
@@ -468,7 +468,10 @@ for trader, who in sorted(LISTS.items()):
     kinds = shop_bands.kinds(trader)
     band = shop_bands.goods(kinds, 0, 4, shop_bands.only(trader)) if kinds else []
     check("%s (%d): %d types, on the wire as written (a seller's band first)" % (
-        who, trader, len(wire)), wire, band + goods)
+        who, trader, len(wire)), wire,
+        (band + goods if trader != ERIKESAM else band + goods[:-2] + [4917, 4937] + goods[-2:]) + ([6152, 6153, 6154, 6163, 6164, 6165, 6166, 6175]
+                        if trader in (BORIS, SCHULZ) else
+                       []))
     check("  ..none twice", len(set(wire)), len(wire))
     check("  ..none premium", [t for t in wire if items.premium(t)], [])
     check("  ..every one servable",

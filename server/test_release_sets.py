@@ -34,7 +34,9 @@ class ReleaseSets(unittest.TestCase):
         # complete A/G pairs; higher sets remain in the catalogue only.
         pieces = set(sets.ITEMS)
         marat = items.stock_for(1219, 126)
-        self.assertEqual(len(marat), 10)
+        self.assertEqual(len(marat), 19)
+        self.assertEqual(set(marat) & {3735, 3736, 3738, 5615, 3722, 3723, 3724, 3725, 3726},
+                         {3735, 3736, 3738, 5615, 3722, 3723, 3724, 3725, 3726})
         self.assertFalse(pieces.intersection(marat))
         expected = {t for t, ware in shop_bands.wares().items()
                     if ware[0] == 'sets' and 16 <= ware[1] <= 17}
@@ -128,7 +130,7 @@ class ReleaseSets(unittest.TestCase):
                 ch.skill[skill][0] = 16
                 ch.bonus_skills[skill] = bonus
                 ch.gain_xp = Mock(return_value=dict(attribs=set(), skills=set(), specs=set()))
-                f = NS(character=lambda: ch)
+                f = NS(character=lambda: ch, sess=NS())
                 target = NS(level=17, stats=NS(role='mob', xp_mult=1))
                 combat.Fighter.credit_xp(f, skill, None, 1.0, target)
                 values.append(ch.gain_xp.call_args.args[1])

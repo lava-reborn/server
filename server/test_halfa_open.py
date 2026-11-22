@@ -388,9 +388,18 @@ def login(first_time=False):
     if first_time:
         c.send("newPers;res=1;sex=0;name=@Newcomer@;")
         c.frames()
-        c.send("actPlayer;")
-    else:
-        c.send("selPers;num=0;")
+        logout(c)
+        # This story route uses an admin gun; normal loadouts are tested separately.
+        st = store()
+        cid = st.character_by_name("Newcomer")["id"]
+        st.save_stats(cid, [("attrib", progression.STRENGTH, 1000, 0, 0),
+                            ("attrib", progression.INTELLECT, 1000, 0, 0)])
+        st.close()
+        c = Client(connect())
+        c.send("hello;minor=2;major=0;")
+        c.send("login;hash=@%s@;" % CRED)
+        c.frames()
+    c.send("selPers;num=0;")
     call = first(c.until(lambda f: f[0] == "lcall"), "lcall")
     arrival = arrive(c)
     inhabitants(arrival, call.get("id"))

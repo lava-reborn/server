@@ -38,7 +38,7 @@ class CarryWeight(unittest.TestCase):
         self.inv = self.s.inv = inventory.Inventory(self.s, self.store)
         self.inv.push_look = lambda *_: None
         self.f = self.s.combat = Fighter(self.s)
-        self.inv.trade = NS(trader_type=1200, loc_id=102)
+        self.inv.trade = inventory.TradeSession(1, 1200, 102)
 
     def make(self, type_id, count=1, slot=inventory.BAG, owner=None):
         fields = inventory.new_fields(type_id, count)

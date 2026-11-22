@@ -161,13 +161,13 @@ class ProfileEquipment(unittest.IsolatedAsyncioTestCase):
         self.enter()
         source = next(t for t in range_catalog.item_catalogue()
                       if t in items.catalogue() and items.catalogue()[t][1].startswith('rifle_1_lvl_19')
-                      and items.params_of(t).get('fire_costs', [0])[0] == 324)
+                      and items.params_of(copies.copy_type(t)).get('fire_costs', [0])[0] == 324)
         before = copies.copy_type(source)
         after = copies.copy_type(source, True)
         self.assertNotEqual(before, after)
         self.assertEqual(items.params_of(before)['fire_costs'][0], 324)
         self.assertEqual(items.params_of(after)['fire_costs'][0], 34)
-        self.assertEqual(items.params_of(source)['fire_costs'][0], 324)
+        self.assertEqual(items.params_of(source)['fire_costs'][0], 34)
 
     async def test_saved_withdrawn_equipment_restores_old_profile_without_reset(self):
         ground = self.enter()

@@ -247,9 +247,13 @@ WAREHOUSE_MASTERS = frozenset({
 })
 
 
-def keeps_hours(type_id):
+def keeps_hours(type_id, loc_id=None):
     """Whether a creature of this type keeps the hours rather than the
     respawn timer: a boss, while the rule is on, but for ALL_DAY."""
+    if loc_id is not None:
+        import holdings                 # late: its schedule imports bosses
+        if holdings.base_for(loc_id, type_id) is not None:
+            return True
     return (bool(HOURS) and type_id not in ALL_DAY
             and world.creature_role(type_id) == "boss")
 
@@ -348,9 +352,14 @@ def slot(t, hours=None):
     return best
 
 
-def slot_of(type_id, t):
+def slot_of(type_id, t, loc_id=None):
     """slot() on the hours a boss of this type keeps (hours_of): a
     warehouse master's window, or the bosses' one."""
+    if loc_id is not None:
+        import holdings                 # late: only the configured surface boss
+        s = holdings.base_for(loc_id, type_id)
+        if s is not None:
+            return holdings.battle_slot(s, t)
     return slot(t, hours_of(type_id))
 
 

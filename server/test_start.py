@@ -28,6 +28,7 @@ The whole of both tutorials is walked in test_valley_quests.
 """
 import collections
 import json
+import math
 import os
 import socket
 import subprocess
@@ -291,7 +292,7 @@ def map_cell(c):
     call = first(c.until(lambda f: f[0] == "lcall"), "lcall")
     if call:
         arrive(c)
-    return (gmap.get("x"), gmap.get("y")), call.get("id")
+    return (math.floor(gmap["x"]), math.floor(gmap["y"])), call.get("id")
 
 
 def status(c, qtype):

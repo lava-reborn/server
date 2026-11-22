@@ -86,6 +86,7 @@ old ones. A missing file means no bands.
 import json
 import os
 import re
+from functools import lru_cache
 
 PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                     "data", "shop_bands.json")
@@ -111,6 +112,104 @@ TOP_LEVEL = 20
 # -- the original's medicine stalls by their articles (the docstring). 0
 # sells the band's tiers alone, two to a city. Weapons and sets keep the band.
 MED_REACH = 4
+
+# City ceilings select the agreed stimulant ranks, independently of player level.
+BUFF_RANKS = {4: (0, 0), 8: (1, 3), 12: (3, 5), 16: (5, 7), 20: (7, 9)}
+BUFF_SELLERS = frozenset((5211, 5224, 5225, 1206, 202, 1167, 207, 1214, 1221,
+                          714, 716, 5239, 5240))
+
+
+def stimulants(top, currency=None):
+    import effects
+    import items
+    low, high = BUFF_RANKS[top]
+    reagent = top // 4 - 1
+    attribute = min(3, reagent)
+    result = []
+    for type_id in sorted(effects.definitions()):
+        name = items.catalogue()[type_id][1]
+        rank = re.fullmatch(r'(?:Salus|Anesthetic)_MK_(\d+)(?:_Gold)?', name)
+        if rank:
+            selected = low <= int(rank[1]) <= high
+        elif name in ('Salus_noob', 'Anesthetic_noob'):
+            selected = top == 4
+        elif name in ('Salus_Plus', 'Anesthetic_Plus'):
+            selected = top == 20
+        elif name.startswith(('item_up_critical_probability_', 'item_up_critical_evade_')):
+            selected = int(name.removesuffix('_gold').rsplit('_', 1)[1]) == reagent
+        elif name.startswith(('item_int_up_', 'item_dex_up_', 'item_const_up_')):
+            selected = {'I': 1, 'II': 2, 'III': 3}[name.rsplit('_', 1)[1]] == attribute
+        elif name == 'item_up_max_od':
+            selected = top >= 8
+        elif type_id in effects.EXPERIENCE_UP:
+            selected = int(name.removesuffix('_gold').rsplit('_', 1)[1]) == reagent
+        elif type_id in effects.EXPERIENCE_DOWN:
+            selected = int(name.removesuffix('_gold').rsplit('_', 1)[1]) == {4: 0, 8: 50, 12: 80, 16: 99, 20: 99}[top]
+        elif type_id in effects.SCANNERS:
+            selected = type_id == (3789 if top <= 12 else 3826) and top >= 8
+        else:
+            selected = False
+        if selected:
+            params = items.params_of(type_id)
+            gold = bool(params.get('g_cost'))
+            if (params.get('cost') or gold) and (currency is None or gold == (currency == 'gold')):
+                result.append(type_id)
+    return result
+
+
+def gold_ammunition(stock):
+    """Gold variants of the calibres already sold or used by this stall's guns."""
+    import items
+    compatible = set()
+    for type_id in stock:
+        if items.root_of(type_id) == items.FIRE_ARM:
+            compatible.update(items.params_of(type_id).get('comp_array', ()))
+        elif items.root_of(type_id) == items.AMMO:
+            name = items.catalogue()[type_id][1]
+            stem = name.rsplit('_', 2)[0] if name.endswith('_G') else name.rsplit('_', 1)[0]
+            compatible.update(t for t, (root, other) in items.catalogue().items()
+                              if root == items.AMMO and other in (stem + '_EK_G', stem + '_BB_G'))
+    return sorted(t for t in compatible if items.root_of(t) == items.AMMO
+                  and items.catalogue()[t][1].endswith(('_EK_G', '_BB_G'))
+                  and items.params_of(t).get('g_cost'))
+
+
+@lru_cache(maxsize=256)
+def stock_owners(loc_id):
+    """One seller per item within a location; cached with the static catalogue."""
+    import items
+    import names
+    import world
+    loc = world.location(loc_id)
+    types = world.mob_types()
+    traders = {t for _, t in loc.spawns if t in SELLERS and t in types and names.known(t)
+               and world.belongs_here(t, types[t][1], types[t][0], loc.war, loc_id)}
+    traders.update(int(row['type']) for row in world.placed_in(loc_id)
+                   if int(row['type']) in SELLERS and names.known(int(row['type'])))
+    stocks = {t: items._shop_stock(t, loc_id) for t in sorted(traders)}
+    candidates = {}
+    for trader, stock in stocks.items():
+        for item in stock:
+            candidates.setdefault(item, []).append(trader)
+
+    def preference(trader, item):
+        kinds = SELLERS[trader]
+        root = items.root_of(item)
+        # Dedicated ammunition stalls win over weapon sellers. Else retain
+        # a compatible firearm seller, then use a stable type-id tie break.
+        if root == items.AMMO:
+            ammo_only = not kinds and all(items.root_of(t) == items.AMMO for t in stocks[trader])
+            compatible = any(items.root_of(t) == items.FIRE_ARM and item in items.params_of(t).get('comp_array', ())
+                             for t in stocks[trader])
+            return (0 if ammo_only else 1 if compatible else 2, trader)
+        if root == items.WEAR:
+            import sets
+            specialist = ('sets' in kinds) if sets.set_of(item) else ('sets' not in kinds)
+            return (not specialist, trader)
+        return (0, trader)
+
+    return {item: min(choices, key=lambda trader: preference(trader, item))
+            for item, choices in candidates.items() if len(choices) > 1}
 
 _LINE = re.compile(r"^(pistols|shotgun|sub_machine_guns|assault_rifle|rifle|machine_gun)"
                    r"_([1-9]\d*)_lvl_(\d+)(_gold)?$")
@@ -410,6 +509,9 @@ def apply(trader_type, loc_id, own):
     """What the trader's stall holds at this place, given its own list."""
     which = SELLERS.get(trader_type)
     b = band(loc_id) if loc_id is not None else None
+    # The archived assistant's own list carries IV outside the city ladder.
+    if b is None or b[1] != 20:
+        own = [t for t in own if t != 3561]
     if which is None or b is None:
         return list(own)
     low, top = b
@@ -418,6 +520,17 @@ def apply(trader_type, loc_id, own):
     if trader_type == 1152 and loc_id == 102:
         low = 1
     if which:
-        return goods(which, low, top, ONLY.get(trader_type)) \
-            + [t for t in own if not band_ware(t)]
-    return [t for t in own if not band_ware(t) or fits(t, low, top)]
+        stock = goods(which, low, top, ONLY.get(trader_type))
+        if trader_type in BUFF_SELLERS:
+            import effects
+            stock += stimulants(top, ONLY.get(trader_type))
+            own = [t for t in own if effects.definition(t) is None]
+        stock += [t for t in own if not band_ware(t)]
+        if any(kind in FIREARM_KINDS for kind in which):
+            stock += gold_ammunition(stock)
+        return list(dict.fromkeys(stock))
+    import items
+    stock = [t for t in own if not band_ware(t) or fits(t, low, top)]
+    if stock and all(items.root_of(t) == items.AMMO for t in stock):
+        stock += gold_ammunition(stock)
+    return list(dict.fromkeys(stock))

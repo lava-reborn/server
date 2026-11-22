@@ -103,8 +103,8 @@ class BlueprintCompatibility(unittest.TestCase):
         for t, capacity in expected.items():
             self.assertEqual(items.params_of(t)['clip_size'], capacity, t)
         mod = items.params_of(26071)
-        self.assertEqual(mod['h_damage_min'][0], 22)
-        self.assertEqual(mod['h_damage_max'][0], 40)
+        self.assertEqual(mod['h_damage_min'][0], 20)
+        self.assertEqual(mod['h_damage_max'][0], 35)
 
     def test_exact_copy_preferred_and_only_one_is_taken(self):
         q = self.recipe(26075)
@@ -293,10 +293,10 @@ class PersonalKnifeAndM24(unittest.TestCase):
             self.assertFalse(barter.tradable(3941))
             self.assertFalse(combat.drops_on_death(3941))
 
-    def test_m24_only_afro_damage_and_its_modifications_change(self):
+    def test_m24_reviewed_damage_and_modifications(self):
         a, g = items.params_of(25803), items.params_of(25804)
-        self.assertEqual((a['h_damage_min'], a['h_damage_max']), ([95, 0, 102], [255, 0, 348]))
-        self.assertEqual((g['h_damage_min'], g['h_damage_max']), ([114, 0, 122], [306, 0, 418]))
+        self.assertEqual((a['h_damage_min'], a['h_damage_max']), ([130, 0, 105], [349, 0, 357]))
+        self.assertEqual((g['h_damage_min'], g['h_damage_max']), ([156, 0, 125], [418, 0, 429]))
         baseline = {t: r for t, r in craft._STAT_CORRECTIONS.items() if t != 25803}
         with patch.dict(craft._STAT_CORRECTIONS, baseline, clear=True):
             before = items.params_of(25803)

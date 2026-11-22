@@ -16,6 +16,7 @@ import items
 import item_templates
 import names
 import mode_extensions
+import progression
 import sets
 import shop_bands
 import storage
@@ -148,18 +149,23 @@ class Strings(unittest.TestCase):
 class CombatDefaults(unittest.TestCase):
     def test_damage_and_critical_defaults_match_ordinary_functions(self):
         fighter = combat.Fighter.__new__(combat.Fighter)
+        character = progression.Character()
+        character.skill[progression.SHOOTING][0] = 10
+        fighter.sess = NS(character=lambda: character)
         room = combat.RoomCombat.__new__(combat.RoomCombat)
-        weapon = NS(crit=25, piercing=7)
-        target = NS(armor=lambda: 61, crit_evade_ranged=lambda: 3)
-        self.assertIs(fighter.prepare_weapon(weapon, {}, {}), weapon)
+        weapon = combat.Weapon(1, 100, 120, 3, 10, 20, 7, .1, 25, 1, 2)
+        target = NS(is_player=True, character=lambda: character,
+                    armor=lambda: 0, crit_evade_ranged=lambda: 3)
+        self.assertEqual(fighter.prepare_weapon(weapon, {}, {}), weapon)
         self.assertEqual(fighter.prepare_melee((10, 20), None), (10, 20))
         for damage in (0, 1, 55, 200):
             for stamina in (0, 10, 1000):
                 for critical in (False, True):
                     self.assertEqual(room.bullet_damage(fighter, target, weapon, damage, 5, critical, stamina),
-                                     combat.split_damage(damage, 61, 7, critical, stamina, 5))
+                                     (damage, min(damage, stamina)) if critical else
+                                     (damage + max(0, 5 - stamina), min(5, stamina)))
                     self.assertEqual(room.melee_damage(fighter, target, damage, critical, stamina),
-                                     combat.melee_split(damage, critical, stamina))
+                                     (damage, 0))
         with patch.object(combat, 'roll', return_value=True) as roll:
             self.assertFalse(room.ranged_critical(fighter, target, weapon, False))
             roll.assert_not_called()
@@ -234,7 +240,7 @@ class HealingHooks(unittest.IsolatedAsyncioTestCase):
 
     async def test_invalid_cooldown_cannot_mutate_deadline_or_schedule_callback(self):
         store = NS()
-        for duration in (0, -1, float('nan'), float('inf'), 5):
+        for duration in (0, -1, float('nan'), float('inf'), 7):
             with self.assertRaises(ValueError):
                 battle_medicine.start(store, 1, 100, duration)
             self.assertFalse(hasattr(store, '_battle_medicine_deadlines'))
@@ -280,7 +286,7 @@ class HookFailures(unittest.IsolatedAsyncioTestCase):
                 combat.Fighter.cancel_timers(f)
 
     async def test_invalid_healing_hook_cannot_consume_or_change_health_ap_deadline(self):
-        for invalid in (0,-1,float('nan'),float('inf'),5,True,None):
+        for invalid in (0,-1,float('nan'),float('inf'),7,True,None):
             f,ch,room,used=healing_fixture(6055)
             room.ws=True
             f.medicine_cooldown_seconds=lambda:invalid

@@ -108,14 +108,14 @@ FOOD, SUPPLY, KHAN_SELL, JUT, SAMUEL, FLAG = 155, 2181, 2391, 207, 893, 1011
 BLUEPRINT_STALLS = {"assault": 580, "mg": 583, "rifle": 584, "smg": 585}
 TICKET_TO_ABRI, TICKET_TO_HALFA, TICKET_TO_DONGOLA, TICKET_FROM_DONGOLA = 6544, 6545, 6546, 6547
 KEY, GOLD_KEY, ENVELOPE = 2648, 2651, 1309
-GIFTS = tuple(range(4329, 4353))                # gift_kid_1..10, gift_girl_1..10, gift_0..3
+GIFTS = tuple(range(4329, 4353)) + (1069, 1070, 1071, 1072)                # gift_kid_1..10, gift_girl_1..10, gift_0..3
 KNIFE_PRINTS = tuple(range(6626, 6632))         # Заточка / Эргономика / both, 14у and 16у
 INGOTS = (7620, 4796, 4797)
 POUCHES = [3577, 3580, 5613, 3578, 3579]        # автоматчика, пулеметчика, рукопашника, снайпера,
                                                 # спецназовца: Галия's article, its order
 LOVELACE = tuple(range(11721, 11726)) + tuple(range(60000, 60005))
 OASIS_ROUNDS = [6104, 6105, 6106, 6108, 6107, 6110, 6111, 6115, 6116, 6117, 6118, 6120, 6119,
-                6122, 6123, 6127, 6113, 6125, 6109, 6121, 6114, 6126, 6112, 6124]
+                6122, 6123, 6127, 6113, 6125, 6109, 6121, 6114, 6126, 6112, 6124] + list(range(6152, 6176))
 # The package WORLD holds the test trader 5113 out of the black market (data/
 # schedule.json held_out) and stands the lottery men all year (world.SEASON_KEPT):
 # 663 in both markets, 712 in the black market. Until it is merged 5113 stands there
@@ -141,7 +141,7 @@ DECIDED = {
     OASIS: {JUT: BAND, 1229: BAND, AMMO_OASIS: OWN_},
     NEW_MARKET: {FOOD: BAND, 580: OWN_, 583: OWN_, 584: OWN_, 585: OWN_, LOTTERY: OWN_,
                  1013: WIKI, MORTIMER: OWN_, 1196: WIKI, 2017: WIKI},
-    PIER: {ELIZABETH: OWN_, KHAN_SELL: BAND, PILOT: OWN_},
+    PIER: {ELIZABETH: OWN_, KHAN_SELL: BAND},
     112: {FLAG: NONE}, 113: {FLAG: NONE}, 114: {FLAG: NONE},
 }
 # The lists of data/npcs.json this restoration wrote (or kept: Мортимер's, Абу-бакр's
@@ -160,7 +160,7 @@ OWN = {
     GOLD_LOTTERY: [GOLD_KEY],
     ELIZABETH: list(GIFTS),
     PILOT: [],
-    AMMO_OASIS: OASIS_ROUNDS,
+    AMMO_OASIS: OASIS_ROUNDS[:24],
     ONE_LEG: list(KNIFE_PRINTS),
     # the bag of beans, as before, and since the integration of 2026-10-13
     # «Фуль» (334): «Старые приятели» (647) and «Фуль ему!» (658) send the
@@ -322,7 +322,7 @@ STALLS = {(p, t): items.stock_for(t, p) for p in DONGOLA_PLACES for t in AT[p]}
 STALLS.update({(p, t): items.stock_for(t, p) for p, ts in WORLD_PUTS.items() for t in ts})
 check("Донгола is the band 12-16 of data/shop_bands.json, its places these",
       [(c[0], c[1], c[2], sorted(c[3])) for c in shop_bands.CITIES if c[0] == "Донгола"],
-      [("Донгола", LO, HI, [49, 50, 79, 103, 159, 195, 197, 445, 469])])
+      [("Донгола", LO, HI, [49, 50, 79, 103, 159, 195, 197, 445, 469, 958])])
 check("no gun, knife or set piece out of 12-16 on a seller's stall of Донгола, no medicine out"
       " of its tiers 8_11-16_19; every one of a seller's band both ways, the ordinary for afro"
       " and the (G) for gold, but the apothecary Джут's gold alone and Абу-бакр's afro alone",
@@ -337,14 +337,13 @@ MEDS = sorted({shop_bands.level_of(x) for s in STALLS.values() for x in s
                if shop_bands.medicine(x)})
 check("  ..the medicine of three tiers by their floors: 8_11, 12_15, 16_19 (the band's and the"
       " one under it)", MEDS, [8, 12, 16])
-check("Чёрный Ловелас[12], A and G, on the set sellers' stalls (Дари, Галия): the band's floor"
-      " 12 is Донгола's too", {t: sorted(set(LOVELACE) - set(STALLS[(BLACK, t)]))
-                               for t in (DARI, GALIA)}, {DARI: [], GALIA: []})
-check("Дари: the town's sets and nothing of his own; Галия: the town's sets, then her"
-      " pouches, each with its (G) right after it",
+check("Чёрный Ловелас[12], A and G, remains at Дари; Галия sells pouches separately",
+      (sorted(set(LOVELACE) - set(STALLS[(BLACK, DARI)])),
+       sorted(set(LOVELACE) & set(STALLS[(BLACK, GALIA)]))), ([], []))
+check("Дари: the town's sets; Галия: pouches, each with its (G) right after it",
       (STALLS[(BLACK, DARI)] == shop_bands.goods(("sets",), LO, HI), STALLS[(BLACK, GALIA)][-10:],
        len(STALLS[(BLACK, GALIA)])),
-      (True, [3577, 3599, 3580, 3602, 5613, 5614, 3578, 3600, 3579, 3601], 50))
+      (True, [3577, 3599, 3580, 3602, 5613, 5614, 3578, 3600, 3579, 3601], 10))
 check("Одноногий: the town's knives and his whetstone's six blueprints after them",
       STALLS[(BLACK, ONE_LEG)], shop_bands.goods(("knives",), LO, HI) + list(KNIFE_PRINTS))
 check("the oasis's «Торговец патронами» (1230): every СТ and ОТ of his list, nothing cut",
@@ -398,12 +397,12 @@ def fam(name):
 
 
 ups = fam("upgrade")
-check("Донгола's rows: repeatable services of the band 9-16 (the owner's decision 27), every"
-      " family, loaded (quests.get)",
+check("Донгола's craft: output level minus three through 20; assembly/salvage keep 9-16",
       (sorted({(r["repeatable"], r["service"], r["level"], r["max_level"]) for r in DN_ROWS}),
        sorted({r["craft"]["family"] for r in DN_ROWS}),
        [r["type"] for r in DN_ROWS if quests.get(r["type"]) is None]),
-      ([(1, True, 9, 16), (1, True, 9, 20)], ["assembly", "decode", "knife", "salvage", "upgrade"], []))
+      (sorted([(1, True, level, 20) for level in range(6, 14)] + [(1, True, 9, 16)]),
+       ["assembly", "decode", "knife", "salvage", "upgrade"], []))
 check("the masters stand in the masters' camps the labels name: assault rifles and machine guns"
       " in 96, rifles and sub-machine guns in 97",
       ({t: t in standing(96) for t in (335, 382, 345, 385)},
@@ -800,7 +799,7 @@ async def main():
     close_stall(sess)
 
     stall, opened = open_stall(sess, PIER, ELIZABETH)
-    check("Элизабет Стюарт (the pier 445): her 24 gifts; «Пистолет» for 500 afro, «Zippo» for"
+    check("Элизабет Стюарт (the pier 445): her 24 original gifts and four golden valentines; «Пистолет» for 500 afro, «Zippo» for"
           " 1 ounce, the gold one not bought back",
           (stall, opened, buy(sess, stall, 4329, BUY), buy(sess, stall, 4338, GOLD),
            sell(sess, 4338)),

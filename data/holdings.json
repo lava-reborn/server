@@ -14,19 +14,21 @@
  "box_tenure_hours": 24,
  "box_one_per_account": true,
  "sites": {
-  "wh_sever": {"loc": 111, "boss": 7448, "flag": 1011, "box": 6824, "quest": 765, "min_level": 8,
+  "wh_sever": {"loc": 111, "boss": 7448, "flag": 1011, "box": 6824, "quest": 765, "gold_quest": 18220, "min_level": 8,
                "title": "Северный склад Вади-Хальфы"},
-  "wh_vostok": {"loc": 110, "boss": 7449, "flag": 1011, "box": 6825, "quest": 766, "min_level": 8,
+  "wh_vostok": {"loc": 110, "boss": 7449, "flag": 1011, "box": 6825, "quest": 766, "gold_quest": 18221, "min_level": 8,
                 "title": "Восточный склад Вади-Хальфы"},
-  "wh_ug": {"loc": 109, "boss": 7450, "flag": 1011, "box": 6826, "quest": 767, "min_level": 12,
+  "wh_ug": {"loc": 109, "boss": 7450, "flag": 1011, "box": 6826, "quest": 767, "gold_quest": 18222, "min_level": 12,
             "title": "Южный склад Вади-Хальфы"},
-  "wh_dn_sever": {"loc": 113, "boss": 7451, "flag": 1011, "box": 6827, "quest": 768, "min_level": 12,
+  "wh_dn_sever": {"loc": 113, "boss": 7451, "flag": 1011, "box": 6827, "quest": 768, "gold_quest": 18223, "min_level": 12,
                   "title": "Северный склад Донголы"},
-  "wh_dn_vostok": {"loc": 114, "boss": 7452, "flag": 1011, "box": 6828, "quest": 769, "min_level": 16,
+  "wh_dn_vostok": {"loc": 114, "boss": 7452, "flag": 1011, "box": 6828, "quest": 769, "gold_quest": 18224, "min_level": 16,
                    "title": "Восточный склад Донголы"},
-  "wh_dn_ug": {"loc": 112, "boss": 7453, "flag": 1011, "box": 6829, "quest": 770, "min_level": 16,
+  "wh_dn_ug": {"loc": 112, "boss": 7453, "flag": 1011, "box": 6829, "quest": 770, "gold_quest": 18225, "min_level": 16,
                "title": "Южный склад Донголы"},
-  "wh_ah_center": {"loc": 128, "boss": 7454, "flag": 1011, "box": 6830, "quest": 771, "min_level": 17,
-                   "title": "Центр Абу-Хамеда"}
+  "wh_ah_center": {"loc": 128, "boss": 7454, "flag": 1011, "box": 6830, "quest": 771, "gold_quest": 18226, "min_level": 17,
+                   "title": "Центр Абу-Хамеда"},
+  "base_ah": {"kind": "base", "health_scale": 30, "loc": 118, "boss": 7454, "flag": 4427, "min_level": 16, "title": "Клановая база Абу-Хамеда", "rooms": [118, 609], "traders": [716, 714], "rent_quest": 18210, "rent": 1500000, "battle": "clan_base_battle", "payment": "clan_base_payment"},
+  "base_dn": {"kind": "base", "health_scale": 30, "loc": 382, "boss": 7451, "flag": 4428, "min_level": 12, "title": "Клановая база Донголы", "rooms": [382, 380, 958], "traders": [5239, 5240], "rent_quest": 18211, "rent": 1500000, "battle": "clan_base_battle", "payment": "clan_base_payment"}
  }
 }

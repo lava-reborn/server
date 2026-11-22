@@ -170,6 +170,11 @@ check("the articles, as read: Каска строителя 5 armour, 750 wear, 
       WANT[HELM], dict(armor_class=5, max_break_abs=750, weight=1500, bonus_st=7, bonus_cp=1,
                        cost=1000, g_cost=0, slot_type=0, exchang=1, premium=0,
                        need_attribs_m=4, need_attribs=[6], need_skills_m=2, need_skills=[2]))
+# The accepted simulator changes only armour/stamina of these starter pieces.
+for t, armour, stamina in ((10179, 4, 11), (10180, 2, 28), (10181, 16, 11), (10182, 2, 21), (10183, 1, 9)):
+    if 'armor_class' in WANT[t] and t in (10179, 10181):
+        WANT[t]['armor_class'] = armour
+    WANT[t]['bonus_st'] = stamina
 check("each piece of clothing on the stall carries its article's (A) column",
       {t: {k: (items.params_of(t).get(k), v) for k, v in WANT[t].items()
            if items.params_of(t).get(k) != v} for t in ARTICLE if
@@ -354,7 +359,8 @@ try:
         if len(bought[t]) > 2:
             c.send("ss_move;obj=x%s;to=%d;from=%d;" % (bought[t][2], dst, BAG))
             got = [p.get("res") for p in named(c.frames(0.8), "cmdAck")]
-        check("level 0: %s accepted without a level gate" % label, got, [inventory.RES_OK])
+        check("level 0: %s respects the +3 equipment cap" % label, got,
+              [inventory.RES_LEVEL if t == WALTHER else inventory.RES_OK])
     c.send("ss_upd;obj=x0;s_status=0;")
     leave(c)
 
@@ -363,9 +369,9 @@ try:
     all_rows = st.items_of(cid)
     rows = [r for r in all_rows if r["slot"] == BAG]
     st.close()
-    check("the helmet and pistol remain equipped in their exact slots after logout",
+    check("the helmet stays equipped and the refused +4 pistol remains in the bag after logout",
           {r["type_id"]: r["slot"] for r in all_rows if r["type_id"] in (HELM, WALTHER)},
-          {HELM: HEAD, WALTHER: PRIMARY})
+          {HELM: HEAD, WALTHER: BAG})
     check("the other purchases remain in the bag, the rounds %d each" % ROUNDS,
           ([t for t in STALL if t not in (HELM, WALTHER) and t not in {r["type_id"] for r in rows}],
            sorted(r["count"] for r in rows if r["type_id"] in (KS, ST))),

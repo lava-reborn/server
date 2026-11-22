@@ -50,6 +50,38 @@ class QuestStateTests(unittest.TestCase):
         self.store.db.executemany('INSERT INTO char_quests_done (char_id,type,done_at) VALUES (?,?,?)', rows)
         self.store.db.commit()
 
+    def test_abu_carriers_require_sixteen_and_reject_old_low_level_quests(self):
+        for kind in (276, 283):
+            quest = quests.get(kind)
+            self.assertEqual(quest.level, 16)
+            for level in range(21):
+                self.s = session(self.store, level=level)
+                self.assertEqual(self.s.quest_available(quest), level >= 16, (kind, level))
+            self.s = session(self.store, level=15)
+            self.s.loc = world.location(49)
+            self.s.room = None
+            self.s.npc_type = lambda _: 156
+            self.s.answer = lambda _: None
+            frames = []
+            self.s.send = lambda cmd, **p: frames.append((cmd, p))
+            q_id = self.store.take_quest(1, kind, {}, False)
+            before = dict(self.store.quest(q_id))
+            with patch.object(self.s, 'hand_in_way') as move:
+                self.s.hand_in_quest(dict(q_id=q_id, mob=156))
+            self.assertFalse(move.called)
+            self.assertEqual(dict(self.store.quest(q_id)), before)
+            self.assertEqual(frames, [('cmdAck', dict(res=server.RES_NOT_AVAILABLE))])
+            self.store.drop_quest(q_id)
+            self.s.closed = self.s.on_map = False
+            self.s.combat = NS(dead=False)
+            with patch.object(self.s, 'refund_way') as refund, \
+                    patch.object(server.travel, 'plan_quest_way') as plan:
+                self.s.follow_way(quest, None)
+                refund.assert_called_once_with(quest)
+                plan.assert_not_called()
+        # A low-level visitor already in Abu must still be able to leave.
+        self.assertLess(quests.get(277).level, 16)
+
     def test_summary_and_first_event_tie_break(self):
         self.history([(1, 10, self.day - 5), (1, 11, self.day - 5), (1, 10, self.day + 5), (1, 10, self.day + 6), (2, 12, self.day + 7)])
         self.store.take_quest(1, 15, {}, False)

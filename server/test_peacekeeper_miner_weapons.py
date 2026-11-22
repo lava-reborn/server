@@ -7,6 +7,7 @@ os.environ.pop('LAVA_DB_URL', None)
 os.environ['LAVA_DB'] = ':memory:'
 import mobs
 import items
+import battle_balance
 from testkit import check, fails
 
 # --- generator, effective stats and the weapon sent to the client ---
@@ -15,28 +16,28 @@ tree = ast.parse(source.read_text(encoding='utf-8'))
 node = next(n for n in tree.body if isinstance(n, ast.Assign)
             and any(isinstance(t, ast.Name) and t.id == 'DESIGNED_KINDS' for t in n.targets))
 designed = ast.literal_eval(node.value)
-for t, level, ap, weapon in ((840, 16, 110, 25265), (841, 17, 115, 25303)):
+for t, level, ap, weapon in ((840, 16, 110, 25303), (841, 17, 115, 25319)):
     st = mobs.stats(t)
     check('%d: level retained and automatic weapon profile applied' % t,
           (st.level, st.weapon_class, st.weapon_type_id, st.ranged,
            st.ap_max, st.attack_ap, st.shots, st.range),
-          (level, 'assault_rifle', weapon, True, ap, 10, 2, 7))
+          (level, 'assault', weapon, True, ap, 10, 2, 30))
     expected = designed['pc_miner_lvl%d' % level]
     check('%d: generated data matches generator overrides' % t,
           {k: mobs.TYPES[str(t)][k] for k in expected}, expected)
     si = items.params_of(weapon)
-    check('%d: aim time and scatter match the held rifle' % t,
-          (st.attack_time, st.scatter),
-          (si['fire_times'][0] / 1000, si['target_size'][0] / si['max_range'][0]))
-    check('%d: damage still comes from mob curve' % t,
+    profile = battle_balance.data()['mob_records'][battle_balance.data()['mobs'][str(t)]]
+    check('%d: simulator modes retain aim time and spread' % t,
+          (st.attack_time, st.balanced_modes[0]['cone']),
+          (profile['attack_time'], profile['modes'][0]['cone']))
+    check('%d: damage follows the reviewed simulator profile' % t,
           (st.dmg_min, st.dmg_max),
-          tuple(int(round(mobs.LEVELS[str(level)][k] * 0.9 * mobs.ROLES[st.role]['dmg_mult']))
-                for k in ('dmg_min', 'dmg_max')))
+          (198, 301) if t == 840 else (223, 343))
     check('%d: virtual weapon loaded with compatible ammo' % t,
           mobs.virtual_di(mobs.VIRTUAL_BASE + 1, weapon, items.FIRE_ARM)[1]['ammo_type'],
           si['comp_array'][0])
 # --- premium afro ammunition for miners; neutral ammunition for elite ---
-for t, ammo, standard in ((840, 6121, 6109), (841, 6124, 6112)):
+for t, ammo, standard in ((840, 6124, 6112), (841, 6121, 6109)):
     st = mobs.stats(t)
     bullet = items.params_of(ammo)
     check('%d: improved ammo compatible with held rifle' % t,
@@ -50,9 +51,9 @@ for t, ammo, standard in ((840, 6121, 6109), (841, 6124, 6112)):
         check('%d: actual drop keeps 2-6 improved rounds' % t,
               (drops[0][0], 2 <= drops[0][1] <= 6), (ammo, True))
 elite = mobs.stats(406)
-standard = items.params_of(6110)
+standard = items.params_of(6112)
 check('elite ammunition is compatible and neutral',
-      (6110 in items.params_of(elite.weapon_type_id)['comp_array'],
+      (6112 in items.params_of(elite.weapon_type_id)['comp_array'],
        [standard[k] for k in ('acc_mod', 'dam_mod', 'st_mod', 'range_mod', 'piercing')]),
       (True, [1.0] * 5))
 check('elite override survives generator rebuild',
@@ -60,7 +61,7 @@ check('elite override survives generator rebuild',
 for seed in range(30):
     drops = mobs.carried(elite, random.Random(seed))
     check('elite drops 3-10 standard rounds',
-          (drops[0][0], 3 <= drops[0][1] <= 10), (6110, True))
+          (drops[0][0], 3 <= drops[0][1] <= 10), (6112, True))
 
 # --- no changes to Magrib miners or global curves ---
 for t in (838, 839):

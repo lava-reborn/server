@@ -107,6 +107,12 @@ class _Store(object):
 class _Inv(object):
     store = _Store()
 
+    def rows(self):
+        return []
+
+    def in_slot(self, slot):
+        return None
+
     def push_di(self, row):
         pass
 

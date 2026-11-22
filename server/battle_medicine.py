@@ -6,7 +6,7 @@ active entry; room transitions and reconnects share the Store's deadline.
 import asyncio
 import math
 
-COOLDOWN_SECONDS = 4.0
+COOLDOWN_SECONDS = 6.0
 DESCRIPTION = 'Усталость после использования боевой медицины'
 
 

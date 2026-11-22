@@ -63,13 +63,22 @@ class Residence(unittest.TestCase):
         self.s.rent_transport(dict(mob=200,p1=vehicle,p2=days))
         return [p["res"] for cmd,p in self.frames if cmd=="cmdAck"]
 
-    def test_status_text_has_no_experience_statement(self):
+    def test_status_text_describes_its_weight_and_experience_bonus(self):
         for level in (1,2):
             self.status(level)
             text=residence.frame(self.ch)['residence_text'].lower()
-            self.assertNotIn('опыт',text)
+            self.assertIn('+%d%% опыта' % (15 if level == 1 else 30), text)
             self.assertIn(str(residence.WEIGHT[level]//1000),text)
         self.assertEqual(self.ch.premium_level(),2)
+
+    def test_login_constants_match_the_bonus_used_by_native_client_messages(self):
+        frames = []
+        s = NS(characters=[], send=lambda cmd, **params: frames.append((cmd, params)))
+        server.Session.send_account(s)
+        constants = next(params for cmd, params in frames if cmd == 'constants')
+        self.assertEqual((constants['premium_xp_bonus_1'], constants['premium_xp_bonus_2']), (.15, .30))
+        for level, bonus in ((1, 15), (2, 30)):
+            self.assertIn('+%d%% опыта' % bonus, quests.get(2128 + level).texts[1])
 
     def test_registration_cost_weight_expiry_and_duplicate_hand_in(self):
         now = time.time()
@@ -98,14 +107,44 @@ class Residence(unittest.TestCase):
             self.assertNotEqual(self.finish(self.ready(t)),[0])
         self.assertEqual(self.ch.gold,6000)
 
-    def test_direct_vnj_no_p_and_no_xp_bonus(self):
+    def test_direct_vnj_and_each_status_experience_bonus(self):
         self.assertEqual(self.finish(self.ready(2130)),[0])
         self.assertEqual((self.ch.gold,self.ch.premium),(7000,2))
         for level in (0,1,2):
             ch = progression.Character()
             ch.premium = level
             ch.gain_xp(progression.MELEE,100)
-            self.assertEqual(ch.skill[0],[1,0,200])
+            self.assertEqual(ch.skill[0], [1, (0, 15, 30)[level], 200])
+
+    def test_status_xp_survives_reload_and_stops_at_deadline(self):
+        for level, expected in ((1, 115), (2, 130)):
+            self.status(level)
+            ch = progression.Character.load(self.store, self.cid)
+            ch.gain_spec_xp(2, 100)
+            self.assertEqual(ch.spec[2][0], -1)
+            ch.set_spec(2, 0)
+            ch.gain_spec_xp(2, 100)
+            self.assertEqual(ch.spec[2][1], expected)
+            ch.premium_until = time.time() - 1
+            ch.gain_spec_xp(2, 100)
+            self.assertEqual(ch.spec[2][1], expected + 100)
+            ch.save(self.store)
+            expired = progression.Character.load(self.store, self.cid)
+            self.assertEqual(expired.premium_level(), 0)
+            expired.gain_spec_xp(2, 100)
+            self.assertEqual(expired.spec[2][1], expected + 200)
+
+    def test_quest_reward_entry_point_applies_status_to_skill_and_spec_once(self):
+        for level, expected in ((0, 100), (1, 115), (2, 130)):
+            self.ch = self.s.char = progression.Character.load(self.store, self.cid)
+            self.ch.set_skill(progression.INDUSTRY, 0)
+            self.ch.set_spec(2, 0)
+            self.status(level)
+            self.s.pay_xp(((progression.INDUSTRY, 100),), ((2, 100),))
+            self.assertEqual(self.ch.skill[progression.INDUSTRY], [1, expected - 100, 200])
+            self.assertEqual(self.ch.spec[2][1], expected)
+            loaded = progression.Character.load(self.store, self.cid)
+            self.assertEqual(loaded.spec[2][1], expected)
 
     def test_no_money_or_distant_npc_cannot_grant_status(self):
         self.ch.gold = 999

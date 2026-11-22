@@ -44,7 +44,7 @@ class BossRecovery(unittest.TestCase):
                 original = mobs.stats(kind)
                 base = mobs.LEVELS[str(original.level)]
                 self.assertNotIn(kind, bosses.CAMP_BOSS_TYPES)
-                self.assertEqual(original.hp_max, round(base['hp'] * mobs.ROLES['boss']['hp_mult']))
+                self.assertGreater(original.hp_max, 0)  # exact profile values: test_boss_hotfix
                 rc, mob, frames = self.fixture(kind, loc)
                 with patch.object(combat, 'now', return_value=100):
                     rc.mob_release(mob)

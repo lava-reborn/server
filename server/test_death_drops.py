@@ -95,12 +95,16 @@ flags = {}
 for rec in wiki.values():
     key = rec.get("drop_on_death", "none")
     flags[key] = flags.get(key, 0) + 1
-check("the wiki's column, as it reached items_wiki.json: 88 да, 557 нет, 1416 silent"
+check("the wiki's column, as it reached items_wiki.json: 88 да, 557 нет, 1421 silent"
       " (with the belts and the gun stalls' lines of 2026-09-28, the 595 records of the"
       " 48 gun articles of 9-20 linked for the stalls by city level, 2026-10-10, and the"
       " six of the three belts linked for the gold pouches, 2026-10-11, none of which"
-      " states the column)",
-      (flags.get(1), flags.get(0), flags.get("none")), (88, 557, 1416))
+      " states the column; restored Репарин I–III, Кориобелаодор and MOD A1 add five"
+      " more records without this column)",
+      (flags.get(1), flags.get(0), flags.get("none")), (88, 557, 1421))
+check("the five restored items do not invent a wiki death-drop rule",
+      [(t, wiki[t].get("drop_on_death", "none")) for t in (3474, 3475, 3476, 3726, 3897)],
+      [(3474, "none"), (3475, "none"), (3476, "none"), (3726, "none"), (3897, "none")])
 check("the owner's numbers: clothing 10 per cent, the backpack 30",
       (getattr(combat, "WEAR_DROP_CHANCE", None), getattr(combat, "BAG_DROP_CHANCE", None)),
       (10, 30))
@@ -511,9 +515,9 @@ try:
     check("and says so in the chat",
           [t.startswith("При гибели выпало:") and "(7 шт.)" in t for t in lines], [True])
     ups = [p for p in named(after_dead, "usrUp") if p.get("id") in (0, VP)]
-    check("the set and its pieces are gone from the bars: 5 health (the set),"
-          " 51 stamina (the pieces)",
-          [(HMAX - p["hmax"], SMAX - p["smax"]) for p in ups][-1:], [(5, 51)])
+    check("the set and its pieces are gone from the bars: 8 health (the set),"
+          " 80 stamina (the pieces)",
+          [(HMAX - p["hmax"], SMAX - p["smax"]) for p in ups][-1:], [(8, 80)])
 
     seen = w.frames(1.5)
     check("the witness sees one bag where the body fell",
@@ -555,7 +559,7 @@ try:
           (wear, hands, bag, look),
           (["0", "0", "0", oid(belt), "0", "0"], [oid(pistol), "0"],
            sorted(oid(r) for r in (rounds, gold_gun, gold_rounds, quest)), None))
-    check("and the bars without the set", vitals(v), (HMAX - 5, SMAX - 51))
+    check("and the bars without the set", vitals(v), (HMAX - 8, SMAX - 80))
     v.send("resurrect;res_type=0;")
     v.until(lambda f: f[0] == "lcall", 3)
     leave(v)

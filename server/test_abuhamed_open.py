@@ -115,6 +115,7 @@ generators.
 """
 import collections
 import json
+import math
 import os
 import socket
 import subprocess
@@ -186,11 +187,10 @@ CUT = {(6183, 1974): "Вещевой рынок «Торговцы одеждо�
        (6184, 1977): "Ремесленники по одежде 19 (462)",
        (6185, 1978): "Ремесленники по одежде 20 (519)",
        (6185, 1976): "Ремесленники по одежде 20x2 (463)",
-       (6185, 1977): "Аэроплощадка ФСЦ (527)", (6126, 1980): "База Смерш (194)",
-       (6154, 1963): "Заброшенная база (118)"}
+       (6185, 1977): "Аэроплощадка ФСЦ (527)", (6126, 1980): "База Смерш (194)"}
 CUT_FILES = [451, 461, 462, 463, 519, 449, 467, 527, 194, 254, 521, 656, 942, 1193, 149, 333,
              533, 343, 347, 351, 355, 359, 363, 367, 948, 949, 950, 1192, 309, 310, 318, 926,
-             930, 947, 1186, 118, 609]
+             930, 947, 1186]
 # The quests.
 RIDE_AH, RIDE_DN, TICKET_AH_RIDE, TICKET_DN_RIDE = 276, 277, 283, 284
 PRISON_RIDE, PRISON_BACK, GATE_WEST, GATE_SOUTH, PRISON_EXIT, SANATORIUM = 880, 881, 882, 883, 163, 884
@@ -306,10 +306,11 @@ try:
              TICKET_DN_RIDE: (VELASQUEZ, STATION, DN_STATION)}
     check("the four rides are on in the shipped table: Нур-ад-Дин to Абу-Хамед for the fare and by"
           " the ticket, Веласкес back to Донгола the same; each given and taken by its driver,"
-          " repeatable, no level asked",
+          " repeatable; entering Абу-Хамед requires level 16, returning has no minimum",
           {t: (quests.get(t).give, quests.get(t).take, quests.get(t).repeatable,
                quests.get(t).level) for t in RIDES},
-          {t: ([d], [d], 1, 0) for t, (d, _f, _to) in RIDES.items()})
+          {t: ([d], [d], 1, 16 if to == STATION else 0)
+           for t, (d, _f, to) in RIDES.items()})
     check("  ..their ways in data/passages.json, from the driver's place to the other end",
           {t: int((travel.quest_way(world.location(frm), t) or {}).get("target_loc_id", 0))
            for t, (_d, frm, _to) in RIDES.items()},
@@ -993,6 +994,9 @@ def newcomer(nick, level):
     st = store()
     cid = st.character_by_name(nick)["id"]
     st.save_stats(cid, [("skill", progression.SHOOTING, level, 0, progression.skill_xp_max(level))])
+    # Quest controller with an admin gun: isolate the route from combat balance.
+    st.save_stats(cid, [("attrib", progression.STRENGTH, 1000, 0, 0),
+                          ("attrib", progression.INTELLECT, 1000, 0, 0)])
     st.save_character_state(cid, level=level)
     st.close()
     c = Client(testkit.connect(SRV.port, SRV.proc, SRV.log))
@@ -1074,7 +1078,8 @@ try:
     # --- the cut: walked off the station ---------------------------------------------------
     got = to_map(c)
     check("out of the station onto the map, the owner's wall gone from its cell: on 6182,1976",
-          [(p.get("x"), p.get("y")) for p in named(got, "gmap")], [world.cell_of(STATION)])
+          [(math.floor(p["x"]), math.floor(p["y"])) for p in named(got, "gmap")],
+          [world.cell_of(STATION)])
     walked = walk_map(c, 1, -2)
     lid, arrival = enter_cell(c)
     gone = {t for f in CUT_FILES for _c, t in world.location(f).spawns if t}
@@ -1384,7 +1389,8 @@ try:
     ack, lid, mouth = through(c, DARK_1, "a", first(back, "lenter").get("pos"), up, GUN)
     got = to_map(c)
     check("  ..and the first's door a up to the mouth, onto its own cell: the map from there opens"
-          " on 6218,1968", (ack, lid, [(p.get("x"), p.get("y")) for p in named(got, "gmap")]),
+          " on 6218,1968", (ack, lid, [(math.floor(p["x"]), math.floor(p["y"]))
+                                     for p in named(got, "gmap")]),
           ([0], DARK_MOUTH, [world.cell_of(DARK_MOUTH)]))
 
     # --- on foot: out of the town and into the masters' camp ------------------------------
@@ -1395,8 +1401,12 @@ try:
     check("out of the station onto the map and four cells west on foot: the wasteland of"
           " 6178,1976, out of the town", (bool(named(walked, "userMove")), lid),
           (True, world.pack(6178, 1976)))
-    to_map(c)
-    walked = walk_map(c, 5, 1)
+    point = first(to_map(c), "gmap")
+    masters = world.cell_of(MASTERS)
+    # The projected start may be near the southern edge. Stay on the open
+    # row until east of the rocks, then turn into the camp's original cell.
+    walked = walk_map(c, masters[0] + .5 - point["x"], 0)
+    walked += walk_map(c, 0, masters[1] + .5 - point["y"])
     lid, arrival = enter_cell(c)
     here = inhabitants(arrival, lid)
     check("  ..back on foot into the masters' camp (131), the owner's wall gone from its cell too:"

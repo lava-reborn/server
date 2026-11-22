@@ -243,11 +243,13 @@ def between(lo, hi, key):
     return half_up(a + (b - a) * T)
 
 
-check("the numbers: t = 2/3 piece by piece -- armour, wear, weight, what it adds -- the A between"
-      " Пустынник's and Спецназ's A pieces, the G between their (G) ones",
+check("the reviewed simulator columns, with existing prices and durability retained",
       [[items.params_of(t).get(k, 0) for k in NUMS] for t in A_TYPES + G_TYPES],
-      [[between(lo, hi, k) for k in NUMS] for lo, hi in zip(members(DESERT_A), members(SPEC_A))]
-      + [[between(lo, hi, k) for k in NUMS] for lo, hi in zip(members(DESERT_G), members(SPEC_G))])
+      [[18, 1750, 3500, 11, 43, 3, 2, 2], [8, 1050, 2100, 11, 76, 3, 2, 1],
+       [109, 2100, 4200, 11, 48, 3, 2, 2], [8, 1400, 2800, 11, 75, 3, 2, 1],
+       [5, 900, 1400, 11, 27, 3, 1, 1], [20, 1750, 3500, 13, 48, 4, 2, 2],
+       [10, 1050, 2100, 13, 87, 4, 2, 1], [130, 2000, 4200, 13, 53, 4, 2, 2],
+       [10, 1400, 2800, 13, 82, 4, 2, 1], [6, 900, 1400, 13, 29, 4, 1, 1]])
 check("  ..so each gold piece is the stronger, as on every rung: armour, health, stamina, action"
       " points", [g for a, g in zip(A_TYPES, G_TYPES)
                   if any(items.params_of(g).get(k, 0) <= items.params_of(a).get(k, 0)
@@ -280,7 +282,8 @@ check("  ..and the file writes them as the ladder does: [12][A], [12][G]",
       ["Шлем Чёрного Ловеласа[12][A]", "Шлем Чёрного Ловеласа[12][G]"])
 check("each described by its quest piece's words, the gold one under its own id",
       [names.text(items.static_info(t)[1]["desc"]) for t in (A_TYPES[0], G_TYPES[0])],
-      ["Встроен рентген сканер обнажающий натуру противника. Без смсок!"] * 2)
+      ["Встроен рентген сканер обнажающий натуру противника. Без смсок!<br>"
+       + items.equipment_level_text(t) for t in (A_TYPES[0], G_TYPES[0])])
 check("the sets: «Чёрный Ловелас» and «Чёрный Ловелас (G)», one description",
       [names.text(sets.NAME_ID_OFFSET + st) for st in (A, G)] + [
           names.text(sets.DESC_ID_OFFSET + G) == names.text(sets.DESC_ID_OFFSET + A)],
@@ -339,7 +342,13 @@ def between_columns(lo, hi):
 
 check("the afro set's bonus: K by K between Пустынник's and Спецназ's columns, t = 2/3; the gold"
       " set's between their (G) columns -- designed like the pieces, a rung's power",
-      (column(A), column(G)), (between_columns(DESERT_A, SPEC_A), between_columns(DESERT_G, SPEC_G)))
+      (column(A), column(G)),
+      ({2: {"hp": 12, "st": 7}, 3: {"st": 10, "ce": 4, "Ловкость": 1},
+        4: {"hp": 22, "st": 22, "od": 1, "ce": 4, "Сила": 1},
+        5: {"st": 38, "od": 4, "cp": 8, "Сила": 1, "Телосложение": 2, "Восприятие": 1}},
+       {2: {"hp": 17, "st": 16}, 3: {"st": 23, "ce": 4, "Ловкость": 2},
+        4: {"hp": 27, "st": 32, "od": 2, "ce": 6, "Сила": 1},
+        5: {"st": 47, "od": 4, "cp": 10, "Сила": 1, "Телосложение": 2, "Восприятие": 1}}))
 check("  ..at three pieces +10 stamina, +4 anti-crit, Ловкость 1 (gold: +23, +4, Ловкость 2);"
       " at five +38 stamina, +4 action points, +8 crit, Сила 1, Телосложение 2, Восприятие 1"
       " (gold: +47, +4, +10, the same three)", [column(st)[k] for st in (A, G) for k in (3, 5)],

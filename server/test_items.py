@@ -80,6 +80,8 @@ SCALARS = ("weight", "cost", "g_cost", "exchang", "premium", "quest", "clip_size
            "max_count", "range_mod", "acc_mod", "dam_mod", "st_mod")
 with open(os.path.join(HERE, "..", "data", "weaponcraft_corrections.json"), encoding="utf-8") as fh:
     corrected = {int(t) for t in json.load(fh)["items"]}
+with open(os.path.join(HERE, '..', 'data', 'combat_balance.json'), encoding='utf-8') as fh:
+    release_changes = json.load(fh)['equipment']
 # Always cover corrected weapons as well as the random wiki sample. The
 # effect itself is checked by test_weapon_upgrade_integrity; other wiki
 # fields must still survive the deliberate overlay unchanged.
@@ -87,6 +89,9 @@ sample = sorted(set(rnd.sample(linked, 20)) | ((corrected | set(craft.DURABILITY
 # Always include both paired blueprint lines, not only whichever a random
 # sample happens to select. Their purchase prices have an explicit overlay.
 sample = sorted(set(sample) | {t for t in linked if cat[t][1].startswith('bpg_damage_25_')})
+# All four PMM variants have the reviewed ten-round magazine. Keep the
+# remainder of each article checked even when the random sample misses them.
+sample = sorted(set(sample) | {7055, 7056, 7057, 7058})
 for t in sample:
     rec = wiki[t]
     cmd, p = items.static_info(t)
@@ -123,6 +128,8 @@ for t in sample:
         ours['heal_cost'] = p['heal_cost']
     if t in items.KS12_FIRE_COSTS:
         ours['fire_costs'] = p['fire_costs']
+    if t in items.PMM_CLIP_SIZES:
+        ours['clip_size'] = 10  # accepted PMM magazine overlay, not the old wiki's 3
     if re.fullmatch(r'bpg_damage_25_afro_lvl\d+', internal):
         price = dict(cost=ours.get('cost', rec.get('cost', 0)), g_cost=rec.get('g_cost', 0))
         blueprint_prices.apply(internal, price)
@@ -130,6 +137,12 @@ for t in sample:
               {key: p[key] for key in price}, price)
         ours.update(price)
     craft.lay_stat_corrections(t, ours)
+    # Changed fields follow the accepted release table. Recipe arithmetic is
+    # independently checked by test_weapon_upgrade_integrity; all unrelated
+    # wiki fields must still remain intact here.
+    ours.update(release_changes.get(str(t), {}))
+    if t == 25803:
+        ours["fire_costs"] = [28, 0, 40]  # reviewed simulator M24 burst cost
     if t in craft.DURABILITY_CORRECTIONS:
         ours["max_break_abs"] = craft.DURABILITY_CORRECTIONS[t]
     if rec.get('max_count') == 50:
@@ -341,6 +354,9 @@ check("MG-3: the wiki's clip and class", (cmd, p["clip_size"], p["weapon_type"])
 check("MG-3: three fire modes as the wiki has them", p["fire_mods"], [3, 6, 9])
 check("MG-3: needs the wiki's shooting skill", (p["need_skills_m"], p["need_skills"]), (2, [20]))
 check("MG-3: chambers real rounds of its class", set(p["comp_array"]) >= set(items.AMMO_762x51), True)
+check("all four PMM variants have the reviewed ten-round magazine",
+      {t: items.static_info(t)[1]['clip_size'] for t in (7055, 7056, 7057, 7058)},
+      {7055: 10, 7056: 10, 7057: 10, 7058: 10})
 cmd, p = items.static_info(26242)
 check("AK: comp_array from the wiki's calibre", 6098 in p["comp_array"], True)
 check("AK: gold rounds of the calibre chamber too", 6158 in p["comp_array"], True)
@@ -445,6 +461,11 @@ check("and the original really is used where it has a name",
       names.text(items.STRING_ID_OFFSET + 25562) == _on.get(25562), True)
 wd = items.wiki_descs()
 check("over a thousand descriptions", len(wd) >= 1000, True)
+check("a level-16 item states its minimum wearer level and the end of accelerated wear",
+      items.equipment_level_text(3735),
+      "Можно надеть с 13-го уровня. Без ускоренного износа — с 16-го.")
+check("an ammunition card does not acquire an equipment-level requirement",
+      items.equipment_level_text(386), "")
 _od = orig_texts.item_descs()
 def expected_item_description(t, original):
     if cat[t][0] == items.HEAL and cat[t][1].startswith('Med_Battle_'):
@@ -460,11 +481,12 @@ def expected_item_description(t, original):
                 used.add(row["line"])
             elif row.get("family") == "knife":
                 used.add("G")
-    if not used:
-        return original
-    note = ("Только для (A) и (G) оружия." if used == {"A", "G"}
-            else "Только для (" + next(iter(used)) + ") оружия.")
-    return (original + "<br>" if original else "") + note
+    if used:
+        note = ("Только для (A) и (G) оружия." if used == {"A", "G"}
+                else "Только для (" + next(iter(used)) + ") оружия.")
+        original = (original + "<br>" if original else "") + note
+    level_note = items.equipment_level_text(t)
+    return original + ("<br>" if original else "") + level_note if level_note else original
 
 
 check("each description keeps its source bonus text and exact applicability suffix",
@@ -518,7 +540,7 @@ import re                                             # noqa: E402
 import npcs                                           # noqa: E402
 MORIS = [6055, 6061, 6073, 7100, 6056, 6062, 6074, 7101,
          6043, 6898, 6049, 6904, 6044, 6899, 6050, 6905,
-         2178, 2184]
+         4917, 4937, 2178, 2184]
 # HealItem.initialize (HealItem.as:35-51) reads these seventeen; a missing one
 # is an undefined the client carries into its arithmetic.
 HEAL_FIELDS = ("heal_time", "max_h_rest", "max_st_rest", "min_h_rest", "min_st_rest",
@@ -560,8 +582,8 @@ for t in dict.fromkeys(MORIS + items.stock_for(5211, 185)):
     if why:
         bad[t] = why
 check("Морис: each item answers ss_si_heal, named, described and priced once", bad, {})
-check("Морис: no stimulant, alcohol or sleeping bag among them",
-      [t for t in MORIS if 4917 <= t <= 4956 or t in (2180, 2181, 2182, 2183, 1289, 1535, 5341)],
+check("Морис: only starter Salus/Anesthetic, no alcohol or sleeping bag",
+      [t for t in MORIS if 4917 <= t <= 4956 and t not in (4917, 4937) or t in (2180, 2181, 2182, 2183, 1289, 1535, 5341)],
       [])
 check("  ..and his stall at the Nubian market is this list, the medicine of his city's tiers"
       " (shop_bands) before his own Лава-Кола and Шаурма", items.stock_for(5211, 185), MORIS)
@@ -630,9 +652,9 @@ _offered = sorted({t for tr in list(npcs.STOCK) + list(items.stock_table())
                    for t in items.stock_for(tr)})
 check("no stall anywhere offers a premium item",
       [t for t in _offered if items.premium(t)], [])
-check("Морис sells no P kit: 18 things at his market, none of 6067-6069",
+check("Морис sells no P kit: 20 things at his market, none of 6067-6069",
       (len(items.stock_for(5211, 185)), {6067, 6068, 6069} & set(items.stock_for(5211, 185))),
-      (18, set()))
+      (20, set()))
 check("Борис sells no P pistol",
       [t for t in items.stock_for(5212) if items.premium(t)], [])
 

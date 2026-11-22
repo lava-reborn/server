@@ -292,7 +292,7 @@ ch.premium = 1
 check("pr is the premium level", ch.player_info()["pr"], 1)
 check("registration adds exactly 25 kg", ch.max_weight(), 65000)
 ch.gain_xp(progression.MELEE, 100)
-check("registration adds no experience bonus", ch.skill[0], [1, 0, 200])
+check("registration adds fifteen percent experience", ch.skill[0], [1, 15, 200])
 ch.premium_until = int(time.time()) - 1
 check("an expired premium counts as none", (ch.premium_level(), ch.max_weight()), (0, 40000))
 check("legacy percent weight constants are disabled",progression.PREMIUM_WEIGHT_BONUS,{0:0,1:0,2:0})

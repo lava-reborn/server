@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "server"))
 import math
+import re
 import unittest
 
 import widescreen as w
@@ -12,6 +13,57 @@ from testkit import run_cases
 
 
 class CombatClient(unittest.TestCase):
+    def test_base_caption_uses_real_clan_name_as_plain_text_and_tracks_revocation(self):
+        clan = dict(clanName='<Clan & friends>')
+        member = dict(clanReg=123, clanInfo=clan)
+        panel = dict(player=dict(__bfBaseFlag=True, clanMemberInfo=member),
+                     info_txt=dict(textHeight=12), infoShadow_txt={},
+                     hBar=dict(_visible=False, _y=30), sBar=dict(_y=20))
+        self.call('__bfBaseCaption', None, panel)
+        self.assertEqual(panel['info_txt']['text'], 'Клановая база — <Clan & friends>')
+        self.assertEqual((panel['info_txt']['_y'], panel['infoShadow_txt']['_y']), (8, 9))
+        member['clanReg'] = 0
+        self.call('__bfBaseCaption', None, panel)
+        self.assertEqual(panel['info_txt']['text'], 'Незанятая клановая база')
+        self.assertEqual(clan, dict(clanName='<Clan & friends>'))
+
+    def test_other_npc_and_player_captions_are_left_to_the_native_renderer(self):
+        for marked in (False, None):
+            panel = dict(player=dict(__bfBaseFlag=marked), info_txt=dict(text='native'))
+            self.call('__bfBaseCaption', None, panel)
+            self.assertEqual(panel['info_txt'], dict(text='native'))
+        npc = dict(__bfNPCInfoOrig=lambda event: 'native')
+        for type_id, expected in ((4427, True), (4428, True), (1011, False), (1959, False)):
+            self.assertEqual(self.call('__bfNPCInfo', npc, dict(param=dict(res=type_id))), 'native')
+            self.assertEqual(npc['__bfBaseFlag'], expected)
+
+    def test_action_point_effect_changes_ceiling_without_refill_or_timer_reset(self):
+        manager = dict(_maxAP=110, currentAP=23, dAP=4, dtAPInterval=91)
+        calls = []
+        def native(event):
+            calls.append(event)
+            manager['currentAP'] = max(0, min(event['param']['ap'], manager['_maxAP']))
+        manager['__bfSyncAPOrig'] = native
+        for maximum, paid in ((150, 17), (150, 11), (110, 110)):
+            event = dict(param=dict(amax=maximum, ap=paid))
+            self.call('__bfSyncAP', manager, event)
+            self.assertEqual((manager['_maxAP'], manager['currentAP']), (maximum, paid))
+            self.assertEqual((manager['dAP'], manager['dtAPInterval']), (4, 91))
+            self.assertIs(calls[-1], event)
+        self.call('__bfSyncAP', manager, dict(param=dict(ap=6)))
+        self.assertEqual((manager['_maxAP'], manager['currentAP']), (110, 6))
+        self.assertEqual(len(calls), 4)
+
+    def test_legacy_action_point_packet_preserves_native_ceiling(self):
+        for supplied in (None, 0, -1, float('nan')):
+            manager = dict(_maxAP=110)
+            events = []
+            manager['__bfSyncAPOrig'] = events.append
+            event = dict(param=dict(amax=supplied, ap=17))
+            self.call('__bfSyncAP', manager, event)
+            self.assertEqual(manager['_maxAP'], 110)
+            self.assertEqual(events, [event])
+
     def test_empty_remote_primary_uses_fist_without_type_zero_request(self):
         equip = dict(isGamer=False, primaryItem='old weapon',
                      __bfRemotePrimaryOrig=lambda event:self.fail('type-zero prototype requested'))
@@ -37,15 +89,19 @@ class CombatClient(unittest.TestCase):
         self.sent, self.calls, self.applied = [], [], []
         self.reported = []
         self.env = dict(_global={}, Number=float, isNaN=math.isnan,
-                        Math=dict(max=max, min=min),
+                        String=lambda value: format(value, 'g'),
+                        parseFloat=lambda value: float(re.match(r'[-+]?\d+(?:\.\d+)?', str(value))[0])
+                        if re.match(r'[-+]?\d+(?:\.\d+)?', str(value)) else float('nan'),
+                        Math=dict(max=max, min=min, round=round),
                         lol=dict(core=dict(SceneShifter=dict(linkGame=dict(
                             visavisAvatar=dict(removeMovieClip=lambda: self.calls.append('avatar')))),
                             player=dict(Training=dict(UPD_CLOSE=0)),
-                            objects=dict(FireArm=dict(PISTOL=0, SHOTGUN=1, ASSAULT=2,
+                            objects=dict(Item=dict(FIRE_ARM=0),
+                                         FireArm=dict(PISTOL=0, SHOTGUN=1, ASSAULT=2,
                                                       RIFLE=3, MACHINEGUN=4, SMG=5))),
                             data=dict(BigUINTCluster=lambda n: dict(value=n), BigUINT=lambda c: c),
                             server=dict(mess=dict(CSM_SSUpdate=lambda a,b: dict(kind=a, number=b)))))
-        spec = patches(w.Asm, w.UNDEF)
+        spec = patches(w.Asm, w.UNDEF, training=True)
         self.functions = {}
         for name, params, body in spec['globals']:
             fn = Function(params, body.assemble(), self.env)
@@ -54,6 +110,101 @@ class CombatClient(unittest.TestCase):
 
     def call(self, name, target, *args):
         return self.functions[name].invoke(target, args)
+
+    def card(self, effects=(), armor=()):
+        slots = ('head', 'armor', 'camouflage', 'belt', 'legs', 'boots')
+        equipment = {slot: dict(item=None) for slot in slots}
+        for slot, remaining, value in armor:
+            props = dict(__break=remaining, armor_class=value)
+            equipment[slot]['item'] = dict(getProp=props.get)
+        equipment['primaryItem'] = dict(rootID=0)
+        self.env['lol']['core']['Master'] = dict(getInstance=lambda: dict(gamer=dict(
+            equipment=equipment, effects=dict(getFXArrayLength=lambda: len(effects),
+                                              getEffect=lambda index: effects[index]))))
+        panel = dict(crit_txt=dict(text=''), critDodge_txt=dict(text=''),
+                     ArmorClassValue=dict(value=dict(text='')))
+
+        def crit():
+            panel['crit_txt']['text'] = str(40 + sum(fx.get('critical_probability', 0) for fx in effects)) + ' %'
+            panel['critDodge_txt']['text'] = str(20 + sum(fx.get('critical_probability', 0)
+                                                       for fx in effects if fx.get('critical_evade'))) + ' %'
+
+        def armour():
+            panel['ArmorClassValue']['value']['text'] = 30 + sum(value for _, _, value in armor)
+
+        panel.update(__bfCritCardOrig=crit, __bfArmorCardOrig=armour)
+        return panel, equipment
+
+    def test_omega_anticrit_uses_evade_without_changing_critical(self):
+        effects = [dict(critical_probability=0, critical_evade=10)]
+        panel, _ = self.card(effects)
+        for _ in range(3):
+            self.call('__bfCritCard', panel)
+            self.assertEqual(panel['crit_txt']['text'], '40 %')
+            self.assertEqual(panel['critDodge_txt']['text'], '30 %')
+        effects.clear()
+        self.call('__bfCritCard', panel)
+        self.assertEqual(panel['critDodge_txt']['text'], '20 %')
+
+    def test_mixed_crit_effects_add_their_own_stat_once(self):
+        effects = [dict(critical_probability=7, critical_evade=0),
+                   dict(critical_probability=3, critical_evade=11),
+                   dict(critical_probability=4, critical_evade=4)]
+        panel, _ = self.card(effects)
+        self.call('__bfCritCard', panel)
+        self.assertEqual(panel['crit_txt']['text'], '54 %')
+        self.assertEqual(panel['critDodge_txt']['text'], '35 %')
+
+    def test_non_firearm_and_pending_native_stats_are_not_rewritten(self):
+        panel, equipment = self.card([dict(critical_probability=0, critical_evade=10)])
+        for weapon in (None, dict(rootID=5)):
+            equipment['primaryItem'] = weapon
+            panel['__bfCritCardOrig'] = lambda: panel['critDodge_txt'].update(text='')
+            self.call('__bfCritCard', panel)
+            self.assertEqual(panel['critDodge_txt']['text'], '')
+        equipment['primaryItem'] = dict(rootID=0)
+        panel['__bfCritCardOrig'] = lambda: panel['critDodge_txt'].update(text='-')
+        self.call('__bfCritCard', panel)
+        self.assertEqual(panel['critDodge_txt']['text'], '-')
+
+    def test_broken_armor_is_removed_from_card_without_losing_other_stats(self):
+        armor = [('head', 0, 10), ('armor', 1, 20), ('camouflage', 0, 5),
+                 ('belt', 50, 2), ('legs', 0, 7), ('boots', 9, 8)]
+        panel, _ = self.card(armor=armor)
+        for _ in range(3):
+            self.call('__bfArmorCard', panel)
+            self.assertEqual(panel['ArmorClassValue']['value']['text'], 60)
+        armor[0] = ('head', 1, 10)
+        panel, _ = self.card(armor=armor)
+        self.call('__bfArmorCard', panel)
+        self.assertEqual(panel['ArmorClassValue']['value']['text'], 70)
+
+    def test_training_server_stats_still_override_ordinary_card_corrections(self):
+        from avm_codegen import Compiler
+        from training_ground_client import SOURCE
+        native = {name: Function(params, body.assemble(), self.env)
+                  for name, params, body in Compiler(w.Asm, w.UNDEF).functions(SOURCE)
+                  if name in ('__tgArmorCard', '__tgCritCard')}
+        panel, _ = self.card([dict(critical_probability=0, critical_evade=10)], [('head', 0, 10)])
+        panel['__tgCritCardOrig'] = lambda: self.call('__bfCritCard', panel)
+        panel['__tgArmorCardOrig'] = lambda: self.call('__bfArmorCard', panel)
+        self.env['_global'].update(__tgActive=True,
+                                  __tgCombatStats=dict(armour=125, critical=77, anticritical=66))
+        native['__tgCritCard'].invoke(panel, ())
+        native['__tgArmorCard'].invoke(panel, ())
+        self.assertEqual(panel['crit_txt']['text'], '77 %')
+        self.assertEqual(panel['critDodge_txt']['text'], '66 %')
+        self.assertEqual(panel['ArmorClassValue']['value']['text'], '125')
+
+    def test_ordinary_wrapper_leaves_already_applied_training_values_intact(self):
+        panel, _ = self.card([dict(critical_probability=0, critical_evade=10)], [('head', 0, 10)])
+        self.env['_global'].update(__tgActive=True, __tgCombatStats=dict(armour=125))
+        panel['__bfCritCardOrig'] = lambda: panel['critDodge_txt'].update(text='66 %')
+        panel['__bfArmorCardOrig'] = lambda: panel['ArmorClassValue']['value'].update(text='125')
+        self.call('__bfCritCard', panel)
+        self.call('__bfArmorCard', panel)
+        self.assertEqual(panel['critDodge_txt']['text'], '66 %')
+        self.assertEqual(panel['ArmorClassValue']['value']['text'], '125')
 
     def test_training_user_close_sends_one_close_and_finishes_cleanup(self):
         panel = dict(XMC=dict(Send=self.sent.append),

@@ -12,12 +12,20 @@ def __esNominal(item):
 def __esTraderInfo(obj):
     this.__esTraderInfoOrig(obj)
     this.eden_shop = obj.param.eden_shop == 1
+    this.base_gold_buyer = obj.param.base_gold_buyer == 1
+
+def __gcBaseLoot(item):
+    pan = lol.core.SceneShifter._ref.UIPanels.trade.instance.content
+    return not not (pan and pan.trader and pan.trader.base_gold_buyer and item and item.getProp("base_loot_gold") > 0)
 
 def __gcInitialize(obj):
     this.__gcInitializeOrig(obj)
     this.g_restore_base = obj.g_restore_base
     this.a_sale_unit = obj.a_sale_unit
     this.g_sale_unit = obj.g_sale_unit
+    this.a_base_sale_unit = obj.a_base_sale_unit
+    this.g_base_sale_unit = obj.g_base_sale_unit
+    this.base_loot_gold = obj.base_loot_gold
     this.bp_sell = obj.bp_sell
     this.a_sale_cap = obj.a_sale_cap
     this.g_transfer = obj.g_transfer
@@ -51,9 +59,39 @@ def __gcSaleQuality(item):
         return Math.max(0, Math.min(1, Math.min(item.getProp("__break"), ceiling) / factory))
     return _global.__gcQuality(item)
 
+def __gcSaleUnit(item):
+    pan = lol.core.SceneShifter._ref.UIPanels.trade.instance.content
+    if pan and pan.trader and pan.trader.smod == 85 / 100:
+        unit = item.getProp("g_base_sale_unit")
+        if not unit:
+            unit = item.getProp("a_base_sale_unit")
+    else:
+        unit = item.getProp("g_sale_unit")
+        if not unit:
+            unit = item.getProp("a_sale_unit")
+    cap = item.getProp("a_sale_cap")
+    if cap and unit:
+        return Math.min(cap, unit)
+    if not unit:
+        unit = cap
+    return unit
+
 def __gcShowCost(item, align):
     this.__gcShowCostOrig(item, align)
     if lol.gpui.StaffInterface.ssType != "trade":
+        return
+    if _global.__gcBaseLoot(item) and this.showItemSellMod:
+        n = 1
+        if this.showHeapCount and item.getProp("size"):
+            n = item.getProp("size")
+        value = item.getProp("base_loot_gold") * n / 100
+        this.price_mc._visible = True
+        this.price_mc.gotoAndStop(2)
+        this.mainCost = value
+        this.costType = "Золото"
+        if not this.attachIconEnabled:
+            value = "g" + String(value)
+        this.price_mc.fontContainer.showValue(value)
         return
     if _global.__esNominal(item) and this.showItemSellMod:
         n = 1
@@ -78,11 +116,7 @@ def __gcShowCost(item, align):
             value = prefix + String(value)
         this.price_mc.fontContainer.showValue(value)
         return
-    base = item.getProp("g_sale_unit")
-    if not base:
-        base = item.getProp("a_sale_unit")
-    if not base:
-        base = item.getProp("a_sale_cap")
+    base = _global.__gcSaleUnit(item)
     if not base or not this.showItemSellMod or _global.__moActive():
         return
     n = 1
@@ -104,6 +138,8 @@ def __gcAddSell(annotationArr):
     this.__gcAddSellOrig(annotationArr)
 
 def __gcCheckSell(item):
+    if _global.__gcBaseLoot(item):
+        return
     if _global.__esNominal(item):
         if not item.getProp("eden_sale_unit") or _global.__gcSaleQuality(item) <= 0:
             return "Скупщик не принимает этот предмет"
@@ -120,16 +156,17 @@ def __gcCheckSell(item):
 
 def __gcExchange(item, title, mode, showGold, selling):
     pan = this.__gcExchangeOrig(item, title, mode, showGold, selling)
+    if selling and _global.__gcBaseLoot(item):
+        pan.cost_num = item.getProp("base_loot_gold")
+        pan.cost_mod = 1
+        pan.showCostInGold = True
+        return pan
     if selling and _global.__esNominal(item):
         pan.cost_num = item.getProp("eden_sale_unit")
         pan.cost_mod = _global.__gcSaleQuality(item)
         pan.showCostInGold = not not item.getProp("eden_sale_gold")
         return pan
-    unit = item.getProp("g_sale_unit")
-    if not unit:
-        unit = item.getProp("a_sale_unit")
-    if not unit:
-        unit = item.getProp("a_sale_cap")
+    unit = _global.__gcSaleUnit(item)
     if selling and not _global.__moActive() and unit > 0:
         pan.cost_num = unit
         pan.cost_mod = _global.__gcSaleQuality(item)
@@ -181,7 +218,7 @@ def __gcAskSale():
         item = group[i].item
         if not item:
             return this.__gcAskSaleOrig()
-        if _global.__esNominal(item) or item.getProp("g_sale_unit"):
+        if _global.__esNominal(item) or item.getProp("g_sale_unit") or _global.__gcBaseLoot(item):
             quoted = True
         elif item.getProp("g_cost") > 0:
             # Retain the native protection for sales outside the quote flow.
@@ -194,7 +231,7 @@ def __gcAskSale():
     return this.__gcAskSaleOrig()
 
 def __gcSell(item, quantity):
-    if (not item.getProp("g_sale_unit") and not _global.__esNominal(item)) or _global.__moActive():
+    if (not item.getProp("g_sale_unit") and not _global.__esNominal(item) and not _global.__gcBaseLoot(item)) or _global.__moActive():
         return this.__gcSellOrig(item, quantity)
     if this.__gcPending:
         this.applyTransfer(False)
@@ -231,7 +268,7 @@ def __gcQuote(obj):
     this.__gcDialog = dialog
     price = obj.param.price
     currency = " афро"
-    if obj.param.eden_sale == 1 and obj.param.currency == 1:
+    if obj.param.currency == 1:
         price = price / 100
         currency = " G"
     pending.edenAfro = obj.param.eden_sale == 1 and obj.param.currency == 0
@@ -432,5 +469,5 @@ def patches(Asm, undef):
         params, body = bodies[name]
         wraps.append((('core', 'player', 'Trade'), name, name + 'Orig', params, body))
     return dict(globals=[(name, params, body) for name, params, body in functions
-                         if name in ('__gcQuality', '__gcSaleQuality', '__gcConfirmInput',
-                                     '__esActive', '__esNominal')], wraps=tuple(wraps))
+                         if name in ('__gcQuality', '__gcSaleQuality', '__gcSaleUnit', '__gcConfirmInput',
+                                     '__esActive', '__esNominal', '__gcBaseLoot')], wraps=tuple(wraps))

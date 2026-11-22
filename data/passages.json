@@ -731,6 +731,14 @@
     "target_loc_id": 1036,
     "why": "RECOVERED. AH_Plumbum_Mine_lvl2, the bottom of the mine (the client has no third tier for Абу-Хамед): its one door, a, 13 cells in two galleries (9-52, 20-112), has W_Pointer_Up beside each gallery (11,108) and (50,19): up, to the first tier 1036. exits.json guessed the same by file name, at low. The owner's Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»): the mines' tiers open, as Донгола's (decision 28 of its plan)."
    }
+  },
+  "958": {
+   "a": {
+    "target_loc_id": 380,
+    "confidence": "high",
+    "source": "designed",
+    "why": "DESIGNED restored clan-base return. The original bunker door leads to its own yard; the low-confidence historical transport room 959 remains retired."
+   }
   }
  },
  "sides": {
@@ -2072,6 +2080,30 @@
     "target_loc_id": 1435,
     "why": "DESIGNED internal Eden edge; outside the reviewed mask has no exit."
    }
+  },
+  "382": {
+   "N": {
+    "target_loc_id": 380,
+    "why": "DESIGNED restored clan-base graph: the original blockpost north edge enters its own yard, never another retired clan base."
+   }
+  },
+  "380": {
+   "W": {
+    "target_loc_id": 382,
+    "why": "DESIGNED safe return from every original yard edge to its own restored blockpost. Other clan-base locations remain retired."
+   },
+   "N": {
+    "target_loc_id": 382,
+    "why": "DESIGNED safe return from every original yard edge to its own restored blockpost. Other clan-base locations remain retired."
+   },
+   "E": {
+    "target_loc_id": 382,
+    "why": "DESIGNED safe return from every original yard edge to its own restored blockpost. Other clan-base locations remain retired."
+   },
+   "S": {
+    "target_loc_id": 382,
+    "why": "DESIGNED safe return from every original yard edge to its own restored blockpost. Other clan-base locations remain retired."
+   }
   }
  },
  "no_map": {
@@ -2294,6 +2326,15 @@
   },
   "694": {
    "why": "DESIGNED. «Джитинджи» (Test_6): as 690."
+  },
+  "609": {
+   "why": "DESIGNED restored clan-base interior: leave by native passage to the base entrance; no direct global-map shortcut from the bunker or inner yard."
+  },
+  "380": {
+   "why": "DESIGNED restored clan-base interior: leave by native passage to the base entrance; no direct global-map shortcut from the bunker or inner yard."
+  },
+  "958": {
+   "why": "DESIGNED restored clan-base interior: leave by native passage to the base entrance; no direct global-map shortcut from the bunker or inner yard."
   }
  },
  "walk_in": {},
@@ -5449,6 +5490,129 @@
     ],
     "target_loc_id": 267,
     "why": "DESIGNED internal route from relocated sorter to foreman; no ordinary-world exit."
+   }
+  ],
+  "118": [
+   {
+    "quest": 18201,
+    "cells": [
+     [
+      8,
+      28
+     ],
+     [
+      6,
+      29
+     ],
+     [
+      8,
+      29
+     ],
+     [
+      50,
+      35
+     ],
+     [
+      50,
+      36
+     ],
+     [
+      50,
+      37
+     ],
+     [
+      33,
+      70
+     ],
+     [
+      29,
+      72
+     ],
+     [
+      33,
+      72
+     ]
+    ],
+    "target_loc_id": 609,
+    "why": "RECOVERED original lift/bunker-service position and existing native quest-passage mechanism; DESIGNED restored connected graph approved 2026-11-22. No fee or item reward, no connection to other retired clan bases."
+   }
+  ],
+  "609": [
+   {
+    "quest": 18202,
+    "cells": [
+     [
+      6,
+      35
+     ],
+     [
+      7,
+      35
+     ],
+     [
+      8,
+      36
+     ],
+     [
+      44,
+      37
+     ],
+     [
+      49,
+      37
+     ],
+     [
+      45,
+      38
+     ],
+     [
+      36,
+      70
+     ],
+     [
+      31,
+      75
+     ],
+     [
+      33,
+      76
+     ]
+    ],
+    "target_loc_id": 118,
+    "why": "RECOVERED original lift/bunker-service position and existing native quest-passage mechanism; DESIGNED restored connected graph approved 2026-11-22. No fee or item reward, no connection to other retired clan bases."
+   }
+  ],
+  "380": [
+   {
+    "quest": 18203,
+    "cells": [
+     [
+      46,
+      35
+     ],
+     [
+      45,
+      37
+     ],
+     [
+      46,
+      37
+     ],
+     [
+      48,
+      115
+     ],
+     [
+      48,
+      117
+     ],
+     [
+      49,
+      117
+     ]
+    ],
+    "target_loc_id": 958,
+    "why": "RECOVERED original lift/bunker-service position and existing native quest-passage mechanism; DESIGNED restored connected graph approved 2026-11-22. No fee or item reward, no connection to other retired clan bases."
    }
   ]
  }

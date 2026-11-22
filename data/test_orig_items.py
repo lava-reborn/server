@@ -96,7 +96,11 @@ class OrigItems(unittest.TestCase):
         self.assertEqual(meta["source_size"], SOURCE_SIZE)
         counts = {}
         for key, rec in self.items.items():
-            self.assertEqual(set(rec), {"name", "desc", "name_id", "desc_id", "confidence", "root"}, key)
+            fields = {"name", "desc", "name_id", "desc_id", "confidence", "root"}
+            if int(key) in B.EXACT_ITEM_TEXTS:
+                fields |= {"source_md5", "why"}
+                self.assertEqual(rec, B.EXACT_ITEM_TEXTS[int(key)], key)
+            self.assertEqual(set(rec), fields, key)
             self.assertIn(rec["confidence"], ("high", "medium"), key)
             root = self.objects[int(key)][0]
             self.assertEqual(rec["root"], B.ROOT_NAME[root], key)
@@ -112,6 +116,15 @@ class OrigItems(unittest.TestCase):
         for root, n in MIN_TYPES.items():
             self.assertGreaterEqual(sum(c.get(root, {}).values()), n, root)
         self.assertGreaterEqual(c["FireArm"]["high"], MIN_FIREARM_HIGH)
+
+    def test_exact_laboratory_pouch_is_not_the_rifle_M2_wiki_match(self):
+        rec = self.items["3737"]
+        self.assertEqual(self.objects[3737][1], "belt_sub_machineguns_g_mod")
+        self.assertEqual((rec["name_id"], rec["desc_id"], rec["source_md5"]),
+                         (47170, 47171, "5753339771815bd83a2cfcbd261db945"))
+        self.assertEqual(rec["name"], "Подсумки спецназовца (G). МОД. А1.")
+        self.assertEqual(rec["desc"],
+                         "Удобные подсумки для магазинов ПП. Установлена модификация уровня А1.")
 
     # --- firearm lines ---------------------------------------------------------
 
@@ -360,6 +373,9 @@ class OrigItems(unittest.TestCase):
         T, md5, _ = B.load_texts(self.source_or_skip())
         self.assertEqual(md5, SOURCE_MD5)
         for key, rec in self.items.items():
+            if rec.get("source_md5", md5) != md5:
+                self.assertEqual(rec, B.EXACT_ITEM_TEXTS[int(key)])
+                continue
             for f in ("name", "desc"):
                 if rec[f + "_id"] is not None:
                     self.assertEqual(rec[f], T[rec[f + "_id"]], (key, f))

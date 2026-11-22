@@ -54,6 +54,7 @@ import sys
 import tempfile
 import time
 from datetime import datetime, timedelta, timezone
+from unittest.mock import patch
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -301,7 +302,8 @@ async def main():
                        'wh_dn_sever': 12, 'wh_dn_vostok': 16, 'wh_dn_ug': 16,
                        'wh_ah_center': 17}
     check("all seven warehouses keep their agreed minimum levels",
-          {key: site.min_level for key, site in holdings.sites().items()}, expected_levels)
+          {key: site.min_level for key, site in holdings.sites().items()
+           if site.kind == "warehouse"}, expected_levels)
     for key, minimum in expected_levels.items():
         site = holdings.sites()[key]
         for second_level in (minimum - 1, minimum, minimum + 1, 20):
@@ -321,7 +323,8 @@ async def main():
     # 14, 18 and 22 -- the day before the fights below, he is not there.
     check("the boss keeps the warehouse masters' hour, 20:00 alone",
           (bosses.hours_of(BOSS),
-           [bosses.hours_of(site.boss) for site in holdings.sites().values()]),
+           [bosses.hours_of(site.boss) for site in holdings.sites().values()
+            if site.kind == "warehouse"]),
           ([20 * 60], [[20 * 60]] * 7))
     seen = []
     for h in (14, 18, 22, 20):
@@ -782,7 +785,7 @@ async def main():
           ("склад «Северный склад Вади-Хальфы» уже не за кланом «Шакалы»", 0))
     check("a site that is not: said so, with the ones there are",
           order("hold", clan=wolves, site="склад"),
-          "склада «склад» нет (есть: wh_ah_center, wh_dn_sever, wh_dn_ug, wh_dn_vostok,"
+          "склада «склад» нет (есть: base_ah, base_dn, wh_ah_center, wh_dn_sever, wh_dn_ug, wh_dn_vostok,"
           " wh_sever, wh_ug, wh_vostok)")
 
     # --- a disband ------------------------------------------------------------------------------
@@ -813,7 +816,7 @@ async def main():
     code, out = tool("clan-hold", "Шакалы", "--wait", "0.5")
     check("tool: clan-hold without --site is refused, nothing queued",
           (code, list(STORE.admin_pending())),
-          ("clan-hold needs --site, one of: wh_ah_center, wh_dn_sever, wh_dn_ug, wh_dn_vostok,"
+          ("clan-hold needs --site, one of: base_ah, base_dn, wh_ah_center, wh_dn_sever, wh_dn_ug, wh_dn_vostok,"
            " wh_sever, wh_ug, wh_vostok", []))
     code, out = tool("clan-hold", "Шакалы", "--site", "wh_sever", "--wait", "0.5")
     pending = [json.loads(r["args_json"]) for r in STORE.admin_pending()]
@@ -899,6 +902,141 @@ async def main():
     take(dick)
     run(dick, "q_st;mob=%d;q_idx=0;" % ah_box())
     check("  ..and his take refused", acks(take(dick))[:1] != [0], True)
+
+    # The same native transactions on PostgreSQL in CI: unlike isolated
+    # in-memory unit fixtures, this suite honours LAVA_DB_URL throughout.
+    NOW[0] = datetime(2026, 11, 21, 20, 5, tzinfo=bosses.ZONE).timestamp()
+    base = holdings.site("base_ah")
+    slot = holdings.battle_slot(base)
+    payer = alice2                     # the first Alice logged out above
+    STORE.clan_member_update(payer.char_id, wolves, perm=clans.R_CHAT | clans.R_AFRO)
+    STORE.holding_capture(base.key, wolves, slot, payer.char_id, NOW[0],
+                          base_sites=holdings.base_keys())
+    treasury = STORE.clan_treasury(wolves)
+    STORE.clan_treasury_adjust(wolves, 3_000_000, "admin")
+    level(payer, 16)
+    into(payer, base.loc)
+    base_room = payer.room
+    base_flag = next(e for e, npc in base_room.npcs.items() if npc.type_id == base.flag)
+    payer.stop_walk()
+    payer.pos = base_room.npcs[base_flag].cell
+    take(payer)
+    run(payer, "q_st;mob=%d;q_idx=%d;" % (
+        base_flag, quests.given_by(base.flag).index(base.rent_quest)))
+    offered = take(payer)
+    rent_id = named(offered, "q_di_del_obj")[0]["q_id"]
+    finish = STORE.finish_quest
+
+    def fail_history(*args, **kwargs):
+        finish(*args, **kwargs)
+        raise RuntimeError("native holding reward failed after SQL history")
+
+    STORE.finish_quest = fail_history
+    try:
+        run(payer, "q_co;q_id=%d;mob=%d;" % (rent_id, base_flag))
+    finally:
+        STORE.finish_quest = finish
+    check("native rent history failure rolls back the lease and treasury together",
+          (acks(take(payer)), STORE.holding(base.key)["paid_until"],
+           STORE.clan_treasury(wolves), STORE.quest(rent_id) is not None),
+          ([1], 0, treasury + 3_000_000, True))
+    run(payer, "q_co;q_id=%d;mob=%d;" % (rent_id, base_flag))
+    paid = acks(take(payer))
+    run(payer, "q_co;q_id=%d;mob=%d;" % (rent_id, base_flag))
+    check("native rent retry and replay pay the weekly lease only once",
+          (paid, acks(take(payer)), STORE.clan_treasury(wolves),
+           STORE.holding(base.key)["paid_until"],
+           holdings.paid_base_for(STORE, 609, payer.char_id) is base),
+          ([0], [server.RES_NO_SUCH], treasury + 1_500_000, slot + 7 * 86400, True))
+
+    NOW[0] = at(19, 5, day=51)
+    into(dora, CENTER)
+    gold_id = ah_box()
+    dora.stop_walk()
+    dora.pos = ah_room.npcs[gold_id].cell
+    gold_quest = site.gold_quest
+    before_gold = dora.inv.bag_pieces()
+    take(dora)
+    run(dora, "q_st;mob=%d;q_idx=%d;" % (
+        gold_id, quests.given_by(AH_BOX).index(gold_quest)))
+    offered = take(dora)
+    gold_qid = named(offered, "q_di_del_obj")[0]["q_id"]
+    STORE.finish_quest = fail_history
+    try:
+        run(dora, "q_co;q_id=%d;mob=%d;" % (gold_qid, gold_id))
+    finally:
+        STORE.finish_quest = finish
+    check("native warehouse gold history failure releases its SQL claim and pays no ingots",
+          (acks(take(dora)), STORE.holding_gold_claimed(site.key, dora.day_start()),
+           dora.inv.bag_pieces(), STORE.quest(gold_qid) is not None),
+          ([1], False, before_gold, True))
+    run(dora, "q_co;q_id=%d;mob=%d;" % (gold_qid, gold_id))
+    paid = acks(take(dora))
+    run(dora, "q_co;q_id=%d;mob=%d;" % (gold_qid, gold_id))
+    after_gold = dora.inv.bag_pieces()
+    check("native warehouse gold retry and replay grant exactly 7 G as original ingots",
+          (paid, acks(take(dora)), STORE.holding_gold_claimed(site.key, dora.day_start()),
+           after_gold.get(4796, 0) - before_gold.get(4796, 0),
+           after_gold.get(7620, 0) - before_gold.get(7620, 0)),
+          ([0], [server.RES_NO_SUCH], True, 1, 2))
+
+    # The laboratory reuses boss_kills CAS, not a new reward ledger. Keep
+    # its native quest transaction in this PG-capable suite as well as the
+    # isolated SQLite race/unit cases of test_laborant.
+    lab_now = [time.time()]
+    with patch.object(time, "time", lambda: lab_now[0]):
+        into(payer, quests.LABORANT_LOC)
+        lab_room = payer.room
+        lab_rc = combat.room_combat(lab_room, STORE)
+
+        def lab_id():
+            return next(e for e, npc in lab_room.npcs.items()
+                        if npc.type_id == quests.LABORANT_NPC)
+
+        def experiment(kind):
+            events.keep(lab_rc)
+            payer.stop_walk()
+            payer.pos = lab_room.npcs[lab_id()].cell
+            for type_id, count in quests.get(kind).wants():
+                payer.inv.give_pieces(type_id, count)
+            take(payer)
+            run(payer, "q_st;mob=%d;q_idx=%d;" % (
+                lab_id(), quests.given_by(quests.LABORANT_NPC).index(kind)))
+            return named(take(payer), "q_di_bring_l_obj")[0]["q_id"]
+
+        lab_qid = experiment(18306)
+        before_lab = payer.inv.bag_pieces()
+        first_lab = lab_id()
+        STORE.finish_quest = fail_history
+        try:
+            run(payer, "q_co;q_id=%d;mob=%d;" % (lab_qid, first_lab))
+        finally:
+            STORE.finish_quest = finish
+        check("native laboratory failed history rolls back its CAS, inputs and output together",
+              (acks(take(payer)), quests.laborant_available(STORE, payer.day_start()),
+               payer.inv.bag_pieces(), STORE.quest(lab_qid) is not None, lab_id()),
+              ([1], True, before_lab, True, first_lab))
+        run(payer, "q_co;q_id=%d;mob=%d;" % (lab_qid, first_lab))
+        paid = acks(take(payer))
+        run(payer, "q_co;q_id=%d;mob=%d;" % (lab_qid, first_lab))
+        check("native laboratory retry, replay and same-day CAS create only one output",
+              (paid, acks(take(payer)), STORE.boss_claim(quests.LABORANT_SPOT, payer.day_start()),
+               payer.inv.bag_pieces().get(3735, 0) - before_lab.get(3735, 0),
+               any(npc.type_id == quests.LABORANT_NPC for npc in lab_room.npcs.values())),
+              ([0], [server.RES_NO_SUCH], False, 1, False))
+        lab_now[0] = payer.day_start() + 86400
+        second_qid = experiment(18307)
+        second_lab = lab_id()
+        before_next = payer.inv.bag_pieces().get(3738, 0)
+        run(payer, "q_co;q_id=%d;mob=%d;" % (second_qid, second_lab))
+        paid = acks(take(payer))
+        run(payer, "q_co;q_id=%d;mob=%d;" % (second_qid, second_lab))
+        check("native laboratory next-day claim opens once and replay pays no second output",
+              (paid, acks(take(payer)), second_lab != first_lab,
+               payer.inv.bag_pieces().get(3738, 0) - before_next,
+               STORE.boss_kills([quests.LABORANT_SPOT])),
+              ([0], [server.RES_NO_SUCH], True, 1,
+               {quests.LABORANT_SPOT: float(payer.day_start())}))
 
     check("no clan command was answered twice", CLANS.double_acks, [])
     for s in list(server.SESSIONS):

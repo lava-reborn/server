@@ -206,6 +206,15 @@ for _type, (_root, _internal_name) in items.catalogue().items():
             ALL[_did] = _BATTLE_AP_ROW.sub(
                 lambda match: match.group(1) + format(_cost, "g"), ALL[_did], count=1)
 
+# Wear limits apply to the final description, after original/set overrides.
+# Both HTTP text preloads read this table; no per-trader text or changed skill
+# requirement is needed. Training copies have their own equipment rules.
+for _type in items.catalogue():
+    _note = items.equipment_level_text(_type)
+    if _note:
+        _did = items.DESC_ID_OFFSET + _type
+        ALL[_did] = (ALL[_did] + "<br>" if ALL.get(_did) else "") + _note
+
 # The table as the game's own sources leave it, before anybody had a say.
 # tools/npc_editor.py compares against this to tell a name that was chosen
 # from one that was merely sitting in the field when Save was pressed.

@@ -213,7 +213,8 @@ with open(os.path.join(os.path.dirname(HERE), "data", "holdings.json"), encoding
 check("  ..and the capturable sites' bosses (data/holdings.json) are masters: Вади-Хальфа's"
       " three and, since 2026-10-13, Донгола's, and, since 2026-10-14, Абу-Хамед's Центр",
       sorted((s["boss"], s["boss"] in bosses.WAREHOUSE_MASTERS)
-             for k, s in _sites.items() if not k.startswith("_")),
+             for k, s in _sites.items()
+             if not k.startswith("_") and s.get("kind", "warehouse") == "warehouse"),
       [(7448, True), (7449, True), (7450, True), (7451, True), (7452, True), (7453, True),
        (7454, True)])
 

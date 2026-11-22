@@ -115,7 +115,7 @@ assert formulas.engine() is engine
         raw = copy.deepcopy(engine.data())
         raw['equations']['INT_DAMAGE'] *= 2
         try:
-            with patch.object(engine, 'PATH', SimpleNamespace(read_text=lambda **kwargs: json.dumps(raw))):
+            with patch('battle_balance.PATH', SimpleNamespace(read_text=lambda **kwargs: json.dumps(raw))):
                 engine.data.cache_clear()
                 with self.assertRaisesRegex(ValueError, 'equations changed'):
                     engine.data()

@@ -17,7 +17,7 @@ class LootTiming(unittest.IsolatedAsyncioTestCase):
         self.addCleanup(store.close)
         published=[]
         mob=NS(is_player=False, walk=None, cell=42,eid=7,type_id=100,aim=None,
-               stats=NS(name='fixture'))
+               stats=NS(name='fixture', role='mob'), xp_ledger={})
         room=NS(motion=None,npcs={7:mob},players=[],broadcast=lambda e: published.append(e[0]))
         rc=NS(store=store,room=room,place=(100,0,0),quest_wants=lambda *a: frozenset(),
               settle_xp=lambda _: None,calm=lambda:None,corpse_gone=lambda *a:None)

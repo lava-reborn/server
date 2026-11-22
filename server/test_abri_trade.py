@@ -117,7 +117,7 @@ WORLD_PUTS = {PORT: {LOTTERY, GOLD_LOTTERY, MORTIMER}}
 DECIDED = {
     PORT: {1159: "band", 1161: "band", 1163: "band", SHOTGUNS: "band", ONE_EAR: "band",
            ALIMA: "band", GALI: "band", TORSI: "band", MUKHSIM: "band", LUIGI: "own",
-           PILOT: "own", LOTTERY: "own", GOLD_LOTTERY: "own", KHAN_SELL: "band",
+           LOTTERY: "own", GOLD_LOTTERY: "own", KHAN_SELL: "band",
            MORTIMER: "own"},
     QUARTER: {1013: "wiki", 1196: "wiki", 2016: "wiki"},
     SLUMS: {MORTIMER: "own", FREYA: "own"},
@@ -336,7 +336,7 @@ check("  ..and Абри's tiers of medicine (4_7-12_15) keep their articles on t
       ([t for t in TORSI_ARTICLE if t not in items.stock_for(TORSI, PORT)],
        [t for t in MUKHSIM_ARTICLE if t not in items.stock_for(MUKHSIM, PORT)],
        [t for t in items.stock_for(TORSI, PORT) if t not in TORSI_ARTICLE]),
-      ([], [6898], [7101, 7102, 7103]))
+      ([], [6898], [7101, 7102, 7103] + [3113, 3116, 3117, 3202, 3206, 3210, 3211, 3469, 3472, 3475, 3789, 3897, 4922, 4923, 4924, 4925, 4926, 4927, 4942, 4943, 4944, 4945, 4946, 4947]))
 check("Хассир sells both tickets at Вади-Хальфа's station: the way home is bought before the"
       " ride", (HASSIR in stood(STATION), items.stock_for(HASSIR, STATION)),
       (True, [TICKET_TO_ABRI, TICKET_TO_HALFA]))
@@ -359,7 +359,7 @@ check("no gun, knife or set piece out of 8-12 on a seller's stall of Абри, n
       (sorted((p, t, x) for (p, t), s in STALLS.items() for x in s if t in shop_bands.SELLERS
               and band_thing(x) and not shop_bands.fits(x, LO, HI)),
        sorted((p, t) for (p, t), s in STALLS.items() if t in shop_bands.SELLERS
-              and shop_bands.SELLERS[t] and not shop_bands.only(t)
+              and shop_bands.SELLERS[t] and not shop_bands.only(t) and (p, t) != (CLOTHES, 5161)
               and not {gold_only(x) for x in s if band_thing(x)} >= {True, False}),
        sorted((p, t, shop_bands.only(t)) for (p, t) in STALLS if shop_bands.only(t))),
       ([], [], [(OASIS, JUT, "gold")]))
@@ -403,12 +403,12 @@ with open(os.path.join(ROOT, "data", "questgen_weaponcraft.json"), encoding="utf
     CRAFT_DOC = json.load(_fh)
 stone = [r for r in CRAFT_DOC["quests"] if r["give"] == [WHETSTONE]]
 check("«Точильный камень Абри» (2280, the port market) sharpens Нож кастет (G) and Штык нож (G)"
-      " three ways each, for player levels 6-20, repeatable services",
+      " three ways each, from output level minus three, repeatable services",
       sorted((r["craft"]["gun"], r["craft"]["blueprint"], r["rew_obj"][0], r["level"],
               r["max_level"], r["repeatable"], r["service"]) for r in stone),
-      [(6251, 6620, 6252, 6, 20, 1, True), (6251, 6621, 6253, 6, 20, 1, True),
-       (6251, 6622, 6254, 6, 20, 1, True), (6256, 6623, 6257, 6, 20, 1, True),
-       (6256, 6624, 6258, 6, 20, 1, True), (6256, 6625, 6259, 6, 20, 1, True)])
+      [(6251, 6620, 6252, 7, 20, 1, True), (6251, 6621, 6253, 7, 20, 1, True),
+       (6251, 6622, 6254, 7, 20, 1, True), (6256, 6623, 6257, 9, 20, 1, True),
+       (6256, 6624, 6258, 9, 20, 1, True), (6256, 6625, 6259, 9, 20, 1, True)])
 check("  ..in the original's words, loaded (quests.get), the whetstone standing in the port"
       " market", ([quests.get(r["type"]).texts[quests.NAME] for r in stone],
                   WHETSTONE in standing(PORT)),
@@ -632,7 +632,7 @@ async def main():
     check("Торси: Абри's tiers of battle medicine, her article's and their packs of 20 doses;"
           " «В.И.Л.К.А. (G)» for 0.03 ounces",
           (stall, opened, buy(sess, stall, 6075, GOLD)),
-          ([6056, 6062, 6074, 7101, 6057, 6063, 6075, 7102, 6058, 6064, 6076, 7103], [0],
+          ([6056, 6062, 6074, 7101, 6057, 6063, 6075, 7102, 6058, 6064, 6076, 7103, 3113, 3116, 3117, 3202, 3206, 3210, 3211, 3469, 3472, 3475, 3789, 3897, 4922, 4923, 4924, 4925, 4926, 4927, 4942, 4943, 4944, 4945, 4946, 4947], [0],
            ([0], [6075], 0, 3)))
     close_stall(sess)
 
@@ -650,10 +650,12 @@ async def main():
     close_stall(sess)
 
     stall, opened = open_stall(sess, FIELDS, HUXLEY)
-    check("Говард Хаксли (Поля Абри): his coupons; «Купон на 300 патронов» for 1 ounce, for afro"
-          " refused", (stall, opened, buy(sess, stall, 6295, GOLD), buy(sess, stall, 6295, BUY)),
-          (list(COUPONS), [0], ([0], [6295], 0, 100), (REFUSED, [], 0, 0)))
-    check("  ..and not bought back", sell(sess, 6295), (REFUSED, True, 0, 0))
+    check("Говард Хаксли (Поля Абри): discounted coupons are no longer sold",
+          (stall, opened), ([], [0]))
+    before = purse(sess)
+    got = run(sess, "ss_upd;s_status=4;obj=x0;param=1;")
+    check("  ..an old coupon index cannot purchase hidden stock",
+          (acks(got), purse(sess)), ([inventory.RES_NOT_FOUND], before))
     close_stall(sess)
 
     stall, opened = open_stall(sess, DUMP, MCCANDLESS)

@@ -1,4 +1,4 @@
-"""Choose a global-map arrival among a location's declared, escapable entries.
+"""Project global/local positions and choose declared, escapable entries.
 
 This policy is only for entering a map cell. Quest, door, resurrection and
 administrator arrivals keep their own rules. Geometry is cached on the
@@ -101,6 +101,23 @@ def _fraction(value):
         raise NoSafeEntry('Invalid global-map position')
     # DisplayGlobalMap chooses a cell by floor, not by rounding its centre.
     return number - math.floor(number)
+
+
+def map_position(loc, cell, gx, gy):
+    """The local hex's position inside its existing global square.
+
+    choose() uses the same axes and width/height minus one. Map coordinates
+    have four integer digits and the wire formats floats with six significant
+    digits, so keep hundredths and stay below the next cell even at an edge.
+    """
+    if not _valid(loc, cell):
+        raise NoSafeEntry('Invalid local position')
+    _fraction(gx)
+    _fraction(gy)
+    fx = (cell % loc.width) / (loc.width - 1) if loc.width > 1 else .5
+    fy = (cell // loc.width) / (loc.height - 1) if loc.height > 1 else .5
+    return (round(math.floor(float(gx)) + min(.99, fx), 2),
+            round(math.floor(float(gy)) + min(.99, fy), 2))
 
 
 def choose(loc, gx, gy, occupied=frozenset()):

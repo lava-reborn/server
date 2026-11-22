@@ -313,6 +313,8 @@ class Mail:
         """lsml: five parallel lists. name is the other party: the sender
         for the inbox, the addressee for the outbox (listMail_XMC builds
         the LetterObject with "я"/"мне" on the near side)."""
+        if eden.confined(self.sess):
+            rows = []
         self.send("lsml",
                   id=[BigUInt(str(r["id"])) for r in rows],
                   date=[stamp(r["sent_at"]) for r in rows],
@@ -333,18 +335,28 @@ class Mail:
         else:
             self.listing(self.store.mail_inbox(self.char_id) if self.char_id
                          else [], outbox=False)
-            self.synced = True
+            self.synced = not eden.confined(self.sess)
 
     def arrived(self, row):
         """A letter for this character has just been filed. The client
         asks for its inbox by itself and shows the envelope from what it
         holds (LocationInterface.checkNewLetter on UPDATE_INBOX), so one
         more lsml is all a push takes -- once the box has been listed."""
+        if eden.confined(self.sess):
+            # Keep the letter in storage, without leaking its subject. On
+            # release the next full inbox fetch includes every held letter;
+            # pushing before that would duplicate it in the appending model.
+            self.synced = False
+            return
         if self.synced:
             self.listing([row], outbox=False)
 
     # --- one letter ----------------------------------------------------------
     def getml(self, p):
+        if eden.confined(self.sess):
+            self.ack(RES_NO_LETTER)
+            self.sess.answer("На плантации Эдем почта недоступна. Письма сохранены до освобождения.")
+            return
         row = self.store.mail_letter(letter_id(p.get("id")))
         side = self.side_of(row)
         if side is None:
@@ -375,10 +387,9 @@ class Mail:
         if not self.char_id:
             self.ack(RES_REFUSED)
             return
-        if eden.confined(self.sess) and (
-                every(p, "item") or _money(p.get("afro")) or _money(p.get("gold"))):
+        if eden.confined(self.sess):
             self.ack(RES_PARCEL_REFUSED)
-            self.sess.answer("На плантации Эдем нельзя отправлять вещи или деньги по почте.")
+            self.sess.answer("На плантации Эдем нельзя отправлять письма, вещи или деньги по почте.")
             return
         kind = int(p.get("type", 0) or 0)
         if kind in (CLAN, CLAN_EXPRESS):
@@ -575,6 +586,10 @@ class Mail:
         so nothing is pushed for the items; the purse is re-sent because
         the client's own arithmetic is not the record.
         """
+        if eden.confined(self.sess):
+            self.ack(RES_PARCEL_REFUSED)
+            self.sess.answer("На плантации Эдем почта недоступна. Вложения сохранены до освобождения.")
+            return
         try:
             with storage.atomic(self.store.db):
                 if not self.store.lock_quest_character(self.char_id):
@@ -586,10 +601,6 @@ class Mail:
                 row = self.store.mail_letter(letter_id(p.get("id")))
                 if self.side_of(row) != "in":
                     self.ack(RES_NO_LETTER)
-                    return
-                if attached(row) and eden.confined(self.sess):
-                    self.ack(RES_PARCEL_REFUSED)
-                    self.sess.answer("На плантации Эдем нельзя получать вещи или деньги по почте. Вложения сохранены.")
                     return
                 snaps = json.loads(row["items_json"])
                 if any(eden.restricted_item(s["type_id"]) for s in snaps):
@@ -688,16 +699,13 @@ class Mail:
         asked about, and deleting some of them anyway would leave letters in
         its list that are gone here. The window asks one letter at a time.
         """
-        ids = every(p, "id")
         if eden.confined(self.sess):
-            for text in ids:
-                row = self.store.mail_letter(letter_id(text))
-                if self.side_of(row) == "in" and attached(row):
-                    # Refusing a parcel normally sends it back. That must
-                    # not become another way to transfer goods from Eden.
-                    self.ack(RES_PARCEL_REFUSED)
-                    self.sess.answer("На плантации Эдем нельзя возвращать или удалять письма с вложениями. Письмо сохранено.")
-                    return
+            # Returning a parcel or deleting even a text letter changes the
+            # other party's mailbox and must not signal outside the island.
+            self.ack(RES_PARCEL_REFUSED)
+            self.sess.answer("На плантации Эдем нельзя возвращать или удалять письма. Письмо сохранено.")
+            return
+        ids = every(p, "id")
         for text in ids:
             row = self.store.mail_letter(letter_id(text))
             if self.side_of(row) == "in" and row["from_char"] == SYSTEM_SENDER \

@@ -67,7 +67,7 @@ class TrainingDisplay(unittest.IsolatedAsyncioTestCase):
             if reference is None:
                 continue
             original = copy.deepcopy(items.params_of(source))
-            base = items.params_of(reference)
+            base = training_balance.before_release(reference, copy.deepcopy(items.params_of(reference)))
             p = items.params_of(copies.copy_type(source))
             for field in ('fire_mods', 'fire_costs', 'fire_times', 'clip_size', 'weapon_type', 'reload_cost'):
                 self.assertEqual(p[field], base[field], (source, field))

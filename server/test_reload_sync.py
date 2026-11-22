@@ -26,20 +26,18 @@ from testkit import run_cases
 
 
 class PmmMagazine(unittest.TestCase):
-    def test_only_pmm_levels_four_and_five_change_capacity(self):
-        for t, level in ((7056, 4), (7057, 5)):
+    def test_all_pmm_versions_change_only_capacity(self):
+        for t, level in ((7055, 2), (7056, 4), (7057, 5), (7058, 2)):
             with self.subTest(type=t):
                 with patch.dict(items.PMM_CLIP_SIZES, {}, clear=True):
                     before = items.params_of(t)
                 after = items.params_of(t)
                 self.assertEqual(max(after['need_skills']), level)
                 self.assertEqual(before['clip_size'], 3)
-                self.assertEqual(after['clip_size'], 7)
-                self.assertEqual(items.static_info(t)[1]['clip_size'], 7)
+                self.assertEqual(after['clip_size'], 10)
+                self.assertEqual(items.static_info(t)[1]['clip_size'], 10)
                 self.assertEqual({k: v for k, v in after.items() if k != 'clip_size'},
                                  {k: v for k, v in before.items() if k != 'clip_size'})
-        for t in (7055, 7058):
-            self.assertEqual(items.params_of(t)['clip_size'], 3)
 
 
 class ReloadSync(unittest.IsolatedAsyncioTestCase):
@@ -124,9 +122,9 @@ class ReloadSync(unittest.IsolatedAsyncioTestCase):
         self.invoke(saved)
         self.assertEqual(self.resources(), (clip, 50 - clip, 100 - cost))
 
-    async def test_existing_pmm_instances_reload_to_seven_without_free_rounds(self):
-        for t in (7056, 7057):
-            for loaded in (0, 3, 6):
+    async def test_existing_pmm_instances_reload_to_ten_without_free_rounds(self):
+        for t in (7055, 7056, 7057, 7058):
+            for loaded in (0, 3, 7, 9):
                 with self.subTest(type=t, loaded=loaded):
                     self.store.delete_item(self.gun['uniq'])
                     self.store.delete_item(self.ammo['uniq'])
@@ -138,7 +136,7 @@ class ReloadSync(unittest.IsolatedAsyncioTestCase):
                     saved = self.start()
                     self.invoke(saved)
                     self.assertEqual(self.resources(),
-                                     (7, 20 - (7 - loaded), 100 - items.params_of(t)['reload_cost']))
+                                     (10, 20 - (10 - loaded), 100 - items.params_of(t)['reload_cost']))
                     self.assertEqual([p['res'] for n, p in self.frames if n == 'cmdAck'], [0])
                     before = self.resources()
                     self.invoke(saved)

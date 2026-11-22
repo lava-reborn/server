@@ -192,7 +192,7 @@ rows = [r for r in quests.table_rows() if isinstance(r.get("craft"), dict) and r
 check("Halfa has three sharpening choices at each existing knife tier",
       sorted(r["craft"]["level"] for r in rows), [2]*3 + [4]*3 + [6]*3 + [8]*3)
 check("every Halfa sharpening blueprint is sold", all(r["craft"]["blueprint"] in stock for r in rows), True)
-check("existing character level range preserved", {(r["level"], r["max_level"]) for r in rows}, {(0, 20)})
+check("knife services require output level minus three", {(r["level"], r["max_level"]) for r in rows}, {(0, 20), (1, 20), (3, 20), (5, 20)})
 
 # New service rows reuse the existing valley recipes and the generator's
 # configured tiers; no existing recipe or type registry entry is replaced.

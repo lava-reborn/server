@@ -1,5 +1,23 @@
 """Warehouses a clan holds: taken by killing the warehouse's boss.
 
+Weekly bases use these same holdings (kind "base" in the table), not a
+second ownership system. Their original surfaces/interiors share one site.
+The Saturday 20:00–21:00 Moscow kill grants a payment reservation; the
+winning clan pays 1,500,000 afro from its treasury by 21:15, then owns the
+benefits until next Saturday 20:00. Each new battle needs a new capture
+and payment. One clan may reserve/lease one base; warehouses do not count.
+There is no fixed squad minimum for a base. A base's capture and weekly
+boss-death record commit at the kill, before the corpse timer. Everything
+below describes the existing warehouses unless it explicitly names a base.
+
+Warehouse gold is a separate native box service: existing 1/5 G ingots,
+3 G in Halfa, 5 G in Dongola, 7 G in Abu. The same ownership, 24-hour
+membership and box windows apply, plus treasury-withdrawal permission.
+A persistent site/day claim belongs to the whole warehouse and is not
+reset by capture or disband. Claim, item grant and quest history commit
+together; personal ammo/afro rewards and the disabled gold treasury stay
+unchanged. Unlike ordinary quest rewards, this service requires carry room.
+
 The owner's «сделай так чтобы склады можно было захватывать убивая босса»
 (2026-10-09). The sites are data/holdings.json's -- Вади-Хальфа's three
 склады, 111, 110 and 109, each a room with its boss «Хозяин склада», the
@@ -73,13 +91,16 @@ clans.py reads every membership -- tools/admin_account.py disbands clans
 from another process. This module imports neither clans nor inventory nor
 mail (trophies.clan_of says why): membership is Store.clan_member's.
 """
+import copy
 import json
 import logging
+import math
 import os
 import time
 
 import bosses
 import events
+import storage
 import world
 
 log = logging.getLogger("lava")
@@ -88,22 +109,35 @@ HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PATH = os.path.join(HERE, "data", "holdings.json")
 
 # What a row of clan_holding_log says happened (accounts.SCHEMA).
-HOW = ("capture", "defend", "none", "admin", "disband")
+HOW = ("capture", "defend", "none", "admin", "disband", "rent")
 
 
 class Site(object):
     """One capturable place of data/holdings.json."""
-    __slots__ = ("key", "loc", "boss", "flag", "box", "quest", "min_level", "title")
+    __slots__ = ("key", "loc", "boss", "flag", "box", "quest", "min_level", "title",
+                 "kind", "rooms", "traders", "rent_quest", "rent", "battle", "payment",
+                 "gold_quest", "health_scale")
 
     def __init__(self, key, rec):
         self.key = str(key)
         self.loc = int(rec["loc"])
         self.boss = int(rec["boss"])
         self.flag = int(rec["flag"])
-        self.box = int(rec["box"])
-        self.quest = int(rec["quest"])
+        self.box = int(rec.get("box", 0))
+        self.quest = int(rec.get("quest", 0))
         self.min_level = int(rec["min_level"])
         self.title = str(rec["title"])
+        self.kind = str(rec.get("kind", "warehouse"))
+        self.rooms = tuple(int(x) for x in rec.get("rooms", [self.loc]))
+        self.traders = tuple(int(x) for x in rec.get("traders", []))
+        self.rent_quest = int(rec.get("rent_quest", 0))
+        self.rent = int(rec.get("rent", 0))
+        self.battle = str(rec.get("battle", ""))
+        self.payment = str(rec.get("payment", ""))
+        self.gold_quest = int(rec.get("gold_quest", 0))
+        self.health_scale = float(rec.get("health_scale", 1))
+        if not math.isfinite(self.health_scale) or not 1 <= self.health_scale <= 100:
+            raise ValueError("data/holdings.json: %s health_scale must be finite, 1..100" % self.key)
 
 
 class Table(object):
@@ -118,10 +152,11 @@ class Table(object):
                       if not key.startswith("_")}
         self.by_loc = {}
         for s in self.sites.values():
-            if s.loc in self.by_loc:
-                raise ValueError("data/holdings.json: %s and %s are both location %d"
-                                 % (self.by_loc[s.loc].key, s.key, s.loc))
-            self.by_loc[s.loc] = s
+            for loc_id in s.rooms:
+                if loc_id in self.by_loc:
+                    raise ValueError("data/holdings.json: %s and %s are both location %d"
+                                     % (self.by_loc[loc_id].key, s.key, loc_id))
+                self.by_loc[loc_id] = s
 
 
 _TABLE = None
@@ -160,7 +195,111 @@ def site_for(loc_id, boss_type):
     983, copies of 109 and 110 with the same bosses, are no sites, and a
     kill there is an ordinary boss's."""
     s = site_at(loc_id)
-    return s if s is not None and s.boss == int(boss_type) else None
+    return s if s is not None and s.loc == int(loc_id) and s.boss == int(boss_type) else None
+
+
+def base_for(loc_id, boss_type=None):
+    """A configured base, optionally only its capture boss on the surface."""
+    s = site_at(loc_id) if boss_type is None else site_for(loc_id, boss_type)
+    return s if s is not None and s.kind == "base" else None
+
+
+def prepare_room(rc):
+    """The base's capture boss has its own health, never a shared type edit."""
+    for target in rc.mobs.values():
+        s = base_for(rc.room.loc.id, target.type_id)
+        if s is None or getattr(target, "_base_prepared", False):
+            continue
+        target.stats = copy.copy(target.stats)
+        target.stats.hp_max = max(1, int(round(target.stats.hp_max * s.health_scale)))
+        target.stats.sp_max = max(0, int(round(target.stats.sp_max * s.health_scale)))
+        target.hp, target.sp = target.stats.hp_max, target.stats.sp_max
+        target._base_prepared = True
+
+
+def rent_site(quest_type):
+    return next((s for s in sites().values()
+                 if s.kind == "base" and s.rent_quest == int(quest_type)), None)
+
+
+def base_keys():
+    return tuple(s.key for s in sites().values() if s.kind == "base")
+
+
+def gold_site(quest_type):
+    return next((s for s in sites().values()
+                 if s.kind == "warehouse" and s.gold_quest == int(quest_type)), None)
+
+
+def gold_refusal(store, s, char_id, day):
+    """The gold-specific part of a warehouse box's existing holders gate."""
+    member = store.clan_member(char_id) if char_id else None
+    if member is None or not int(member["perm"]) & (0x8000 | 0x400):
+        return "Золото клана может забрать глава или участник с правом расходовать афро из казны."
+    if store.holding_gold_claimed(s.key, day):
+        return "Золото с этого склада сегодня уже забрали. Награда общая на весь склад."
+    return None
+
+
+def battle_slot(s, now=None):
+    return events.table().window(s.battle).slot(bosses.clock() if now is None else now)
+
+
+def paid_holder(store, s, now=None):
+    """Only a current paid lease owns a base's benefits and public caption."""
+    held = holder(store, s)
+    now = bosses.clock() if now is None else now
+    if (held is None or held["slot"] is None
+            or not float(held["slot"]) <= now < float(held["paid_until"])
+            or float(held["paid_until"]) > float(held["slot"]) + 7 * 86400):
+        return None
+    return held
+
+
+def paid_base_for(store, loc_id, char_id, now=None):
+    """The character's paid base in this room; native NPC rights stay native."""
+    s = base_for(loc_id)
+    if s is None or not member_of(store, paid_holder(store, s, now), char_id):
+        return None
+    return s
+
+
+def rent_refusal(store, s, char_id, loc_id=None, now=None):
+    """Rechecked at both native quest offer and hand-in, never a purse fee."""
+    now = bosses.clock() if now is None else now
+    slot = events.table().window(s.payment).slot(now)
+    if slot is None or (loc_id is not None and int(loc_id) != s.loc):
+        return "Аренду можно оплатить у флага базы в субботу до 21:15 по Москве."
+    held = holder(store, s)
+    if held is None or held["slot"] != slot:
+        return "Сначала ваш клан должен захватить базу в этой недельной битве."
+    m = store.clan_member(char_id) if char_id else None
+    if m is None or int(m["clan_id"]) != int(held["clan_id"]):
+        return "Базу может арендовать только захвативший её клан."
+    if not int(m["perm"]) & (0x8000 | 0x400):
+        return "Нужно право расходовать афро из казны клана."
+    if store.base_reserved(held["clan_id"], base_keys(), now, except_site=s.key):
+        return "Клан может владеть только одной клановой базой. Склады не учитываются."
+    if float(held["paid_until"]) != 0:
+        return "Аренда за эту неделю уже оплачена."
+    balance = store.clan_treasury(int(held["clan_id"]))
+    if balance is None or balance < s.rent:
+        return "В казне клана недостаточно афро для аренды базы."
+    return None
+
+
+def pay_rent(store, s, char_id, now=None):
+    """Part of quest_write's transaction; no other player's frames before commit."""
+    now = bosses.clock() if now is None else now
+    if rent_refusal(store, s, char_id, s.loc, now) is not None:
+        return None
+    held = holder(store, s)
+    if held is None:
+        return None
+    slot = events.table().window(s.payment).slot(now)
+    return store.holding_rent(s.key, held["clan_id"], char_id, slot,
+                              slot + 7 * 86400, s.rent, s.rent_quest, now,
+                              base_sites=base_keys())
 
 
 # --- the table holds together ----------------------------------------------------------
@@ -185,6 +324,32 @@ def problems():
             out.append("%s: no location %d (%s)" % (key, s.loc, exc))
             continue
         files = {ty for _c, ty in loc.spawns}
+        files.update(int(r["type"]) for r in world.placements().get(s.loc, ()))
+        if s.kind == "base":
+            for what, ty in (("boss", s.boss), ("flag", s.flag)):
+                if ty not in files:
+                    out.append("%s: no %s %d in its surface" % (key, what, ty))
+            if world.creature_role(s.boss) != "boss":
+                out.append("%s: its capture creature is not a boss" % key)
+            if s.loc not in s.rooms or s.rent <= 0 or not s.traders:
+                out.append("%s: a base needs its surface, traders and a positive rent" % key)
+            for loc_id in s.rooms:
+                try:
+                    world.location(loc_id)
+                except (KeyError, OSError, ValueError):
+                    out.append("%s: no base room %d" % (key, loc_id))
+            q = quests.get(s.rent_quest)
+            if (q is None or not q.service or not q.repeatable or q.level != s.min_level
+                    or q.give != [s.flag] or q.take != [s.flag] or q.has_fee
+                    or q.rew_obj or q.rew_also or q.rew_afro or q.rew_gold
+                    or q.rew_xp or q.rew_spec_xp or q.holders):
+                out.append("%s: rent quest is not its native treasury service" % key)
+            gate = events.table().gates.get(s.rent_quest)
+            if gate is None or gate[0].name != s.payment or gate[1] != "both":
+                out.append("%s: rent quest needs its payment window, gate both" % key)
+            if s.battle not in events.table().windows or s.payment not in events.table().windows:
+                out.append("%s: no battle/payment window" % key)
+            continue
         if s.boss not in bosses.WAREHOUSE_MASTERS:
             out.append("%s: its boss %d is no warehouse master (bosses.WAREHOUSE_MASTERS)"
                        " and keeps the bosses' hours" % (key, s.boss))
@@ -207,6 +372,16 @@ def problems():
         if gate is None or gate[1] != "both":
             out.append("%s: quest %d is in no window of data/schedule.json with gate both"
                        % (key, s.quest))
+        if s.gold_quest:
+            q = quests.get(s.gold_quest)
+            gold_gate = events.table().gates.get(s.gold_quest)
+            if (q is None or not q.service or not q.repeatable or q.holders != key
+                    or q.level != s.min_level or q.give != [s.box] or q.take != [s.box]
+                    or not q.rew_also or q.rew_obj or q.rew_random or q.has_fee
+                    or q.rew_afro or q.rew_gold or q.rew_xp or q.rew_spec_xp):
+                out.append("%s: invalid clan gold service quest" % key)
+            if gold_gate != gate:
+                out.append("%s: gold service must keep its personal box's window" % key)
     for q in quests.QUESTS.values():
         if q.holders and q.holders not in t.sites:
             out.append("quest %d: holders names no site %r" % (q.type, q.holders))
@@ -253,8 +428,8 @@ def flag_for(store, loc_id, type_id, char_id):
     s = site_at(loc_id)
     if s is None or int(type_id) != s.flag:
         return None
-    held = holder(store, s)
-    return held, member_of(store, held, char_id)
+    held = paid_holder(store, s) if s.kind == "base" else holder(store, s)
+    return held, s.kind != "base" and member_of(store, held, char_id)
 
 
 def may_repair(store, loc_id, trader_type, char_id):
@@ -315,6 +490,9 @@ def snapshot(rc, mob, killer):
     s = site_for(rc.room.loc.id, mob.type_id)
     if s is None:
         return None
+    now = bosses.clock()
+    if s.kind == "base" and (mob.slot is None or battle_slot(s, now) != mob.slot):
+        return None
     here = {}
     for sess in list(rc.room.players):
         if getattr(sess, "char_id", None):
@@ -335,12 +513,12 @@ def snapshot(rc, mob, killer):
         killer_char = int(killer.sess.char_id)
         km = store.clan_member(killer_char)
         killer_clan = int(km["clan_id"]) if km is not None else None
-    return {"site": s.key, "slot": mob.slot,
+    return {"site": s.key, "slot": mob.slot, "at": now,
             "pool": float(max(1, int(mob.hp_max) + int(mob.sp_max))),
             "fighters": fighters, "killer": killer_char, "killer_clan": killer_clan}
 
 
-def winner(snap, squad, min_level):
+def winner(snap, squad, min_level, excluded=()):
     """(clan, its name, the harm counted, the member credited) of the clan
     that takes the site by this kill, or None (the module's docstring): of
     the clans with `squad` members in the room, alive, at min_level or
@@ -351,7 +529,7 @@ def winner(snap, squad, min_level):
     totals, squads, names, best_of = {}, {}, {}, {}
     for f in snap["fighters"]:
         clan = f["clan"]
-        if clan is None or not f["here"]:
+        if clan is None or clan in excluded or not f["here"]:
             continue
         totals[clan] = totals.get(clan, 0.0) + f["harm"]
         names[clan] = f["clan_name"]
@@ -372,7 +550,7 @@ def winner(snap, squad, min_level):
 
 
 def _where(s):
-    return "warehouse %s (%d)" % (s.key, s.loc)
+    return "%s %s (%d)" % (s.kind, s.key, s.loc)
 
 
 def _whose(held):
@@ -391,6 +569,35 @@ def settle(rc, mob):
         return None
     s = site(snap["site"])
     store = rc.store
+    if s.kind == "base":
+        excluded = {f["clan"] for f in snap["fighters"] if f["clan"] is not None
+                    and store.base_reserved(f["clan"], base_keys(), snap["at"], s.key)}
+        won = winner(snap, 1, s.min_level, excluded)
+        # A base's capture and the boss's weekly death survive together,
+        # before the corpse timer. Warehouses keep their established path.
+        with storage.atomic(store.db):
+            status = "none"
+            if won is not None:
+                clan, _name, _harm, credited = won
+                _prev, status = store.holding_capture(s.key, clan, snap["slot"],
+                                                      credited, snap["at"],
+                                                      base_sites=base_keys())
+                if status == "occupied":
+                    excluded.add(clan)
+            else:
+                held = holder(store, s)
+                prev = int(held["clan_id"]) if held else None
+                store.holding_logged(s.key, "none", prev, slot=snap["slot"], when=snap["at"])
+            store.boss_killed(rc.boss_spot(mob), snap["slot"])
+        for sess in list(rc.room.players):
+            member = store.clan_member(sess.char_id) if sess.char_id else None
+            if member is not None and int(member["clan_id"]) in excluded:
+                sess.answer("Клан уже владеет другой базой или ещё может оплатить её аренду."
+                            " Одновременно можно владеть одной клановой базой; склады не учитываются.")
+        if status == "ok":
+            refresh(rc.room, s)
+            return "capture"
+        return status
     held = holder(store, s)
     prev = int(held["clan_id"]) if held else None
     won = winner(snap, table().squad, s.min_level)
@@ -439,7 +646,10 @@ def refresh(room, s):
     id and the client asks its rows again, the new holders finding the
     offer and the old ones losing it."""
     _resend_flag(room, s)
-    events.touch(s.box)
+    if s.box:
+        events.touch(s.box)
+    if s.rent_quest:
+        events.touch(s.flag)
 
 
 def _resend_flag(room, s):
@@ -457,11 +667,14 @@ def changed(sessions, s):
     seen = []
     for sess in list(sessions):
         room = getattr(sess, "room", None)
-        if room is not None and room.loc.id == s.loc and all(room is not r for r in seen):
+        if room is not None and room.loc.id in s.rooms and all(room is not r for r in seen):
             seen.append(room)
     for room in seen:
         _resend_flag(room, s)
-    events.touch(s.box)
+    if s.box:
+        events.touch(s.box)
+    if s.rent_quest:
+        events.touch(s.flag)
 
 
 # --- from outside the kill -------------------------------------------------------------------

@@ -10,6 +10,7 @@ import test_release_battle as fixtures
 import eden
 import eden_map
 import inventory
+import location_entry
 import rooms
 import server
 import travel
@@ -82,12 +83,14 @@ class EdenMapTests(unittest.IsolatedAsyncioTestCase):
     async def test_every_scene_opens_global_map_and_can_return_without_moving(self):
         for loc_id in eden.LOCATIONS:
             self.place(loc_id)
-            self.open_map()
             cell = eden_map.cell_of(loc_id)
-            self.assertEqual((self.s.gx, self.s.gy), cell)
+            point = location_entry.map_position(self.s.loc, self.s.pos, *cell)
+            self.open_map()
+            self.assertEqual((self.s.gx, self.s.gy), point)
+            self.assertEqual((math.floor(self.s.gx), math.floor(self.s.gy)), cell)
             self.s.writer.frames.clear()
             self.s.step_on_map(0, 0)
-            self.assertEqual((self.s.gx, self.s.gy), cell)
+            self.assertEqual((self.s.gx, self.s.gy), point)
             self.assertIsNone(self.s.leg)
             self.assertIsNone(self.s.arrival)
             self.s.writer.frames.clear()
@@ -102,6 +105,27 @@ class EdenMapTests(unittest.IsolatedAsyncioTestCase):
         self.assertIsNone(self.s.room)
         self.assertTrue(self.s.on_map)
         self.assertFalse(eden.allowed(self.s, server.quests.get(eden.GIFT)))
+
+    async def test_local_corner_projection_stays_in_its_eden_square_on_wire_and_return(self):
+        for fx, fy in ((0, 0), (.5, .5), (1, 0), (0, 1), (1, 1)):
+            self.place(eden.CENTER)
+            loc = self.s.loc
+            free = set(range(loc.width * loc.height)) - loc.obstacles
+            self.s.pos = min(free, key=lambda c: (
+                (c % loc.width / (loc.width - 1) - fx) ** 2
+                + (c // loc.width / (loc.height - 1) - fy) ** 2, c))
+            self.open_map()
+            packet = next(p for cmd, p in self.s.writer.frames if cmd == 'gmap')
+            self.assertEqual((packet['x'], packet['y']), (self.s.gx, self.s.gy))
+            self.assertEqual((math.floor(packet['x']), math.floor(packet['y'])),
+                             eden_map.CENTER_CELL)
+            self.assertTrue(eden_map.inside_map(self.s.gx, self.s.gy))
+            self.s.writer.frames.clear()
+            self.s.cmd_chWorld({})
+            self.assertEqual(self.answers(), [0])
+            self.assertFalse(self.s.on_map)
+            self.assertEqual(self.s.loc.id, eden.CENTER)
+            self.assertIsNotNone(self.s.eden_sentence)
 
     async def test_local_exit_request_from_non_exit_cell_is_refused(self):
         self.place(eden.CENTER)

@@ -68,6 +68,67 @@ class GoldCommerceClient(unittest.TestCase):
         self.methods['checkComission'].invoke(ui, [])
         self.assertEqual(ui['info_txt']['htmlText'], '\rКомиссия: 19338 А')
 
+    def test_paid_base_selects_static_base_price_without_corrupting_cached_ordinary_price(self):
+        item = self.item(g_sale_unit=700, g_base_sale_unit=850, size=2)
+        unit = self.env['_global']['__gcSaleUnit']
+        for smod, expected in ((0.7, 700), (0.85, 850), (0.7, 700)):
+            self.pan['trader'] = dict(smod=smod)
+            self.assertEqual(unit.invoke(None, [item]), expected)
+        self.pan['trader'] = dict(smod=0.85)
+        self.assertEqual(unit.invoke(None, [self.item(g_sale_unit=700, g_base_sale_unit=850, a_sale_cap=600)]), 600)
+        self.assertEqual(unit.invoke(None, [self.item(g_sale_unit=0, g_base_sale_unit=0,
+                                                       a_sale_unit=140, a_base_sale_unit=170)]), 170)
+
+    def test_base_card_and_exchange_use_same_wear_quantity_and_capped_price(self):
+        self.pan['trader'] = dict(smod=0.85)
+        item = self.item(g_sale_unit=700, g_base_sale_unit=850, size=3)
+        values = []
+        card = dict(showItemSellMod=True, showHeapCount=True, attachIconEnabled=True,
+                    __gcShowCostOrig=lambda *a: None,
+                    price_mc=dict(gotoAndStop=lambda frame: None,
+                                  fontContainer=dict(showValue=values.append)))
+        self.methods['showCost'].invoke(card, [item, 'left'])
+        self.assertEqual(values, [1275])
+        exchange = {}
+        ui = dict(__gcExchangeOrig=lambda *a: exchange)
+        self.methods['createExchangePan'].invoke(ui, [item, '', 0, False, True])
+        self.assertEqual((exchange['cost_num'], exchange['cost_mod'], exchange['showCostInGold']),
+                         (850, 0.5, False))
+
+    def test_initialized_base_fields_are_static_and_do_not_replace_normal_units(self):
+        item = dict(__gcInitializeOrig=lambda obj: None)
+        self.methods['initialize'].invoke(item, [dict(a_sale_unit=70, g_sale_unit=0,
+                                                       a_base_sale_unit=85, g_base_sale_unit=0)])
+        self.assertEqual((item['a_sale_unit'], item['a_base_sale_unit']), (70, 85))
+
+    def test_base_gold_valuable_card_exchange_and_sale_use_gold_quote(self):
+        self.pan['trader'] = dict(smod=0.85, base_gold_buyer=True)
+        item = self.item(g_sale_unit=0, base_loot_gold=5, size=3)
+        item['rootID'] = 4
+        values, frames = [], []
+        card = dict(showItemSellMod=True, showHeapCount=True, attachIconEnabled=True,
+                    __gcShowCostOrig=lambda *a: None,
+                    price_mc=dict(gotoAndStop=frames.append, fontContainer=dict(showValue=values.append)))
+        self.methods['showCost'].invoke(card, [item, 'left'])
+        self.assertEqual((values, frames, card['costType']), ([0.15], [2], 'Золото'))
+        exchange = {}
+        ui = dict(__gcExchangeOrig=lambda *a: exchange)
+        self.methods['createExchangePan'].invoke(ui, [item, '', 0, False, True])
+        self.assertEqual((exchange['cost_num'], exchange['cost_mod'], exchange['showCostInGold']), (5, 1, True))
+        trade = self.trade()
+        self.methods['sell'].invoke(trade, [item, 3])
+        self.assertEqual(self.sent[0]['sale_stage'], '@quote@')
+        self.assertEqual(self.sent[0]['param'], 3)
+        self.pan['trader']['base_gold_buyer'] = False
+        self.assertFalse(self.env['_global']['__gcBaseLoot'].invoke(None, [item]))
+
+    def test_trader_info_clears_gold_valuable_right_when_server_revokes_lease(self):
+        trader = dict(__esTraderInfoOrig=lambda obj: None)
+        self.methods['userInfo'].invoke(trader, [dict(param=dict(base_gold_buyer=1))])
+        self.assertTrue(trader['base_gold_buyer'])
+        self.methods['userInfo'].invoke(trader, [dict(param={})])
+        self.assertFalse(trader['base_gold_buyer'])
+
     def test_blueprint_without_durability_can_sell_and_tooltip_says_yes(self):
         for gold in (False,True):
             item=self.item(bp_sell=1,g_sale_unit=180000 if gold else 0,__break=0,cost=0 if gold else 4000)

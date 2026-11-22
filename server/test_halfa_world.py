@@ -300,6 +300,7 @@ class _Killer(object):
 
 class _Shooter(object):
     is_player = False
+    stats = SimpleNamespace(level=1, weapon_class='pistols')
 
     def __init__(self, cell):
         self.cell, self.eid = cell, 999999

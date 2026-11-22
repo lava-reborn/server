@@ -6,17 +6,15 @@ import test_combat_xp_cap as cap_tests
 
 
 class CombatXpRamp(unittest.TestCase):
-    def test_linear_steps_retain_equal_reward_and_old_ceiling(self):
+    def test_gap_rewards_increase_and_stop_at_four(self):
         for skill in range(17):
-            same = p.mob_price(skill) * .5
-            ceiling = p.mob_price(skill + 1)
+            base = p.mob_price(skill + 1)
             values = [p.combat_mob_xp(skill + gap, skill) for gap in range(5)]
-            self.assertEqual(values[0], same)
-            self.assertEqual(values[4], ceiling)
-            for gap in range(1, 5):
-                with self.subTest(skill=skill, gap=gap):
-                    self.assertAlmostEqual(values[gap] - values[gap - 1], (ceiling - same) / 4)
-            self.assertEqual(p.combat_mob_xp(skill + 50, skill), ceiling)
+            self.assertEqual(values[0], p.mob_price(skill) * .5)
+            for gap, factor in enumerate((.8, 1, 1.1, 1.2), 1):
+                self.assertAlmostEqual(values[gap], base * factor)
+                self.assertGreater(values[gap], values[gap - 1])
+            self.assertEqual(p.combat_mob_xp(skill + 50, skill), base * 1.2)
 
     def test_mob_multipliers_and_shares_apply_once(self):
         for skill in (0, 5, 12, 16):
@@ -48,8 +46,10 @@ class CombatXpRamp(unittest.TestCase):
                 reward = p.combat_mob_xp(12 + gap, 12)
                 for kill in range(1, 4):
                     mob = fixture.mob(12 + gap)
+                    before = (ch.skill[skill][1], ch.spec[spec][:], dict(ch.xp_carry))
                     for _ in range(13):
                         f.award_xp(skill, spec, 7, mob)
+                        self.assertEqual((ch.skill[skill][1], ch.spec[spec], ch.xp_carry), before)
                     fixture.settle(mob, f)
                     fixture.settle(mob, f)
                     whole.credit_xp(skill, expected_spec, 1, fixture.mob(12 + gap))
@@ -64,9 +64,13 @@ class CombatXpRamp(unittest.TestCase):
         mob = fixture.mob(14)
         first.award_xp(p.SHOOTING, spec_a, 50, mob)
         second.award_xp(p.SHOOTING, spec_b, 50, mob)
+        self.assertEqual((a.skill[p.SHOOTING][1], b.skill[p.SHOOTING][1]), (0, 0))
         fixture.settle(mob, first, second)
         awarded = sum(ch.skill[p.SHOOTING][1] + ch.xp_carry[p.SHOOTING] for ch in (a, b))
         self.assertAlmostEqual(awarded, p.combat_mob_xp(14, 12))
+        for character in (a, b):
+            self.assertAlmostEqual(character.skill[p.SHOOTING][1] + character.xp_carry[p.SHOOTING],
+                                   p.combat_mob_xp(14, 12) / 2)
 
 
 if __name__ == "__main__":

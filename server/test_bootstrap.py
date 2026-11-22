@@ -185,6 +185,10 @@ try:
     # and the reworked pieces' and the clothing cheques' words (setcraft.py)
     import setcraft                                    # noqa: E402
     ids |= set(setcraft.strings())
+    # Priced equipment also preloads the +3 allowance and wear-level note,
+    # including articles without an original/wiki description.
+    ids |= {items.DESC_ID_OFFSET + t for t in items.catalogue()
+            if items.equipment_level_text(t)}
     have = {int(i) for i in re.findall(rb"id='(\d+)'", everything)}
     check('every name the server sends is preloaded', ids - have, set())
     check('creature, item, description, quest, transport and set ids do not collide',

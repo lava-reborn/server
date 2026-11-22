@@ -1,0 +1,386 @@
+"""Release boundaries: timed items, fractional XP, loot and purchase prices."""
+import copy
+from types import SimpleNamespace as NS
+import unittest
+from unittest.mock import patch
+
+import battle_medicine
+import combat
+import effects
+import inventory
+import items
+import mobs
+import progression
+import test_combat_xp_cap as xp_fixture
+import test_training_ground as fixtures
+
+
+class TimedItems(unittest.IsolatedAsyncioTestCase):
+    asyncSetUp = fixtures.TrainingGround.asyncSetUp
+    asyncTearDown = fixtures.TrainingGround.asyncTearDown
+
+    def manager(self):
+        self.s.on_map = False
+        self.s.room.players[self.s] = True
+        self.s.room.combat = combat.RoomCombat(self.s.room, self.store)
+        self.s.effects = effects.Effects(self.s)
+        self.s.effects.load()
+        self.addCleanup(self.s.effects.close)
+        return self.s.effects
+
+    async def test_use_relog_expiry_and_quest_snapshot(self):
+        manager = self.manager()
+        row = self.s.inv.create(3206)
+        f = self.s.combat
+        f.ap = f.ap_max
+        effects.activate(f, row['uniq'], f, 0)
+        self.assertIsNone(self.store.item(row['uniq']))
+        self.assertAlmostEqual(effects.multiplier(self.s, 'mob_exp'), .2)
+        self.assertEqual(len(self.store.effects_for(self.s.char_id)), 1)
+        # Quest rollback copies only character values, never the socket or DB.
+        self.assertEqual(copy.deepcopy(self.s.char).__dict__, self.s.char.__dict__)
+        deadline = manager.active['experience_down'].deadline
+        manager.close()
+        manager.load()
+        self.assertEqual(manager.active['experience_down'].deadline, deadline)
+        with patch.object(manager, 'clock', return_value=deadline + 1):
+            manager.refresh()
+            self.assertEqual(effects.multiplier(self.s, 'mob_exp'), 1)
+            self.assertFalse(manager.active)
+            self.assertIsNone(manager.timer)
+
+    async def test_weaker_dose_and_foreign_target_are_not_consumed(self):
+        manager = self.manager()
+        manager.add(3206)
+        row = self.s.inv.create(3205)
+        effects.activate(self.s.combat, row['uniq'], self.s.combat, 0)
+        self.assertIsNotNone(self.store.item(row['uniq']))
+        self.assertAlmostEqual(effects.multiplier(self.s, 'mob_exp'), .2)
+        self.assertIsNotNone(effects.use_error(self.s.combat, object(), 3201))
+        self.assertIsNotNone(effects.use_error(self.s.combat, self.s.combat, 3203))
+        self.s.char.set_rep(3200)
+        self.assertIsNone(effects.use_error(self.s.combat, self.s.combat, 3203))
+
+    async def test_bonuses_do_not_stack_and_downward_effect_keeps_fraction(self):
+        manager = self.manager()
+        manager.add(3206)
+        manager.add(3206)
+        manager.add(3207)
+        self.assertAlmostEqual(effects.multiplier(self.s, 'mob_exp'), .01)
+        f, character, spec = xp_fixture.CombatXpCap().fighter(level=12)
+        f.sess.effects = manager
+        fixture = xp_fixture.CombatXpCap()
+        target = fixture.mob(level=14)
+        before = (character.skill[progression.SHOOTING][1], character.spec[spec][:], dict(character.xp_carry))
+        for _ in range(100):
+            f.award_xp(progression.SHOOTING, spec, 2, target)
+            self.assertEqual((character.skill[progression.SHOOTING][1], character.spec[spec], character.xp_carry), before)
+        fixture.settle(target, f)
+        expected = progression.combat_mob_xp(14, 12) * .01
+        self.assertAlmostEqual(character.skill[progression.SHOOTING][1] + character.xp_carry[progression.SHOOTING], expected)
+
+    async def test_fixed_six_second_shared_medicine_cooldown(self):
+        self.assertEqual(self.s.combat.medicine_cooldown_seconds(), 6)
+        self.s.char.attrib[progression.INTELLECT] = 20
+        self.assertEqual(self.s.combat.medicine_cooldown_seconds(), 6)
+        self.assertEqual(battle_medicine.start(self.store, self.s.char_id, 100), 6000)
+        self.assertEqual(battle_medicine.remaining_ms(self.store, self.s.char_id, 105), 1000)
+        self.assertEqual(battle_medicine.remaining_ms(self.store, self.s.char_id, 106), 0)
+
+    async def test_effect_and_dose_roll_back_together_on_storage_failure(self):
+        manager = self.manager()
+        row = self.s.inv.create(3206)
+        fighter = self.s.combat
+        fighter.ap = fighter.ap_max
+        before_ap = fighter.ap
+        with patch.object(self.store, 'delete_item', side_effect=RuntimeError('storage unavailable')):
+            with self.assertRaises(RuntimeError):
+                effects.activate(fighter, row['uniq'], fighter, 1)
+        self.assertEqual(self.store.item(row['uniq'])['use_count'], row['use_count'])
+        self.assertFalse(self.store.effects_for(self.s.char_id))
+        self.assertFalse(manager.active)
+        self.assertEqual(fighter.ap, before_ap)
+
+    async def test_expired_dead_or_moved_dose_callbacks_do_not_grant_effects(self):
+        manager = self.manager()
+        fighter = self.s.combat
+        row = self.s.inv.create(3206)
+        fighter.ap = fighter.ap_max
+        with patch.object(fighter, 'present', return_value=False):
+            effects.activate(fighter, row['uniq'], fighter, 1)
+        self.assertFalse(manager.active)
+        self.assertIsNotNone(self.store.item(row['uniq']))
+        self.store.update_item(row['uniq'], slot=inventory.BANK)
+        effects.activate(fighter, row['uniq'], fighter, 1)
+        self.assertFalse(manager.active)
+        self.assertIsNotNone(self.store.item(row['uniq']))
+        self.store.update_item(row['uniq'], slot=inventory.BAG)
+        effects.activate(fighter, row['uniq'], fighter, 1)
+        deadline = manager.active['experience_down'].deadline
+        ap = fighter.ap
+        effects.activate(fighter, row['uniq'], fighter, 1)
+        self.assertEqual(manager.active['experience_down'].deadline, deadline)
+        self.assertEqual(fighter.ap, ap)
+
+    async def test_refresh_replaces_the_timer_and_expired_relogin_is_clean(self):
+        manager = self.manager()
+        manager.add(3206)
+        handles = []
+        for _ in range(100):
+            handles.append(manager.timer)
+            manager.refresh(notify=False)
+        self.assertTrue(all(handle.cancelled() for handle in handles))
+        self.assertFalse(manager.timer.cancelled())
+        self.store.put_effect(self.s.char_id, 'experience_down', 3206, 10, 11)
+        manager.close()
+        manager.load()
+        self.assertFalse(manager.active)
+        self.assertIsNone(manager.timer)
+
+    async def test_experience_boosters_apply_gain_keep_skill_cap_and_downward_effect(self):
+        manager = self.manager()
+        fixture = xp_fixture.CombatXpCap()
+        for type_id, multiplier in ((3112, 1.1), (3113, 1.3), (3114, 1.5), (3561, 1.7)):
+            with self.subTest(type_id=type_id):
+                manager.add(type_id)
+                self.assertEqual(len(manager.active), 1)
+                self.assertAlmostEqual(effects.multiplier(self.s, 'mob_exp'), multiplier)
+                self.assertAlmostEqual(effects.multiplier(self.s, 'pl_exp'), multiplier)
+                for level in (12, progression.COMBAT_SKILL_CAP):
+                    f, character, spec = fixture.fighter(level)
+                    f.sess.effects = manager
+                    target = fixture.mob(level + 2)
+                    f.award_xp(progression.SHOOTING, spec, 25, target)
+                    self.assertEqual(character.skill[progression.SHOOTING][1], 0)
+                    self.assertEqual(fixture.spec_total(character, spec), 0)
+                    # The active-at-hit reward survives expiry before death.
+                    deadline = manager.active['experience_up'].deadline
+                    with patch.object(manager, 'clock', return_value=deadline + 1):
+                        fixture.settle(target, f)
+                        fixture.settle(target, f)
+                    expected = progression.combat_mob_xp(level + 2, level) * multiplier
+                    skill_xp = character.skill[progression.SHOOTING][1]
+                    if level == progression.COMBAT_SKILL_CAP:
+                        self.assertEqual(skill_xp, 0)
+                        self.assertAlmostEqual(fixture.spec_total(character, spec)
+                                               + character.xp_carry.get(('spec', spec), 0), expected)
+                    else:
+                        self.assertEqual(fixture.spec_total(character, spec), int(expected))
+                        self.assertAlmostEqual(skill_xp + character.xp_carry[progression.SHOOTING], expected)
+        # Repeated or stale duplicate positive effects cannot exceed +70%.
+        manager.add(3561)
+        manager.active['stale_duplicate'] = manager.active['experience_up']
+        self.assertEqual(effects.multiplier(self.s, 'mob_exp'), 1.7)
+        self.assertEqual(effects.multiplier(self.s, 'mob_exp', bonus=.3), 2)
+        manager.active.pop('stale_duplicate')
+        manager.add(3206)
+        self.assertAlmostEqual(effects.multiplier(self.s, 'mob_exp'), .34)
+        f, character, spec = fixture.fighter(12)
+        f.sess.effects = manager
+        target = fixture.mob(14)
+        f.award_xp(progression.SHOOTING, spec, 25, target)
+        self.assertEqual(character.skill[progression.SHOOTING][1], 0)
+        fixture.settle(target, f)
+        expected = progression.combat_mob_xp(14, 12) * .34
+        self.assertAlmostEqual(character.skill[progression.SHOOTING][1]
+                               + character.xp_carry[progression.SHOOTING], expected)
+
+    async def test_experience_dose_relog_expiry_and_weaker_rejection(self):
+        manager = self.manager()
+        manager.add(3114)
+        row = self.s.inv.create(3561)
+        effects.activate(self.s.combat, row['uniq'], self.s.combat, 0)
+        self.assertIsNone(self.store.item(row['uniq']))
+        deadline = manager.active['experience_up'].deadline
+        for type_id in (3112, 3113, 3114):
+            weaker = self.s.inv.create(type_id)
+            effects.activate(self.s.combat, weaker['uniq'], self.s.combat, 0)
+            self.assertIsNotNone(self.store.item(weaker['uniq']))
+        self.assertEqual(manager.active['experience_up'].deadline, deadline)
+        repeated = self.s.inv.create(3561)
+        with patch.object(manager, 'clock', return_value=deadline - 1200):
+            effects.activate(self.s.combat, repeated['uniq'], self.s.combat, 0)
+        self.assertIsNone(self.store.item(repeated['uniq']))
+        self.assertEqual(manager.active['experience_up'].deadline, deadline + 600)
+        self.assertEqual(len(manager.active), 1)
+        self.assertEqual(len(self.store.effects_for(self.s.char_id)), 1)
+        deadline += 600
+        manager.close()
+        manager.load()
+        self.assertEqual(manager.active['experience_up'].deadline, deadline)
+        self.assertEqual(effects.multiplier(self.s, 'mob_exp'), 1.7)
+        with patch.object(manager, 'clock', return_value=deadline + 1):
+            manager.refresh()
+            self.assertEqual(effects.multiplier(self.s, 'mob_exp'), 1)
+            self.assertFalse(manager.active)
+
+
+class ReleaseCatalogue(unittest.TestCase):
+    def test_contributor_level_survives_character_selection_and_resets_on_respawn(self):
+        fixture = xp_fixture.CombatXpCap()
+        fighter, character, spec = fixture.fighter(14)
+        target = fixture.mob(14)
+        target.stats.level = 14
+        fighter.award_xp(progression.SHOOTING, spec, 1, target)
+        character.set_skill(progression.SHOOTING, 10)
+        self.assertEqual(combat.RoomCombat.loot_multiplier(None, target, fighter), 1)
+        mob = mobs.Mob(1, 258, 100)
+        mob.loot_level = 14
+        mob.reset()
+        self.assertEqual(mob.loot_level, 0)
+
+    def test_level_loot_bonus_cannot_be_obtained_by_a_low_level_last_hit(self):
+        class Fighter:
+            is_player = True
+            def __init__(self, level):
+                self.level = level
+                self.sess = NS()
+        low, senior = Fighter(10), Fighter(14)
+        mob = NS(stats=NS(level=13, role='mob'), xp_ledger={low: [100]})
+        multiplier = lambda: combat.RoomCombat.loot_multiplier(None, mob, low)
+        self.assertEqual(multiplier(), 1.5)
+        mob.stats.level = 14
+        self.assertEqual(multiplier(), 1.75)
+        with patch.object(effects, 'multiplier', return_value=3):
+            self.assertEqual(multiplier(), 5.25)
+        mob.xp_ledger[senior] = [1]
+        self.assertEqual(multiplier(), 1)
+        mob.stats.role = 'object'
+        with patch.object(effects, 'multiplier', return_value=3):
+            self.assertEqual(multiplier(), 1)
+
+    def test_live_sets_match_pinned_simulator_health_stamina_and_armour(self):
+        import battle_balance
+        import sets
+        frozen = battle_balance.data()
+        for key, fields in frozen['equipment'].items():
+            t = int(key)
+            if items.root_of(t) != items.WEAR or not sets.set_of(t):
+                continue
+            params = items.params_of(t)
+            for name in ('armor_class', 'bonus_hp', 'bonus_st'):
+                if name in fields:
+                    self.assertEqual(params[name], fields[name], (t, name))
+        for key, bonuses in frozen['sets'].items():
+            set_id = int(key)
+            if set_id not in sets.SETS:
+                continue
+            frame = sets.frame(set_id)
+            for count, row in bonuses.items():
+                for name in ('hp', 'st'):
+                    self.assertEqual(frame.get('bonus_%s_%s' % (count, name), 0), row[name], (set_id, count, name))
+
+    def test_boss_plus_four_uses_mob_plus_two_gap_factor(self):
+        import battle_balance
+        for level in range(1, 17):
+            shooter = NS(is_player=True, character=lambda: NS(level=level))
+            mob = NS(is_player=False, stats=NS(level=level + 2, role='mob'), armor=lambda: 0)
+            boss = NS(is_player=False, stats=NS(level=level + 4, role='boss'), armor=lambda: 0)
+            for critical in (False, True):
+                self.assertEqual(battle_balance.split(shooter, boss, 100, 1, critical, 500, ordinary=True),
+                                 battle_balance.split(shooter, mob, 100, 1, critical, 500, ordinary=True))
+
+    def test_plus_two_adjustment_leaves_other_mobs_and_private_profile_unchanged(self):
+        import battle_balance
+        for level in range(1, 21):
+            shooter = NS(is_player=True, character=lambda: NS(level=level))
+            for gap in (-1, 0, 1, 2, 3, 4, 8):
+                target = NS(is_player=False, stats=NS(level=level + gap, role='mob'), armor=lambda: 0)
+                before = battle_balance.split(shooter, target, 10000, 1, False, 0)
+                after = battle_balance.split(shooter, target, 10000, 1, False, 0, ordinary=True)
+                if gap == 2:
+                    self.assertGreaterEqual(after[0], before[0])
+                else:
+                    self.assertEqual(after, before, (level, gap))
+
+    def test_boss_gap_equivalence_preserves_armour_and_ranged_melee_critical_rules(self):
+        import battle_balance
+        for level in range(1, 17):
+            shooter = NS(is_player=True, character=lambda: NS(level=level))
+            for armour in (0, 100, 1000):
+                mob = NS(is_player=False, stats=NS(level=level + 2, role='mob'), armor=lambda: armour)
+                boss = NS(is_player=False, stats=NS(level=level + 4, role='boss'), armor=lambda: armour)
+                for critical in (False, True):
+                    for melee in (False, True):
+                        args = dict(ordinary=True, melee=melee)
+                        self.assertEqual(battle_balance.split(shooter, boss, 1000, 1.5, critical, 500, 70, **args),
+                                         battle_balance.split(shooter, mob, 1000, 1.5, critical, 500, 70, **args))
+                self.assertEqual(boss.stats.level, level + 4)
+                self.assertEqual(boss.armor(), armour)
+
+    def test_stamina_damage_waits_for_death_and_solo_kill_settles_only_once(self):
+        fixture = xp_fixture.CombatXpCap()
+        f, ch, spec = fixture.fighter(12)
+        mob = fixture.mob(14)
+        f.award_xp(progression.SHOOTING, spec, 25, mob)
+        reward = progression.combat_mob_xp(14, 12)
+        self.assertEqual(ch.skill[progression.SHOOTING][1], 0)
+        self.assertEqual(fixture.spec_total(ch, spec), 0)
+        self.assertEqual(ch.xp_carry.get(progression.SHOOTING, 0), 0)
+        fixture.settle(mob, f)
+        fixture.settle(mob, f)
+        self.assertAlmostEqual(ch.skill[progression.SHOOTING][1] + ch.xp_carry[progression.SHOOTING], reward)
+
+    def test_only_documented_ordinary_utility_items(self):
+        self.assertEqual(effects.definition(3789)['duration'], 1800)
+        self.assertEqual(effects.definition(3826)['duration'], 7200)
+        self.assertEqual(items.params_of(3826)['g_cost'], 100)
+        for t in (3093, 3823, 31594, 26275, 26607, 6490):
+            self.assertIsNone(effects.definition(t))
+
+    def test_experience_boosters_follow_city_ladder_and_original_prices(self):
+        import shop_bands
+        boosters = {3112, 3113, 3114, 3561}
+        for top, expected in ((4, set()), (8, {3112}), (12, {3113}), (16, {3114}), (20, {3561})):
+            self.assertEqual(boosters.intersection(shop_bands.stimulants(top)), expected)
+            self.assertFalse(boosters.intersection(shop_bands.stimulants(top, 'afro')))
+            self.assertEqual(boosters.intersection(shop_bands.stimulants(top, 'gold')), expected)
+        for type_id, percent, price in ((3112, 10, 28), (3113, 30, 105), (3114, 50, 210), (3561, 70, 630)):
+            self.assertFalse(items.stimulant_unavailable(type_id))
+            self.assertEqual(effects.definition(type_id)['modifiers']['mob_exp'], 1 + percent / 100)
+            self.assertEqual(effects.definition(type_id)['duration'], 1800)
+            self.assertEqual(items.params_of(type_id)['g_cost'], price)
+        self.assertNotIn(3561, items.stock_for(2015, 36))
+        self.assertNotIn(3561, items.stock_for(2015))
+        self.assertIn(3561, items.stock_for(1221, 126))
+        from training import effects as private_effects
+        self.assertFalse(boosters.intersection(private_effects.definitions()))
+        from training import catalog as private_catalog
+        self.assertFalse(boosters.intersection(private_catalog.item_catalogue()))
+
+    def test_scanner_changes_probability_not_quantity_or_guaranteed_drop(self):
+        rows = [(333, .1, True), (334, 1, False)]
+        with patch.object(mobs, 'loot_table', return_value=rows), \
+                patch.object(mobs, 'independent_loot', return_value=set()), \
+                patch.object(mobs, 'count_of', return_value=1), \
+                patch.object(mobs, 'one_of_groups', return_value=[]):
+            rng = NS(random=lambda: .2)
+            self.assertEqual(mobs.roll_table(82, rng), [(334, 1)])
+            self.assertEqual(mobs.roll_table(82, rng, 3), [(333, 1), (334, 1)])
+            rng.random = lambda: .31
+            self.assertEqual(mobs.roll_table(82, rng, 3), [(334, 1)])
+
+    def test_gold_rounds_price_is_two_hundredths_and_only_selected_types_added(self):
+        import shop_bands
+        added = shop_bands.gold_ammunition(items.stock_for(1200))
+        self.assertTrue(added)
+        for t in added:
+            self.assertTrue(items.catalogue()[t][1].endswith(('_BB_G', '_EK_G')))
+            self.assertEqual(inventory.buy_price(items.params_of(t), items.AMMO, 100, True), 200)
+
+    def test_gear_boundary_all_existing_armour_and_weapons(self):
+        for t, (root, _) in items.catalogue().items():
+            if root not in items.BREAKABLE_ROOTS or items.out_of_game(t):
+                continue
+            level = inventory.item_level(t)
+            if not 4 <= level <= 20:
+                continue
+            row = dict(type_id=t, root=root)
+            with self.subTest(type=t):
+                self.assertTrue(inventory.wearable(row, level - 3))
+                self.assertFalse(inventory.wearable(row, level - 4))
+
+
+if __name__ == '__main__':
+    from testkit import run_cases
+    run_cases(TimedItems, ReleaseCatalogue)

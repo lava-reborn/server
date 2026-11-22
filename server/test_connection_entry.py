@@ -5,6 +5,7 @@ import socket
 import struct
 import tempfile
 import unittest
+from types import SimpleNamespace as NS
 from unittest.mock import patch
 
 os.environ['LAVA_DB'] = os.path.join(tempfile.mkdtemp(prefix='lava_entry_'), 'entry.sqlite')
@@ -16,6 +17,7 @@ import combat
 import inventory
 import items
 import party
+import progression
 import rooms
 import server
 import world
@@ -74,6 +76,68 @@ class EntryFailures(unittest.IsolatedAsyncioTestCase):
         sess.handle('newPers', dict(res=1, sex=0, name=name))
         sess.writer.frames.clear()
         return sess
+
+    def xp_characters(self, name):
+        sess = self.player(name)
+        sess.char.set_skill(progression.SHOOTING, 12)
+        sess.char.set_spec(2, 0)
+        sess.char.save(self.store)
+        other, slot = self.store.create_character(sess.account['id'], name + 'Other', 0, '1')
+        loc = world.location(93)
+        gx, gy = world.cell_of(93)
+        self.store.save_position(other, 93, loc.entry_cell(), gx, gy, False)
+        sess.loc, sess.gx, sess.gy, sess.pos = loc, gx, gy, loc.entry_cell()
+        sess.characters = [dict(row) for row in self.store.characters(sess.account['id'])]
+        sess.handle('actPlayer', {})
+        sess.handle('lenter', dict(accept=1))
+        mob = NS(level=13, stats=NS(hp_max=100, sp_max=100, role='mob', xp_mult=1), xp_ledger={})
+        sess.combat.award_xp(progression.SHOOTING, 2, 100, mob)
+        return sess, other, slot, mob
+
+    async def test_active_selection_cannot_redirect_unpaid_xp_to_another_character(self):
+        sess, other, slot, mob = self.xp_characters('XpSelection')
+        before = sess.char_id, sess.char, sess.combat, sess.room
+        sess.writer.frames.clear()
+        sess.handle('selPers', dict(num=slot))
+        self.assertEqual((sess.char_id, sess.char, sess.combat, sess.room), before)
+        self.assertEqual(sess.writer.frames, [])
+        self.assertNotIn(other, self.online.by_char)
+        combat.RoomCombat.settle_xp(NS(room=sess.room), mob)
+        self.assertGreater(sess.char.skill[progression.SHOOTING][1], 0)
+        self.assertEqual(progression.Character.load(self.store, other).skill[progression.SHOOTING][1], 0)
+
+    async def test_active_character_creation_cannot_replace_a_live_fighter_identity(self):
+        sess = self.player('ActiveCreation')
+        before = sess.char_id, sess.char, sess.combat
+        count = len(self.store.characters(sess.account['id']))
+        sess.handle('newPers', dict(name='ActiveSecond', res='1', sex=0))
+        self.assertEqual((sess.char_id, sess.char, sess.combat), before)
+        self.assertEqual(len(self.store.characters(sess.account['id'])), count)
+        self.assertEqual(sess.writer.frames, [('cmdAck', dict(res=1))])
+
+    async def test_logout_then_other_character_login_never_reuses_old_xp_ledger_identity(self):
+        for linger in (0, 60):
+            with self.subTest(linger=linger), patch.object(server, 'COMBAT_LINGER', linger):
+                login = 'XpLogout' + str(linger)
+                old, other, slot, mob = self.xp_characters(login)
+                actor, room = old.combat, old.room
+                old.handle('logout', {})
+                self.assertTrue(old.closed)
+                old.handle('selPers', dict(num=slot))
+                self.assertNotEqual(old.char_id, other)
+                fresh = server.Session(Writer(), ('127.0.0.1', len(self.sessions)))
+                self.sessions.append(fresh)
+                fresh.handle('hello', {})
+                fresh.handle('login', dict(hash=accounts.credential(login, 'test-secret')))
+                fresh.handle('selPers', dict(num=slot))
+                fresh.handle('lenter', dict(accept=1))
+                self.assertFalse(fresh.closed)
+                self.assertEqual(fresh.char_id, other)
+                self.assertIsNot(fresh.combat, actor)
+                self.assertIs(fresh.room, room)
+                combat.RoomCombat.settle_xp(NS(room=room), mob)
+                self.assertEqual(fresh.char.skill[progression.SHOOTING][1], 0)
+                self.assertEqual(fresh.char.spec[2][0], -1)
 
     async def test_stale_online_recipient_cannot_abort_a_new_players_activation(self):
         first, stale, newcomer = (self.player(name) for name in ('Alpha', 'Bravo', 'Charlie'))

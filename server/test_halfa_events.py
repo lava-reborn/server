@@ -247,15 +247,12 @@ try:
           (100, 0, EK_G, [10] * 6, 0, 0))
     worth = {t: (items.params_of(t)["g_cost"], items.params_of(t)["sell_num"], items.params_of(t)["cost"])
              for t in EK_G}
-    # Worth the ounce at 2 G for 20; a gold round is a hundredth of an ounce
-    # since the owner's word of 2026-09-28 (items.GOLD_AMMO_ROUND), so the
-    # ten are a tenth of it now -- left for the owner to settle (UNDONE,
-    # «Решения владельца по Хальфе»).
-    check("  ..a tenth of the ounce it costs, at the stalls' own price: 0,20 G for 20, no afro"
-          " price",
-          {t: g * 10 // n for t, (g, n, _c) in worth.items()} == {t: late.cost_gold // 10
-                                                                  for t in EK_G}
-          and all(c == 0 for _g, _n, c in worth.values()), True)
+    # EK/BB gold ammunition now costs 0.02 G per cartridge. The quest's
+    # own price and guaranteed reward quantity remain unchanged.
+    check("gold expansive ammunition costs 0.40 G per 20 rounds, no afro price",
+          ({t: g * 20 // n for t, (g, n, _c) in worth.items()},
+           all(c == 0 for _g, _n, c in worth.values())),
+          ({t: 40 for t in EK_G}, True))
     check("  ..1 G is 50 000 afro at the one rate", progression.GOLD_TO_AFRO_RATE * late.cost_gold // 100,
           50000)
     ways = [RIDE, BACK, GATE_W, GATE_S, EXIT]
@@ -632,14 +629,16 @@ async def _rooms():
               " window's); since 2026-10-13 Донгола's the same: Нур-ад-Дин and its two"
               " guards by its gates' window, its three boxes by wh_box; since 2026-10-14"
               " Абу-Хамед's: Веласкес and its two guards by its gates' window, the box of"
-              " the Центр by its own quarter of an hour, wh_box_ah",
+              " the Центр by its own quarter of an hour, wh_box_ah; the two restored"
+              " clan-base flags keep their separate payment window",
               {t: [w.name for w in ws] for t, ws in SCHEDULE.marked().items()},
               {HASSIR: ["prison_wh_gates"], WEST_GUARD: ["prison_wh_gates"],
                SOUTH_GUARD: ["prison_wh_gates"], 6824: ["wh_box"], 6825: ["wh_box"],
                6826: ["wh_box"], 156: ["prison_dn_gates"], 1792: ["prison_dn_gates"],
                1795: ["prison_dn_gates"], 6827: ["wh_box"], 6828: ["wh_box"],
                6829: ["wh_box"], 740: ["prison_ah_gates"], 1793: ["prison_ah_gates"],
-               1796: ["prison_ah_gates"], 6830: ["wh_box_ah"]})
+               1796: ["prison_ah_gates"], 6830: ["wh_box_ah"],
+               4427: ["clan_base_payment"], 4428: ["clan_base_payment"]})
     finally:
         bosses.clock = real_clock
         store.close()

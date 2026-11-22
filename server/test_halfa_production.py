@@ -782,6 +782,9 @@ def reshape(name, skill):
     st = accounts.Store(DB)
     ch = progression.Character.load(st, st.character_by_name(name)["id"])
     ch.skill[progression.SHOOTING] = [skill, 0, progression.skill_xp_max(skill)]
+    # Keep the admin raid controller alive while checking production quests.
+    ch.attrib[progression.STRENGTH] = 1000
+    ch.attrib[progression.INTELLECT] = 1000
     ch.recalc()
     ch.hp = ch.sp = None
     ch.save(st)
@@ -824,7 +827,7 @@ def heal_if_needed(c):
     assert hp > 0, ('raid controller died', c.scene_pos)
     if hp >= maximum * 0.8:
         return out
-    left = getattr(c, 'fixture_healed_at', 0) + 4.05 - time.monotonic()
+    left = getattr(c, 'fixture_healed_at', 0) + 6.05 - time.monotonic()
     if left > 0:
         out += c.frames(left)
     c.send('ss_use;type=2;obj=x%s;' % c.fixture_medicine)

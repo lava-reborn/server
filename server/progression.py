@@ -134,9 +134,9 @@ SPEC_COST = {0: (0, 0), 1: (1000, 0), 2: (0, 10 * GOLD_OUNCE),
              3: (0, 30 * GOLD_OUNCE), 4: (0, 55 * GOLD_OUNCE)}
 SPEC_COST_MAX = (0, 75 * GOLD_OUNCE)
 
-# Status 1 = registration, 2 = residence permit. No experience bonus.
+# Status 1 = registration (+15% XP), 2 = residence permit (+30% XP).
 # Weight is fixed (+25/+50 kg), not the legacy premium percentage.
-PREMIUM_XP_BONUS = {0: 0.0, 1: 0.0, 2: 0.0}
+PREMIUM_XP_BONUS = {0: 0.0, 1: 0.15, 2: 0.30}
 # Legacy percentage constants sent as zero; residence weight is a fixed sum.
 PREMIUM_WEIGHT_BONUS = {0: 0.0, 1: 0.0, 2: 0.0}
 
@@ -336,7 +336,8 @@ class Character:
 
     def attr(self, i):
         """Attribute with bonuses: what the card's formulas call .level."""
-        return self.attrib[i] + self.bonus_attribs[i]
+        active = getattr(self, 'effects', None)
+        return self.attrib[i] + self.bonus_attribs[i] + (active['attribs'][i] if active else 0)
 
     def skill_level(self, i):
         return self.skill[i][0] + self.bonus_skills[i]
@@ -380,6 +381,11 @@ class Character:
         for a partial rp_info. Only a change is worth pushing: SkillObject
         and SpecObject announce every new value_bonus as "повышен до N".
         """
+        effects = getattr(self, 'effects', None)
+        if effects is not None:
+            b = dict(b)
+            for key in ('hp', 'st', 'od', 'cp', 'ce'):
+                b[key] += effects['sp' if key == 'st' else key]
         self.card_cp, self.card_ce = repeat
         changed = {"attribs": set(), "skills": set(), "specs": set()}
         for kind, have in (("attribs", self.bonus_attribs), ("skills", self.bonus_skills),
@@ -544,18 +550,40 @@ class Character:
 
     def forget_spec(self, idx):
         """Reset a specialisation (wiki "Механизм сброса специализации"):
-        its attribute drops by its level, it goes back to -1 with the first
-        threshold, and nothing is refunded."""
+        remove its capped attribute contribution, go back to -1 with the
+        first threshold, and refund nothing."""
         if not 0 <= idx < SPECS or self.spec[idx][0] < 0:
             return ERR_STATE
         lvl = self.spec[idx][0]
-        a = SPEC_ATTRIB[idx]
-        if a is not None:
-            # Never below the birth value: a raise that the cap of 20 refused
-            # was never added, so it cannot be taken away either.
-            self.attrib[a] = max(START_ATTRIB, self.attrib[a] - lvl)
         self.spec[idx] = [-1, 0, SPEC_XP_START]
+        self._spec_attribute_change(idx, lvl)
         return 0
+
+    def _spec_attribute_change(self, idx, old_level):
+        """Apply the change of the combined, capped specialisation bonus.
+
+        A level refused by the cap must not be subtracted on reset while
+        the remaining specialisations still fill that cap. Use a delta,
+        leaving saved base values, gear and effects outside this calculation.
+        """
+        a = SPEC_ATTRIB[idx]
+        if a is None:
+            return None
+        total = sum(max(0, spec[0]) for i, spec in enumerate(self.spec)
+                    if SPEC_ATTRIB[i] == a)
+        previous = total - max(0, self.spec[idx][0]) + max(0, old_level)
+        limit = ATTRIB_MAX - START_ATTRIB
+        delta = min(limit, total) - min(limit, previous)
+        if not delta:
+            return None
+        before = self.attrib[a]
+        if before > ATTRIB_MAX:
+            return None
+        if delta > 0:
+            self.attrib[a] = min(ATTRIB_MAX, before + delta)
+        else:
+            self.attrib[a] = max(START_ATTRIB, before + delta)
+        return a if self.attrib[a] != before else None
 
     # --- experience ------------------------------------------------------
     def carry_xp(self, skill_idx, xp):
@@ -572,7 +600,7 @@ class Character:
         """Keep fractional combat XP separate for each specialisation."""
         return self.carry_xp(("spec", spec_idx), xp)
 
-    def gain_xp(self, skill_idx, base, spec_idx=None, spec_on_top=False, skill_cap=None):
+    def gain_xp(self, skill_idx, base, spec_idx=None, spec_on_top=False, skill_cap=None, *, premium=True):
         """Award experience for an action. Returns the indexes changed, as
         {"skills": set, "specs": set, "attribs": set}, ready for a push.
 
@@ -588,8 +616,9 @@ class Character:
         healing keeps the wiki's halves. An optional skill_cap limits only
         the skill's award, discarding overflow when it reaches that level;
         the specialisation keeps its award. Other sources pass no cap.
+        Combat passes premium=False after applying it before fractional carry.
         """
-        total = int(base * (1 + PREMIUM_XP_BONUS[self.premium_level()]))
+        total = int(base + base * PREMIUM_XP_BONUS[self.premium_level()]) if premium else int(base)
         changed = {"skills": set(), "specs": set(), "attribs": set()}
         if total <= 0:
             return changed
@@ -661,7 +690,8 @@ class Character:
         if int(xp) >= 0:
             self._spec_up(spec_idx, int(xp), changed)
             return changed
-        sp, xp, a = self.spec[spec_idx], -int(xp), SPEC_ATTRIB[spec_idx]
+        sp, xp = self.spec[spec_idx], -int(xp)
+        old_level = sp[0]
         while xp > 0:
             if xp <= sp[1]:
                 sp[1] -= xp
@@ -672,9 +702,9 @@ class Character:
             xp -= sp[1]
             sp[0] -= 1
             sp[2] = sp[1] = spec_xp_max(sp[0])
-            if a is not None and self.attrib[a] > START_ATTRIB:
-                self.attrib[a] -= 1
-                changed["attribs"].add(a)
+        a = self._spec_attribute_change(spec_idx, old_level)
+        if a is not None:
+            changed["attribs"].add(a)
         changed["specs"].add(spec_idx)
         return changed
 
@@ -691,14 +721,14 @@ class Character:
             s[1] = min(s[1], s[2])
         changed["skills"].add(skill_idx)
 
-    def gain_spec_xp(self, spec_idx, base):
+    def gain_spec_xp(self, spec_idx, base, *, premium=True):
         """Experience into a specialisation alone, none into its skill: a
         quest's rew_spec_xp (the wiki's «опыт спецу», «требуется открытая
         специализация»). The premium share on top, as gain_xp's. A
         specialisation not learned takes nothing. Returns the indexes
         changed, as gain_xp does."""
         changed = {"skills": set(), "specs": set(), "attribs": set()}
-        total = int(base * (1 + PREMIUM_XP_BONUS[self.premium_level()]))
+        total = int(base + base * PREMIUM_XP_BONUS[self.premium_level()]) if premium else int(base)
         if total > 0 and 0 <= spec_idx < SPECS and self.spec[spec_idx][0] >= 0:
             self._spec_up(spec_idx, total, changed)
         return changed
@@ -706,17 +736,17 @@ class Character:
     def _spec_up(self, spec_idx, xp, changed):
         """xp into a learned specialisation, its levels and its attribute."""
         sp = self.spec[spec_idx]
+        old_level = sp[0]
         sp[1] += xp
         while sp[0] < SPEC_MAX and sp[1] >= sp[2]:
             sp[1] -= sp[2]
             sp[0] += 1
             sp[2] = spec_xp_max(sp[0])
-            a = SPEC_ATTRIB[spec_idx]
-            if a is not None and self.attrib[a] < ATTRIB_MAX:
-                self.attrib[a] += 1
-                changed["attribs"].add(a)
         if sp[0] >= SPEC_MAX:
             sp[1] = min(sp[1], sp[2])
+        a = self._spec_attribute_change(spec_idx, old_level)
+        if a is not None:
+            changed["attribs"].add(a)
         changed["specs"].add(spec_idx)
 
     # --- set outright, for a test run (server.py /skill, /spec) ---------------
@@ -737,9 +767,8 @@ class Character:
 
     def set_spec(self, idx, level):
         """A specialisation put at a level, learned for nothing if it was
-        not, with what its levels carry: one point of its attribute per
-        level up (ATTRIB_MAX holds), one back per level down (START_ATTRIB
-        holds, as forget_spec). -1 forgets it. Returns the indexes changed,
+        not, with the change of its capped attribute contribution.
+        -1 forgets it. Returns the indexes changed,
         as gain_xp does."""
         if not 0 <= idx < SPECS:
             raise ValueError("spec index")
@@ -747,21 +776,17 @@ class Character:
         changed = {"skills": set(), "specs": {idx}, "attribs": set()}
         if level < 0:
             if self.spec[idx][0] >= 0:
+                a = SPEC_ATTRIB[idx]
+                before = self.attrib[a] if a is not None else None
                 self.forget_spec(idx)
-                if SPEC_ATTRIB[idx] is not None:
-                    changed["attribs"].add(SPEC_ATTRIB[idx])
+                if a is not None and self.attrib[a] != before:
+                    changed["attribs"].add(a)
             return changed
         old = max(0, self.spec[idx][0])
-        a = SPEC_ATTRIB[idx]
-        if a is not None and level != old:
-            before = self.attrib[a]
-            if level > old:
-                self.attrib[a] = min(ATTRIB_MAX, before + (level - old))
-            else:
-                self.attrib[a] = max(START_ATTRIB, before - (old - level))
-            if self.attrib[a] != before:
-                changed["attribs"].add(a)
         self.spec[idx] = [level, 0, spec_xp_max(level)]
+        a = self._spec_attribute_change(idx, old)
+        if a is not None:
+            changed["attribs"].add(a)
         return changed
 
     def admin_edit(self, kind, args):
@@ -895,6 +920,7 @@ KILLS_START = 5
 KILLS_GROWTH = 1.5
 GAP_SHARE = {0: 0.5, -1: 0.25}
 GREY_GAP = 2
+COMBAT_GAP_REWARD = (.8, 1.0, 1.1, 1.2)
 
 
 def kills_per_level(level):
@@ -929,26 +955,19 @@ def mob_xp(mob_level, player_level, share=1.0, xp_mult=1):
 
 
 def combat_mob_xp(mob_level, skill_level, share=1.0, xp_mult=1):
-    """Combat reward: interpolate from equal-level XP to the old +1 ceiling.
+    """A +2 mob is the reference reward; +1/+3/+4 pay 80/110/120 percent.
 
-    Gaps +1/+2/+3 pay 25/50/75 percent of that difference; +4 and above
-    pay the old ceiling. Equal and lower targets keep their old rewards.
-    At trained skill 17+, only the specialisation receives this reward,
-    using the level-16 reward curve for the same relative mob gap.
-    Its +4 maximum also caps the award after the mob multiplier.
-    Price the whole kill before apportioning across hits and settlement.
-    Fractional XP is carried
-    by Character.carry_xp, not rounded separately for every hit.
-    Mining and other experience sources keep mob_xp's existing rules.
+    Equal/lower targets keep their rewards. Gaps above four pay no extra.
+    Skill 17 stops advancing; specialisations retain the level-16 curve,
+    capped at one +4 reward before hit shares. Mining keeps mob_xp.
     """
     reference_level = min(skill_level, COMBAT_SKILL_CAP)
     reward_level = min(reference_level, COMBAT_SKILL_CAP - 1)
-    spec_limit = mob_price(COMBAT_SKILL_CAP)
+    spec_limit = mob_price(COMBAT_SKILL_CAP) * COMBAT_GAP_REWARD[-1]
     gap = mob_level - reference_level
     if gap > 0:
-        same = mob_xp(reward_level, reward_level)
         ceiling = mob_xp(reward_level + 1, reward_level)
-        base = same + (ceiling - same) * min(gap, 4) / 4
+        base = ceiling * COMBAT_GAP_REWARD[min(gap, 4) - 1]
         whole = base * xp_mult
     else:
         whole = mob_xp(reward_level + gap, reward_level, xp_mult=xp_mult)

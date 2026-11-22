@@ -136,7 +136,8 @@ try:
           " rung's id",
           (names.text(items.STRING_ID_OFFSET + mod3), si3["desc"], names.text(si3["desc"])),
           ("Очки налетчика (G) (мод03)", items.DESC_ID_OFFSET + chain(RAIDER_G)[0],
-           sets.item_descs()[chain(RAIDER_G)[0]]))
+           sets.item_descs()[chain(RAIDER_G)[0]] + "<br>"
+           + items.equipment_level_text(chain(RAIDER_G)[0])))
     mods = [t for c in setcraft.CHAINS.values() for t in c[1:]]
     check("  ..every one of them named in the preload, its description id its rung's and"
           " known there",

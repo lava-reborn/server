@@ -54,6 +54,14 @@ CREATE TABLE IF NOT EXISTS char_training_profiles (
     char_id INTEGER PRIMARY KEY REFERENCES characters(id) ON DELETE CASCADE,
     data TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS char_effects (
+    char_id INTEGER NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
+    family TEXT NOT NULL,
+    source INTEGER NOT NULL,
+    started REAL NOT NULL,
+    deadline REAL NOT NULL,
+    PRIMARY KEY (char_id, family)
+);
 CREATE TABLE IF NOT EXISTS char_eden (
     char_id INTEGER PRIMARY KEY REFERENCES characters(id) ON DELETE CASCADE,
     admin TEXT NOT NULL,
@@ -437,7 +445,8 @@ CREATE TABLE IF NOT EXISTS clan_holdings (
     clan_id  INTEGER NOT NULL,     -- clans.id
     since    REAL    NOT NULL,     -- the epoch second of the capture or the order
     by_char  INTEGER,              -- the winning clan's member credited; NULL for the admin
-    slot     REAL                  -- the boss window it was taken in (bosses.slot)
+    slot     REAL,                 -- the boss window it was taken in (bosses.slot)
+    paid_until REAL NOT NULL DEFAULT 0 -- a base's paid lease, never used by warehouses
 );
 CREATE TABLE IF NOT EXISTS clan_holding_log (
     -- Every outcome at a site (holdings.HOW): a capture, a defence, a kill
@@ -451,6 +460,16 @@ CREATE TABLE IF NOT EXISTS clan_holding_log (
     how      TEXT    NOT NULL,
     by_char  INTEGER,
     slot     REAL
+);
+CREATE TABLE IF NOT EXISTS clan_holding_claims (
+    -- One clan-gold payout per warehouse and reset day, even if ownership
+    -- changes or its clan disbands. Personal box rewards remain separate.
+    site TEXT NOT NULL,
+    day INTEGER NOT NULL,
+    clan_id INTEGER NOT NULL,
+    char_id INTEGER NOT NULL,
+    at REAL NOT NULL,
+    PRIMARY KEY (site, day)
 );
 CREATE INDEX IF NOT EXISTS clan_holding_log_by_site ON clan_holding_log (site, at);
 CREATE TABLE IF NOT EXISTS email_tokens (
@@ -530,6 +549,7 @@ LEDGER_OTHER = "other"
 # The sources a row of a clan's treasury journal names (clan_ledger.source),
 # each row the signed change of clans.afro.
 CLAN_LEDGER_SOURCES = {
+    "base_rent": "weekly clan base lease paid from the treasury (ref: service quest)",
     "deposit": "afro put in from a member's purse",
     "withdraw": "afro taken out into a member's purse",
     "diplomacy": "a change of stance paid for, a sink (ref: the other clan)",
@@ -773,7 +793,8 @@ def migrate(db):
     """
     for table, wanted in (("characters", CHARACTER_COLUMNS),
                           ("trophies", TROPHY_COLUMNS),
-                          ("accounts", ACCOUNT_COLUMNS)):
+                          ("accounts", ACCOUNT_COLUMNS),
+                          ("clan_holdings", [("paid_until", "REAL NOT NULL DEFAULT 0")])):
         have = db.columns(table)
         for col, decl in wanted:
             if col not in have:
@@ -1229,8 +1250,10 @@ def relocate_river_all(db):
 # quest gives, takes, asks for or points into these places
 # (server/test_dongola_cut.py holds that).
 DONGOLA_CUT_FIX = "retire-dongola-cut-2026-10-13"
+# 2026-11-22: the restored base rooms 382/380/958 remain saved there.
+# Keep the migration id: restoring them must not repeat the old relocation.
 DONGOLA_CUT_PLACES = (455, 460, 518, 448, 469, 530,
-                      382, 380, 381, 385, 386, 387, 388, 958, 959, 960, 1196,
+                      381, 385, 386, 387, 388, 959, 960, 1196,
                       534, 535, 536, 537, 593, 594, 991, 992, 993, 1207,
                       337, 338, 339, 342, 346, 350, 354, 358, 362, 366, 955, 956, 957, 1195,
                       1171, 389)
@@ -1256,11 +1279,11 @@ def relocate_dongola_cut(db):
 # (data/terrain_verified.json). No journal step: no quest gives, takes, asks
 # for or points into these places (server/test_abuhamed_cut.py holds that).
 ABUHAMED_CUT_FIX = "retire-abuhamed-cut-2026-10-14"
+# The restored base surface/bunker 118/609 are no longer retirement targets.
 ABUHAMED_CUT_PLACES = (451, 461, 462, 463, 519, 449, 467, 527,
                        194, 254, 521, 656, 942, 1193,
                        149, 333, 533, 343, 347, 351, 355, 359, 363, 367, 948, 949, 950, 1192,
-                       309, 310, 318, 926, 930, 947, 1186,
-                       118, 609)
+                       309, 310, 318, 926, 930, 947, 1186)
 ABUHAMED_CUT_TO = (126, 6182, 1976)
 
 
@@ -2309,8 +2332,22 @@ class Store:
             % ", ".join("?" * len(spots)), spots).fetchall()
         return {r["spot"]: float(r["slot"]) for r in rows}
 
+    def boss_claim(self, spot, slot):
+        """Claim an NPC's daily completion with its native quest transaction.
+
+        The same persistent boss slot records the laboratory's disappearance.
+        A CAS, not a prior read, decides the winner across server processes;
+        rolling the quest back also releases this claim.
+        """
+        hit = self.db.execute(
+            "INSERT INTO boss_kills (spot, slot) VALUES (?, ?)"
+            " ON CONFLICT (spot) DO UPDATE SET slot = EXCLUDED.slot"
+            " WHERE boss_kills.slot < EXCLUDED.slot", (str(spot), float(slot))).rowcount
+        self.db.commit()
+        return hit == 1
+
     # --- sites clans hold (server/holdings.py; clan_holdings, clan_holding_log) ---------
-    _HOLDING = ("SELECT h.site, h.clan_id, k.name, h.since, h.by_char, h.slot"
+    _HOLDING = ("SELECT h.site, h.clan_id, k.name, h.since, h.by_char, h.slot, h.paid_until"
                 " FROM clan_holdings h JOIN clans k ON k.id = h.clan_id")
 
     def holding(self, site):
@@ -2346,12 +2383,139 @@ class Store:
                 "INSERT INTO clan_holdings (site, clan_id, since, by_char, slot)"
                 " SELECT ?, ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM clans WHERE id = ?)"
                 " ON CONFLICT (site) DO UPDATE SET clan_id = EXCLUDED.clan_id,"
-                " since = EXCLUDED.since, by_char = EXCLUDED.by_char, slot = EXCLUDED.slot",
+                " since = EXCLUDED.since, by_char = EXCLUDED.by_char, slot = EXCLUDED.slot,"
+                " paid_until = 0",
                 (str(site), int(clan_id), when, by_char, slot, int(clan_id))).rowcount
             if hit != 1:
                 return prev, "gone"
             self._holding_log(site, how, int(clan_id), prev, by_char, slot, when)
         return prev, "ok"
+
+    def holding_capture(self, site, clan_id, slot, by_char=None, when=None, base_sites=()):
+        """A base's new weekly capture, once per slot, even for its old clan.
+
+        Lock the clan before its holding, as clan_drop does. The slot CAS
+        also rejects a duplicate kill or an old corpse after a newer battle.
+        A successful recapture always needs a new payment.
+        """
+        when = float(time.time() if when is None else when)
+        lock = " FOR UPDATE" if storage.using_postgres(self.db) else ""
+        with storage.atomic(self.db):
+            clan = self.db.execute("SELECT id FROM clans WHERE id = ?" + lock,
+                                   (int(clan_id),)).fetchone()
+            if clan is None:
+                return None, "gone"
+            if self.base_reserved(clan_id, base_sites, when, except_site=site):
+                return None, "occupied"
+            row = self.db.execute("SELECT clan_id, slot FROM clan_holdings WHERE site = ?"
+                                  + lock, (str(site),)).fetchone()
+            prev = int(row["clan_id"]) if row else None
+            hit = self.db.execute(
+                "INSERT INTO clan_holdings (site, clan_id, since, by_char, slot, paid_until)"
+                " VALUES (?, ?, ?, ?, ?, 0) ON CONFLICT (site) DO UPDATE SET"
+                " clan_id = EXCLUDED.clan_id, since = EXCLUDED.since,"
+                " by_char = EXCLUDED.by_char, slot = EXCLUDED.slot, paid_until = 0"
+                " WHERE clan_holdings.slot IS NULL OR clan_holdings.slot < EXCLUDED.slot",
+                (str(site), int(clan_id), when, by_char, float(slot))).rowcount
+            if hit != 1:
+                return prev, "same"
+            self._holding_log(site, "capture", int(clan_id), prev, by_char, slot, when)
+            return prev, "ok"
+
+    def base_reserved(self, clan_id, base_sites, when, except_site=None):
+        """A paid base or its still-open payment reservation, not a warehouse.
+
+        Writers call this while holding the clan lock: two simultaneous
+        captures cannot reserve different bases for the same clan.
+        """
+        keys = [str(key) for key in base_sites if str(key) != str(except_site)]
+        if not keys:
+            return False
+        return self.db.execute(
+            "SELECT site FROM clan_holdings WHERE clan_id = ? AND site IN ("
+            + ",".join("?" for _key in keys) + ") AND (paid_until > ? OR"
+            " (slot <= ? AND slot + 4500 > ?)) LIMIT 1",
+            (int(clan_id), *keys, float(when), float(when), float(when))).fetchone() is not None
+
+    def holding_rent(self, site, clan_id, char_id, slot, paid_until, price, quest, when=None,
+                     base_sites=()):
+        """Pay a captured base from the clan treasury, once per battle.
+
+        The caller validates the schedule and live NPC. Both rights and
+        ownership are checked again here, under clan-then-holding locks.
+        An outer quest transaction includes completion history; standalone
+        callers get the same atomic debit, lease and two journals.
+        """
+        when = float(time.time() if when is None else when)
+        price = int(price)
+        if price <= 0 or not float(slot) <= when < float(paid_until):
+            return None
+        lock = " FOR UPDATE" if storage.using_postgres(self.db) else ""
+        with storage.atomic(self.db):
+            clan = self.db.execute("SELECT afro FROM clans WHERE id = ?" + lock,
+                                   (int(clan_id),)).fetchone()
+            if clan is None or int(clan["afro"]) < price:
+                return None
+            if self.base_reserved(clan_id, base_sites, when, except_site=site):
+                return None
+            held = self.db.execute("SELECT clan_id, slot, paid_until FROM clan_holdings"
+                                   " WHERE site = ?" + lock, (str(site),)).fetchone()
+            if (held is None or int(held["clan_id"]) != int(clan_id)
+                    or held["slot"] != float(slot) or float(held["paid_until"]) != 0):
+                return None
+            hit = self.db.execute(
+                "UPDATE clans SET afro = afro - ? WHERE id = ? AND afro >= ?"
+                " AND EXISTS (SELECT 1 FROM clan_members WHERE char_id = ?"
+                " AND clan_id = ? AND (perm & ?) != 0)",
+                (price, int(clan_id), price, int(char_id), int(clan_id),
+                 CLAN_HEAD | 0x400)).rowcount
+            if hit != 1:
+                return None
+            # The holding is locked and unchanged. Any later failure raises
+            # through atomic(), rolling the treasury and quest back too.
+            self.db.execute("UPDATE clan_holdings SET paid_until = ? WHERE site = ?",
+                            (float(paid_until), str(site)))
+            clan_book(self.db, clan_id, "base_rent", -price, char_id, quest, when)
+            self._holding_log(site, "rent", int(clan_id), int(clan_id), char_id, slot, when)
+            return int(clan["afro"]) - price
+
+    def holding_gold_claimed(self, site, day):
+        return self.db.execute("SELECT site FROM clan_holding_claims WHERE site = ? AND day = ?",
+                               (str(site), int(day))).fetchone() is not None
+
+    def holding_gold_claim(self, site, day, char_id, tenure, when=None):
+        """Reserve a warehouse's gold in the caller's item/quest transaction.
+
+        The primary key belongs to the warehouse/day, never an account or
+        current owner. Clan-first locking matches capture and clan_drop;
+        ownership, treasury rights and membership tenure are rechecked.
+        Rollback after a failed item grant releases the reservation too.
+        """
+        when = float(time.time() if when is None else when)
+        if not int(day) <= when < int(day) + 86400:
+            return False
+        lock = " FOR UPDATE" if storage.using_postgres(self.db) else ""
+        with storage.atomic(self.db):
+            member = self.clan_member(char_id)
+            if member is None:
+                return False
+            clan_id = int(member["clan_id"])
+            clan = self.db.execute("SELECT id FROM clans WHERE id = ?" + lock,
+                                   (clan_id,)).fetchone()
+            if clan is None:
+                return False
+            held = self.db.execute("SELECT clan_id FROM clan_holdings WHERE site = ?" + lock,
+                                   (str(site),)).fetchone()
+            if held is None or int(held["clan_id"]) != clan_id:
+                return False
+            hit = self.db.execute(
+                "INSERT INTO clan_holding_claims (site, day, clan_id, char_id, at)"
+                " SELECT ?, ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM clan_members"
+                " WHERE char_id = ? AND clan_id = ? AND (perm & ?) != 0 AND joined_at <= ?)"
+                " ON CONFLICT (site, day) DO NOTHING",
+                (str(site), int(day), clan_id, int(char_id), when, int(char_id), clan_id,
+                 CLAN_HEAD | 0x400, when - float(tenure))).rowcount
+            return hit == 1
 
     def holding_clear(self, site, how, clan_id=None, when=None):
         """Nobody holds the site from now -- only if clan_id holds it, when
@@ -2514,8 +2678,12 @@ class Store:
         if char_id is not None:
             self.quests_changed(char_id)
 
-    def lock_quest_character(self, char_id):
-        """Serialize this character's quest writes inside storage.atomic."""
+    def lock_quest_character(self, char_id, clan_first=False):
+        """Serialize quest writes; treasury services follow clan_drop's order."""
+        if clan_first:
+            clan_lock = " FOR UPDATE OF k" if storage.using_postgres(self.db) else ""
+            self.db.execute("SELECT k.id FROM clans k JOIN clan_members m ON m.clan_id = k.id"
+                            " WHERE m.char_id = ?" + clan_lock, (char_id,)).fetchone()
         lock = " FOR UPDATE" if isinstance(self.db, storage.PostgresDB) else ""
         return self.db.execute("SELECT id FROM characters WHERE id = ?" + lock,
                                (char_id,)).fetchone() is not None
@@ -3439,3 +3607,11 @@ class Store:
 
     def close(self):
         self.db.close()
+
+    def effects_for(self, char_id):
+        return [dict(row) for row in self.db.execute(
+            'SELECT source, started, deadline FROM char_effects WHERE char_id=?', (char_id,))]
+
+    def put_effect(self, char_id, family, source, started, deadline):
+        self.db.replace('char_effects', ('char_id', 'family', 'source', 'started', 'deadline'),
+                       [(char_id, family, source, started, deadline)], conflict=('char_id', 'family'))

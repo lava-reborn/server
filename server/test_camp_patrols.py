@@ -113,7 +113,9 @@ HAND = {184: [(1135, [56, 88], False)],
         263: [(1751, [39, 40], False), (2170, [40, 62], False)],
         289: [(2367, [28, 69], False), (2368, [14, 95], False), (2369, [20, 13], False),
               (2370, [20, 85], False), (2371, [36, 114], False), (2372, [23, 9], False),
-              (2373, [24, 80], False), (2374, [41, 38], False)]}
+              (2373, [24, 80], False), (2374, [41, 38], False)],
+        118: [(7454, [32, 26], False)],
+        382: [(7451, [39, 37], False), (4428, [41, 38], False)]}
 # The approved plantation restores these four original IDs through overlays.
 # Keep them explicit: new or changed ordinary-world hand rows still fail.
 for _lid, _cells in {
@@ -288,7 +290,8 @@ try:
     # hand rows of the original's places.
     OURS = set(world.overlay_ids())
     check("the hand rows of 184, 31 and 102 are as they were, and Абри's of 187, 88, 92 and 289,"
-          " Донгола's of 103 and 93, Абу-Хамед's of 132, 168 and 263 and Eden's restored 264..267"
+          " Донгола's of 103 and 93, Абу-Хамед's of 132, 168 and 263, Eden's restored 264..267"
+          " and the approved clan bases 118/382"
           " are the only others (the places"
           " of ours aside)",
           {lid: [(r["type"], r["cell"], bool(r.get("escort"))) for r in recs if "patrol" not in r]

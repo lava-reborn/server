@@ -3294,7 +3294,7 @@ def injected(training=None):
         a.var('_global').push(name).function(params, body).op('setmember')
     wraps += reflash['wraps']
     from combat_client import patches as battle_patches
-    battle = battle_patches(Asm, UNDEF)
+    battle = battle_patches(Asm, UNDEF, training=training_enabled(training))
     for name, params, body in battle['globals']:
         a.var('_global').push(name).function(params, body).op('setmember')
     wraps += battle['wraps']
@@ -3318,6 +3318,7 @@ def injected(training=None):
     for name, params, body in lifecycle['globals']:
         a.var('_global').push(name).function(params, body).op('setmember')
     wraps += lifecycle['wraps']
+    a.push(0).var('_global').push('__lcInstallTimeout').op('callmethod').op('pop')
     from chat_history import patches as history_patches
     history = history_patches(Asm, UNDEF)
     for name, params, body in history["globals"]:

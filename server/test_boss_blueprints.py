@@ -129,7 +129,7 @@ class BossBlueprints(unittest.TestCase):
         self.assertEqual(len(added), 3)
         for r in added:
             self.assertEqual((r['give'], r['take'], r['level'], r['max_level']),
-                             ([651], [651], 9, 20))
+                             ([651], [651], r['craft']['level'] - 3, 20))
             self.assertEqual(doc['types'][r['craft']['key']], r['type'])
             self.assertEqual(set(r['objs'][0]), {'obj', 'num'})
             for reward in r['rew_random']:
@@ -249,7 +249,7 @@ class BossBlueprints(unittest.TestCase):
                 patch.object(mobs, 'roll_table', return_value=[]), \
                 patch.object(mobs, 'quest_table', return_value=[]):
             for boss_level in (0, 10, 100):
-                st = SimpleNamespace(type_id=269, level=boss_level)
+                st = SimpleNamespace(type_id=269, level=boss_level, role='boss')
                 self.assertEqual(mobs.loot_for(st, FixedRandom(0.015), (),
                     loc_id=82, killer_level=4), [(2408, 1)])
                 self.assertEqual(mobs.loot_for(st, FixedRandom(0.1), (),
@@ -277,10 +277,10 @@ class BossBlueprints(unittest.TestCase):
         import combat
 
         async def exercise():
-            killer = SimpleNamespace(is_player=True, level=4, eid=1,
+            killer = SimpleNamespace(is_player=True, level=4, eid=1, sess=SimpleNamespace(),
                                      count_kill=lambda t: None, release_stats=lambda: None)
             mob = SimpleNamespace(is_player=False, eid=2, type_id=269,
-                                  stats=SimpleNamespace(name='test'), aim=None)
+                                  stats=SimpleNamespace(name='test', role='boss', level=1), aim=None, xp_ledger={})
             rc = SimpleNamespace(room=SimpleNamespace(broadcast=lambda f: None,
                 npcs={2: mob}, players=[], loc=SimpleNamespace(title='test')),
                 quest_wants=lambda m, k: frozenset(),
@@ -351,16 +351,17 @@ class BossBlueprints(unittest.TestCase):
             offered = quests.given_by(651)
             added = [t for t in offered if t in (10717, 10718, 10719)]
             self.assertEqual(len(added), 3)
-            for level in (8, 9, 20, 21):
+            for level in (5, 6, 7, 8, 9, 20, 21):
                 # Boundary 21 is a defensive gate, even though progression caps at 20.
                 s.skill_level = lambda value=level: value
                 for tid in added:
                     q = quests.get(tid)
                     obj, num = q.wants()[0]
                     # Blueprint acquired before taking its decoding quest.
-                    if level in (9, 20): s.inv.give_pieces(obj, num)
+                    if {10717: 6, 10718: 7, 10719: 8}[tid] <= level <= 20:
+                        s.inv.give_pieces(obj, num)
                     ack = cmd('q_st', {'mob': npc, 'q_idx': offered.index(tid)})
-                    if level in (8, 21):
+                    if level < {10717: 6, 10718: 7, 10719: 8}[tid] or level > 20:
                         self.assertEqual(ack, [server.RES_NOT_AVAILABLE])
                         continue
                     self.assertEqual(ack, [0])

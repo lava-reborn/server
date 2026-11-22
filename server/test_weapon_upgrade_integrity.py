@@ -155,9 +155,24 @@ class UpgradeCatalogue(unittest.TestCase):
             name = row["internal"]
             self.assertTrue(name.startswith(("lamantin_", "gift_"))
                             or (name.startswith("knife_lvl") and name.endswith("_A"))
-                            or row["type"] in (2943, 3552, 3941, *range(3728, 3734)), row)
+                            or row["type"] in (2943, 3552, 3941, *range(3728, 3734),
+                                               *items.GOLD_VALENTINES), row)
             self.assertFalse(any(n.startswith(name + "_mod_")
                                  for _root, n in items.catalogue().values()))
+
+    def test_restored_valentines_are_attribute_items_not_missing_weapon_recipes(self):
+        self.assertEqual(items.GOLD_VALENTINES, (1069, 1070, 1071, 1072))
+        uncovered = {r['type'] for r in self.audit['uncovered_base_weapons']}
+        self.assertTrue(set(items.GOLD_VALENTINES) <= uncovered)
+        for t, mask, bonus in ((1069, 1, 3), (1070, 2, 3),
+                               (1071, 8, 3), (1072, 16, 4)):
+            p = items.params_of(t)
+            self.assertEqual(items.root_of(t), items.COLD_ARM, t)
+            self.assertEqual([p[k] for k in ('h_damage_min', 'h_damage_max',
+                                           'st_damage_min', 'st_damage_max')],
+                             [1, 1, 1, 1], t)
+            self.assertEqual((p['bonus_attribs_m'], p['bonus_attribs']),
+                             (mask, [bonus]), t)
 
 
 class UpgradeOperations(unittest.TestCase):

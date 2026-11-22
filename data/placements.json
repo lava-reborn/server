@@ -15925,6 +15925,34 @@
     ],
     "why": "RECOVERED qJM_prison_Palm. DESIGNED reviewed62-cell layout: twelve accessible palms, two free rings, at least8hexes from entry/staff routes and20between palms, complete map coverage within26hexes."
    }
+  ],
+  "118": [
+   {
+    "type": 7454,
+    "cell": [
+     32,
+     26
+    ],
+    "why": "DESIGNED approved capturable clan base, 2026-11-22. Existing native boss/flag artwork; capture strength and ownership are location-scoped in holdings, preserving warehouse behaviour."
+   }
+  ],
+  "382": [
+   {
+    "type": 7451,
+    "cell": [
+     39,
+     37
+    ],
+    "why": "DESIGNED approved capturable clan base, 2026-11-22. Existing native boss/flag artwork; capture strength and ownership are location-scoped in holdings, preserving warehouse behaviour."
+   },
+   {
+    "type": 4428,
+    "cell": [
+     41,
+     38
+    ],
+    "why": "DESIGNED approved clan-base flag, 2026-11-22. Existing native flag artwork, dedicated type4428 prevents rent-window refreshes from replacing ordinary warehouse flag entities."
+   }
   ]
  }
 }

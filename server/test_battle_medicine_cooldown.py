@@ -1,4 +1,4 @@
-"""Four-second battle medicine cooldown: virtual time, no sleeps or load."""
+"""Six-second battle medicine cooldown: virtual time, no sleeps or load."""
 import asyncio
 import unittest
 from types import SimpleNamespace as NS
@@ -19,7 +19,7 @@ class BattleMedicineCooldown(unittest.IsolatedAsyncioTestCase):
     def use(self, f):
         return HealingCompletion().start(f)
 
-    async def test_success_starts_only_after_dose_commits_and_expires_at_four_seconds(self):
+    async def test_success_starts_only_after_dose_commits_and_expires_at_six_seconds(self):
         f,ch,room,used=self.fixture()
         room.ws=True
         with patch.object(combat,'now',return_value=100):
@@ -27,10 +27,10 @@ class BattleMedicineCooldown(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(battle_medicine.remaining_ms(f.store,1,100),0)
             f.heal_now(*args)
         self.assertEqual(used,[1])
-        self.assertEqual(battle_medicine.remaining_ms(f.store,1,100),4000)
-        self.assertEqual(battle_medicine.remaining_ms(f.store,1,103.999),1)
-        self.assertEqual(battle_medicine.remaining_ms(f.store,1,104),0)
-        self.assertEqual(f.frames[-1],('medCooldown',dict(time_ms=4000,description=battle_medicine.DESCRIPTION)))
+        self.assertEqual(battle_medicine.remaining_ms(f.store,1,100),6000)
+        self.assertEqual(battle_medicine.remaining_ms(f.store,1,105.999),1)
+        self.assertEqual(battle_medicine.remaining_ms(f.store,1,106),0)
+        self.assertEqual(f.frames[-1],('medCooldown',dict(time_ms=6000,description=battle_medicine.DESCRIPTION)))
 
     async def test_shared_by_all_battle_items_and_rejection_keeps_aim_ap_and_dose(self):
         f,ch,room,used=self.fixture()
@@ -82,8 +82,8 @@ class BattleMedicineCooldown(unittest.IsolatedAsyncioTestCase):
         replacement.rc=None
         with patch.object(combat,'now',return_value=101):
             combat.Fighter.resend_room(replacement,resumed=True)
-            self.assertEqual(combat.Fighter.medicine_cooldown_blocked(replacement,7101),3000)
-        self.assertEqual(replacement.frames[-1][1]['time_ms'],3000)
+            self.assertEqual(combat.Fighter.medicine_cooldown_blocked(replacement,7101),5000)
+        self.assertEqual(replacement.frames[-1][1]['time_ms'],5000)
         self.assertEqual(battle_medicine.remaining_ms(f.store,2,101),0)
         self.assertEqual(combat.Fighter.medicine_cooldown_blocked(replacement,6043),False)
 
@@ -93,10 +93,10 @@ class BattleMedicineCooldown(unittest.IsolatedAsyncioTestCase):
         loop=NS(call_later=lambda delay,fn:callbacks.append((delay,fn)))
         with patch.object(battle_medicine.asyncio,'get_running_loop',return_value=loop):
             battle_medicine.start(store,1,100)
-            battle_medicine.start(store,1,104)
-        self.assertEqual([delay for delay,_ in callbacks],[4,4])
+            battle_medicine.start(store,1,106)
+        self.assertEqual([delay for delay,_ in callbacks],[6,6])
         callbacks[0][1]()
-        self.assertEqual(battle_medicine.remaining_ms(store,1,104),4000)
+        self.assertEqual(battle_medicine.remaining_ms(store,1,106),6000)
         callbacks[1][1]()
         self.assertEqual(store._battle_medicine_deadlines,{})
 

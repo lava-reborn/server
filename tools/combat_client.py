@@ -2,6 +2,83 @@
 from avm_codegen import Compiler
 
 SOURCE = '''
+def __bfNPCInfo(obj):
+    # These two native flag types belong only to restored clan bases.
+    this.__bfBaseFlag = obj.param.res == 4427 or obj.param.res == 4428
+    return this.__bfNPCInfoOrig(obj)
+
+def __bfBaseCaption(panel):
+    if not panel.player.__bfBaseFlag:
+        return
+    member = panel.player.clanMemberInfo
+    title = "Незанятая клановая база"
+    if member.clanReg and member.clanInfo.clanName:
+        title = "Клановая база — " + member.clanInfo.clanName
+    # A clan name is plain text, never markup or a replacement ClanInfo name.
+    panel.info_txt.text = title
+    anchor = panel.sBar._y
+    if panel.hBar._visible:
+        anchor = panel.hBar._y - 5
+    panel.info_txt._y = Math.round(anchor - panel.info_txt.textHeight)
+    panel.infoShadow_txt._y = panel.info_txt._y + 1
+
+def __bfInfoUpdate(obj):
+    this.__bfInfoUpdateOrig(obj)
+    _global.__bfBaseCaption(this)
+
+def __bfClanCaption():
+    this.__bfClanCaptionOrig()
+    _global.__bfBaseCaption(this)
+
+def __bfSyncAP(obj):
+    if obj.param.amax != None:
+        ceiling = Number(obj.param.amax)
+        if not isNaN(ceiling) and ceiling > 0:
+            # setAP/warState refill AP and replace the combat regeneration interval.
+            # Only the maximum changes; the native setter accepts the paid balance.
+            this._maxAP = ceiling
+    return this.__bfSyncAPOrig(obj)
+
+def __bfCritCard():
+    this.__bfCritCardOrig()
+    if _global.__tgActive and _global.__tgCombatStats:
+        return
+    gamer = lol.core.Master.getInstance().gamer
+    weapon = gamer.equipment.primaryItem
+    if not weapon or weapon.rootID != lol.core.objects.Item.FIRE_ARM:
+        return
+    value = parseFloat(this.critDodge_txt.text)
+    if isNaN(value):
+        return
+    correction = 0
+    i = 0
+    while i < gamer.effects.getFXArrayLength():
+        effect = gamer.effects.getEffect(i)
+        if effect and effect.critical_evade:
+            # Native showKrit adds critical_probability in the evade branch.
+            correction = correction + effect.critical_evade - effect.critical_probability
+        i = i + 1
+    if correction:
+        this.critDodge_txt.text = String(value + correction) + " %"
+
+def __bfArmorCard():
+    this.__bfArmorCardOrig()
+    if _global.__tgActive and _global.__tgCombatStats:
+        return
+    equipment = lol.core.Master.getInstance().gamer.equipment
+    slots = [equipment.head, equipment.armor, equipment.camouflage, equipment.belt, equipment.legs, equipment.boots]
+    correction = 0
+    i = 0
+    while i < len(slots):
+        item = slots[i].item
+        if item:
+            remaining = item.getProp("__break")
+            if remaining != None and remaining <= 0:
+                correction = correction + item.getProp("armor_class")
+        i = i + 1
+    if correction:
+        this.ArmorClassValue.value.text = Number(this.ArmorClassValue.value.text) - correction
+
 def __bfRemotePrimary(obj):
     # Native ss_obj_move constructs a type-0 firearm for an empty hand.
     # Empty snapshots must use PersEquip's existing bare-fist fallback.
@@ -312,11 +389,20 @@ def __bfDead(obj):
 '''
 
 
-def patches(Asm, undef):
-    functions = Compiler(Asm, undef).functions(SOURCE)
+def patches(Asm, undef, *, training=False):
+    source = SOURCE
+    if not training:
+        source = source.replace('    if _global.__tgActive and _global.__tgCombatStats:\n        return\n', '')
+    functions = Compiler(Asm, undef).functions(source)
     bodies = {name: (params, body) for name, params, body in functions}
     wraps = []
     for path, method, keep, helper in (
+        (('core','player','NPC'), 'userInfo', '__bfNPCInfoOrig', '__bfNPCInfo'),
+        (('core','location','CharInfo'), 'userInfoUpdate', '__bfInfoUpdateOrig', '__bfInfoUpdate'),
+        (('core','location','CharInfo'), 'clanNameUpdate', '__bfClanCaptionOrig', '__bfClanCaption'),
+        (('core','player','APManager'), 'syncAPtoServer', '__bfSyncAPOrig', '__bfSyncAP'),
+        (('gpui','CharInterface'), 'showKrit', '__bfCritCardOrig', '__bfCritCard'),
+        (('gpui','CharInterface'), 'showArmorLevel', '__bfArmorCardOrig', '__bfArmorCard'),
         (('core','player','PersEquip'), 'ss_obj_move', '__bfRemotePrimaryOrig', '__bfRemotePrimary'),
         (('core','player','Training'), 'close', '__bfTrainingCloseOrig', '__bfTrainingClose'),
         (('core','player','Gamer'), 'gotoLoot', '__bfLootGoOrig', '__bfLootGo'),

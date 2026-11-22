@@ -420,10 +420,10 @@ try:
     check("  ..the fares the texts name, 0,25 and 0,10 G, and the tickets 1567 and 1639",
           [(real[t].cost_gold, [o for o, _n in real[t].wants()]) for t in (276, 277, 283, 284)],
           [(25, []), (10, []), (0, [TICKET_AH]), (0, [TICKET_DN])])
-    check("  ..each a way of the row's own record ('way'), at no level, repeatable",
+    check("  ..each a way of the row's own record ('way'), minimum level 16 inbound, unrestricted outbound, repeatable",
           {t: (raw[t]["way"]["at"], raw[t]["way"]["target_loc_id"], real[t].level,
                real[t].repeatable) for t in RIDES},
-          {t: (frm, to, 0, 1) for t, (_d, frm, to) in RIDES.items()})
+          {t: (frm, to, 16 if t in (276, 283) else 0, 1) for t, (_d, frm, to) in RIDES.items()})
     check("Нур-ад-Дин and Веласкес list their rides where q_idx finds them",
           (quests.given_by(NUR), quests.given_by(VELASQUEZ)),
           ([276, 282, 283, 631, 632, 636, 18100], [277, 284, 880, 884]))

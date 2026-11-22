@@ -138,11 +138,12 @@ try:
           sorted(c for c in list(CELLS) + list(CAMPS) if c not in walked), [])
     # (the places of ours, data/locations, are the owner's: the location
     # editor's checks are theirs)
-    check("  ..and every place on a cell round the town that walk reaches is one this suite looks at"
-          " (a place left out would show its people unchecked; the places of ours aside)",
+    check("  ..the only additional reachable place is the approved clan base, checked by test_clan_base_world"
+          " (the places of ours aside)",
           sorted((i, c) for c, i in world.settlements().items()
                  if BOX[0] <= c[0] <= BOX[1] and BOX[2] <= c[1] <= BOX[3] and c in walked
-                 and i not in PLACES and not (i >= world.FIRST_NEW_ID and i in world.overlay_ids())), [])
+                 and i not in PLACES and not (i >= world.FIRST_NEW_ID and i in world.overlay_ids())),
+          [(382, (5955, 2032))])
     check("each place's way out of its file is open: the dump's and the arena's one side is the west,"
           " the works' three, the others' four",
           {i: sorted({s for s in travel.exit_sides(world.location(i)).values() if s in travel.SIDES})
@@ -198,7 +199,7 @@ try:
           " (bosses.ALL_DAY)",
           ({t: (bosses.keeps_hours(t), mobs.stats(t).level) for t in (374, 375, 407, 408)},
            {t: (world.creature_role(t), bosses.keeps_hours(t)) for t in (592, 593)}),
-          ({374: (True, 26), 375: (True, 24), 407: (True, 30), 408: (True, 28)},
+          ({374: (True, 16), 375: (True, 16), 407: (True, 18), 408: (True, 18)},
            {592: ("boss", False), 593: ("boss", False)}))
     check("Вильям Блейд stands in the ДСР's camp by hand and is in no ambush's band",
           ([int(r["type"]) for r in world.placed_in(93)], 1565 in world.camp_fill(93),

@@ -41,6 +41,7 @@ the table on -- nobody takes the ways back -- and on the socket at the
 first take, which moves the player at once and journals nothing.
 """
 import json
+import math
 import os
 import re
 import socket
@@ -150,6 +151,9 @@ check("the mine has no walk-in any more: its quests are the way",
 check("the table names both ways of the mine",
       sorted(k for k in WAYS if k[0] in (MOUTH, TIER1, TIER2, TIER3)),
       [(MOUTH, DOWN), (TIER1, UP)])
+check("the three restored clan-base ways tell the native client that they move the player",
+      [(t, quests.get(t).si_frame()[1]["rew_loc"]) for t in (18201, 18202, 18203)],
+      [(18201, 1), (18202, 1), (18203, 1)])
 for (key, qtype), rec in sorted(WAYS.items()):
     loc = world.location(key)
     q = quests.get(qtype)
@@ -203,7 +207,7 @@ for (key, qtype), rec in sorted(WAYS.items()):
         check("%s: quest %d is a way and nothing else" % (key, qtype),
               (q.kind, q.obj, q.rew_obj, q.rew_afro, q.rew_gold, q.repeatable,
                q.rew_loc, q.level, q.need_all, q.need_any),
-              (quests.DEL_OBJ, 0, [], 0, 0, 1, 1, 0, [],
+              (quests.DEL_OBJ, 0, [], 0, 0, 1, 1, 16 if qtype == 276 else 0, [],
                [OLD_ADITS, GOLD] if qtype == DOWN else []))
         check("%s: taken, it is complete at once" % key,
               q.is_complete(q.fresh_progress()), True)
@@ -761,7 +765,8 @@ try:
     got = c.until(lambda f: f[0] == "gmap")
     check("out on the map, from the first tier", [n for n, _ in got if n in ("cmdAck", "gmap")][:2],
           ["cmdAck", "gmap"])
-    check("standing on the mouth's cell", [(p["x"], p["y"]) for p in named(got, "gmap")],
+    check("standing on the mouth's cell", [(math.floor(p["x"]), math.floor(p["y"]))
+                                         for p in named(got, "gmap")],
           [MOUTH_CELL])
     c.frames(0.3)
     got = hand_in(c, kamal["id"], Q, 0.6)

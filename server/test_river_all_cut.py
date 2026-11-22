@@ -430,10 +430,11 @@ try:
     # in the shelters of ZEON, ВЭС and СМЕРШ (1186, 1192, 1193), the clan
     # upgrader 4581 in ZEON's garage 930 and the warehouse's clan flag 4427 in
     # the abandoned clan base 118, until the owner's cut of Абу-Хамед
-    # (2026-10-14) took those.
+    # (2026-10-14) took those. The approved 2026-11-22 restoration puts
+    # only that flag back at 118, with the base's weekly rent quest.
     ELSEWHERE = {114: [44], 257: [1007], 436: [1007], 437: [1007], 438: [1007],
                  2172: [706, 735, 928, 932, 1044, 1231], 2393: [766], 2394: [766], 2395: [766],
-                 2396: [766], 2403: [766], 4017: [1010, 1187, 1191, 1194, 1201],
+                 2396: [766], 2403: [766], 4017: [1010, 1187, 1191, 1194, 1201], 4427: [118],
                  4581: [929, 933]}
     rooms_of = {}
 
@@ -451,14 +452,15 @@ try:
     check("every one of them stood in the cut places alone, but the cows (Вади-Хальфа's pasture 44), the tombs' waves"
           " (Донгола's dungeon 1007), the band leader, Абри's ore refinery's people (its cash machine 2402 held out"
           " of it), the bankers and the clan upgrader; Delta Force's stands nowhere since Донгола's cut took its"
-          " base, the warehouse's clan flag nowhere since Абу-Хамед's took the base 118",
+          " base; only the approved Abu base flag is restored at 118",
           {t: w[:8] for t, w in elsewhere.items() if w}, ELSEWHERE)
     alone = sorted(t for t in people if not elsewhere[t])
     givers = {t for t in people
               if (set(quests.given_by(t)) | set(quests.taken_by(t))) - {8800, 8801, 8802, 8803}}
-    check("of those who give or take a quest every one stands in Абри's ore refinery 766 too, with his quests"
-          " 532-538", (sorted(givers), sorted(givers - {t for t in people if 766 in elsewhere[t]})),
-          ([2393, 2394, 2395, 2396], []))
+    check("quest givers stand in Абри's refinery 766, except the restored flag 4427 with only rent quest 18210",
+          (sorted(givers), sorted(givers - {t for t in people if 766 in elsewhere[t]}),
+           quests.given_by(4427), quests.taken_by(4427)),
+          ([2393, 2394, 2395, 2396, 4427], [4427], [18210], [18210]))
     check("  ..the healer 4612 of Эван's village alone registered a home there (the run_once moves such homes)",
           sorted(t for t in people if world.offers_home(t)), [4612])
     clock = sorted(t for t in people if bosses.keeps_hours(t))
@@ -596,7 +598,11 @@ try:
                     sq = after.at(x, y)
                     if sq is not None and map_cells.painted_square(ac, sq):
                         left.append((name, x, y))
-        check("  ..and no square of the palette's very colour is left anywhere on the far banks", left, [])
+        # apply() now also paints the one approved Eden town marker. Keep
+        # the complete scan: no other far-bank square is permitted to return.
+        check("  ..only the restored Eden town has a green palette square on the far banks",
+              (left, plan.paint.get((5858, 1929), (None,))[0], after.at(5858, 1929)[2]),
+              ([("Керма", 5858, 1929)], "green", ("green",)))
         check("  ..nor on a 'bare' cell, before or after", [c for c in plan.bare if before.at(*c) or after.at(*c)], [])
         moved = []
         for n in sorted(new):

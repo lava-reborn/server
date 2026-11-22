@@ -8,13 +8,8 @@ Mob copies use frozen source records and modes. Old profiles never use these val
 No imported simulator engine, Monte Carlo work, database or per-hit file I/O.
 """
 from functools import lru_cache
-import json
 import math
-import re
-from pathlib import Path
-from types import MappingProxyType
 
-import battle_medicine
 import combat
 import inventory
 import progression
@@ -22,59 +17,9 @@ import items
 from training import display as training_display
 from training import items as training_items
 
-PATH = Path(__file__).resolve().parents[3] / 'data/training_simulator_formulas.json'
-KEY = 'simulator-v1'
-SNAPSHOT_VERSION = 1
-INTELLECT_BASE = 5
-DAMAGE_PER_INTELLECT = .03
-HEAL_PER_INTELLECT = .04
-COOLDOWN_PER_INTELLECT = .1
-MIN_COOLDOWN = 2.0
-MAX_ARMOUR_SHARE = .9
-ARMOUR_LEVEL_GAP = 1
-MOB_CRIT_FLOOR = 5.0
-LEVEL_SPREAD = .6
-LEVEL_DAMAGE = .12
-MIN_LEVEL_DAMAGE = .1
-GAP_MAX = 3
-
-
-@lru_cache(maxsize=1)
-def data():
-    raw = json.loads(PATH.read_text(encoding='utf-8'))
-    if raw.get('version') != SNAPSHOT_VERSION or raw.get('engine') != KEY:
-        raise ValueError('Unsupported simulator snapshot')
-    if not re.fullmatch(r'[0-9a-f]{40}', raw.get('source_commit', '')):
-        raise ValueError('Simulator source revision must be pinned')
-    expected = dict(INT_DAMAGE=DAMAGE_PER_INTELLECT, INT_HEAL=HEAL_PER_INTELLECT,
-                    INT_COOLDOWN=COOLDOWN_PER_INTELLECT, COOLDOWN_FLOOR=MIN_COOLDOWN,
-                    ARMOR_SHARE_CAP=MAX_ARMOUR_SHARE, ARMOR_GAP=ARMOUR_LEVEL_GAP,
-                    MOB_CRIT_FLOOR=MOB_CRIT_FLOOR / 100,
-                    LEVEL_SPREAD=LEVEL_SPREAD, LEVEL_DAMAGE=LEVEL_DAMAGE)
-    if raw.get('equations') != expected:
-        raise ValueError('Simulator equations changed; port and version the engine before exporting')
-    tables = [raw['weapon_scale'], *raw['class_scale'].values()]
-    if any(isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v) or not 0 < v <= 100
-           for table in tables for v in table.values()):
-        raise ValueError('Invalid simulator calibration')
-    if (len(raw['mob_records']) > 2048 or any(type(index) is not int or not 0 <= index < len(raw['mob_records'])
-                                           for index in raw['mobs'].values())
-            or any(not 1 <= len(record['modes']) <= 3 for record in raw['mob_records'])):
-        raise ValueError('Invalid simulator mob profiles')
-    return raw
-
-
-@lru_cache(maxsize=1)
-def coefficients():
-    raw = data()
-    armour = {int(k): v for k, v in raw['armour_reference'].items()}
-    gaps = {int(k): {int(g): v for g, v in row.items()} for k, row in raw['gap_table'].items()}
-    valid = lambda v: not isinstance(v, bool) and isinstance(v, (int, float)) and math.isfinite(v)
-    if (set(armour) != set(range(1, 21)) or any(not valid(v) or v <= 0 for v in armour.values())
-            or any(k not in range(1, 21) or any(g not in (1, 2, 3) or not valid(v) or not 0 < v <= 1
-                for g, v in row.items()) for k, row in gaps.items())):
-        raise ValueError('Invalid simulator equation coefficients')
-    return MappingProxyType(armour), MappingProxyType({k: MappingProxyType(row) for k, row in gaps.items()})
+from battle_balance import (data, coefficients, intellect, healing_multiplier,
+    cooldown_seconds, level, reference_armour, split, critical, ranged_critical,
+    DAMAGE_PER_INTELLECT, MIN_LEVEL_DAMAGE, LEVEL_DAMAGE, LEVEL_SPREAD, KEY)
 
 
 @lru_cache(maxsize=1)
@@ -86,18 +31,6 @@ def enabled(actor):
     ground = (getattr(getattr(actor, 'sess', None), 'ground', None)
               or getattr(actor, 'training_ground', None))
     return bool(ground and ground.rules.simulator_formulas)
-
-
-def intellect(character):
-    return max(0, character.attr(progression.INTELLECT) - INTELLECT_BASE)
-
-
-def healing_multiplier(character):
-    return 1 + HEAL_PER_INTELLECT * intellect(character)
-
-
-def cooldown_seconds(character):
-    return max(MIN_COOLDOWN, battle_medicine.COOLDOWN_SECONDS - COOLDOWN_PER_INTELLECT * intellect(character))
 
 
 def damage_multiplier(character, row):
@@ -186,47 +119,6 @@ def melee(bounds, character, row):
             bounds = tuple(max(1, base[field] + strength) for field in ('h_damage_min', 'h_damage_max'))
     multiplier, _spread = damage_multiplier(character, row)
     return tuple(max(1, round(value * multiplier)) for value in bounds)
-
-
-def level(actor):
-    return actor.character().level if actor.is_player else actor.stats.level
-
-
-def reference_armour(target_level):
-    return coefficients()[0][max(1, min(20, target_level))]
-
-
-def split(shooter, target, damage, piercing, critical, stamina_left, stamina_damage=0, melee=False, rifle=False):
-    if shooter.is_player and not target.is_player:
-        player_level = level(shooter)
-        gap = level(target) - player_level
-        factors = coefficients()[1].get(max(1, min(20, player_level)), {})
-        factor = factors.get(min(gap, GAP_MAX), 1) if gap >= 1 else 1
-        damage, stamina_damage = max(1, int(damage * factor)), int(stamina_damage * factor)
-    left = max(0, stamina_left)
-    if critical:
-        return damage, 0 if melee else min(damage, left)
-    armour = max(0, target.armor()) / max(.5, piercing)
-    if rifle and not melee:
-        share = min(MAX_ARMOUR_SHARE, armour / (armour + reference_armour(level(target))))
-    else:
-        share = min(1, armour / max(1, reference_armour(level(shooter) - ARMOUR_LEVEL_GAP)))
-    moved = int(damage * share)
-    stamina = stamina_damage + moved
-    return damage - moved + max(0, stamina - left), min(stamina, left)
-
-
-def critical(shooter, target, chance, optimal=True):
-    if shooter.is_player and not optimal:
-        return False
-    chance = max(0, min(100, chance))
-    if not shooter.is_player and target.is_player:
-        chance = max(MOB_CRIT_FLOOR, chance)
-    return combat.roll(chance)
-
-
-def ranged_critical(shooter, target, weapon, optimal):
-    return critical(shooter, target, weapon.crit - target.crit_evade_ranged(), optimal)
 
 
 def profile():

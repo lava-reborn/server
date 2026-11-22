@@ -200,6 +200,51 @@ import progression                 # no imports of its own; safe at load
 KILL_MOBS, BRING_L_OBJ, DEL_OBJ = "kill_mobs", "bring_l_obj", "del_obj"
 KINDS = (KILL_MOBS, BRING_L_OBJ, DEL_OBJ)
 
+# The lab's original experiment texts (49833..49850) name seven G pouches,
+# MOD A1, five equipment parts and a researcher kit. The personal daily part
+# and one server-wide completion per reset day are the owner's rules.
+LABORANT_NPC, LABORANT_LOC = 1407, 128
+LABORANT_DETAIL = 18300
+LABORANT_SPOT = "quest:1407:experiment"
+LABORANT_MOD = 3726
+LABORANT_PART = 3741
+LABORANT_RECIPES = {
+    18301: (3604, 3740), 18302: (3603, 3739), 18303: (3601, 3737),
+    18304: (5614, 5615), 18305: (3600, 3736), 18306: (3599, 3735),
+    18307: (3602, 3738),
+}
+LABORANT_QUESTS = frozenset((LABORANT_DETAIL, *LABORANT_RECIPES))
+
+
+def laborant_available(store, day):
+    claimed = store.boss_kills([LABORANT_SPOT]).get(LABORANT_SPOT)
+    return claimed is None or claimed < day
+
+
+def laborant_wear(quest, inv):
+    """The two oldest unlocked bag ingredients retain their worst condition.
+
+    Reuse the ordinary set rework conversion: no fresh factory ceiling or
+    repair is obtained by combining worn equipment and then selling it.
+    """
+    recipe = LABORANT_RECIPES.get(quest.type)
+    if recipe is None:
+        return None
+    from fractions import Fraction
+    import inventory
+    import items
+    import setcraft
+    new_abs = items.params_of(recipe[1])["max_break_abs"]
+    worn = []
+    for type_id in (LABORANT_MOD, recipe[0]):
+        row = next(r for r in inv.rows() if r["type_id"] == type_id
+                   and r["slot"] == inventory.BAG and r["uniq"] not in inv.locked)
+        old_abs = items.params_of(type_id)["max_break_abs"]
+        worn.append(setcraft.worn_as((row["brk"], row["max_break_cur"], old_abs), new_abs))
+    top = min(ceiling for _brk, ceiling in worn)
+    condition = min(Fraction(brk, ceiling) for brk, ceiling in worn)
+    return top * condition.numerator // condition.denominator, top, new_abs
+
 # String id layout (recon/analysis/quests.md 4.4): 2 000 000 + 4 * type + k.
 STRING_BASE = 2_000_000
 STRINGS_PER_QUEST = 4
@@ -1141,9 +1186,9 @@ def kept_on_death(type_id):
     hands it over at the take (start_obj, START_OBJ_KEPT_ON_DEATH) -- or
     lends it, whatever the switch says -- or because one quest pays it and
     another asks for it and it is worth nothing away from them
-    (STEP_REWARD_KEPT_ON_DEATH)."""
+    (STEP_REWARD_KEPT_ON_DEATH). The lab's daily part is personal too."""
     t = int(type_id)
-    if t in _LENT or (START_OBJ_KEPT_ON_DEATH and t in _HANDED):
+    if t == LABORANT_PART or t in _LENT or (START_OBJ_KEPT_ON_DEATH and t in _HANDED):
         return True
     return STEP_REWARD_KEPT_ON_DEATH and t in _STEPS and _worthless(t)
 
@@ -1152,9 +1197,10 @@ def not_on_ground(type_id):
     """Whether a thing of this type may not be thrown on the ground because
     a quest hands it over at the take (start_obj, START_OBJ_NOT_ON_GROUND),
     or lends it, whatever the switch says -- whoever has it, and however it
-    came: Ян Дуглас's notes out of his bag are 41's notes too."""
+    came: Ян Дуглас's notes out of his bag are 41's notes too. Neither may
+    the lab's daily part be passed to another character through a bag."""
     t = int(type_id)
-    return t in _LENT or (START_OBJ_NOT_ON_GROUND and t in _HANDED)
+    return t == LABORANT_PART or t in _LENT or (START_OBJ_NOT_ON_GROUND and t in _HANDED)
 
 
 def lent(type_id):

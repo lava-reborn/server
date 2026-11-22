@@ -33,7 +33,7 @@ class MortimerSales(unittest.TestCase):
         self.s.closed,self.s.transport,self.s.residence_timer=False,None,None
         self.s.close=lambda force=False:setattr(self.s,'closed',True)
         self.s.loc=NS(id=36,width=20,height=20,spawns=[])
-        self.s.room=NS(npc=lambda n:(0,1188,world.TRADER))
+        self.s.room=NS(loc=self.s.loc,npc=lambda n:(0,1188,world.TRADER))
         self.s.pos=0;self.s.active=self.store.character(self.cid)
         self.s.fee_shown,self.s.skill_shown={},{}
         self.frames=[]

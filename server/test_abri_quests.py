@@ -227,12 +227,14 @@ try:
     dropped = {o for q in real.values() if q.give for _m, o, _c in q.drops
                if stands.get(_m)}
     asked = sorted({o for t in live for o, _n in real[t].wants()})
-    check("every thing a row asks for can be had: dropped while the quest wants it by somebody"
-          " standing in the open places, sold at a stall there, or handed out by a row",
-          [o for o in asked if o not in on_sale | handed | dropped], [])
-    check("  ..Хаксли's coupons, the dump's tools, the splint's gypsum, wire and bandages, the"
+    check("every new quest input can be had; only the three retired ammunition coupons"
+          " require existing ownership",
+          [o for o in asked if o not in on_sale | handed | dropped], [6294, 6295, 6296])
+    check("  ..the retired coupons are no longer sold; their exchange services remain below",
+          sorted(on_sale & {6294, 6295, 6296}), [])
+    check("  ..the dump's tools, the splint's gypsum, wire and bandages, the"
           " lottery tickets, the P90 and the injector are sold",
-          sorted(o for o in (6294, 6295, 6296, 7025, 7026, 7027, 7028, 7029, 7036, 7037, 7038,
+          sorted(o for o in (7025, 7026, 7027, 7028, 7029, 7036, 7037, 7038,
                              7039, 7040, 7041, 7042, 5740, 5741, 5742, 2646, 2647, 2649, 2650,
                              25485, 6075, 6050) if o not in on_sale), [])
 

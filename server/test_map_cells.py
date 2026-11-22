@@ -22,6 +22,7 @@ and holds nothing else of the real map:
 
     LAVA_RES=<res with the original tiles> python3 server/test_map_cells.py
 """
+import copy
 import glob
 import hashlib
 import json
@@ -111,12 +112,12 @@ try:
     # Донгола's cut (2026-10-13): the craftsmen 455, 460, 518, the clothing
     # market 469, the ФСЦ airfield 530 and Delta Force's block post 382, each
     # with its square.
-    DONGOLA_CUT = [(5876, 2013), (5878, 2014), (5878, 2015), (5878, 2013), (5879, 2011), (5955, 2032)]
+    DONGOLA_CUT = [(5876, 2013), (5878, 2014), (5878, 2015), (5878, 2013), (5879, 2011)]
     # Абу-Хамед's cut (2026-10-14): the craftsmen 451, 461, 462, 463, 519, the
     # clothing market 467, the ФСЦ airfield 527, the clan base СМЕРШ 194 and
     # the abandoned clan base 118, each with its square.
     ABUHAMED_CUT = [(6184, 1973), (6185, 1975), (6184, 1977), (6185, 1978), (6185, 1976), (6183, 1974),
-                    (6185, 1977), (6126, 1980), (6154, 1963)]
+                    (6185, 1977), (6126, 1980)]
     # Two retired places had no square of their own in the picture: Абри's ФСЦ
     # airfield 529 (its name over the river's dark bank) and Blackwater's block
     # post 317 (the base's square is on 5923,1838 beside it). The plan lists
@@ -237,10 +238,6 @@ try:
            ((49412, 15564, 49432, 15572), "База ВЭС", 15553, 15553),
            ((49412, 15572, 49432, 15581), "База ВЭС", 15553, 15553),
            ((48648, 15811, 48690, 15819), "База Zeon", 15806, 15806),
-           ((49248, 15698, 49303, 15707), "Заброшенная база - бункер", 15808, 15808),
-           ((49248, 15707, 49301, 15715), "Заброшенная база - бункер", 15808, 15808),
-           ((49276, 15715, 49280, 15717), "Заброшенная база - бункер", 15808, 15808),
-           ((49293, 15715, 49298, 15717), "Заброшенная база - бункер", 15808, 15808),
            ((49773, 15576, 49845, 15584), "База Доктора \"Д\"", 15554, 15554),
            ((49793, 15584, 49799, 15586), "База Доктора \"Д\"", 15554, 15554),
            ((49818, 15584, 49822, 15586), "База Доктора \"Д\"", 15554, 15554),
@@ -1040,7 +1037,7 @@ try:
                                      ("Частный остров / Господина ПэЖэ", 16055), ("База Хогвартс", 15801),
                                      ("База Врачи без границ", 16057), ("База Delta Force", 16314),
                                      ("База Смерш", 15807), ("База ВЭС", 15553), ("База Zeon", 15806),
-                                     ("Заброшенная база - бункер", 15808), ("База Доктора \"Д\"", 15554)]})
+                                     ("База Доктора \"Д\"", 15554)]})
             def own_ground(rr, c):
                 """The share of the ground round a square (a band four pixels
                 wide outside its frame, after) of the square's own colours."""
@@ -1065,8 +1062,23 @@ try:
             check("  ..and every square is painted from a patch of photograph",
                   [line.strip() for line in real["report"] if "smooth" in line and not line.startswith("zone ")],
                   [])
-            out_real, _report = M.apply(read)
+            # The reconstruction above exercises erasure, before the separate
+            # layer that adds the green Eden marker to the original picture.
+            erase_plan = copy.copy(plan)
+            erase_plan.paint = {}
+            out_real, _report = M.apply(read, erase_plan)
             check("map_cells.apply gives these tiles", out_real == real["out"], True)
+            painted_canvas = M.Canvas(lambda p: out_real.get(p) or read(p))
+            M.paint(painted_canvas, plan)
+            marker_tiles, _blocks = painted_canvas.encode()
+            marked = M.Canvas(lambda p: marker_tiles.get(int(os.path.basename(p)[:-4]))
+                              or out_real.get(p) or read(p))
+            check("Eden's town gets the green square over the original ground",
+                  M.Squares(marked).at(5858, 1929)[2], ('green',))
+            check("adding the town's square changes only its own tile",
+                  sorted(marker_tiles), [M.tile_of(8 * 5858, 8 * 1929)])
+            full_out = dict(out_real)
+            full_out.update({M.tile_path(n): data for n, data in marker_tiles.items()})
 
             # The war zones of the camps across the river (the owner,
             # 2026-10-12: «ты с карты не убрал лагеря за рекой»).
@@ -1192,8 +1204,8 @@ try:
                    in_caption),
                   ([], [True, True]))
             check("a local run serves the same bytes (bootstrap_http)",
-                  (lambda served_: {p: served_.get(p) == data for p, data in out_real.items()})(M.Served(RES)),
-                  {p: True for p in out_real})
+                  (lambda served_: {p: served_.get(p) == data for p, data in full_out.items()})(M.Served(RES)),
+                  {p: True for p in full_out})
 
             # client/build.py's generated layer, over a store of the original tiles
             sys.path.insert(0, os.path.join(ROOT, "client"))
@@ -1211,7 +1223,7 @@ try:
             tiles_rel, _done = b.gen_map_tiles()
             shutil.rmtree(b.tmp, ignore_errors=True)
             check("a client release carries the same tiles (client/build.py, from the store)",
-                  tiles_rel == out_real, True)
+                  tiles_rel == full_out, True)
             print("  " + "\n  ".join(real["report"]))
 finally:
     shutil.rmtree(W, ignore_errors=True)

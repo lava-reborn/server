@@ -5,6 +5,7 @@ no sockets, simulations or farm measurements. Existing exchange prices,
 SP, damage and XP must not change with the health hotfix.
 """
 import os
+import json
 import random
 import sys
 from types import SimpleNamespace as NS
@@ -23,6 +24,13 @@ from testkit import check, fails
 CARRIERS = {2103, 269, 270, 283, 284, 299, 300, 313, 314,
             327, 328, 360, 361, 374, 375, 407, 408,
             777, 778, 8620, 1037, 1038}
+with open(os.path.join(os.path.dirname(__file__), '..', 'data', 'training_simulator_formulas.json'), encoding='utf-8') as source:
+    PROFILE = json.load(source)
+
+
+def reviewed(type_id):
+    index = PROFILE['mobs'].get(str(type_id))
+    return PROFILE['mob_records'][index] if index is not None else None
 
 health_errors, other_errors = [], []
 for t, info in mobs.TYPES.items():
@@ -33,23 +41,27 @@ for t, info in mobs.TYPES.items():
     role = mobs.ROLES['boss']
     before = max(1, round(row['hp'] * role['hp_mult']))
     expected = round(before * 1.5) if int(t) in bosses.CAMP_BOSS_TYPES else before
+    accepted = reviewed(t)
+    if accepted:
+        expected = accepted['hp_max']
     if st.hp_max != expected:
         health_errors.append(int(t))
     weapon = mobs.WEAPONS.get(st.weapon_class, mobs.WEAPONS['fist'])
-    if (st.sp_max != max(0, round(row['sp'] * role['hp_mult']))
-            or st.dmg_min != round(row['dmg_min'] * weapon['dmg_mult'] * role['dmg_mult'])
+    if (st.sp_max != (accepted['sp_max'] if accepted else max(0, round(row['sp'] * role['hp_mult'])))
+            or st.dmg_min != (accepted['dmg_min'] if accepted else round(row['dmg_min'] * weapon['dmg_mult'] * role['dmg_mult']))
             or st.xp_mult != role['xp_mult']):
         other_errors.append(int(t))
-check('only reviewed camp bosses have extra HP; other bosses keep base HP',
+check('reviewed bosses follow the pinned profile; remaining bosses retain the HP hotfix',
       health_errors, [])
-check('boss SP damage and XP multipliers retain their existing rules', other_errors, [])
+check('boss SP/damage follow the profile and XP multipliers retain existing rules', other_errors, [])
 
 ordinary_errors = []
 for t in (12, 14, 836, 930, 931):
     st = mobs.stats(t)
     row = mobs.LEVELS[str(max(0, min(mobs.MAX_LEVEL, st.level)))]
     role = mobs.ROLES.get(st.role, mobs.ROLES['mob'])
-    if st.hp_max != max(1, round(row['hp'] * role['hp_mult'])):
+    accepted = reviewed(t)
+    if st.hp_max != (accepted['hp_max'] if accepted else max(1, round(row['hp'] * role['hp_mult']))):
         ordinary_errors.append(t)
 check('ordinary mobs and miners keep their HP', ordinary_errors, [])
 

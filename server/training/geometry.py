@@ -17,6 +17,7 @@ def arena_location(location=RANGE):
     if location != 59:
         loc.width, loc.height = ARENA_WIDTH, ARENA_HEIGHT
         loc.obstacles, loc.shoot_over = set(), frozenset()
+        loc.bushes = frozenset()
     else:
         loc.obstacles = set(loc.obstacles)
     loc.entries, loc.spawns = [], []

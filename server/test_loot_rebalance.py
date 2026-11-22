@@ -73,6 +73,21 @@ def revenue(k):
             + loot.get(mortimer.SAND, 0))
 
 
+def carried_ammo_revenue(st):
+    """Guaranteed rounds in 175 kills, independent of random economic rows."""
+    si = items.params_of(st.weapon_type_id) if st.weapon_type_id else None
+    if not si or not st.ranged or not si.get('comp_array'):
+        return 0
+    ammo = st.loot_ammo_type or si['comp_array'][0]
+    return 175 * price(ammo) * sum(st.loot_ammo_count) / 2
+
+
+def current_income_target(k, afro):
+    """The approved loot budget plus an existing carried-calibre change."""
+    return (afro + carried_ammo_revenue(mobs.stats(k))
+            - carried_ammo_revenue(mobs.MobStats(k, balanced=False)))
+
+
 class LootRebalance(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -107,15 +122,30 @@ class LootRebalance(unittest.TestCase):
                 total = sum(counts.values())
                 a = sum(revenue(k)[0] * n for k, n in counts.items()) / total
                 g = sum(revenue(k)[1] * n for k, n in counts.items()) / total
-                self.assertAlmostEqual(a, profile['afro'], delta=1)
+                target = sum(current_income_target(k, profile['afro']) * n
+                             for k, n in counts.items()) / total
+                self.assertAlmostEqual(a, target, delta=1)
                 self.assertAlmostEqual(g, profile['gold'], delta=.0001)
             else:
                 top = max(mobs.stats(k).level for k in counts)
                 for k in counts:
                     factor = 1 - .03 * (top - mobs.stats(k).level)
                     a, g = revenue(k)
-                    self.assertAlmostEqual(a, profile['afro'] * factor, delta=1)
+                    self.assertAlmostEqual(a, current_income_target(k, profile['afro'] * factor), delta=1)
                     self.assertAlmostEqual(g, profile['gold'] * factor, delta=.0001)
+
+    def test_changed_calibre_preserves_explicit_ammo_quality_and_quantity(self):
+        for kind in (840, 841):
+            with self.subTest(kind=kind):
+                original = mobs.MobStats(kind, balanced=False)
+                current = mobs.stats(kind)
+                compatible = items.params_of(current.weapon_type_id)['comp_array']
+                self.assertIn(current.loot_ammo_type, compatible)
+                original_quality = items.catalogue()[original.loot_ammo_type][1].rsplit('_', 1)[-1]
+                current_quality = items.catalogue()[current.loot_ammo_type][1].rsplit('_', 1)[-1]
+                self.assertEqual(current_quality, original_quality)
+                self.assertEqual(current.loot_ammo_count, original.loot_ammo_count)
+                self.assertEqual(current.loot_ammo_count, (2, 6))
 
     def test_sa_base_income_is_105000_afro_and_1_2_gold(self):
         profile = next(p for p in self.doc['targets'] if p['id'] == 'camp-263')

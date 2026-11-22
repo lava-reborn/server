@@ -90,7 +90,9 @@ class EdenNativeWeaponTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(self.case.pending[-1], si['strike_time'] / 1000)
             self.finish()
         strength = self.s.char.attr(progression.STRENGTH)
-        self.assertEqual(self.palm.hp, 5000 - si['h_damage_min'] - strength)
+        # Ordinary blades receive the same intellect scaling on palms as elsewhere.
+        expected = round((si['h_damage_min'] + strength) * (1 + .03 * max(0, self.s.char.attr(progression.INTELLECT) - 5)))
+        self.assertEqual(self.palm.hp, 5000 - expected)
         self.assertEqual(self.store.item(row['uniq'])['brk'], row['brk'] - 1)
         self.assertEqual(self.f.ap, self.f.ap_max - si['strike_cost'])
         self.assertEqual(self.skill_state(), before)

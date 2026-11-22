@@ -11,7 +11,7 @@ weapon multipliers. Nothing here invents a second set of numbers: every
 figure a mob fights with comes from those two files.
 
 Geometry lives here too, because the mob's brain and the shot resolver in
-combat.py share it and neither may import the other: LocationGrid.as puts a
+combat.py share it without a startup import cycle: LocationGrid.as puts a
 hex at rx = gx + 0.5*(gy % 2), ry = gy * 0.866, measures distance as the
 Euclidean one between those points (getHexDistance), and reads the facing
 angle off the signs of the difference (getDirection). The client colours the
@@ -246,7 +246,7 @@ def find_path(loc, start, goal, blocked=(), limit=SEARCH_LIMIT, toward=None):
 class MobStats:
     """One type's numbers, from mob_types.json through mob_curves.json."""
 
-    def __init__(self, type_id):
+    def __init__(self, type_id, balanced=True):
         info = TYPES.get(str(type_id), {})
         self.type_id = type_id
         self.name = info.get("name", "")
@@ -312,6 +312,10 @@ class MobStats:
             ts, rng = si.get("target_size", [0])[0], si.get("max_range", [0])[0]
             if ts > 0 and rng > 0:
                 self.scatter = ts / float(rng)
+
+        if balanced:
+            import battle_balance
+            battle_balance.configure_mob(self)
 
     def weapon_oid(self, entity_id):
         """The oid of the weapon in this mob's primary hand, or None. Virtual:
@@ -631,7 +635,7 @@ def count_of(type_id, t):
     return counts.get(t, 1)
 
 
-def roll_table(type_id, rng):
+def roll_table(type_id, rng, multiplier=1):
     """[(type_id, count)] off loot_table: every row rolled, so the dice
     spent do not depend on what came up, and the first MAX_DROPS successes
     kept. A row at SURE is certain: in the bag every time, without a die and
@@ -646,7 +650,7 @@ def roll_table(type_id, rng):
     for t, chance, _valuable in loot_table(type_id):
         if chance >= SURE:
             out.append((t, count_of(type_id, t)))
-        elif rng.random() < chance and (t in independent or kept < MAX_DROPS):
+        elif rng.random() < min(1, chance * multiplier) and (t in independent or kept < MAX_DROPS):
             out.append((t, count_of(type_id, t)))
             if t not in independent:
                 kept += 1
@@ -755,13 +759,13 @@ def quest_roll(type_id, wanted, rng, excluded_groups=()):
     return out
 
 
-def carried(st, rng):
+def carried(st, rng, multiplier=1):
     """[(type_id, count)]: what the body certainly had on it."""
     if st.role == "animal":
         parts = animal_parts(st)
         if not parts:
             return [(FALLBACK_LOOT, 1)]
-        return [(parts[0], 1)] + [(t, 1) for t in parts[1:] if rng.random() < 0.5]
+        return [(parts[0], 1)] + [(t, 1) for t in parts[1:] if rng.random() < min(1, 0.5 * multiplier)]
     out = []
     si = items.params_of(st.weapon_type_id) if st.weapon_type_id else None
     if si and st.ranged and si.get("comp_array"):
@@ -776,7 +780,7 @@ def carried(st, rng):
     return out or [(FALLBACK_LOOT, 1)]
 
 
-def loot_for(st, rng, wanted=(), *, loc_id=None, killer_level=None):
+def loot_for(st, rng, wanted=(), *, loc_id=None, killer_level=None, multiplier=1):
     """[(type_id, count)] for a corpse of this type: what it carried, then
     what its kind's table rolled, then the quest rows for what those who
     brought it down still need (quest_roll; wanted, the types). combat.
@@ -784,7 +788,10 @@ def loot_for(st, rng, wanted=(), *, loc_id=None, killer_level=None):
     whatever a list says."""
     import bosses                  # late: keep module initialization separate
     blueprint = bosses.blueprint_for(loc_id, st.type_id)
-    out = carried(st, rng) + roll_table(st.type_id, rng) + \
+    # Scanner x3 and the difficult-mob bonus up to x1.75 affect random
+    # drops only, never harvest/quest/event quantities.
+    multiplier = max(1, min(5.25, multiplier)) if st.role != 'object' else 1
+    out = carried(st, rng, multiplier) + roll_table(st.type_id, rng, multiplier) + \
         quest_roll(st.type_id, wanted, rng)
     # Encrypted blueprints have exactly one acquisition roll per corpse,
     # from the explicit scheduled-boss table below. Legacy quest rows or
@@ -796,7 +803,7 @@ def loot_for(st, rng, wanted=(), *, loc_id=None, killer_level=None):
         # Levels are accepted for compatibility; the chance is fixed at 10%.
         blueprint_level = int(items.catalogue()[blueprint][1].rsplit("_", 1)[1])
         chance = bosses.blueprint_drop_chance(killer_level, blueprint_level)
-        if rng.random() < chance:
+        if rng.random() < min(1, chance * multiplier):
             out.append((blueprint, 1))
     return out
 
@@ -861,6 +868,7 @@ class Mob:
         # combat.Fighter -> [harm done, share of the kill already paid,
         # skill, spec]: what a kill is settled from (RoomCombat.settle_xp)
         self.xp_ledger = {}
+        self.loot_level = 0
         # Character id -> harm done since it was last whole: what a
         # warehouse's boss is taken by (holdings.py). Apart from the xp
         # ledger, which keeps every blow until the kill: this one forgets
@@ -969,6 +977,7 @@ class Mob:
         self.target = None
         self.homing = False
         self.xp_ledger = {}
+        self.loot_level = 0
         self.capture_harm = {}
         self.capture = None
         self.quest_wants = frozenset()
@@ -1016,8 +1025,11 @@ class Mob:
             return
         target = self.target
         if self.stats.ranged:
+            # The firing decision and its walking goal use the same cover
+            # as the actual burst; verified bushes never become AI walls.
+            from combat import shot_wall
             in_reach = (hex_distance(self.cell, target.cell, loc.width) <= self.stats.range
-                        and line_of_fire(loc, self.cell, target.cell) is None)
+                        and shot_wall(loc, self.cell, target.cell) is None)
         else:
             in_reach = adjacent(self.cell, target.cell, loc)
         if in_reach:
@@ -1028,7 +1040,7 @@ class Mob:
             return
         if self.stats.ranged:
             goal = (lambda c: hex_distance(c, target.cell, loc.width) <= self.stats.range
-                    and line_of_fire(loc, c, target.cell) is None)
+                    and shot_wall(loc, c, target.cell) is None)
         else:
             goal = lambda c: adjacent(c, target.cell, loc)
         rc.mob_walk(self, goal, now)

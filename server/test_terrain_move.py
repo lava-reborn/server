@@ -23,6 +23,7 @@ data/test_borders.py.
     wsl.exe -e python3 server/test_terrain_move.py
 """
 import collections
+import math
 import os
 import socket
 import subprocess
@@ -120,7 +121,13 @@ def param(frame_text, key):
 
 def enter(c):
     got = c.frames(wait=2)
+    # lenter precedes the room's snapshot. Under parallel load its remaining
+    # frames may arrive after a quiet socket read; wait for the final list.
+    deadline = time.monotonic() + 15
+    while not any(f.startswith("e_list;") for f in got) and time.monotonic() < deadline:
+        got += c.frames(wait=2)
     check("positioned", got[0].split(";")[0], "lenter")
+    check("the location snapshot is complete", any(f.startswith("e_list;") for f in got), True)
 
 
 def goto(c, gx, gy):
@@ -199,7 +206,9 @@ try:
     got = c.frames()
     check("on the map at the start", [f.split(";")[0] for f in got],
           ["cmdAck", "gmap", "marks"])
-    check("standing on the market's cell", "x=5970;y=1730;" in got[1], True)
+    start_x, start_y = (float(param(got[1], key)) for key in ("x", "y"))
+    check("standing on the market's cell", (math.floor(start_x), math.floor(start_y)),
+          (5970, 1730))
     c.send("moveTo;dy=0;dx=100;")
     got = c.frames()
     check("a step east is acknowledged with a velocity and nothing else",
@@ -209,13 +218,15 @@ try:
     check("and the arrival is confirmed a cell on",
           [f.split(";")[0] for f in got], ["userMove"])
     check("at rest, where it was aimed",
-          (param(got[0], "dx"), param(got[0], "vx"), param(got[0], "vy")),
-          ("5971", "0", "0"))
+          (float(param(got[0], "dx")), float(param(got[0], "dy")),
+           param(got[0], "vx"), param(got[0], "vy")),
+          (round(start_x + 1, 2), start_y, "0", "0"))
 
     # --- into the lake: stopped on its shore -------------------------------
     print("  ..  the lake reaches %d,%d, open ground to its east"
           % (SHORE_X - 1, SHORE_Y))
-    goto(c, SHORE_X + 1, SHORE_Y)
+    shore_map = goto(c, SHORE_X + 1, SHORE_Y)
+    shore_y = float(param(shore_map, "y"))
     c.send("moveTo;dy=0;dx=-1000;")
     got = c.frames()
     check("a leg into the water is acknowledged, it is the client that walks",
@@ -228,8 +239,8 @@ try:
     check("just inside the last dry cell, not in the water",
           SHORE_X <= stopped < SHORE_X + 0.1, True)
     check("at rest, and not moved off its row",
-          (param(got[0], "vx"), param(got[0], "vy"), param(got[0], "dy")),
-          ("0", "0", str(SHORE_Y)))
+          (param(got[0], "vx"), param(got[0], "vy"), float(param(got[0], "dy"))),
+          ("0", "0", shore_y))
 
     # --- and the next step is refused where it stands ----------------------
     c.send("moveTo;dy=0;dx=-1000;")
@@ -340,7 +351,8 @@ try:
     c.send("chWorld;")
     got = c.frames()
     check("and the map puts the player on the rim, not beyond it",
-          "x=%d;y=%d;" % RIM_CELL in got[1], True)
+          (math.floor(float(param(got[1], "x"))), math.floor(float(param(got[1], "y")))),
+          RIM_CELL)
 
     c.send("logout;")
     c.frames()

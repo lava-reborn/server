@@ -85,6 +85,7 @@ the yard; none of it is a place of the cut.
 """
 import collections
 import json
+import math
 import os
 import socket
 import subprocess
@@ -155,9 +156,8 @@ RESTORED = {(5878, 2012): 147, (5899, 2003): 253, (5900, 2017): 144, (5894, 2019
 CUT = {(5879, 2011): "Аэроплощадка ФСЦ (530)", (5876, 2013): "Ремесленники по одежде 14 (455)",
        (5878, 2014): "Ремесленники по одежде 15 (460)",
        (5878, 2015): "Ремесленники по одежде 16 (518)",
-       (5878, 2013): "Вещевой рынок «Торговцы одеждой» (469)",
-       (5955, 2032): "Блок-пост Delta Force (382)"}
-CUT_FILES = ([455, 460, 518, 469, 530, 382, 448, 380, 381, 385, 386, 387, 388, 958, 959, 960,
+       (5878, 2013): "Вещевой рынок «Торговцы одеждой» (469)"}
+CUT_FILES = ([455, 460, 518, 469, 530, 448, 381, 385, 386, 387, 388, 959, 960,
               1196, 534, 535, 536, 537, 593, 594, 991, 992, 993, 1207, 337, 338, 339, 342, 346,
               350, 354, 358, 362, 366, 955, 956, 957, 1195, 1171, 389])
 # The quests.
@@ -808,6 +808,9 @@ def newcomer(nick, level):
     st = store()
     cid = st.character_by_name(nick)["id"]
     st.save_stats(cid, [("skill", progression.SHOOTING, level, 0, progression.skill_xp_max(level))])
+    # Quest controller with an admin gun: isolate the route from combat balance.
+    st.save_stats(cid, [("attrib", progression.STRENGTH, 1000, 0, 0),
+                          ("attrib", progression.INTELLECT, 1000, 0, 0)])
     st.save_character_state(cid, level=level)
     st.close()
     c = Client(testkit.connect(SRV.port, SRV.proc, SRV.log))
@@ -878,8 +881,10 @@ try:
     # --- the cut: walked off the station ---------------------------------------------------
     got = to_map(c)
     check("out of the station onto the map: on its cell, 5877,2010",
-          [(p.get("x"), p.get("y")) for p in named(got, "gmap")], [world.cell_of(DN_STATION)])
-    walked = walk_map(c, 2.5, 1.5)
+          [(math.floor(p["x"]), math.floor(p["y"])) for p in named(got, "gmap")],
+          [world.cell_of(DN_STATION)])
+    point = first(got, "gmap")
+    walked = walk_map(c, 5879.5 - point["x"], 2011.5 - point["y"])
     lid, arrival = enter_cell(c)
     gone = {t for f in CUT_FILES for _c, t in world.location(f).spawns if t}
     check("two cells east and one south, where «Аэроплощадка ФСЦ» stood: the wasteland of the"

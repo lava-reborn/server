@@ -6,6 +6,97 @@ Only the departing object's own subscriptions and timer handles are removed.
 from avm_codegen import Compiler
 
 SOURCE = '''
+def __lcTimeout(target, callback, delay):
+    this.target = target
+    this.callback = callback
+    this.args = []
+    i = 3
+    while i < len(arguments):
+        this.args.push(arguments[i])
+        i = i + 1
+    this.id = setInterval(_global.__lcTimeoutFire, delay, this)
+
+def __lcTimeoutClear():
+    _global.__lcStopTimer(this, "id")
+    this.target = None
+    this.callback = None
+    this.args = None
+
+def __lcTimeoutFire(timer):
+    callback = timer.callback
+    target = timer.target
+    args = timer.args
+    _global.__lcTimeoutClear.apply(timer, [])
+    if callback:
+        callback.apply(target, args)
+
+def __lcInstallTimeout():
+    old = lol.utils.Timeout
+    if not old or old.__lcPatched:
+        return
+    replacement = _global.__lcTimeout
+    replacement.prototype.Clear = _global.__lcTimeoutClear
+    # Bootstrap timers still reference their original registry until they fire.
+    replacement._intervals = old._intervals
+    replacement.__lcPatched = True
+    lol.utils.Timeout = replacement
+
+def __lcEffectsInit():
+    this.__lcEffectsSource = this.master.gamer.effects
+    this.__lcEffectsDisposed = False
+    this.__lcEffectsInitOrig()
+
+def __lcEffectsKill():
+    if this.__lcEffectsDisposed:
+        return
+    this.__lcEffectsDisposed = True
+    _global.__lcStopTimer(this, "effectsTimer")
+    source = this.__lcEffectsSource
+    if source:
+        source.removeEventListener(lol.events.PlayerEvent.UPDATE_EFFECTS, this, this.effectsUpdate)
+        source.removeEventListener(lol.events.PlayerEvent.UPDATE_ONE_EFFECT, this, this.oneEffectUpdate)
+    this.__lcEffectsSource = None
+    this.__lcEffectsKillOrig()
+
+def __lcInfoNick(id):
+    this.__lcInfoDisposed = False
+    this.__lcInfoNickOrig(id)
+    this.__lcInfoPlayer = this.player
+    this.__lcInfoParty = lol.core.party.PartyManager.getInstance()
+
+def __lcInfoKill():
+    if this.__lcInfoDisposed:
+        return
+    this.__lcInfoDisposed = True
+    _global.__lcStopTimer(this, "timer")
+    _global.__lcStopTimer(this, "removePhraseInterval")
+    party = this.__lcInfoParty
+    events = lol.core.party.PartyEvent
+    if party:
+        # Native kill removes partyColorUpdate_pause, but setNick registered
+        # partyColorUpdate. The dispatcher requires the same function object.
+        types = [events.JOIN_TO_PARTY, events.DISBAND_PARTY, events.KICKED_FROM_PARTY, events.LEAVE_PARTY, events.PARTY_LIST_REFRESH]
+        i = 0
+        while i < len(types):
+            party.removeEventListener(types[i], this, this.partyColorUpdate)
+            i = i + 1
+    player = this.__lcInfoPlayer
+    if player:
+        player.removeEventListener(lol.events.PlayerEvent.UPDATE_INFO, this, this.userInfoUpdate)
+    this.__lcInfoKillOrig()
+    this.__lcInfoParty = None
+    this.__lcInfoPlayer = None
+
+def __lcPrepareTimer(seconds):
+    # A delayed Flash frame can skip the exact second native code waits for.
+    # Retire the display timer once its deadline has passed as well.
+    if getTimer() - this.startTimer >= seconds * 1000:
+        this.timerFlag = False
+        _global.__lcStopTimer(this, "timer")
+        this.prepare_txt.text = ""
+        return
+    return this.__lcPrepareTimerOrig(seconds)
+
 def __lcDisableTraderNotice():
     this.traderMessage_bool = False
 
@@ -49,6 +140,8 @@ def __lcSceneKill():
     this.__lcDisposed = True
     _global.__lcStopTimer(this, "areaInterval")
     _global.__lcStopTimer(this, "spt_int")
+    # Native scene kill never calls kill on the surviving name/health panels.
+    _global.__lcKillHelpers(this.helperObjects)
     _global.__lcUnlisten(this.currentLocation, ["addPlayer", "removePlayer", "position", "finishPart", "finishMove", "aim", "fireAck", "dead", "enemy", "addBag", "removeBag"], this)
     state = this.__lcState
     if state:
@@ -99,8 +192,25 @@ def __lcLoaderClear():
 '''
 
 
+def kill_helpers(Asm):
+    """Enumerate native sparse entity IDs, never scan an array's length."""
+    a = Asm()
+    a.var('helpers').op('not').iftrue('done')
+    a.var('helpers').op('enumerate2').label('next')
+    a.push('key').op('stackswap').op('definelocal')
+    a.var('key').push(None).op('equals2').iftrue('done')
+    a.push('panel').var('helpers').var('key').op('getmember').op('definelocal')
+    a.var('panel').op('not').iftrue('skip')
+    a.var('panel').member('kill').op('not').iftrue('skip')
+    a.push(0).var('panel').push('kill').op('callmethod').op('pop')
+    a.label('skip').push(True).iftrue('next')
+    a.label('done').push(None).op('return')
+    return a
+
+
 def patches(Asm, undef):
     functions = Compiler(Asm, undef).functions(SOURCE)
+    functions.append(('__lcKillHelpers', ('helpers',), kill_helpers(Asm)))
     bodies = {name: (params, body) for name, params, body in functions}
     wraps = []
     for path, method, keep, helper in (
@@ -114,6 +224,11 @@ def patches(Asm, undef):
         (('core', 'globmap', 'DisplayGlobalMap'), 'init', '__lcMapInitOrig', '__lcMapInit'),
         (('core', 'globmap', 'DisplayGlobalMap'), 'kill', '__lcMapKillOrig', '__lcMapKill'),
         (('core', 'location', 'LocSourceLoader'), 'clearList', '__lcLoaderClearOrig', '__lcLoaderClear'),
+        (('core', 'effects', 'DisplayFX'), 'init', '__lcEffectsInitOrig', '__lcEffectsInit'),
+        (('core', 'effects', 'DisplayFX'), 'kill', '__lcEffectsKillOrig', '__lcEffectsKill'),
+        (('core', 'location', 'CharInfo'), 'setNick', '__lcInfoNickOrig', '__lcInfoNick'),
+        (('core', 'location', 'CharInfo'), 'kill', '__lcInfoKillOrig', '__lcInfoKill'),
+        (('core', 'location', 'CharInfo'), 'prepareTimer', '__lcPrepareTimerOrig', '__lcPrepareTimer'),
     ):
         params, body = bodies[helper]
         wraps.append((path, method, keep, params, body))

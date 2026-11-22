@@ -56,7 +56,7 @@ class AbuHamedMinerLoot(unittest.TestCase):
         for kind, level in ((930, 18), (931, 19)):
             st = mobs.stats(kind)
             self.assertEqual((st.level, st.weapon_type_id, st.weapon_class, st.ranged),
-                             (level, 25319, 'assault_rifle', True))
+                             (level, 25319, 'assault', True))
             for k, v in designed[st.name].items():
                 self.assertEqual(mobs.TYPES[str(kind)][k], v)
             self.assertIn(6109, items.params_of(25319)['comp_array'])

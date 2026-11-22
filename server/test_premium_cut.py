@@ -78,10 +78,13 @@ with open(os.path.join(DATA, "retired.json"), encoding="utf-8") as _fh:
 # server/test_halfa_cut.py holds.
 PLACES = {int(k): v for k, v in RETIRED["places"].items()
           if v.startswith("The owner's cut of (P)")}
-# And its own creatures: the black market's 639 (2026-10-10), no premium
-# creature, stands beside them, and server/test_halfa_cut.py holds it.
+# Separate later non-premium cuts: the black market's 639 (2026-10-10)
+# and the exact 20 helicopter transport types (2026-11-22). Their dedicated
+# cut regressions check them; any other non-premium row still fails below.
+HELICOPTER_PILOTS = set(range(4670, 4689)) | {4786}
 CREATURES = {int(k): v for k, v in RETIRED["creatures"].items()
-             if not v.startswith("The owner's cut of Вади-Хальфа")}
+             if not v.startswith("The owner's cut of Вади-Хальфа")
+             and int(k) not in HELICOPTER_PILOTS}
 CELLS = {124: (5968, 1726), 125: (5876, 2012), 130: (6182, 1975)}
 QUARTER, AZAM, QUARTER_MASTER, WAY_IN, WAY_OUT = 447, 704, 5771, 414, 415
 PRICHAL = 41

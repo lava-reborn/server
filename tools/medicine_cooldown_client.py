@@ -67,7 +67,7 @@ def __bfMedTick():
             clearInterval(_global.__bfMedTimer)
         _global.__bfMedTimer = None
         return
-    # Stay alive only for these four seconds, including a collapsed panel.
+    # Stay alive only for the server's remaining cooldown, including a collapsed panel.
     # This also handles a canvas whose native constructor predates our hooks.
     if not _global.__bfMedTimer:
         _global.__bfMedTimer = setInterval(_global.__bfMedTick, 100)
@@ -106,7 +106,7 @@ def __bfMedTick():
 def __bfMedNotify(cmd):
     this.__bfMedNotifyOrig(cmd)
     if cmd.messID == "medCooldown":
-        _global.__bfMedUntil = getTimer() + Math.min(4000, Math.max(0, cmd.params.time_ms * 1))
+        _global.__bfMedUntil = getTimer() + Math.min(6000, Math.max(0, cmd.params.time_ms * 1))
         _global.__bfMedDescription = cmd.params.description
         _global.__bfMedTick()
 

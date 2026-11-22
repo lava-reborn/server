@@ -79,9 +79,9 @@ out, changed = M.apply(raw)
 retexted = {(x, y, new) for x, y, was, new in edits
             if was is not None and new is not None and (x, y, was) not in COMPATIBILITY}
 fallbacks = {(x, y, new) for x, y, was, new in edits if was is None} & retexted
-check("the only retext/add fallback is the restored Eden town label",
+check("retext/add fallbacks restore only the Eden town and two clan-base labels",
       sorted((x, y) for x, y, _text in fallbacks),
-      [(5858, 1929)])
+      [(5858, 1929), (5955, 2032), (6154, 1963)])
 check("every original edit applied once; matching recovery fallbacks add no duplicate",
       changed, len(edits) - len(fallbacks) - len(COMPATIBILITY))
 tree = rows_at(raw, 6266, 1822, "Новогодняя Елка")

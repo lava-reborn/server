@@ -33,23 +33,23 @@
   "1069": {
    "_wiki": {
     "column": "-[0]",
-    "confidence": 0.8,
-    "method": "icon_prefix",
-    "page": "+3 к восприятию Золотая Валентинка",
+    "confidence": 1.0,
+    "method": "hand",
+    "page": "+3 к силе Золотая Валентинка",
     "variant": "A"
    },
    "bonus_attribs": [
     3
    ],
-   "bonus_attribs_m": 8,
-   "desc_ru": "Послание от любящего человека.\nЧеловек, что послал вам эту валентинку, так заботится о вас, что вы и сами начинаете вести себя более аккуратно.",
+   "bonus_attribs_m": 1,
+   "desc_ru": "Послание от любящего человека.\nСодержащиеся в нем теплые слова придают веры в собственные силы.",
    "exchang": 0,
-   "g_cost": 500,
+   "g_cost": 2500,
    "h_damage_max": 1,
    "h_damage_min": 1,
    "max_break_abs": 30000,
    "max_range": 1.7,
-   "name_ru": "+3 к восприятию Золотая Валентинка",
+   "name_ru": "+3 к силе Золотая Валентинка",
    "need_skills": [
     0
    ],
@@ -63,23 +63,23 @@
   "1070": {
    "_wiki": {
     "column": "-[0]",
-    "confidence": 0.8,
-    "method": "icon_prefix",
-    "page": "+3 к восприятию Золотая Валентинка",
+    "confidence": 1.0,
+    "method": "hand",
+    "page": "+3 к ловкости Золотая Валентинка",
     "variant": "A"
    },
    "bonus_attribs": [
     3
    ],
-   "bonus_attribs_m": 8,
-   "desc_ru": "Послание от любящего человека.\nЧеловек, что послал вам эту валентинку, так заботится о вас, что вы и сами начинаете вести себя более аккуратно.",
+   "bonus_attribs_m": 2,
+   "desc_ru": "Послание от любящего человека.\nСодержащиеся в нем теплые слова поднимают настроение и вы чувствуете себя легко и свободно.",
    "exchang": 0,
-   "g_cost": 500,
+   "g_cost": 2500,
    "h_damage_max": 1,
    "h_damage_min": 1,
    "max_break_abs": 30000,
    "max_range": 1.7,
-   "name_ru": "+3 к восприятию Золотая Валентинка",
+   "name_ru": "+3 к ловкости Золотая Валентинка",
    "need_skills": [
     0
    ],
@@ -93,8 +93,8 @@
   "1071": {
    "_wiki": {
     "column": "-[0]",
-    "confidence": 0.8,
-    "method": "icon_prefix",
+    "confidence": 1.0,
+    "method": "hand",
     "page": "+3 к восприятию Золотая Валентинка",
     "variant": "A"
    },
@@ -104,7 +104,7 @@
    "bonus_attribs_m": 8,
    "desc_ru": "Послание от любящего человека.\nЧеловек, что послал вам эту валентинку, так заботится о вас, что вы и сами начинаете вести себя более аккуратно.",
    "exchang": 0,
-   "g_cost": 500,
+   "g_cost": 2500,
    "h_damage_max": 1,
    "h_damage_min": 1,
    "max_break_abs": 30000,
@@ -123,23 +123,23 @@
   "1072": {
    "_wiki": {
     "column": "-[0]",
-    "confidence": 0.8,
-    "method": "icon_prefix",
-    "page": "+3 к восприятию Золотая Валентинка",
+    "confidence": 1.0,
+    "method": "hand",
+    "page": "+4 к интеллекту Золотая Валентинка",
     "variant": "A"
    },
    "bonus_attribs": [
-    3
+    4
    ],
-   "bonus_attribs_m": 8,
-   "desc_ru": "Послание от любящего человека.\nЧеловек, что послал вам эту валентинку, так заботится о вас, что вы и сами начинаете вести себя более аккуратно.",
+   "bonus_attribs_m": 16,
+   "desc_ru": "Послание от любящего человека.\nВ этой валентинке вас очень похвалили. И не в последнюю очередь - за ваш живой ум и сообразительность.",
    "exchang": 0,
-   "g_cost": 500,
+   "g_cost": 2500,
    "h_damage_max": 1,
    "h_damage_min": 1,
    "max_break_abs": 30000,
    "max_range": 1.7,
-   "name_ru": "+3 к восприятию Золотая Валентинка",
+   "name_ru": "+4 к интеллекту Золотая Валентинка",
    "need_skills": [
     0
    ],
@@ -83972,6 +83972,81 @@
    "use_count": 1,
    "weight": 10
   },
+  "3474": {
+   "_wiki": {
+    "column": "",
+    "confidence": 1,
+    "method": "manual",
+    "page": "Репарин I",
+    "variant": "A"
+   },
+   "bonus_act_time": 3600,
+   "bonus_od": 0,
+   "cost": 500,
+   "desc_ru": "Повышает силу.",
+   "exchang": 1,
+   "g_cost": 0,
+   "max_h_rest": 0,
+   "max_st_rest": 0,
+   "min_h_rest": 0,
+   "min_st_rest": 0,
+   "name_ru": "Репарин I",
+   "sellable": true,
+   "source_revision": 22024,
+   "str_bonus": 1,
+   "use_count": 1,
+   "weight": 10
+  },
+  "3475": {
+   "_wiki": {
+    "column": "",
+    "confidence": 1,
+    "method": "manual",
+    "page": "Репарин II",
+    "variant": "A"
+   },
+   "bonus_act_time": 3600,
+   "bonus_od": 0,
+   "cost": 2500,
+   "desc_ru": "Повышает силу.",
+   "exchang": 1,
+   "g_cost": 0,
+   "max_h_rest": 0,
+   "max_st_rest": 0,
+   "min_h_rest": 0,
+   "min_st_rest": 0,
+   "name_ru": "Репарин II",
+   "sellable": true,
+   "source_revision": 22025,
+   "str_bonus": 3,
+   "use_count": 1,
+   "weight": 10
+  },
+  "3476": {
+   "_wiki": {
+    "column": "",
+    "confidence": 1,
+    "method": "manual",
+    "page": "Репарин III",
+    "variant": "G"
+   },
+   "bonus_act_time": 3600,
+   "bonus_od": 0,
+   "cost": 0,
+   "desc_ru": "Повышает силу.",
+   "exchang": 0,
+   "g_cost": 50,
+   "max_h_rest": 0,
+   "max_st_rest": 0,
+   "min_h_rest": 0,
+   "min_st_rest": 0,
+   "name_ru": "Репарин III",
+   "sellable": false,
+   "source_revision": 22026,
+   "str_bonus": 5,
+   "use_count": 1,
+   "weight": 10
+  },
   "3477": {
    "_wiki": {
     "column": "-[0]",
@@ -87023,13 +87098,54 @@
    "slot_type": 3,
    "weight": 100
   },
+  "3726": {
+   "_wiki": {
+    "column": "-[0]",
+    "confidence": 0.95,
+    "method": "manual",
+    "page": "МОД. УРОВЕНЬ А1",
+    "variant": "G",
+    "why": "Original belt_crpc_paw, unique MOD A1 text47197 and wiki crocodile-paw exchange; mapping accepted by release owner. Stats from the raw wiki table, not invented server data.",
+    "release_requirement": "DESIGNED owner-approved shared tier16 for plain/crossed A1; existing character-level+3 gate prevents low-level transfers bypassing the rule. Not an archived level."
+   },
+   "armor_class": 5,
+   "bonus_ce": 20,
+   "bonus_skills": [
+    3
+   ],
+   "bonus_skills_m": 1,
+   "bonus_specs": [
+    3,
+    3
+   ],
+   "bonus_specs_m": 3,
+   "cost": 0,
+   "g_cost": 3600,
+   "max_break_abs": 5000,
+   "name_ru": "МОД. уровень А1.",
+   "desc_ru": "Результат упорной работы ученых по распилу НЛО. Обладатель не может его потерять ни при каких обстоятельствах.",
+   "need_attribs": [
+    5
+   ],
+   "need_attribs_m": 4,
+   "premium": 0,
+   "exchang": 0,
+   "sellable": 0,
+   "slot_type": 3,
+   "weight": 100,
+   "need_skills": [
+    16
+   ],
+   "need_skills_m": 1
+  },
   "3735": {
    "_wiki": {
     "column": "-[0]",
     "confidence": 0.95,
     "method": "icon_exact",
     "page": "Подсумки автоматчика МОД. А1.",
-    "variant": "G"
+    "variant": "G",
+    "release_requirement": "DESIGNED owner-approved shared tier16 for plain/crossed A1; existing character-level+3 gate prevents low-level transfers bypassing the rule. Not an archived level."
    },
    "armor_class": 5,
    "bonus_attribs": [
@@ -87049,13 +87165,17 @@
    "bonus_specs_m": 19,
    "desc_ru": "Удобные подсумки для магазинов автомата. Установлена модификация уровня А1.",
    "exchang": 0,
-   "g_cost": 4800,
+   "g_cost": 5000,
    "max_break_abs": 5600,
    "name_ru": "Подсумки автоматчика МОД. А1.",
    "need_attribs": [
     5
    ],
    "need_attribs_m": 4,
+   "need_skills": [
+    16
+   ],
+   "need_skills_m": 2,
    "premium": 0,
    "sellable": 0,
    "slot_type": 3,
@@ -87067,7 +87187,8 @@
     "confidence": 0.95,
     "method": "icon_exact",
     "page": "Подсумки снайпера МОД. А1.",
-    "variant": "G"
+    "variant": "G",
+    "release_requirement": "DESIGNED owner-approved shared tier16 for plain/crossed A1; existing character-level+3 gate prevents low-level transfers bypassing the rule. Not an archived level."
    },
    "armor_class": 5,
    "bonus_attribs": [
@@ -87094,6 +87215,10 @@
     5
    ],
    "need_attribs_m": 4,
+   "need_skills": [
+    16
+   ],
+   "need_skills_m": 2,
    "premium": 0,
    "sellable": 0,
    "slot_type": 3,
@@ -87104,8 +87229,11 @@
     "column": "-[0]",
     "confidence": 0.95,
     "method": "icon_exact",
-    "page": "Подсумки снайпера М2",
-    "variant": "G"
+    "page": "Подсумки спецназовца МОД. А1.",
+    "variant": "G",
+    "why": "Correct the wrong incomplete M2 article alias; original belt_sub_machineguns_g_mod and separate raw A1 article agree.",
+    "valuation": "DESIGNED release owner-approved internal value:36G plain MOD A1 plus existing G pouch price; not an archived price or new retail entry.",
+    "release_requirement": "DESIGNED owner-approved shared tier16 for plain/crossed A1; existing character-level+3 gate prevents low-level transfers bypassing the rule. Not an archived level."
    },
    "armor_class": 5,
    "bonus_attribs": [
@@ -87113,13 +87241,15 @@
    ],
    "bonus_attribs_m": 2,
    "bonus_specs": [
+    3,
+    3,
     1
    ],
-   "bonus_specs_m": 128,
-   "desc_ru": "Удобные подсумки для магазинов ПП.",
+   "bonus_specs_m": 131,
+   "desc_ru": "Удобные подсумки для магазинов ПП. Установлена модификация уровня А1.",
    "exchang": 0,
    "max_break_abs": 5600,
-   "name_ru": "Подсумки снайпера М2",
+   "name_ru": "Подсумки спецназовца МОД. А1.",
    "need_attribs": [
     5
    ],
@@ -87127,7 +87257,18 @@
    "premium": 0,
    "sellable": 0,
    "slot_type": 3,
-   "weight": 700
+   "weight": 700,
+   "bonus_ce": 20,
+   "bonus_skills": [
+    3
+   ],
+   "bonus_skills_m": 1,
+   "cost": 0,
+   "g_cost": 4400,
+   "need_skills": [
+    16
+   ],
+   "need_skills_m": 2
   },
   "3738": {
    "_wiki": {
@@ -87135,7 +87276,8 @@
     "confidence": 0.95,
     "method": "icon_exact",
     "page": "Подсумки пулемётчика МОД. А1.",
-    "variant": "G"
+    "variant": "G",
+    "release_requirement": "DESIGNED owner-approved shared tier16 for plain/crossed A1; existing character-level+3 gate prevents low-level transfers bypassing the rule. Not an archived level."
    },
    "armor_class": 5,
    "bonus_attribs": [
@@ -87155,13 +87297,17 @@
    "bonus_specs_m": 67,
    "desc_ru": "Удобные подсумки для лент пулемёта. Установлена модификация уровня А1.",
    "exchang": 0,
-   "g_cost": 5600,
+   "g_cost": 5500,
    "max_break_abs": 5600,
    "name_ru": "Подсумки пулемётчика МОД. А1.",
    "need_attribs": [
     5
    ],
    "need_attribs_m": 4,
+   "need_skills": [
+    16
+   ],
+   "need_skills_m": 2,
    "premium": 0,
    "sellable": 0,
    "slot_type": 3,
@@ -87173,7 +87319,9 @@
     "confidence": 0.95,
     "method": "icon_exact",
     "page": "Подсумки охотника МОД. А1.",
-    "variant": "G"
+    "variant": "G",
+    "valuation": "DESIGNED release owner-approved internal value:36G plain MOD A1 plus existing G pouch price; not an archived price or new retail entry.",
+    "release_requirement": "DESIGNED owner-approved shared tier16 for plain/crossed A1; existing character-level+3 gate prevents low-level transfers bypassing the rule. Not an archived level."
    },
    "armor_class": 5,
    "bonus_attribs": [
@@ -87202,7 +87350,13 @@
    "premium": 0,
    "sellable": 0,
    "slot_type": 3,
-   "weight": 700
+   "weight": 700,
+   "cost": 0,
+   "g_cost": 3760,
+   "need_skills": [
+    16
+   ],
+   "need_skills_m": 2
   },
   "3740": {
    "_wiki": {
@@ -87210,7 +87364,9 @@
     "confidence": 0.95,
     "method": "icon_exact",
     "page": "Подсумки пистолетные МОД. А1.",
-    "variant": "G"
+    "variant": "G",
+    "valuation": "DESIGNED release owner-approved internal value:36G plain MOD A1 plus existing G pouch price; not an archived price or new retail entry.",
+    "release_requirement": "DESIGNED owner-approved shared tier16 for plain/crossed A1; existing character-level+3 gate prevents low-level transfers bypassing the rule. Not an archived level."
    },
    "armor_class": 5,
    "bonus_attribs": [
@@ -87239,7 +87395,13 @@
    "premium": 0,
    "sellable": 0,
    "slot_type": 3,
-   "weight": 700
+   "weight": 700,
+   "cost": 0,
+   "g_cost": 3650,
+   "need_skills": [
+    16
+   ],
+   "need_skills_m": 2
   },
   "3741": {
    "_wiki": {
@@ -89245,16 +89407,16 @@
   },
   "3826": {
    "_wiki": {
-    "column": "Сканер[0]",
+    "column": "Сканер (У)[1]",
     "confidence": 0.6,
     "method": "manual",
     "page": "Сканер",
     "variant": "A+long"
    },
-   "bonus_act_time": 1800,
+   "bonus_act_time": 7200,
    "desc_ru": "Увеличивает шанс найти что-нибудь ценное. Правда хватает его только на некоторое время.",
    "exchang": 0,
-   "g_cost": 50,
+   "g_cost": 100,
    "loot_pct": 200,
    "max_h_rest": 0,
    "max_st_rest": 0,
@@ -89433,6 +89595,31 @@
    "max_count": 100,
    "name_ru": "Карта 5899.2003",
    "quest": 1,
+   "weight": 10
+  },
+  "3897": {
+   "_wiki": {
+    "column": "",
+    "confidence": 1,
+    "method": "manual",
+    "page": "Кориобелаодор",
+    "variant": "G"
+   },
+   "bonus_act_time": 7200,
+   "bonus_od": 40,
+   "cost": 0,
+   "desc_ru": "Повышает подвижность. Увеличивает запас ОД.",
+   "exchang": 0,
+   "g_cost": 10,
+   "max_h_rest": 0,
+   "max_st_rest": 0,
+   "min_h_rest": 0,
+   "min_st_rest": 0,
+   "name_ru": "Кориобелаодор",
+   "sellable": false,
+   "source_revision": 21997,
+   "str_bonus": 0,
+   "use_count": 1,
    "weight": 10
   },
   "3904": {
@@ -96493,7 +96680,8 @@
     "confidence": 0.95,
     "method": "icon_exact",
     "page": "Подсумки рукопашника МОД. А1.",
-    "variant": "G"
+    "variant": "G",
+    "release_requirement": "DESIGNED owner-approved shared tier16 for plain/crossed A1; existing character-level+3 gate prevents low-level transfers bypassing the rule. Not an archived level."
    },
    "armor_class": 5,
    "bonus_attribs": [
@@ -96512,13 +96700,17 @@
    "bonus_specs_m": 3,
    "desc_ru": "Удобные подсумки для ножей. Установлена модификация уровня А1.",
    "exchang": 0,
-   "g_cost": 4400,
+   "g_cost": 4500,
    "max_break_abs": 5600,
    "name_ru": "Подсумки рукопашника МОД. А1.",
    "need_attribs": [
     5
    ],
    "need_attribs_m": 4,
+   "need_skills": [
+    16
+   ],
+   "need_skills_m": 1,
    "premium": 0,
    "sellable": 0,
    "slot_type": 3,

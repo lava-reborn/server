@@ -222,7 +222,7 @@ def apply_request(ground, p, op, now):
             ground.clone.push_vitals()
             ground.clone.combat.ap = ground.clone.character().ap_ceiling
             ground.clone.combat.amax_sent = ground.clone.character().ap_ceiling
-            ground.clone.combat.c_ap()
+            ground.clone.combat.c_ap(amax=True)
         else:
             ground.opponent = profile
             ground.mode = 'fighter'

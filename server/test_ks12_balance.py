@@ -26,6 +26,30 @@ EXPECTED = {4: (7072, 31), 5: (7073, 32), 6: (7074, 33), 7: (7075, 36),
 
 
 class Ks12Numbers(unittest.TestCase):
+    def test_specialisation_ladder_and_named_copies(self):
+        required = {4: None, 5: None, 6: None, 7: 1, 8: 2, 9: 2,
+                    10: 3, 11: 3, 12: 3, 14: 3, 15: 4}
+        for t, (root, name) in items.catalogue().items():
+            if root != items.FIRE_ARM or not name.startswith('lamantin_shotgun_'):
+                continue
+            row = dict(type_id=t, root=root)
+            params = items.params_of(t)
+            level = inventory.item_level(t)
+            if level not in required:
+                continue
+            need = required[level]
+            with self.subTest(type=t, level=level):
+                ch = progression.Character()
+                ch.skill[progression.SHOOTING][0] = level
+                ch.recalc()
+                if need is None:
+                    self.assertFalse(params.get('need_specs_m', 0) & (1 << 3))
+                    continue
+                ch.spec[3][0] = need - 1
+                self.assertIsNotNone(inventory.weapon_requirement_error(row, ch))
+                ch.spec[3][0] = need
+                self.assertIsNone(inventory.weapon_requirement_error(row, ch))
+
     def test_all_base_versions_change_only_the_active_shot_cost(self):
         for level, (t, cost) in EXPECTED.items():
             with self.subTest(level=level, type=t):

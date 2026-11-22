@@ -36,6 +36,8 @@ def records():
                 if not all(members.values()):
                     continue
             record = copy.deepcopy(base)
+            for count, fields in balance.before_release_data()['previous_sets'].get(str(original_id), {}).items():
+                record['bonus'][int(count)].update(fields)
             record['variant'], record['members'] = line, dict(members)
             record['name'] = base['name'] + (' (' + line + ')' if line != 'A' else '')
             if corresponding is not None:
