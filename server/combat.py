@@ -2815,11 +2815,13 @@ class RoomCombat:
                 return sess.combat
         return None
 
-    def nearest_fighter(self, cell, radius):
+    def nearest_fighter(self, cell, radius, mob=None):
         width = self.room.loc.width
         best, best_d = None, radius
         for f in self.fighters():
             if not f.present(self):
+                continue
+            if mob is not None and holdings.defender_friendly(self, mob, f):
                 continue
             d = mobs.hex_distance(cell, f.cell, width)
             if d <= best_d:
@@ -2897,6 +2899,8 @@ class RoomCombat:
         else:
             self.ap_last = t
         for mob in list(self.mobs.values()):
+            if mob.target is not None and holdings.defender_friendly(self, mob, mob.target):
+                self.mob_release(mob)
             # Settle quiet time before a returning player can start a fight.
             if bosses.uses_camp_recovery(self.room.loc.id, mob.type_id):
                 self.regen_mob(mob, t)
@@ -3062,7 +3066,7 @@ class RoomCombat:
         """A mob picks a player: the room goes to war and the player's client
         paints the mob red (lch;enemy -> Location.setEnemy) and remembers it
         for autofire."""
-        if fighter.preparing():
+        if fighter.preparing() or holdings.defender_friendly(self, mob, fighter):
             return
         t = now() if t is None else t
         mob.target = fighter
@@ -3128,6 +3132,9 @@ class RoomCombat:
             self.push_vitals(mob)
 
     def mob_attack(self, mob, target, t):
+        if holdings.defender_friendly(self, mob, target):
+            self.mob_release(mob)
+            return
         if mob.stats.ranged and hasattr(mob.stats, 'balanced_modes'):
             distance = mobs.hex_distance(mob.cell, target.cell, self.room.loc.width)
             selected = battle_balance.mob_mode(mob.stats, distance)
@@ -3165,6 +3172,9 @@ class RoomCombat:
         mob.aim = None
         if not mob.alive:
             return
+        if holdings.defender_friendly(self, mob, target):
+            self.room.broadcast(("actionCancel", dict(id=mob.eid, stop_aim=1)))
+            return
         others = []
         h, s, hits, killed = self.burst(mob, target, target.cell, weapon,
                                         weapon.num_shots, others)
@@ -3179,6 +3189,9 @@ class RoomCombat:
     def mob_strike(self, mob, target):
         mob.aim = None
         if not mob.alive:
+            return
+        if holdings.defender_friendly(self, mob, target):
+            self.room.broadcast(("actionCancel", dict(id=mob.eid, stop_aim=1)))
             return
         st = mob.stats
         killed = False

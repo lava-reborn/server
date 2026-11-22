@@ -4,9 +4,10 @@ Weekly bases use these same holdings (kind "base" in the table), not a
 second ownership system. Their original surfaces/interiors share one site.
 The Saturday 20:00–21:00 Moscow kill grants a payment reservation; the
 winning clan pays 1,500,000 afro from its treasury by 21:15, then owns the
-benefits until next Saturday 20:00. Each new battle needs a new capture
+benefits until next Saturday 19:55, five minutes before the battle. Each week needs a new capture
 and payment. One clan may reserve/lease one base; warehouses do not count.
-There is no fixed squad minimum for a base. A base's capture and weekly
+At least three living clan members of the site's minimum level must be in
+the boss's room at the kill; only one of them needs to hurt him. Capture and weekly
 boss-death record commit at the kill, before the corpse timer. Everything
 below describes the existing warehouses unless it explicitly names a base.
 
@@ -110,6 +111,8 @@ PATH = os.path.join(HERE, "data", "holdings.json")
 
 # What a row of clan_holding_log says happened (accounts.SCHEMA).
 HOW = ("capture", "defend", "none", "admin", "disband", "rent", "expire")
+BASE_SQUAD = 3
+BASE_RESET_LEAD = 5 * 60
 
 
 class Site(object):
@@ -248,7 +251,7 @@ def guards_cleared(rc, s, slot):
 
 
 def reset_base(rc):
-    """Opening a weekly battle clears the previous owner before arrivals.
+    """Five minutes before the weekly battle, clear the previous owner.
 
     The conditional delete preserves a concurrent current-week capture.
     Empty rooms reconcile on entry through the existing schedule tick.
@@ -258,6 +261,8 @@ def reset_base(rc):
         return
     now = bosses.clock()
     slot = battle_slot(s, now)
+    if slot is None:
+        slot = battle_slot(s, now + BASE_RESET_LEAD)
     if slot is None:
         return
     held = holder(rc.store, s)
@@ -290,7 +295,8 @@ def paid_holder(store, s, now=None):
     held = holder(store, s)
     now = bosses.clock() if now is None else now
     if (held is None or held["slot"] is None
-            or not float(held["slot"]) <= now < float(held["paid_until"])
+            or not float(held["slot"]) <= now < min(float(held["paid_until"]),
+                                                    float(held["slot"]) + 7 * 86400 - BASE_RESET_LEAD)
             or float(held["paid_until"]) > float(held["slot"]) + 7 * 86400):
         return None
     return held
@@ -302,6 +308,14 @@ def paid_base_for(store, loc_id, char_id, now=None):
     if s is None or not member_of(store, paid_holder(store, s, now), char_id):
         return None
     return s
+
+
+def defender_friendly(rc, mob, fighter):
+    """Only a paid base's own defenders spare its current clan members."""
+    s = base_for(rc.room.loc.id, mob.type_id) or guard_site(rc.room.loc.id, mob.type_id)
+    if s is None or not getattr(fighter, 'is_player', False):
+        return False
+    return member_of(rc.store, paid_holder(rc.store, s), fighter.sess.char_id)
 
 
 def rent_refusal(store, s, char_id, loc_id=None, now=None):
@@ -338,7 +352,7 @@ def pay_rent(store, s, char_id, now=None):
         return None
     slot = events.table().window(s.payment).slot(now)
     return store.holding_rent(s.key, held["clan_id"], char_id, slot,
-                              slot + 7 * 86400, s.rent, s.rent_quest, now,
+                              slot + 7 * 86400 - BASE_RESET_LEAD, s.rent, s.rent_quest, now,
                               base_sites=base_keys())
 
 
@@ -548,7 +562,13 @@ def snapshot(rc, mob, killer):
             here[int(sess.char_id)] = sess.combat
     store = rc.store
     fighters = []
-    for char_id, harm in sorted(getattr(mob, "capture_harm", {}).items()):
+    harm_by_char = dict(getattr(mob, "capture_harm", {}))
+    if s.kind == "base":
+        # Base support counts by presence at the kill, without requiring a
+        # token shot from every member. Ordinary warehouses keep harm-only squads.
+        for char_id in here:
+            harm_by_char.setdefault(char_id, 0)
+    for char_id, harm in sorted(harm_by_char.items()):
         f = here.get(char_id)
         m = store.clan_member(char_id)
         fighters.append({"char": int(char_id), "harm": float(harm),
@@ -567,12 +587,12 @@ def snapshot(rc, mob, killer):
             "fighters": fighters, "killer": killer_char, "killer_clan": killer_clan}
 
 
-def winner(snap, squad, min_level, excluded=()):
+def winner(snap, squad, min_level, excluded=(), require_harm=True):
     """(clan, its name, the harm counted, the member credited) of the clan
     that takes the site by this kill, or None (the module's docstring): of
     the clans with `squad` members in the room, alive, at min_level or
-    above, with harm on the boss, the one with the most harm of all its
-    members in the room, capped at the boss's health and stamina; a tie to
+    above (each with harm unless require_harm is false), the one with the
+    most harm of all its members in the room, capped at the boss's health and stamina; a tie to
     the killing blow's clan, else the lowest id. Credited is the killer when
     he is of it, else its member with the most harm."""
     totals, squads, names, best_of = {}, {}, {}, {}
@@ -582,13 +602,13 @@ def winner(snap, squad, min_level, excluded=()):
             continue
         totals[clan] = totals.get(clan, 0.0) + f["harm"]
         names[clan] = f["clan_name"]
-        if f["alive"] and f["level"] >= min_level and f["harm"] > 0:
+        if f["alive"] and f["level"] >= min_level and (not require_harm or f["harm"] > 0):
             squads[clan] = squads.get(clan, 0) + 1
         top = best_of.get(clan)
         if top is None or (f["harm"], -f["char"]) > (top["harm"], -top["char"]):
             best_of[clan] = f
     counted = {c: min(h, snap["pool"]) for c, h in totals.items()
-               if squads.get(c, 0) >= squad}
+               if h > 0 and squads.get(c, 0) >= squad}
     if not counted:
         return None
     most = max(counted.values())
@@ -621,7 +641,7 @@ def settle(rc, mob):
     if s.kind == "base":
         excluded = {f["clan"] for f in snap["fighters"] if f["clan"] is not None
                     and store.base_reserved(f["clan"], base_keys(), snap["at"], s.key)}
-        won = winner(snap, 1, s.min_level, excluded)
+        won = winner(snap, BASE_SQUAD, s.min_level, excluded, require_harm=False)
         # A base's capture and the boss's weekly death survive together,
         # before the corpse timer. Warehouses keep their established path.
         with storage.atomic(store.db):

@@ -119,7 +119,7 @@ DECIDED = {
            ALIMA: "band", GALI: "band", TORSI: "band", MUKHSIM: "band", LUIGI: "own",
            LOTTERY: "own", GOLD_LOTTERY: "own", KHAN_SELL: "band",
            MORTIMER: "own"},
-    QUARTER: {1013: "wiki", 1196: "wiki", 2016: "wiki"},
+    QUARTER: {1013: "band", 1196: "band", 2016: "band"},
     SLUMS: {MORTIMER: "own", FREYA: "own"},
     OASIS: {1225: "band", AMMO_OASIS: "own", JUT: "band"},
     CLOTHES: {5160: "band", 5161: "band", 5181: "own"},
@@ -313,8 +313,8 @@ for p, decided in DECIDED.items():
                 and items.stock_for(t, p) == items.stock_table().get(t)
         if not ok:
             how[(p, t)] = kind
-check("  ..each the way the table says: a seller of the band, a list of the owner's file, or"
-      " the wiki's list untouched (Гофус, Бернар, the doctor's junior helper)", how, {})
+check("  ..each the way the table says: city band (including Gofus and his assistants),"
+      " an owner list, or the archived wiki list", how, {})
 check("the lists of data/npcs.json, trader by trader (DESIGN.md 6.2)",
       {t: npcs.stock(t) for t in OWN}, OWN)
 # The articles of Торси and Мухсим, which the wiki's shifted links had given the pilot

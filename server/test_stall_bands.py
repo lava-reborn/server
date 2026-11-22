@@ -209,10 +209,11 @@ LEFT_ALONE = sorted((p, t) for p, types in AT.items() for t in types
 # (2026-10-12) and Элизабет Стюарт's, the same 24, at Донгола's pier (2026-10-13,
 # server/test_dongola_trade.py).
 LEFT_HOLDING = [(41, 1959), (127, 1968), (255, 1962), (445, 1965)]
-check("  ..and every trader of a city's place that is no seller sells its own list there, as"
-      " anywhere: the bands take nothing off it (the flower sellers keep their bouquets,"
-      " a cold arm to the client)",
-      [(p, t) for p, t in LEFT_ALONE if items.stock_for(t, p) != items.stock_for(t)], [])
+check("  ..other traders keep their own goods, except duplicates already sold by the"
+      " location's configured sellers; flower sellers keep their bouquets",
+      [(p, t) for p, t in LEFT_ALONE if items.stock_for(t, p) != [x for x in items.stock_for(t)
+       if items.root_of(x) == items.AMMO or not any(x in items.stock_for(seller, p) for seller in AT[p]
+                  if seller in shop_bands.SELLERS)]], [])
 check("  ..not idly: these of them hold a cold arm or a gun of no line, which a cut would take",
       sorted((p, t) for p, t in LEFT_ALONE if any(shop_bands.band_ware(x)
                                                   for x in items.stock_for(t))), LEFT_HOLDING)
@@ -334,13 +335,15 @@ COUNTS = {
                          1187: (6, 0), 5211: (0, 0), 5224: (0, 0), 5217: (0, 0), 5225: (0, 0)},
     "Вади-Хальфа": {1200: (4, 4), 1201: (10, 10), 1202: (3, 3), 1203: (2, 2), 1152: (5, 4),
                     1224: (19, 19), 1205: (15, 15), 1204: (0, 0), 650: (15, 15), 2391: (0, 7),
-                    1206: (0, 0), 1207: (0, 0), 202: (0, 0), 81: (0, 0), 2180: (0, 0)},
+                    1206: (0, 0), 1207: (0, 0), 202: (0, 0), 81: (0, 0), 2180: (0, 0),
+                    1013: (0, 0), 1196: (0, 0), 2015: (0, 0)},
     # The set sellers of Абри (8-12) and Донгола (12-16) hold Чёрный Ловелас[12], A and G,
     # since the owner's «поставь ловеласа у Гали и за афро и за голд» (2026-10-13): five
     # more of each currency than while it was a quest set.
     "Абри": {1159: (2, 2), 1161: (4, 4), 1163: (10, 10), 1162: (10, 10), 1164: (3, 3),
              1225: (26, 26), 1166: (15, 15), 1165: (0, 0), 5160: (15, 15), 5161: (0, 0),
-             1168: (0, 0), 2391: (0, 6), 1167: (0, 0), 207: (0, 0), 1228: (0, 0)},
+             1168: (0, 0), 2391: (0, 6), 1167: (0, 0), 207: (0, 0), 1228: (0, 0),
+             1013: (0, 0), 1196: (0, 0), 2016: (0, 0)},
     # The black market's machine guns at «Пулеметы и патроны» (1208), whom the wiki's article
     # puts there; Серхио (1214), who had his list by a shifted link, sells battle medicine.
     # The oasis's «Торговец патронами» (1230) its rounds alone, a seller of no kinds since
@@ -350,7 +353,8 @@ COUNTS = {
     "Донгола": {1209: (10, 10), 1210: (5, 5), 1211: (4, 4), 1153: (3, 3), 1208: (2, 2),
                 1229: (23, 23), 1213: (20, 20), 1233: (0, 0), 5161: (20, 20), 2391: (0, 8),
                 207: (0, 0), 1214: (0, 0), 1215: (0, 0), 155: (0, 0), 2181: (0, 0),
-                1230: (0, 0), 5239: (0, 0), 5240: (0, 0)},
+                1230: (0, 0), 5239: (0, 0), 5240: (0, 0),
+                1013: (0, 0), 1196: (0, 0), 2017: (0, 0)},
     # Киплер (1221) sells battle medicine; the town's knives are Шрам's (2274) alone.
     # Тёмное Эхо[17], A and G, on its set sellers' stalls since 2026-10-14 (the
     # Абу-Хамед restoration: the 17th rung's quest set sold as Чёрный Ловелас);
@@ -358,7 +362,8 @@ COUNTS = {
     # kinds, as Донгола's 1230 (server/test_abuhamed_trade.py).
     "Абу-Хамед": {1216: (3, 3), 1217: (3, 3), 1218: (1, 1), 2274: (1, 1), 1221: (0, 0),
                   1223: (10, 10), 1219: (0, 0), 5161: (10, 10), 2391: (0, 3), 207: (0, 0),
-                  1222: (0, 0), 880: (0, 0), 1232: (0, 0), 714: (0, 0), 716: (0, 0)},
+                  1222: (0, 0), 880: (0, 0), 1232: (0, 0), 714: (0, 0), 716: (0, 0),
+                  1013: (0, 0), 1196: (0, 0), 2018: (0, 0)},
 }
 got = {}
 for (p, t), stall in stalls.items():

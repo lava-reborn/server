@@ -326,7 +326,7 @@ class _Brain(object):
         self.room = type("R", (), {"loc": loc})()
         self.aggroed = 0
 
-    def nearest_fighter(self, cell, radius):
+    def nearest_fighter(self, cell, radius, mob=None):
         return object()
 
     def aggro(self, mob, fighter):

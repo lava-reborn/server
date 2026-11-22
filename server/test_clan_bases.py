@@ -13,7 +13,7 @@ import time
 import unittest
 from datetime import datetime
 from types import SimpleNamespace as NS
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 os.environ.pop("LAVA_DB_URL", None)
 os.environ["LAVA_DB"] = ":memory:"
@@ -91,6 +91,17 @@ class ClanBases(unittest.TestCase):
         self.store.clan_member_add(other, self.clan, 0x400, "")
         self.store.clan_leave(self.cid, self.clan)
 
+    def supporters(self, clan=None):
+        clan = self.clan if clan is None else clan
+        members = []
+        for index in range(2):
+            account, _ = self.store.register('support-%s-%s' % (clan, index), 'test-only')
+            cid, _ = self.store.create_character(account, 'Support%s_%s' % (clan, index), 0, '1')
+            self.store.clan_member_add(cid, clan, 0, '')
+            members.append(dict(char=cid, clan=clan, clan_name='Support clan',
+                                here=True, alive=True, level=16, harm=0))
+        return members
+
     def test_capture_health_is_local_and_survives_reset_without_growing(self):
         for base in (self.base, holdings.site("base_dn")):
             with self.subTest(base=base.key):
@@ -167,7 +178,7 @@ class ClanBases(unittest.TestCase):
         self.assertEqual(self.store.clan_treasury(self.clan), 3_000_000)
         rent = [r for r in self.store.clan_ledger_rows(self.clan) if r["source"] == "base_rent"]
         self.assertEqual([r["afro"] for r in rent], [-1_500_000])
-        self.assertEqual(self.store.holding(self.base.key)["paid_until"], SLOT + 7 * 86400)
+        self.assertEqual(self.store.holding(self.base.key)["paid_until"], SLOT + 7 * 86400 - 300)
         self.assertIsNone(holdings.paid_base_for(self.store, 118, self.cid, SLOT + 7 * 86400))
         # Bases repair at explicit supply NPCs, never at a warehouse flag.
         self.assertEqual(holdings.flag_for(self.store, 118, self.base.flag, self.cid)[1], False)
@@ -189,7 +200,7 @@ class ClanBases(unittest.TestCase):
         self.capture()
         self.pay()
         self.assertEqual(self.capture()[1], "same")
-        self.assertEqual(self.store.holding(self.base.key)["paid_until"], SLOT + 7 * 86400)
+        self.assertEqual(self.store.holding(self.base.key)["paid_until"], SLOT + 7 * 86400 - 300)
         self.now += 7 * 86400
         self.store.holding_capture(self.base.key, self.clan, SLOT + 7 * 86400,
                                   self.cid, self.now, base_sites=holdings.base_keys())
@@ -212,6 +223,54 @@ class ClanBases(unittest.TestCase):
         self.assertFalse(self.store.base_reserved(self.clan, holdings.base_keys(), SLOT + 4500))
         self.assertFalse(self.store.base_reserved(self.clan, holdings.base_keys(), SLOT + 7 * 86400))
 
+    def test_defenders_spare_the_paid_clan_until_1955_and_never_spare_outsiders(self):
+        member = self.supporters()[0]['char']
+        for base in (self.base, holdings.site('base_dn')):
+            with self.subTest(base=base.key):
+                previous = SLOT - 7 * 86400
+                self.now = previous + 300
+                self.store.holding_capture(base.key, self.clan, previous, self.cid, self.now)
+                self.assertIsNotNone(holdings.pay_rent(self.store, base, self.cid, self.now))
+                owner = NS(is_player=True, cell=0, present=lambda rc: True,
+                           preparing=lambda: False, sess=NS(char_id=member, send=Mock()))
+                outsider = NS(is_player=True, cell=1, present=lambda rc: True,
+                              preparing=lambda: False, sess=NS(char_id=None, send=Mock()))
+                rc = NS(store=self.store, room=NS(loc=world.location(base.loc), broadcast=Mock()),
+                        fighters=lambda: [outsider, owner], burst=Mock(), set_ws=Mock())
+                self.now = SLOT - 301
+                for type_id in (base.boss,) + base.guards:
+                    mob = NS(type_id=type_id, target=None, alive=True, aim=None, ap=100,
+                             next_attack=0, eid=1)
+                    self.assertTrue(holdings.defender_friendly(rc, mob, owner))
+                    self.assertFalse(holdings.defender_friendly(rc, mob, outsider))
+                    self.assertIs(combat.RoomCombat.nearest_fighter(rc, 0, 10, mob), outsider)
+                    combat.RoomCombat.aggro(rc, mob, owner, 1)
+                    self.assertIsNone(mob.target)
+                    combat.RoomCombat.mob_burst(rc, mob, owner, None)
+                    combat.RoomCombat.mob_strike(rc, mob, owner)
+                    self.assertEqual([call.args[0] for call in rc.room.broadcast.call_args_list],
+                                     [("actionCancel", dict(id=1, stop_aim=1))] * 2)
+                    rc.room.broadcast.reset_mock()
+                    rc.burst.assert_not_called()
+                    self.assertEqual(mob.ap, 100)
+                    self.store.clan_leave(member, self.clan)
+                    self.assertFalse(holdings.defender_friendly(rc, mob, owner))
+                    self.store.clan_member_add(member, self.clan, 0, '')
+                    self.now = SLOT - 300
+                    self.assertFalse(holdings.defender_friendly(rc, mob, owner))
+                    self.assertIsNone(bosses.slot_of(type_id, self.now, base.loc))
+                    self.now = SLOT - 301
+                # Pre-update leases used 20:00: their visible rights also end at 19:55.
+                self.store.db.execute('UPDATE clan_holdings SET paid_until=? WHERE site=?', (SLOT, base.key))
+                self.store.db.commit()
+                self.now = SLOT - 300
+                self.assertIsNone(holdings.paid_holder(self.store, base))
+                with patch.object(holdings, 'refresh'):
+                    holdings.reset_base(rc)
+                self.assertIsNone(self.store.holding(base.key))
+                rc.room.loc = world.location(128)
+                self.assertFalse(holdings.defender_friendly(rc, NS(type_id=7454), owner))
+
     def test_new_week_clears_old_owner_but_never_current_reservation(self):
         for base in (self.base, holdings.site('base_dn')):
             with self.subTest(base=base.key):
@@ -221,15 +280,16 @@ class ClanBases(unittest.TestCase):
                 self.assertIsNotNone(holdings.pay_rent(self.store, base, self.cid, self.now))
                 room = rooms.Room(world.location(base.loc), rooms.IdAllocator(), world.mob_types())
                 rc = combat.RoomCombat(room, self.store)
-                self.now = SLOT - 1
+                self.now = SLOT - 301
                 rc.keep_hours()
                 self.assertIsNotNone(holdings.paid_holder(self.store, base))
-                self.now = SLOT
+                self.now = SLOT - 300
                 rc.keep_hours()
                 self.assertIsNone(self.store.holding(base.key))
                 self.assertEqual(self.store.holding_log(base.key)[0]['how'], 'expire')
                 rc.keep_hours()
                 self.assertEqual(sum(r['how'] == 'expire' for r in self.store.holding_log(base.key)), 1)
+                self.now = SLOT
                 self.store.holding_capture(base.key, self.clan, SLOT, self.cid, self.now)
                 self.assertIsNone(self.store.holding_clear(base.key, 'expire', before_slot=SLOT))
                 rc.keep_hours()
@@ -320,7 +380,7 @@ class ClanBases(unittest.TestCase):
                 patch.object(server.clans.clan_treasury, "tell_balance"):
             s.cmd_q_co(dict(q_id=qid, mob=1))
             s.cmd_q_co(dict(q_id=qid, mob=1))
-        self.assertEqual(notices, [SLOT + 7 * 86400])
+        self.assertEqual(notices, [SLOT + 7 * 86400 - 300])
         self.assertEqual([p["res"] for n, p in frames if n == "cmdAck"], [0, server.RES_NO_SUCH])
         self.assertEqual(self.store.clan_treasury(self.clan), 3_000_000)
         self.assertTrue(self.store.quest_done(self.cid, self.base.rent_quest))
@@ -382,20 +442,23 @@ class ClanBases(unittest.TestCase):
             self.assertIsNotNone(self.store.quest(qid))
             self.assertEqual(self.store.clan_treasury(self.clan), 4_500_000)
 
-    def test_live_capture_one_member_and_death_checkpoint_are_persistent(self):
+    def test_live_capture_three_present_members_and_death_checkpoint_are_persistent(self):
+        support = self.supporters()
         for base in (self.base, holdings.site('base_dn')):
             with self.subTest(base=base.key):
                 self.now = SLOT + 300
                 sess = NS(char_id=self.cid, combat=NS(dead=False, level=base.min_level - 1),
                           answer=lambda text: None)
-                room = NS(loc=world.location(base.loc), players=[sess], npcs={})
+                helpers = [NS(char_id=f['char'], combat=NS(dead=False, level=base.min_level))
+                           for f in support]
+                room = NS(loc=world.location(base.loc), players=[sess] + helpers, npcs={})
                 rc = NS(store=self.store, room=room, place=(base.loc, None, None))
                 rc.mobs = {1: NS(type_id=base.guards[0], alive=False, slot=SLOT)}
                 rc.boss_spot = lambda mob: combat.RoomCombat.boss_spot(rc, mob)
                 mob = NS(type_id=base.boss, slot=SLOT, hp_max=100, sp_max=0,
                          home=100, capture_harm={self.cid: 100})
                 snap = holdings.snapshot(rc, mob, None)
-                self.assertIsNone(holdings.winner(snap, 1, base.min_level))
+                self.assertIsNone(holdings.winner(snap, 3, base.min_level, require_harm=False))
                 sess.combat.level += 1
                 mob.capture = holdings.snapshot(rc, mob, None)
                 self.assertEqual(holdings.settle(rc, mob), 'capture')
@@ -409,9 +472,55 @@ class ClanBases(unittest.TestCase):
                 # still-open reservation for the other base.
                 self.store.holding_clear(base.key, 'admin')
 
+    def test_base_capture_counts_only_living_eligible_clanmates_here_at_the_kill(self):
+        support = self.supporters()
+        for base in (self.base, holdings.site('base_dn')):
+            lead = NS(char_id=self.cid, combat=NS(dead=False, level=base.min_level))
+            helpers = [NS(char_id=f['char'], combat=NS(dead=False, level=base.min_level))
+                       for f in support]
+            room = NS(loc=world.location(base.loc), players=[lead] + helpers)
+            rc = NS(store=self.store, room=room,
+                    mobs={1: NS(type_id=base.guards[0], alive=False, slot=SLOT)})
+            mob = NS(type_id=base.boss, slot=SLOT, hp_max=100, sp_max=0,
+                     capture_harm={self.cid: 100})
+            for missing in ('absent', 'dead', 'underlevel', 'clanless'):
+                with self.subTest(base=base.key, missing=missing):
+                    last = helpers[-1]
+                    if missing == 'absent':
+                        room.players.remove(last)
+                    elif missing == 'dead':
+                        last.combat.dead = True
+                    elif missing == 'underlevel':
+                        last.combat.level -= 1
+                    else:
+                        self.store.clan_leave(last.char_id, self.clan)
+                    snap = holdings.snapshot(rc, mob, None)
+                    self.assertIsNone(holdings.winner(snap, 3, base.min_level, require_harm=False))
+                    if missing == 'absent':
+                        room.players.append(last)
+                    elif missing == 'dead':
+                        last.combat.dead = False
+                    elif missing == 'underlevel':
+                        last.combat.level += 1
+                    else:
+                        self.store.clan_member_add(last.char_id, self.clan, 0, '')
+            snap = holdings.snapshot(rc, mob, None)
+            self.assertEqual(holdings.winner(snap, 3, base.min_level, require_harm=False)[0], self.clan)
+            self.assertEqual(mob.capture_harm, {self.cid: 100})
+            # A reconnect cannot turn one character into two supporters.
+            room.players[-1] = helpers[0]
+            self.assertIsNone(holdings.winner(holdings.snapshot(rc, mob, None), 3,
+                                             base.min_level, require_harm=False))
+            room.players = [lead] + helpers
+            mob.capture_harm.clear()
+            self.assertIsNone(holdings.winner(holdings.snapshot(rc, mob, None), 3,
+                                             base.min_level, require_harm=False))
+            # Warehouse policy still requires actual harm from the squad.
+            self.assertIsNone(holdings.winner(snap, 2, base.min_level))
+
     def test_capture_and_boss_death_roll_back_together(self):
         snap = dict(site=self.base.key, slot=SLOT, at=self.now, pool=100,
-                    killer=self.cid, killer_clan=self.clan, fighters=[
+                    killer=self.cid, killer_clan=self.clan, fighters=self.supporters() + [
                         dict(char=self.cid, clan=self.clan, clan_name="Base clan",
                              here=True, alive=True, level=16, harm=100)])
         rc = NS(store=self.store, room=NS(loc=world.location(118), players=[], npcs={}),
@@ -435,6 +544,7 @@ class ClanBases(unittest.TestCase):
         fighters = [dict(char=c, clan=k, clan_name=n, here=True, alive=True, level=16, harm=h)
                     for c, k, n, h in ((self.cid, self.clan, "Base clan", 100),
                                        (cid, other, "Other clan", 50))]
+        fighters += self.supporters() + self.supporters(other)
         mob = NS(capture=dict(site=self.base.key, slot=SLOT, at=self.now, pool=150,
                               killer=self.cid, killer_clan=self.clan, fighters=fighters))
         rc = NS(store=self.store, room=NS(loc=world.location(118), players=[], npcs={}),
@@ -523,7 +633,7 @@ class ClanBases(unittest.TestCase):
             restored = accounts.Store(path)
             try:
                 self.assertEqual(restored.clan_treasury(clan), 3_000_000)
-                self.assertEqual(restored.holding(self.base.key)["paid_until"], SLOT + 7 * 86400)
+                self.assertEqual(restored.holding(self.base.key)["paid_until"], SLOT + 7 * 86400 - 300)
                 self.assertIs(holdings.paid_base_for(restored, 609, officer, SLOT + 30), self.base)
                 self.assertIsNone(holdings.pay_rent(restored, self.base, head, SLOT + 30))
                 self.assertEqual(len([r for r in restored.clan_ledger_rows(clan)

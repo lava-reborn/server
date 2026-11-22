@@ -1012,7 +1012,7 @@ class Mob:
             # A boss past its stay picks no new fight: the one it was in is
             # what kept it here (RoomCombat.keep_hours).
             if self.stats.can_attack and not self.leaving:
-                found = rc.nearest_fighter(self.cell, self.stats.aggro)
+                found = rc.nearest_fighter(self.cell, self.stats.aggro, self)
                 if found is not None:
                     rc.aggro(self, found)
                     return

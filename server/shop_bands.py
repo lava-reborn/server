@@ -115,7 +115,8 @@ MED_REACH = 4
 
 # City ceilings select the agreed stimulant ranks, independently of player level.
 BUFF_RANKS = {4: (0, 0), 8: (1, 3), 12: (3, 5), 16: (5, 7), 20: (7, 9)}
-BUFF_SELLERS = frozenset((5211, 5224, 5225, 1206, 202, 1167, 207, 1214, 1221,
+BUFF_SELLERS = frozenset((1013, 1196, 2015, 2016, 2017, 2018,
+                          5211, 5224, 5225, 1206, 202, 1167, 207, 1214, 1221,
                           714, 716, 5239, 5240))
 
 
@@ -567,18 +568,16 @@ def apply(trader_type, loc_id, own):
     # Keep every other seller and city band unchanged.
     if trader_type == 1152 and loc_id == 102:
         low = 1
-    if which:
-        stock = goods(which, low, top, ONLY.get(trader_type))
-        if trader_type in BUFF_SELLERS:
-            import effects
-            stock += stimulants(top, ONLY.get(trader_type))
-            own = [t for t in own if effects.definition(t) is None]
-        stock += [t for t in own if not band_ware(t)]
-        if any(kind in FIREARM_KINDS for kind in which):
-            stock += gold_ammunition(stock)
-        return list(dict.fromkeys(stock))
+    if trader_type in BUFF_SELLERS:
+        import effects
+        own = [t for t in own if effects.definition(t) is None]
+    stock = goods(which, low, top, ONLY.get(trader_type)) if which else []
+    if trader_type in BUFF_SELLERS:
+        stock += stimulants(top, ONLY.get(trader_type))
+    stock += [t for t in own if not band_ware(t) or (not which and fits(t, low, top))]
+    if any(kind in FIREARM_KINDS for kind in which):
+        stock += gold_ammunition(stock)
     import items
-    stock = [t for t in own if not band_ware(t) or fits(t, low, top)]
     if stock and all(items.root_of(t) == items.AMMO for t in stock):
         stock += gold_ammunition(stock)
     return list(dict.fromkeys(stock))

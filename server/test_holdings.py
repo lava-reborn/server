@@ -890,7 +890,7 @@ async def main():
           (paid, acks(take(payer)), STORE.clan_treasury(wolves),
            STORE.holding(base.key)["paid_until"],
            holdings.paid_base_for(STORE, 609, payer.char_id) is base),
-          ([0], [server.RES_NO_SUCH], treasury + 1_500_000, slot + 7 * 86400, True))
+          ([0], [server.RES_NO_SUCH], treasury + 1_500_000, slot + 7 * 86400 - 300, True))
 
     NOW[0] = at(19, 5, day=51)
     into(dora, CENTER)

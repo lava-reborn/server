@@ -566,7 +566,7 @@ class _Release(object):
         mob.target = None
     mob_reset = mob_release           # its name before the rule
 
-    def nearest_fighter(self, cell, aggro):
+    def nearest_fighter(self, cell, aggro, mob=None):
         return None
 
     def mob_walk(self, mob, goal, t):

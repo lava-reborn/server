@@ -3,9 +3,12 @@ import unittest
 from unittest.mock import patch
 
 import effects
+import inventory
 import items
+import names
 import progression as p
 import shop_bands
+import test_gold_commerce as trade_fixtures
 import test_training_ground as fixtures
 from training import character as range_character
 from test_release_combat import TimedItems
@@ -182,5 +185,71 @@ class ArchivedBuffs(unittest.IsolatedAsyncioTestCase):
         self.assertEqual((f.ap_max, f.ap), (initial, 17))
 
 
+class GofusStock(unittest.TestCase):
+    def test_each_city_offers_its_ranks_scanner_and_ap_at_the_doctor(self):
+        for loc, booster, strength, scanner, salus in (
+                (36, 3112, 3474, 3789, {1, 2, 3}),
+                (188, 3113, 3475, 3789, {3, 4, 5}),
+                (197, 3114, 3476, 3826, {5, 6, 7}),
+                (127, 3561, 3476, 3826, {7, 8, 9})):
+            with self.subTest(location=loc):
+                stock = items.stock_for(1013, loc)
+                self.assertEqual(len(stock), len(set(stock)))
+                self.assertEqual(set(stock) & {3112, 3113, 3114, 3561}, {booster})
+                self.assertEqual(set(stock) & {3474, 3475, 3476}, {strength})
+                self.assertEqual(set(stock) & {3789, 3826}, {scanner})
+                self.assertIn(3897, stock)
+                ranks = {int(items.catalogue()[t][1].split('_')[2]) for t in stock
+                         if items.catalogue()[t][1].startswith('Salus_MK_')}
+                self.assertEqual(ranks, salus)
+                self.assertFalse(set(stock) & {6294, 6295, 6296, 3449, 3450, 3451, 7647, 7648})
+                for type_id in stock:
+                    si = items.params_of(type_id)
+                    self.assertTrue(effects.definition(type_id))
+                    self.assertTrue(si['cost'] or si['g_cost'])
+                    self.assertTrue(names.known(si['name']))
+
+    def test_helpers_do_not_repeat_the_doctors_goods_in_the_same_room(self):
+        for loc, junior in ((36, 2015), (188, 2016), (197, 2017), (127, 2018)):
+            doctor = set(items.stock_for(1013, loc))
+            for helper in (1196, junior):
+                with self.subTest(location=loc, helper=helper):
+                    self.assertFalse(doctor.intersection(items.stock_for(helper, loc)))
+
+    def test_outside_city_and_without_location_keep_the_archive_list(self):
+        for trader in (1013, 1196, 2018):
+            self.assertEqual(items.stock_for(trader, 58), items.stock_for(trader))
+        self.assertNotIn(3561, items.stock_for(1013, 58))
+
+
+class GofusTrade(unittest.TestCase):
+    setUp = trade_fixtures.GoldCommerce.setUp
+
+    def test_actual_purchase_index_charges_catalogue_currency_once_in_each_city(self):
+        import world
+        for loc in (36, 188, 197, 127):
+            self.s.loc.id = loc
+            self.inv.trade = inventory.TradeSession(1, 1013, loc)
+            self.s.room.npc = lambda n: (0, 1013, world.TRADER) if n == 1 else None
+            for index, type_id in enumerate(items.stock_for(1013, loc)):
+                with self.subTest(location=loc, item=type_id):
+                    self.store.set_money(self.cid, 5000000, 100000)
+                    self.s.char.afro, self.s.char.gold = self.store.money(self.cid)
+                    before = self.store.money(self.cid)
+                    si = items.params_of(type_id)
+                    gold = bool(si['g_cost'])
+                    self.frames.clear()
+                    self.inv.buy(dict(obj=format(index, 'x'), param=1),
+                                 inventory.UPD_BUY_GOLD if gold else inventory.UPD_BUY)
+                    self.assertEqual([p['res'] for cmd, p in self.frames if cmd == 'cmdAck'], [0])
+                    after = self.store.money(self.cid)
+                    self.assertEqual(before[int(gold)] - after[int(gold)],
+                                     si['g_cost'] if gold else si['cost'])
+                    self.assertEqual(before[int(not gold)], after[int(not gold)])
+                    rows = self.inv.rows()
+                    self.assertEqual([row['type_id'] for row in rows], [type_id])
+                    self.store.delete_item(rows[0]['uniq'])
+
+
 if __name__ == '__main__':
-    run_cases(ArchivedBuffs)
+    run_cases(ArchivedBuffs, GofusStock, GofusTrade)
