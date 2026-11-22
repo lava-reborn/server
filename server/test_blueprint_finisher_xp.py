@@ -68,7 +68,7 @@ async def exercise():
             row = dict(char_id=7, ammo_count=1, brk=100, type_id=25566,
                        slot=inventory.PRIMARY, root=items.FIRE_ARM)
             killer.store = NS(item=lambda uniq: row, update_item=lambda *a, **k: None)
-            killer.sess = NS(char_id=7, loc=NS(width=10, height=10),
+            killer.sess = NS(char_id=7, combat=killer, loc=NS(width=10, height=10),
                 push_vitals=lambda: None,
                 inv=NS(push_di=lambda row: None, wear_uniq=lambda *a: None))
             room = NS(ws=False, broadcast=lambda frame: None,

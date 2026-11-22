@@ -183,6 +183,12 @@ class ClanBaseWorldTests(unittest.TestCase):
                                         progression.hex_neighbours(cell, loc.width, loc.height)))
 
     def test_native_resource_ids_and_client_manifest_are_valid(self):
+        pinned = {}
+        for line in (ROOT / 'client' / 'base.txt').read_text(encoding='utf-8').splitlines():
+            fields = line.split('\t')
+            if len(fields) == 3:
+                digest, size, path = fields
+                pinned[path] = (digest, int(size))
         files = {lid: Path(world.overlay_path(lid)).read_bytes() for lid in STAFF}
         manifest = world.loc_defs(b'<data></data>', files)
         for lid, raw in files.items():
@@ -194,7 +200,15 @@ class ClanBaseWorldTests(unittest.TestCase):
                 self.assertIn(type_id, world.mob_types())
                 self.assertTrue(names.known(type_id))
                 art = world.mob_types()[type_id][2]
-                self.assertTrue((Path(world.RES) / 'mobs' / (art + '.xml')).is_file(), art)
+                path = 'mobs/' + art + '.xml'
+                self.assertIn(path, pinned)
+                # Model art belongs to the client. The production/CI server
+                # slice omits unused client files; a full original archive
+                # additionally verifies their pinned size and hash here.
+                model = Path(world.RES) / path
+                if model.is_file():
+                    raw = model.read_bytes()
+                    self.assertEqual((hashlib.sha256(raw).hexdigest(), len(raw)), pinned[path])
 
     def test_base_tooltips_restore_both_original_and_previously_cut_clients(self):
         cells = set(BASES.values())

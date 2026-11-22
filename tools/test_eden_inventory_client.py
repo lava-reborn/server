@@ -134,8 +134,10 @@ class EdenInventoryClientTests(unittest.TestCase):
             # Use the complete assembled DoAction, not only our helper: this
             # is the same reader/whitelist that final SWF verify() runs.
             ops = Counter(w.disassemble(w.injected(training=enabled)))
-            self.assertEqual(ops['enumerate2'], 1)
-            self.assertEqual(ops['stackswap'], 1)
+            # Eden's quest dictionary and lifecycle's sparse scene panels
+            # each emit one iteration in the complete injected DoAction.
+            self.assertEqual(ops['enumerate2'], 2)
+            self.assertEqual(ops['stackswap'], 2)
             self.assertFalse([op for op in ops if op.startswith('0x')])
 
 
