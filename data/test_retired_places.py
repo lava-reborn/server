@@ -107,7 +107,8 @@ RIVER_ALL = {"5943,1722": 433, "5941,1697": 508, "5850,1850": 434, "5849,1851": 
              "5851,1991": 988, "6168,1988": 436, "6167,1989": 525, "6145,1993": 517}
 # Донгола's cut: the craftsmen, the clothing market, the ФСЦ airfield, Delta
 # Force's block post; and the 33 cells «Засада» of the quest file 389.
-DONGOLA = {"5876,2013": 455, "5878,2014": 460, "5878,2015": 518, "5878,2013": 469, "5879,2011": 530}
+DONGOLA = {"5876,2013": 455, "5878,2014": 460, "5878,2015": 518, "5878,2013": 469,
+           "5879,2011": 530, "5955,2032": 382}
 # Абу-Хамед's cut: the five craftsmen's quarters, the clothing market, the ФСЦ
 # airfield, the clan base СМЕРШ's yard and the abandoned clan base.
 ABUHAMED = {"6184,1973": 451, "6185,1975": 461, "6184,1977": 462, "6185,1978": 519, "6185,1976": 463,
@@ -124,6 +125,8 @@ INTENDED = dict(PREMIUM, **HALFA, **FSC, **ABRI, **RIVER, **ABRI_CLOTHES, **RIVE
 # map's squares on them are painted over: all but 6160,1975, whose square is
 # the pirates', and the cells «Засада», the Peacekeepers' wasteland.
 RETIRED_CELLS = {k: v for k, v in INTENDED.items() if k != "6160,1975" and k not in AMBUSH}
+# The original abandoned yard is restored at a new cell; its old marker is retired.
+RETIRED_CELLS['6154,1963'] = 118
 # Held by the cut of the camps across the river, as they were: 168 on its
 # cell, «Аванпост Северного Альянса» wasteland; and by the cut of everything
 # across the river «Ангар в джунглях» wasteland. As the clues gave them before
@@ -165,7 +168,7 @@ RIVER_ALL_OFF_CELL = ([963, 964, 965, 966, 1197, 1198, 1199, 1200, 1003, 1004, 1
 # the staging post, the bunker, its garage and workshop, the leader's room),
 # «Хогвартс»'s and «Врачи без границ»'s, and the copy 1171 of the
 # Peacekeepers' camp.
-DONGOLA_OFF_CELL = ([448, 381, 385, 386, 387, 388, 959, 960, 1196,
+DONGOLA_OFF_CELL = ([448, 380, 381, 385, 386, 387, 388, 958, 959, 960, 1196,
                      534, 535, 536, 537, 593, 594, 991, 992, 993, 1207,
                      337, 338, 339, 342, 346, 350, 354, 358, 362, 366, 955, 956, 957, 1195, 1171])
 # The cut of Абу-Хамед's off-cell files: the quarter 449 behind «Улучшение
