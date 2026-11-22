@@ -8,7 +8,8 @@ from testkit import run_cases
 
 
 class ReleasePouches(unittest.TestCase):
-    PRICES = {3735: 5000, 3736: 4000, 3738: 5500, 5615: 4500}
+    # Ready-made pouches cost more than their accepted laboratory recipes.
+    PRICES = {3735: 6000, 3736: 5500, 3738: 7000, 5615: 6000}
     BONUSES = {3735: {0: 3, 1: 3, 4: 1}, 3736: {0: 3, 1: 3, 5: 1},
                3738: {0: 3, 1: 3, 6: 1}, 5615: {0: 4, 1: 4}}
 
