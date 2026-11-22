@@ -1278,6 +1278,12 @@ def one_passage_out(original, own):
     return head + tail == len(b)
 
 
+CINEMA_FINISH_REPLACEMENT = (
+    'Учти, что его хватит лишь на 5 раз.',
+    'Учти, что его хватит на 20 применений только против других игроков. '
+    'Его нельзя отремонтировать или восстановить.')
+
+
 def build_quests(texts, rows):
     index = QuestIndex(texts)
     out, unverified = {}, {}
@@ -1290,7 +1296,14 @@ def build_quests(texts, rows):
                 raise SystemExit("quest %d is listed as our own but carries a wiki source" % qtype)
             continue
         own = frozenset(row.get("own_texts") or ())
-        ids = match_quest(index, row)
+        matched = row
+        cinema_finish = qtype in (215, 218) and 'finish' in own
+        if cinema_finish:
+            # Match the unchanged archive, while the live row owns only the
+            # reviewed finite-PvP sentence. Never rewrite orig_misc.json.
+            matched = dict(row, finish=row['finish'].replace(
+                CINEMA_FINISH_REPLACEMENT[1], CINEMA_FINISH_REPLACEMENT[0]))
+        ids = match_quest(index, matched)
         if ids is None and "start" in own and qtype in VERIFIED:
             # The matcher finds a row by its start, and a start of the row's
             # own is not the original's on purpose: 301-303 lost their
@@ -1320,6 +1333,10 @@ def build_quests(texts, rows):
                              % (qtype, VERIFIED[qtype], ids))
         for key, i in zip(QUEST_KEYS, ids):
             original = texts[i] if i is not None else ""
+            if cinema_finish and key == 'finish':
+                if row[key] != original.replace(*CINEMA_FINISH_REPLACEMENT):
+                    raise SystemExit('quest %d: unreviewed syringe finish' % qtype)
+                continue
             if qtype in (158, 636, 884) and key == "start":
                 original = original.replace("12:00", "13:00").replace("16:00", "17:00").replace("23:00", "21:00")
             if key in own and i is not None and not one_passage_out(original, row.get(key) or ""):

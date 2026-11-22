@@ -99,6 +99,22 @@ class ReleaseTexts(unittest.TestCase):
         with self.assertRaises(SystemExit):
             self.build(148, row)
 
+    def test_cinema_finishes_keep_the_archive_and_only_the_approved_live_sentence(self):
+        for quest_type in (215, 218):
+            with self.subTest(quest=quest_type):
+                record = self.build(quest_type)
+                self.assertEqual(record, self.originals[str(quest_type)])
+                self.assertEqual(self.rows[quest_type]['finish'], record['finish'].replace(
+                    'Учти, что его хватит лишь на 5 раз.',
+                    'Учти, что его хватит на 20 применений только против других игроков. '
+                    'Его нельзя отремонтировать или восстановить.'))
+                for old, new in (('20 применений', '30 применений'),
+                                 ('других игроков', 'боссов'), ('Она улыбается', 'Она молчит')):
+                    row = copy.deepcopy(self.rows[quest_type])
+                    row['finish'] = row['finish'].replace(old, new)
+                    with self.assertRaises(SystemExit):
+                        self.build(quest_type, row)
+
     def test_provision_own_description_cannot_add_unrelated_text(self):
         row = copy.deepcopy(self.rows[148])
         row["own_texts"] = ["start"]
