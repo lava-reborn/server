@@ -1,9 +1,11 @@
 """Death-only combat XP: actual damage ownership, snapshots and live persistence."""
 import copy
+import gc
 import logging
 import os
 from types import SimpleNamespace as NS
 import unittest
+import weakref
 from unittest.mock import patch
 
 os.environ.pop('LAVA_DB_URL', None)
@@ -215,6 +217,53 @@ class DamageXp(unittest.TestCase):
         self.assertEqual(self.skill_xp(a), 0)
         self.assertAlmostEqual(self.skill_xp(b), p.combat_mob_xp(14, 12) * .1)
         self.assertEqual((mob.capture_harm, mob.loot_level), (harm, loot_level))
+
+    def test_repeated_reconnects_keep_one_plain_damage_record_without_old_sessions(self):
+        mob = self.mob()
+        retired = []
+        for _ in range(200):
+            fighter, _ch, _spec = self.fighter()
+            fighter.sess.char_id = 123
+            mob.hp = 100
+            self.hit(fighter, mob, 1)
+            self.assertEqual(set(mob.xp_ledger), {123})
+            retired.append(weakref.ref(fighter))
+        del fighter
+        gc.collect()
+        self.assertTrue(all(ref() is None for ref in retired))
+        self.assertEqual(mob.xp_ledger[123][0], 200)
+        returned, ch, spec = self.fighter()
+        returned.sess.char_id = 123
+        mob.hp = 100
+        self.hit(returned, mob, 100)
+        rc = self.room(returned)
+        rc.settle_xp(mob)
+        reward = p.combat_mob_xp(14, 12)
+        self.assertAlmostEqual(self.skill_xp(ch), reward)
+        self.assertAlmostEqual(self.spec_xp(ch, spec), reward)
+        before = self.skill_xp(ch)
+        rc.settle_xp(mob)
+        self.assertEqual(self.skill_xp(ch), before)
+
+    def test_identity_record_keeps_live_level_guard_and_quest_loot_after_reconnect(self):
+        first, _ch, _spec = self.fighter(14)
+        mob = self.mob()
+        mob.stats.level = 18
+        self.hit(first, mob, 1)
+        returned, current, _spec = self.fighter(14)
+        returned.sess.char_id = first.sess.char_id
+        returned.sess.inv = NS(bag_pieces=lambda: {})
+        rc = self.room(returned)
+        rc.store = object()
+        self.assertEqual(rc.loot_multiplier(mob, None), 1.75)
+        current.set_skill(p.SHOOTING, 15)
+        self.assertEqual(rc.loot_multiplier(mob, None), 1.5)
+        current.set_skill(p.SHOOTING, 10)
+        self.assertEqual(rc.loot_multiplier(mob, None), 1.75)
+        with patch.object(combat.mobs, 'quest_table', return_value=((1234, .5),)), \
+                patch.object(combat.quests, 'wanted_things', return_value={1234}) as wanted:
+            self.assertEqual(rc.quest_wants(mob, None), {1234})
+            self.assertEqual(wanted.call_args.args[1], returned.sess.char_id)
 
     def test_objects_palms_and_private_training_never_produce_combat_xp(self):
         f, ch, _ = self.fighter()

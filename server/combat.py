@@ -2226,8 +2226,8 @@ class Fighter:
         Each skill/spec keeps its own harm and damage-time reward, including
         the trained skill's level and active XP bonuses. Regeneration cannot
         mint another kill price, and a late weapon or buff cannot inherit
-        somebody else's earlier contribution. The first four ledger fields
-        stay compatible with loot and its existing harm consumers.
+        somebody else's earlier contribution. A character's stable ID keeps
+        a reconnect from retaining its old Fighter/Session until the kill.
         """
         if eden_harvest.is_palm(self.sess.loc, target):
             return
@@ -2236,8 +2236,9 @@ class Fighter:
             return
         ledger = getattr(target, "xp_ledger", None)
         if ledger is not None:
-            row = ledger.setdefault(self, [0.0, 0.0, skill, spec, {},
-                                           getattr(self.sess, "char_id", None)])
+            owner = getattr(self.sess, "char_id", None)
+            key = owner if owner is not None else self
+            row = ledger.setdefault(key, [0.0, 0.0, skill, spec, {}, owner])
             row[0] += dealt
             row[2], row[3] = skill, spec
             ch = self.character()
@@ -3487,12 +3488,20 @@ class RoomCombat:
         The damage ledger includes departed fighters. A low-level last hit
         cannot turn a senior player's kill into a difficult-mob bonus.
         """
-        fighters = [f for f, row in mob.xp_ledger.items() if row[0] > 0 and f.is_player]
+        # Persistent contributors need no live Session. Combatants without
+        # a character ID retain object keys; hit-time levels stay on the mob.
+        fighters = [f for f, row in mob.xp_ledger.items()
+                    if row[0] > 0 and getattr(f, 'is_player', False)]
+        if self is not None:
+            fighters += [s.combat for s in self.room.players
+                         if mob.xp_ledger.get(getattr(s, 'char_id', None), [0])[0] > 0]
+        recorded = any(row[0] > 0 and isinstance(key, int)
+                       for key, row in mob.xp_ledger.items())
         if killer is not None and killer.is_player and killer not in fighters:
             fighters.append(killer)
-        if mob.stats.role == 'object' or not fighters:
+        if mob.stats.role == 'object' or not (recorded or fighters):
             return 1
-        level = max(getattr(mob, 'loot_level', 0), max(f.level for f in fighters))
+        level = max([getattr(mob, 'loot_level', 0)] + [f.level for f in fighters])
         gap = mob.stats.level - level
         reward = 1.75 if gap >= 4 else 1.5 if gap == 3 else 1
         scanner = effects.multiplier(killer.sess, 'mob_drop') if killer is not None and killer.is_player else 1
@@ -3515,15 +3524,15 @@ class RoomCombat:
                    if getattr(sess, "char_id", None) is not None
                    and getattr(sess, "combat", None) is not None}
         payments = {}
-        for fighter, row in ledger.items():
+        for contributor, row in ledger.items():
             if len(row) < 6:
                 continue
             owner = row[5]
             recipient = by_char.get(owner) if owner is not None else None
-            sess = getattr(fighter, "sess", None)
+            sess = getattr(contributor, "sess", None)
             if (recipient is None and sess in present
                     and getattr(sess, "char_id", None) == owner):
-                recipient = fighter
+                recipient = contributor
             if recipient is None:
                 continue
             for key, (harm, weighted) in row[4].items():
@@ -3552,9 +3561,14 @@ class RoomCombat:
         Empty for a creature with no quest rows, and nothing is asked then."""
         if not mobs.quest_table(mob.type_id):
             return frozenset()
-        fighters = [f for f in mob.xp_ledger
-                    if getattr(f, "sess", None) in self.room.players] \
-            if QUEST_LOOT_FOR_ALL_WHO_HARMED else []
+        fighters = []
+        if QUEST_LOOT_FOR_ALL_WHO_HARMED:
+            owners = {row[5] for row in mob.xp_ledger.values()
+                      if len(row) >= 6 and row[5] is not None}
+            fighters = [s.combat for s in self.room.players
+                        if getattr(s, 'char_id', None) in owners]
+            fighters += [f for f in mob.xp_ledger
+                         if getattr(f, "sess", None) in self.room.players]
         if killer is not None and killer.is_player and killer not in fighters:
             fighters.append(killer)
         out = set()
