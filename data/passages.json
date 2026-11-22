@@ -2075,7 +2075,7 @@
   }
  },
  "no_map": {
-  "688": {"why": "Quest-only other-side cemetery: return to Vivek after defeating four ghost guardians."},
+  "688": {"why": "DESIGNED quest-only other-side cemetery: return to Vivek after defeating four ghost guardians."},
   "_": "Interiors left only by their own ways, never straight onto the global map: location -> why. The lcall's g_id carries the sublocation bit there, as a deadloc's does, so the client greys both map buttons out, and the server refuses chWorld to the map and /home (server/travel.py no_map, geo_id; server.py Session.cmd_chWorld, cmd_userMsg). A death still sends a player home. Their sides and quest ways work as anywhere. Each row says whether it is RECOVERED or DESIGNED.",
   "732": {
    "why": "DESIGNED. Берт Гаммер's bunker, TIR_00: the course (1682 and its lessons) is walked once, and a button to the map in the middle of it would lose it for good -- the lessons' givers stand in rooms only the lessons lead to. The ways out are the lesson on (351) and «Прервать обучение» (358), back to the market."

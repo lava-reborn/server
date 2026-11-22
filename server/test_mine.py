@@ -201,8 +201,9 @@ for (key, qtype), rec in sorted(WAYS.items()):
     # 2026-10-14): the quarry's contract of 16-20, the mines' gates of
     # 15-20 and Гатера's car for a diamond -- which server/
     # test_abuhamed_quests holds. Every other way is held to the bare ride
-    # here.
-    if not (qtype == 1682 or 351 <= qtype <= 449 or 279 <= qtype <= 286
+    # here. Cinema's two cemetery passages also carry story requirements;
+    # test_release_quest_content walks both complete branches and the return.
+    if not (qtype in (216, 217, 1682) or 351 <= qtype <= 449 or 279 <= qtype <= 286
             or 450 <= qtype <= 599 or 630 <= qtype <= 799 or 880 <= qtype <= 999):
         check("%s: quest %d is a way and nothing else" % (key, qtype),
               (q.kind, q.obj, q.rew_obj, q.rew_afro, q.rew_gold, q.repeatable,

@@ -657,7 +657,7 @@ def positions(frames):
 
 def hunt(c, got, loc_id, targets, pos):
     """Shoot one creature of each type in targets, in order, each from a cell
-    with a clear line to it and out of every hostile's reach (the admin gun
+    with a clear line, clearing hostiles along narrow approaches (the admin gun
     fells anything with one shot). (the fight's frames, the types killed,
     where the player stands, type -> the cell it fell on, the cells within
     reach of the hostiles still standing)."""
@@ -670,6 +670,24 @@ def hunt(c, got, loc_id, targets, pos):
     hostile = {e for e, t in types.items() if MT.get(t, (None,))[0] == world.MOB}
     reach = max([mobs.stats(types[e]).aggro for e in hostile] or [0]) + 0.5
     out, killed, fell, dead = [], [], {}, set()
+
+    def shoot(eid):
+        frames = []
+        for _ in range(30):
+            c.send("ss_use;type=16;obj=x%s;target=%s;" % (GUN, entity(eid)))
+            got_ = c.until(lambda f: f[0] == "ss_di_firearm"
+                           or (f[0] == "cmdAck" and f[1].get("res")), 3) + c.frames(0.4)
+            frames += got_
+            if [p for p in named(got_, "lch") if p.get("dead") == eid]:
+                kind = types[eid]
+                if kind in targets:
+                    killed.append(kind)
+                    fell[kind] = positions(got + out + frames).get(eid)
+                dead.add(eid)
+                return frames
+            time.sleep(0.3)
+        return None
+
     for want in targets:
         where = positions(got + out)
         for eid in [e for e, t in types.items() if t == want and e not in dead]:
@@ -704,19 +722,10 @@ def hunt(c, got, loc_id, targets, pos):
                                       set(c.scene_cells.values()), limit=20000)
                 if not path:
                     continue
-                out += testkit.clear_approach(c, in_sight, None, (), shot_range)
+                out += testkit.clear_approach(c, in_sight, shoot, hostile - dead, shot_range)
             pos = c.scene_pos
-            for _ in range(30):
-                c.send("ss_use;type=16;obj=x%s;target=%s;" % (GUN, entity(eid)))
-                got_ = c.until(lambda f: f[0] == "ss_di_firearm"
-                               or (f[0] == "cmdAck" and f[1].get("res")), 3) + c.frames(0.4)
-                out += got_
-                if [p for p in named(got_, "lch") if p.get("dead") == eid]:
-                    killed.append(want)
-                    dead.add(eid)
-                    fell[want] = positions(got + out).get(eid, home)
-                    break
-                time.sleep(0.3)
+            if eid not in dead:
+                out += shoot(eid) or []
             if want in killed:
                 break
     where = positions(got + out)
