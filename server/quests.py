@@ -213,7 +213,8 @@ LABORANT_RECIPES = {
     18304: (5614, 5615), 18305: (3600, 3736), 18306: (3599, 3735),
     18307: (3602, 3738),
 }
-LABORANT_QUESTS = frozenset((LABORANT_DETAIL, *LABORANT_RECIPES))
+LABORANT_MOD_UPGRADES = {18308: 3722, 18309: 3723, 18310: 3724, 18311: 3725}
+LABORANT_QUESTS = frozenset((LABORANT_DETAIL, *LABORANT_RECIPES, *LABORANT_MOD_UPGRADES))
 
 
 def laborant_available(store, day):
@@ -228,15 +229,16 @@ def laborant_wear(quest, inv):
     repair is obtained by combining worn equipment and then selling it.
     """
     recipe = LABORANT_RECIPES.get(quest.type)
-    if recipe is None:
+    upgrade = LABORANT_MOD_UPGRADES.get(quest.type)
+    if recipe is None and upgrade is None:
         return None
     from fractions import Fraction
     import inventory
     import items
     import setcraft
-    new_abs = items.params_of(recipe[1])["max_break_abs"]
+    new_abs = items.params_of(recipe[1] if recipe else LABORANT_MOD)["max_break_abs"]
     worn = []
-    for type_id in (LABORANT_MOD, recipe[0]):
+    for type_id in ((LABORANT_MOD, recipe[0]) if recipe else (upgrade,)):
         row = next(r for r in inv.rows() if r["type_id"] == type_id
                    and r["slot"] == inventory.BAG and r["uniq"] not in inv.locked)
         old_abs = items.params_of(type_id)["max_break_abs"]

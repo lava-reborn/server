@@ -176,11 +176,11 @@ try:
     check("the oasis: new models, the choice rounds and others, medicine",
           [len(items.stock_for(t, 62)) > 0 for t in (1224, 1227, 202)], [True] * 3)
     check("  ..the rounds are rounds, the medicine medicine: Снитке's the town's tiers of both"
-          " lines, afro and gold, plus INTUX I, Reparin I and the AP buff",
+          " lines, afro and gold; stimulants moved to Gofus",
           ({items.root_of(t) for t in items.stock_for(1227)},
            {items.root_of(t) for t in items.stock_for(202, 62)}, len(items.stock_for(202, 62)),
            sorted(set(items.stock_for(202, 62)) & set(effects.EXPERIENCE_UP))),
-          ({items.AMMO}, {items.HEAL}, 48, [3112]))
+          ({items.AMMO}, {items.HEAL}, 24, []))
     check("the lottery men sell their tickets; the gold one for gold alone",
           (items.stock_for(LOTTERY_MAN), items.stock_for(GOLD_LOTTERY),
            (items.params_of(GOLD_TICKET)["cost"], items.params_of(GOLD_TICKET)["g_cost"])),

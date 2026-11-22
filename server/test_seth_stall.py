@@ -71,25 +71,26 @@ SETH, ARENA, ARENA_CELL = 1187, 167, (6270, 1831)
 WALTHER, KS, ST = 25636, 6092, 6104
 HELM, SHIRT, ARMOR, PANTS, BOOTS = 10179, 10180, 10181, 10182, 10183
 ALPHA, OMEGA = 4181, 3208
-STALL = [WALTHER, KS, ST, SHIRT, PANTS, BOOTS, HELM, ARMOR, ALPHA, OMEGA]
+ARCHIVE_STALL = [WALTHER, KS, ST, SHIRT, PANTS, BOOTS, HELM, ARMOR, ALPHA, OMEGA]
+STALL = ARCHIVE_STALL[:-2]  # Reagents now belong to Gofus and assistants.
 # The combat release adds the other four qualities of his pistol's calibre.
 # Keep the original shopping basket independent of the live wire indices.
 LIVE_STALL = [WALTHER, KS, ST, 6116, 6140, 6164, 6152,
-              SHIRT, PANTS, BOOTS, HELM, ARMOR, ALPHA, OMEGA]
+              SHIRT, PANTS, BOOTS, HELM, ARMOR]
 # Rounds are bought by the number, anything else one at a time.
 ROUNDS = 20
 # What each costs, worked out by hand from the frames (pmod 1): the pistol
 # and the clothes at their price, 20 rounds of a pack of 20 at 20 and at 60
 # afro, the reagents at 2500.
 PRICES = {WALTHER: 2800, KS: 20, ST: 60, SHIRT: 600, PANTS: 800, BOOTS: 400,
-          HELM: 1000, ARMOR: 1200, ALPHA: 2500, OMEGA: 2500}
+          HELM: 1000, ARMOR: 1200}
 START_AFRO = 20000
 # The pieces of clothing and the article each one's numbers are.
 ARTICLE = {HELM: "Каска строителя", SHIRT: "Рубашка", ARMOR: "Кусковая броня",
            PANTS: "Джинсы", BOOTS: "Старые ботинки"}
 # The level each thing asks (inventory.item_level): its Стрельба.
 LEVEL = {WALTHER: 4, SHIRT: 2, PANTS: 2, BOOTS: 2, HELM: 2, ARMOR: 2,
-         KS: 0, ST: 0, ALPHA: 0, OMEGA: 0}
+         KS: 0, ST: 0, ALPHA: 2, OMEGA: 2}
 cat = items.catalogue()
 
 # --- in process ------------------------------------------------------------------------
@@ -102,9 +103,9 @@ check("  ..standing in «Арена Нубии» (167), the cell 6270x1831",
       (world.location_at(*ARENA_CELL), [t for _c, t in world.location(ARENA).spawns]),
       (ARENA, [SETH]))
 check("his stall is the wiki page's list, in its order: the data/npcs.json entry",
-      (npcs.stock(SETH), items.stock_for(SETH)), (STALL, LIVE_STALL))
+      (npcs.stock(SETH), items.stock_for(SETH)), (ARCHIVE_STALL, LIVE_STALL))
 check("  ..each by the name the player reads",
-      [names.text(items.STRING_ID_OFFSET + t) for t in STALL],
+      [names.text(items.STRING_ID_OFFSET + t) for t in ARCHIVE_STALL],
       ["Walther P99$Пистолет", "9мм НАТО $КС", "9мм НАТО $СТ", "Рубашка", "Джинсы",
        "Старые ботинки", "Гоглы с фильтром", "Кусковая броня", "Альфа-реагент I",
        "Омега-реагент I"])
@@ -112,7 +113,7 @@ check("  ..priced in afro, nothing premium, nothing gold",
       [(t, items.params_of(t)["g_cost"], items.premium(t)) for t in STALL
        if items.params_of(t)["g_cost"] or items.premium(t) or items.params_of(t)["cost"] <= 0],
       [])
-check("  ..and asking the levels of their Стрельба", {t: inventory.item_level(t) for t in STALL},
+check("  ..and asking the levels of their Стрельба", {t: inventory.item_level(t) for t in ARCHIVE_STALL},
       LEVEL)
 
 # Every trader of the client, as the stall would be without this change: the

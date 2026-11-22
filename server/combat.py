@@ -179,12 +179,12 @@ LOOT_OWNER = 0
 # What a dead player loses, in per cent -- the owner's rules of 2026-09-25,
 # for every death, whoever or whatever did the killing («При любой смерти»):
 # each piece of clothing on the body falls with WEAR_DROP_CHANCE if it is
-# an afro thing («...с вероятностью 10%, если оно афро; если голд-предметы,
-# то они не падают»), and each thing in the backpack with BAG_DROP_CHANCE
+# an afro thing (5% per eligible piece; gold equipment stays bound),
+# and each thing in the backpack with BAG_DROP_CHANCE
 # («Каждая вещь с шансом 30%»). See death_losses. The environment moves them
 # for a test that has to know what falls (test_death_drops sets both to
 # 100); nothing that serves anybody sets either.
-WEAR_DROP_CHANCE = int(os.environ.get("LAVA_WEAR_DROP", "10"))
+WEAR_DROP_CHANCE = int(os.environ.get("LAVA_WEAR_DROP", "5"))
 BAG_DROP_CHANCE = int(os.environ.get("LAVA_BAG_DROP", "30"))
 
 # What the server still accepts from a client it knows to be dead. Two
@@ -514,8 +514,10 @@ def death_losses(rows, locked=(), rng=None):
     medicines, which are neither, and keep what they hold; the bank is not
     on the body; what lies on the table in a barter (locked) is not in the
     backpack either -- though Fighter.die ends the barter first, and it
-    comes back to it. One roll per row, rows in order, so a seeded RNG
-    gives the same losses for the same things.
+    comes back to it. At most one worn armour piece is lost; the belt
+    rolls separately. Multiple successful armour rolls choose uniformly,
+    so inventory order does not favour the first slot. Backpack losses
+    retain their existing rules.
     """
     out = []
     for row in rows:
@@ -528,6 +530,11 @@ def death_losses(rows, locked=(), rng=None):
             n = bag_share(row, rng)
             if n:
                 out.append((row, n))
+    armour = [row["uniq"] for row, _n in out
+              if row["slot"] in inventory.WEAR_SLOTS and row["slot"] != inventory.BELT]
+    if len(armour) > 1:
+        chosen = armour[(rng or RNG).randint(0, len(armour) - 1)]
+        out = [(row, n) for row, n in out if row["uniq"] not in armour or row["uniq"] == chosen]
     return out
 
 
@@ -2391,7 +2398,10 @@ class Fighter:
         room = self.sess.room
         if room is not None:
             room.broadcast(("lch", dict(dead=self.eid)))
-            self.drop_on_death()
+            # PvE deaths retain their ordinary losses. A player cannot farm
+            # possessions from a victim four or more levels below them.
+            if killer is None or not killer.is_player or killer.level - self.level < 4:
+                self.drop_on_death()
         # Nothing here to shoot at any more. think() would notice on its
         # next tick (present() is false for a corpse), but until then the
         # room stays at war over a target that cannot be hit.
@@ -2786,10 +2796,10 @@ class RoomCombat:
 
     # --- pure target-resolution policies ------------------------------------------
     def ranged_critical(self, shooter, target, weapon, optimal):
-        return battle_balance.ranged_critical(shooter, target, weapon, optimal)
+        return battle_balance.ranged_critical(shooter, target, weapon, optimal, ordinary=True)
 
     def melee_critical(self, attacker, target, chance):
-        return battle_balance.critical(attacker, target, chance)
+        return battle_balance.critical(attacker, target, chance, ordinary=True)
 
     def bullet_damage(self, shooter, target, weapon, damage, stamina_damage, critical, stamina_left):
         rifle = (weapon.spec == SPEC_OF_WEAPON[items.RIFLE] if shooter.is_player
@@ -3469,6 +3479,7 @@ class RoomCombat:
         # who its quest rows of loot are rolled for (quest_wants).
         mob.quest_wants = self.quest_wants(mob, killer)
         mob.loot_multiplier = RoomCombat.loot_multiplier(self, mob, killer)
+        mob.gold_loot_multiplier = RoomCombat.loot_multiplier(self, mob, killer, include_scanner=False)
         RoomCombat.materialize_loot(self, mob)
         # A warehouse's boss (holdings.py): who brought it down and for which
         # clan, as they stand now; the holding is settled when the corpse
@@ -3509,7 +3520,7 @@ class RoomCombat:
         # If it was the last one after anybody here, the fight is over now.
         self.calm()
 
-    def loot_multiplier(self, mob, killer):
+    def loot_multiplier(self, mob, killer, *, include_scanner=True):
         """Random drops: scanner and the gap to the strongest contributor.
 
         The damage ledger includes departed fighters. A low-level last hit
@@ -3530,8 +3541,11 @@ class RoomCombat:
             return 1
         level = max([getattr(mob, 'loot_level', 0)] + [f.level for f in fighters])
         gap = mob.stats.level - level
-        reward = 1.75 if gap >= 4 else 1.5 if gap == 3 else 1
-        scanner = effects.multiplier(killer.sess, 'mob_drop') if killer is not None and killer.is_player else 1
+        if gap <= -4:
+            return 0
+        reward = {1: 1.15, 2: 1.3, 3: 1.5}.get(gap, 1.75 if gap >= 4 else 1)
+        scanner = (effects.multiplier(killer.sess, 'mob_drop')
+                   if include_scanner and killer is not None and killer.is_player else 1)
         return reward * scanner
 
     def settle_xp(self, mob):
@@ -3760,6 +3774,7 @@ class RoomCombat:
         bag holds the rest of its loot and no ingot."""
         rows = []
         thing = mob.stats.role == "object"
+        restricted = not thing and getattr(mob, 'loot_multiplier', 1) <= 0
         gold_ok = bosses.keeps_hours(mob.type_id)
         # What a timed event puts on top, by place (events.loot): a
         # prisoner's red armband in the uprising. An ore rock leaves its ore
@@ -3767,9 +3782,13 @@ class RoomCombat:
         for type_id, count in mobs.loot_for(mob.stats, RNG, mob.quest_wants,
                               loc_id=self.room.loc.id,
                               killer_level=getattr(mob, "blueprint_killer_level", None),
-                              multiplier=getattr(mob, "loot_multiplier", 1)) \
+                              multiplier=getattr(mob, "loot_multiplier", 1),
+                              gold_multiplier=getattr(mob, "gold_loot_multiplier", 1)) \
                 + events.loot(self.room.loc.id, mob.type_id, RNG) \
                 + production.yield_of(mob.type_id):
+            if restricted and (type_id not in mob.quest_wants
+                               or not mobs.personal_quest_item(type_id)):
+                continue
             if items.out_of_game(type_id) or items.acquisition_blocked(type_id):
                 continue            # (P) or retired by name; see items.out_of_game
             if type_id in items.GOLD_INGOTS and not gold_ok:
@@ -3856,16 +3875,16 @@ class RoomCombat:
 
     # --- bosses and their hours ----------------------------------------------------------
     def boss_slots(self, t):
-        """Weekly battle and paid occupation reuse distinct death checkpoints."""
+        """Weekly battle and ordinary occupation reuse distinct death checkpoints."""
         due = {m.eid: bosses.slot_of(m.type_id, t, self.room.loc.id) for m in self.bosses}
         base = holdings.base_for(self.room.loc.id)
         held = holdings.paid_holder(self.store, base, t) if base is not None else None
-        if held is not None and holdings.battle_slot(base, t) is None:
+        if base is not None and holdings.battle_slot(base, t) is None:
             # The battle's end identifies its occupation phase. Early rent
             # payment must not restore a cleared wave before capture closes.
-            slot = float(held['slot']) + events.table().window(base.battle).minutes * 60
+            slot = holdings.occupation_slot(base, t)
             for mob in self.bosses:
-                if mob.type_id in base.guards + base.troops:
+                if mob.type_id in base.troops or (held is not None and mob.type_id in base.guards):
                     due[mob.eid] = slot
         return due
 

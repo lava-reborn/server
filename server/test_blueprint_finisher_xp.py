@@ -118,7 +118,7 @@ async def exercise():
                         with patch.object(mobs, 'carried', return_value=[]), \
                                 patch.object(mobs, 'roll_table', return_value=[]), \
                                 patch.object(mobs, 'quest_table', return_value=[]):
-                            loot = mobs.loot_for(NS(type_id=269, role='boss'), NS(random=lambda: roll),
+                            loot = mobs.loot_for(NS(type_id=269, role='boss', level=corpse.stats.level), NS(random=lambda: roll),
                                 loc_id=82, killer_level=player_level)
                         check(label + ': roll %s at level %d' % (roll, player_level),
                               loot, expected)

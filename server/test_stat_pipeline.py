@@ -170,7 +170,8 @@ class StatPipeline(unittest.IsolatedAsyncioTestCase):
 
     async def test_effects_round_trip_relog_without_persisting_temporary_base_stats(self):
         manager = self.manager()
-        self.s.char.set_rep(100)
+        self.s.char.skill[progression.SHOOTING][0] = 18
+        self.s.char.skill[progression.MELEE][0] = 9
         before = copy.deepcopy(self.s.char.rows())
         for source in (4917, 4937, 3115, 3208, 3468, 3471):
             row = self.s.inv.create(source)

@@ -82577,10 +82577,15 @@
    "min_h_rest": 0,
    "min_st_rest": 0,
    "name_ru": "Альфа-Реагент II",
-   "need_pvp_rep": 200,
+   "need_pvp_rep": 0,
    "sellable": 1,
    "use_count": 1,
-   "weight": 10
+   "weight": 10,
+   "need_skills_m": 3,
+   "need_skills": [
+     4,
+     8
+   ]
   },
   "3117": {
    "_wiki": {
@@ -82620,10 +82625,15 @@
    "min_h_rest": 0,
    "min_st_rest": 0,
    "name_ru": "Альфа-Реагент III",
-   "need_pvp_rep": 400,
+   "need_pvp_rep": 0,
    "sellable": 1,
    "use_count": 1,
-   "weight": 10
+   "weight": 10,
+   "need_skills_m": 3,
+   "need_skills": [
+     6,
+     12
+   ]
   },
   "3119": {
    "_wiki": {
@@ -83008,7 +83018,13 @@
    "name_ru": "Пикодин I",
    "sellable": 1,
    "use_count": 1,
-   "weight": 10
+   "weight": 10,
+   "need_pvp_rep": 0,
+   "need_skills_m": 3,
+   "need_skills": [
+     1,
+     2
+   ]
   },
   "3202": {
    "_wiki": {
@@ -83029,10 +83045,15 @@
    "min_h_rest": 0,
    "min_st_rest": 0,
    "name_ru": "Пикодин II",
-   "need_pvp_rep": 400,
+   "need_pvp_rep": 0,
    "sellable": 1,
    "use_count": 1,
-   "weight": 10
+   "weight": 10,
+   "need_skills_m": 3,
+   "need_skills": [
+     5,
+     10
+   ]
   },
   "3203": {
    "_wiki": {
@@ -83053,10 +83074,15 @@
    "min_h_rest": 0,
    "min_st_rest": 0,
    "name_ru": "Пикодин III",
-   "need_pvp_rep": 3200,
+   "need_pvp_rep": 0,
    "sellable": 1,
    "use_count": 1,
-   "weight": 10
+   "weight": 10,
+   "need_skills_m": 3,
+   "need_skills": [
+     9,
+     17
+   ]
   },
   "3205": {
    "_wiki": {
@@ -83144,10 +83170,15 @@
    "min_h_rest": 0,
    "min_st_rest": 0,
    "name_ru": "Омега-Реагент I",
-   "need_pvp_rep": 100,
+   "need_pvp_rep": 0,
    "sellable": 1,
    "use_count": 1,
-   "weight": 10
+   "weight": 10,
+   "need_skills_m": 3,
+   "need_skills": [
+     1,
+     2
+   ]
   },
   "3209": {
    "_wiki": {
@@ -83187,10 +83218,15 @@
    "min_h_rest": 0,
    "min_st_rest": 0,
    "name_ru": "Омега-Реагент II",
-   "need_pvp_rep": 200,
+   "need_pvp_rep": 0,
    "sellable": 1,
    "use_count": 1,
-   "weight": 10
+   "weight": 10,
+   "need_skills_m": 3,
+   "need_skills": [
+     4,
+     8
+   ]
   },
   "3211": {
    "_wiki": {
@@ -83230,10 +83266,15 @@
    "min_h_rest": 0,
    "min_st_rest": 0,
    "name_ru": "Омега-Реагент III",
-   "need_pvp_rep": 400,
+   "need_pvp_rep": 0,
    "sellable": 1,
    "use_count": 1,
-   "weight": 10
+   "weight": 10,
+   "need_skills_m": 3,
+   "need_skills": [
+     6,
+     12
+   ]
   },
   "3213": {
    "_wiki": {
@@ -83840,7 +83881,13 @@
    "name_ru": "Ментостимулятор I",
    "sellable": 1,
    "use_count": 1,
-   "weight": 10
+   "weight": 10,
+   "need_pvp_rep": 0,
+   "need_skills_m": 3,
+   "need_skills": [
+     1,
+     2
+   ]
   },
   "3469": {
    "_wiki": {
@@ -83866,7 +83913,13 @@
    "name_ru": "Ментостимулятор II",
    "sellable": 1,
    "use_count": 1,
-   "weight": 10
+   "weight": 10,
+   "need_pvp_rep": 0,
+   "need_skills_m": 3,
+   "need_skills": [
+     9,
+     17
+   ]
   },
   "3470": {
    "_wiki": {
@@ -83918,7 +83971,13 @@
    "name_ru": "Дофрамин I",
    "sellable": 1,
    "use_count": 1,
-   "weight": 10
+   "weight": 10,
+   "need_pvp_rep": 0,
+   "need_skills_m": 3,
+   "need_skills": [
+     1,
+     2
+   ]
   },
   "3472": {
    "_wiki": {
@@ -83944,7 +84003,13 @@
    "name_ru": "Дофрамин II",
    "sellable": 1,
    "use_count": 1,
-   "weight": 10
+   "weight": 10,
+   "need_pvp_rep": 0,
+   "need_skills_m": 3,
+   "need_skills": [
+     9,
+     17
+   ]
   },
   "3473": {
    "_wiki": {
@@ -83995,7 +84060,13 @@
    "source_revision": 22024,
    "str_bonus": 1,
    "use_count": 1,
-   "weight": 10
+   "weight": 10,
+   "need_pvp_rep": 0,
+   "need_skills_m": 3,
+   "need_skills": [
+     1,
+     2
+   ]
   },
   "3475": {
    "_wiki": {
@@ -84020,7 +84091,13 @@
    "source_revision": 22025,
    "str_bonus": 3,
    "use_count": 1,
-   "weight": 10
+   "weight": 10,
+   "need_pvp_rep": 0,
+   "need_skills_m": 3,
+   "need_skills": [
+     9,
+     17
+   ]
   },
   "3476": {
    "_wiki": {
@@ -87264,7 +87341,7 @@
    ],
    "bonus_skills_m": 1,
    "cost": 0,
-   "g_cost": 4400,
+   "g_cost": 6000,
    "need_skills": [
     16
    ],
@@ -87352,7 +87429,7 @@
    "slot_type": 3,
    "weight": 700,
    "cost": 0,
-   "g_cost": 3760,
+   "g_cost": 5000,
    "need_skills": [
     16
    ],
@@ -87397,7 +87474,7 @@
    "slot_type": 3,
    "weight": 700,
    "cost": 0,
-   "g_cost": 3650,
+   "g_cost": 5000,
    "need_skills": [
     16
    ],
@@ -90471,11 +90548,16 @@
    "min_h_rest": 0,
    "min_st_rest": 0,
    "name_ru": "Альфа-Реагент I",
-   "need_pvp_rep": 100,
+   "need_pvp_rep": 0,
    "premium": 0,
    "sellable": 1,
    "use_count": 1,
-   "weight": 10
+   "weight": 10,
+   "need_skills_m": 3,
+   "need_skills": [
+     1,
+     2
+   ]
   },
   "4182": {
    "_wiki": {
@@ -90494,10 +90576,15 @@
    "min_h_rest": 0,
    "min_st_rest": 0,
    "name_ru": "Альфа-Реагент IV",
-   "need_pvp_rep": 800,
+   "need_pvp_rep": 0,
    "sellable": 1,
    "use_count": 1,
-   "weight": 10
+   "weight": 10,
+   "need_skills_m": 3,
+   "need_skills": [
+     9,
+     17
+   ]
   },
   "4183": {
    "_wiki": {
@@ -90537,10 +90624,15 @@
    "min_h_rest": 0,
    "min_st_rest": 0,
    "name_ru": "Омега-Реагент IV",
-   "need_pvp_rep": 800,
+   "need_pvp_rep": 0,
    "sellable": 1,
    "use_count": 1,
-   "weight": 10
+   "weight": 10,
+   "need_skills_m": 3,
+   "need_skills": [
+     9,
+     17
+   ]
   },
   "4185": {
    "_wiki": {
@@ -93146,7 +93238,13 @@
    "min_st_rest": 0,
    "name_ru": "Салюс",
    "sellable": 0,
-   "weight": 10
+   "weight": 10,
+   "need_pvp_rep": 0,
+   "need_skills_m": 3,
+   "need_skills": [
+     1,
+     2
+   ]
   },
   "4918": {
    "_wiki": {
@@ -93166,9 +93264,14 @@
    "min_h_rest": 0,
    "min_st_rest": 0,
    "name_ru": "Салюс МК I",
-   "need_pvp_rep": 100,
+   "need_pvp_rep": 0,
    "sellable": 1,
-   "weight": 10
+   "weight": 10,
+   "need_skills_m": 3,
+   "need_skills": [
+     1,
+     2
+   ]
   },
   "4919": {
    "_wiki": {
@@ -93209,9 +93312,14 @@
    "min_h_rest": 0,
    "min_st_rest": 0,
    "name_ru": "Салюс МК II",
-   "need_pvp_rep": 200,
+   "need_pvp_rep": 0,
    "sellable": 1,
-   "weight": 10
+   "weight": 10,
+   "need_skills_m": 3,
+   "need_skills": [
+     2,
+     4
+   ]
   },
   "4921": {
    "_wiki": {
@@ -93252,9 +93360,14 @@
    "min_h_rest": 0,
    "min_st_rest": 0,
    "name_ru": "Салюс МК III",
-   "need_pvp_rep": 400,
+   "need_pvp_rep": 0,
    "sellable": 1,
-   "weight": 10
+   "weight": 10,
+   "need_skills_m": 3,
+   "need_skills": [
+     3,
+     6
+   ]
   },
   "4923": {
    "_wiki": {
@@ -93295,9 +93408,14 @@
    "min_h_rest": 0,
    "min_st_rest": 0,
    "name_ru": "Салюс МК IV",
-   "need_pvp_rep": 800,
+   "need_pvp_rep": 0,
    "sellable": 1,
-   "weight": 10
+   "weight": 10,
+   "need_skills_m": 3,
+   "need_skills": [
+     4,
+     8
+   ]
   },
   "4925": {
    "_wiki": {
@@ -93338,9 +93456,14 @@
    "min_h_rest": 0,
    "min_st_rest": 0,
    "name_ru": "Салюс МК V",
-   "need_pvp_rep": 1600,
+   "need_pvp_rep": 0,
    "sellable": 1,
-   "weight": 10
+   "weight": 10,
+   "need_skills_m": 3,
+   "need_skills": [
+     5,
+     10
+   ]
   },
   "4927": {
    "_wiki": {
@@ -93381,9 +93504,14 @@
    "min_h_rest": 0,
    "min_st_rest": 0,
    "name_ru": "Салюс МК VI",
-   "need_pvp_rep": 3200,
+   "need_pvp_rep": 0,
    "sellable": 1,
-   "weight": 10
+   "weight": 10,
+   "need_skills_m": 3,
+   "need_skills": [
+     6,
+     12
+   ]
   },
   "4929": {
    "_wiki": {
@@ -93424,9 +93552,14 @@
    "min_h_rest": 0,
    "min_st_rest": 0,
    "name_ru": "Салюс МК VII",
-   "need_pvp_rep": 6400,
+   "need_pvp_rep": 0,
    "sellable": 1,
-   "weight": 10
+   "weight": 10,
+   "need_skills_m": 3,
+   "need_skills": [
+     7,
+     14
+   ]
   },
   "4931": {
    "_wiki": {
@@ -93467,9 +93600,14 @@
    "min_h_rest": 0,
    "min_st_rest": 0,
    "name_ru": "Салюс МК VIII",
-   "need_pvp_rep": 12800,
+   "need_pvp_rep": 0,
    "sellable": 1,
-   "weight": 10
+   "weight": 10,
+   "need_skills_m": 3,
+   "need_skills": [
+     8,
+     16
+   ]
   },
   "4933": {
    "_wiki": {
@@ -93510,9 +93648,14 @@
    "min_h_rest": 0,
    "min_st_rest": 0,
    "name_ru": "Салюс МК IX",
-   "need_pvp_rep": 25600,
+   "need_pvp_rep": 0,
    "sellable": 1,
-   "weight": 10
+   "weight": 10,
+   "need_skills_m": 3,
+   "need_skills": [
+     9,
+     17
+   ]
   },
   "4935": {
    "_wiki": {
@@ -93577,7 +93720,13 @@
    "name_ru": "Анестетик",
    "sellable": 0,
    "use_count": 1,
-   "weight": 10
+   "weight": 10,
+   "need_pvp_rep": 0,
+   "need_skills_m": 3,
+   "need_skills": [
+     1,
+     2
+   ]
   },
   "4938": {
    "_wiki": {
@@ -93597,10 +93746,15 @@
    "min_h_rest": 0,
    "min_st_rest": 0,
    "name_ru": "Анестетик МК I",
-   "need_pvp_rep": 100,
+   "need_pvp_rep": 0,
    "sellable": 1,
    "use_count": 1,
-   "weight": 10
+   "weight": 10,
+   "need_skills_m": 3,
+   "need_skills": [
+     1,
+     2
+   ]
   },
   "4939": {
    "_wiki": {
@@ -93642,10 +93796,15 @@
    "min_h_rest": 0,
    "min_st_rest": 0,
    "name_ru": "Анестетик МК II",
-   "need_pvp_rep": 200,
+   "need_pvp_rep": 0,
    "sellable": 1,
    "use_count": 1,
-   "weight": 10
+   "weight": 10,
+   "need_skills_m": 3,
+   "need_skills": [
+     2,
+     4
+   ]
   },
   "4941": {
    "_wiki": {
@@ -93687,10 +93846,15 @@
    "min_h_rest": 0,
    "min_st_rest": 0,
    "name_ru": "Анестетик МК III",
-   "need_pvp_rep": 400,
+   "need_pvp_rep": 0,
    "sellable": 1,
    "use_count": 1,
-   "weight": 10
+   "weight": 10,
+   "need_skills_m": 3,
+   "need_skills": [
+     3,
+     6
+   ]
   },
   "4943": {
    "_wiki": {
@@ -93732,10 +93896,15 @@
    "min_h_rest": 0,
    "min_st_rest": 0,
    "name_ru": "Анестетик МК IV",
-   "need_pvp_rep": 800,
+   "need_pvp_rep": 0,
    "sellable": 1,
    "use_count": 1,
-   "weight": 10
+   "weight": 10,
+   "need_skills_m": 3,
+   "need_skills": [
+     4,
+     8
+   ]
   },
   "4945": {
    "_wiki": {
@@ -93777,10 +93946,15 @@
    "min_h_rest": 0,
    "min_st_rest": 0,
    "name_ru": "Анестетик МК V",
-   "need_pvp_rep": 1600,
+   "need_pvp_rep": 0,
    "sellable": 1,
    "use_count": 1,
-   "weight": 10
+   "weight": 10,
+   "need_skills_m": 3,
+   "need_skills": [
+     5,
+     10
+   ]
   },
   "4947": {
    "_wiki": {
@@ -93822,10 +93996,15 @@
    "min_h_rest": 0,
    "min_st_rest": 0,
    "name_ru": "Анестетик МК VI",
-   "need_pvp_rep": 3200,
+   "need_pvp_rep": 0,
    "sellable": 1,
    "use_count": 1,
-   "weight": 10
+   "weight": 10,
+   "need_skills_m": 3,
+   "need_skills": [
+     6,
+     12
+   ]
   },
   "4949": {
    "_wiki": {
@@ -93867,10 +94046,15 @@
    "min_h_rest": 0,
    "min_st_rest": 0,
    "name_ru": "Анестетик МК VII",
-   "need_pvp_rep": 6400,
+   "need_pvp_rep": 0,
    "sellable": 1,
    "use_count": 1,
-   "weight": 10
+   "weight": 10,
+   "need_skills_m": 3,
+   "need_skills": [
+     7,
+     14
+   ]
   },
   "4951": {
    "_wiki": {
@@ -93912,10 +94096,15 @@
    "min_h_rest": 0,
    "min_st_rest": 0,
    "name_ru": "Анестетик МК VIII",
-   "need_pvp_rep": 12800,
+   "need_pvp_rep": 0,
    "sellable": 1,
    "use_count": 1,
-   "weight": 10
+   "weight": 10,
+   "need_skills_m": 3,
+   "need_skills": [
+     8,
+     16
+   ]
   },
   "4953": {
    "_wiki": {
@@ -93957,10 +94146,15 @@
    "min_h_rest": 0,
    "min_st_rest": 0,
    "name_ru": "Анестетик МК IX",
-   "need_pvp_rep": 25600,
+   "need_pvp_rep": 0,
    "sellable": 1,
    "use_count": 1,
-   "weight": 10
+   "weight": 10,
+   "need_skills_m": 3,
+   "need_skills": [
+     9,
+     17
+   ]
   },
   "4955": {
    "_wiki": {

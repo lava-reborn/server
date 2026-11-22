@@ -47,9 +47,9 @@ class CombatXpCap(unittest.TestCase):
                         self.assertEqual(p.combat_mob_xp(mob, level, share, mult), p.mob_xp(mob, level, share, mult))
 
     def test_spec_reward_rises_to_level_16_maximum_at_gap_four(self):
-        ceiling = 1996 * 1.2
-        self.assertAlmostEqual(ceiling, 2395.2)
-        expected = [748.5, 1996 * .8, 1996, 1996 * 1.1, 1996 * 1.2]
+        ceiling = 1996 * 1.3
+        self.assertAlmostEqual(ceiling, 2594.8)
+        expected = [748.5, 1996, 1996 * 1.1, 1996 * 1.2, 1996 * 1.3]
         for level in (17, 18, 19, 20):
             self.assertEqual([p.combat_mob_xp(17 + gap, level) for gap in range(5)], expected)
             for mob in (17, 18, 21, 30):
@@ -76,7 +76,7 @@ class CombatXpCap(unittest.TestCase):
                     self.settle(mob, f)
                     self.assertEqual(ch.skill[skill], before)
                     self.assertEqual(self.spec_total(ch, spec),
-                                     int(2395.2 * (1 + p.PREMIUM_XP_BONUS[premium]) + 1e-9))
+                                     int(2594.8 * (1 + p.PREMIUM_XP_BONUS[premium]) + 1e-9))
 
     def test_premium_is_applied_once_before_fractional_combat_carry(self):
         for level in (12, 17):
@@ -149,7 +149,7 @@ class CombatXpCap(unittest.TestCase):
             f.award_xp(p.SHOOTING, spec, 99999, mob)
         self.settle(mob, f)
         self.assertEqual(ch.skill[p.SHOOTING][1], 0)
-        self.assertEqual(self.spec_total(ch, spec), 1596)
+        self.assertEqual(self.spec_total(ch, spec), int(p.combat_mob_xp(mob.level, ch.level)))
 
     def test_lower_base_skill_still_trains_when_character_is_17(self):
         f, ch, spec = self.fighter(10, skill=p.MELEE)
@@ -171,8 +171,9 @@ class CombatXpCap(unittest.TestCase):
         self.settle(mob, first, second)
         for ch, spec in ((a, spec_a), (b, spec_b)):
             self.assertEqual(ch.skill[p.SHOOTING][1], 0)
-            self.assertEqual(self.spec_total(ch, spec), 798)
-            self.assertAlmostEqual(ch.xp_carry['spec', spec], .4)
+            reward = p.combat_mob_xp(mob.level, ch.level) / 2
+            self.assertEqual(self.spec_total(ch, spec), int(reward))
+            self.assertAlmostEqual(ch.xp_carry['spec', spec], reward - int(reward))
         f, ch, spec = self.fighter()
         for _ in range(10):
             mob = self.mob(16)

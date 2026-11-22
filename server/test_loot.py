@@ -406,7 +406,7 @@ try:
           (store.item(KEPT) or {}).get("char_id"), 999)
     char_id = store.character_by_name("scavenger")["id"]
     ch = progression.Character.load(store, char_id)
-    ch.skill[progression.MELEE] = [20, 0, progression.skill_xp_max(20)]
+    ch.skill[progression.MELEE] = [6, 0, progression.skill_xp_max(6)]
     ch.recalc()
     ch.hp = ch.sp = None
     ch.save(store)

@@ -635,7 +635,7 @@ def count_of(type_id, t):
     return counts.get(t, 1)
 
 
-def roll_table(type_id, rng, multiplier=1):
+def roll_table(type_id, rng, multiplier=1, *, gold_multiplier=1):
     """[(type_id, count)] off loot_table: every row rolled, so the dice
     spent do not depend on what came up, and the first MAX_DROPS successes
     kept. A row at SURE is certain: in the bag every time, without a die and
@@ -650,7 +650,8 @@ def roll_table(type_id, rng, multiplier=1):
     for t, chance, _valuable in loot_table(type_id):
         if chance >= SURE:
             out.append((t, count_of(type_id, t)))
-        elif rng.random() < min(1, chance * multiplier) and (t in independent or kept < MAX_DROPS):
+        elif rng.random() < min(1, chance * (gold_multiplier if t in items.GOLD_INGOTS else multiplier)) \
+                and (t in independent or kept < MAX_DROPS):
             out.append((t, count_of(type_id, t)))
             if t not in independent:
                 kept += 1
@@ -733,6 +734,13 @@ def quest_table(type_id):
     return rows
 
 
+def personal_quest_item(type_id):
+    """A wanted quest item that cannot become money or change owners."""
+    si = items.params_of(type_id)
+    return bool(si) and not (si.get('exchang') or si.get('auction') or si.get('sellable')
+                            or type_id in items.GOLD_INGOTS)
+
+
 def quest_roll(type_id, wanted, rng, excluded_groups=()):
     """[(type_id, 1)] of the quest rows that came up for a corpse, given the
     things a quest of those who brought it down still asks for (wanted, as
@@ -780,18 +788,23 @@ def carried(st, rng, multiplier=1):
     return out or [(FALLBACK_LOOT, 1)]
 
 
-def loot_for(st, rng, wanted=(), *, loc_id=None, killer_level=None, multiplier=1):
+def loot_for(st, rng, wanted=(), *, loc_id=None, killer_level=None, multiplier=1, gold_multiplier=1):
     """[(type_id, count)] for a corpse of this type: what it carried, then
     what its kind's table rolled, then the quest rows for what those who
     brought it down still need (quest_roll; wanted, the types). combat.
     drop_loot still turns away anything out of the game (items.out_of_game),
     whatever a list says."""
+    if st.role != 'object' and (multiplier <= 0 or
+            (killer_level is not None and killer_level - st.level >= 4)):
+        personal = [t for t in wanted if personal_quest_item(t)]
+        return quest_roll(st.type_id, personal, rng) if personal else []
     import bosses                  # late: keep module initialization separate
     blueprint = bosses.blueprint_for(loc_id, st.type_id)
     # Scanner x3 and the difficult-mob bonus up to x1.75 affect random
     # drops only, never harvest/quest/event quantities.
     multiplier = max(1, min(5.25, multiplier)) if st.role != 'object' else 1
-    out = carried(st, rng, multiplier) + roll_table(st.type_id, rng, multiplier) + \
+    out = carried(st, rng, multiplier) + roll_table(st.type_id, rng, multiplier,
+                                                   gold_multiplier=gold_multiplier) + \
         quest_roll(st.type_id, wanted, rng)
     # Encrypted blueprints have exactly one acquisition roll per corpse,
     # from the explicit scheduled-boss table below. Legacy quest rows or

@@ -58,7 +58,8 @@ class TimedItems(unittest.IsolatedAsyncioTestCase):
         self.assertAlmostEqual(effects.multiplier(self.s, 'mob_exp'), .2)
         self.assertIsNotNone(effects.use_error(self.s.combat, object(), 3201))
         self.assertIsNotNone(effects.use_error(self.s.combat, self.s.combat, 3203))
-        self.s.char.set_rep(3200)
+        self.s.char.skill[progression.SHOOTING][0] = 18
+        self.s.char.skill[progression.MELEE][0] = 9
         self.assertIsNone(effects.use_error(self.s.combat, self.s.combat, 3203))
 
     async def test_bonuses_do_not_stack_and_downward_effect_keeps_fraction(self):
@@ -216,6 +217,118 @@ class TimedItems(unittest.IsolatedAsyncioTestCase):
 
 
 class ReleaseCatalogue(unittest.TestCase):
+    def test_plus_one_mob_critical_chance_is_halved_without_changing_bosses_or_range(self):
+        import battle_balance
+        player = NS(is_player=True, character=lambda: NS(level=12))
+        mob = NS(is_player=False, stats=NS(level=13, role='mob'))
+        with patch.object(combat, 'roll', return_value=False) as roll:
+            battle_balance.critical(mob, player, 20, ordinary=True)
+            roll.assert_called_with(10)
+            battle_balance.critical(mob, player, 0, ordinary=True)
+            roll.assert_called_with(2.5)
+            battle_balance.critical(mob, player, 20)
+            roll.assert_called_with(20)
+            mob._holding_prepared = True
+            battle_balance.critical(mob, player, 20, ordinary=True)
+            roll.assert_called_with(20)
+            mob._holding_prepared = False
+            mob.stats.level = 14
+            battle_balance.critical(mob, player, 20, ordinary=True)
+            roll.assert_called_with(10)
+            for role, level in (('boss', 13), ('mob', 12), ('mob', 15)):
+                mob.stats.role, mob.stats.level = role, level
+                battle_balance.critical(mob, player, 20, ordinary=True)
+                roll.assert_called_with(20)
+
+    def test_outside_optimal_critical_chance_is_half_for_ordinary_fire(self):
+        import battle_balance
+        shooter = NS(is_player=True)
+        target = NS(is_player=True)
+        with patch.object(combat, 'roll', return_value=True) as roll:
+            self.assertTrue(battle_balance.critical(shooter, target, 40, ordinary=True))
+            roll.assert_called_with(40)
+            self.assertTrue(battle_balance.critical(shooter, target, 40, optimal=False, ordinary=True))
+            roll.assert_called_with(20)
+            self.assertFalse(battle_balance.critical(shooter, target, 40, optimal=False))
+
+    def test_four_level_loot_cutoff_has_no_last_hit_or_scanner_bypass(self):
+        fighter = NS(is_player=True, level=14, sess=NS())
+        # Object keys in older transient ledgers are also supported.
+        class Contributor:
+            is_player, level, sess = True, 14, NS()
+        senior = Contributor()
+        mob = NS(stats=NS(level=10, role='mob'), xp_ledger={senior: [100]}, loot_level=14)
+        with patch.object(effects, 'multiplier', return_value=3):
+            self.assertEqual(combat.RoomCombat.loot_multiplier(None, mob, fighter), 0)
+            mob.stats.level = 11
+            self.assertEqual(combat.RoomCombat.loot_multiplier(None, mob, fighter), 3)
+            mob.stats.role = 'object'
+            self.assertEqual(combat.RoomCombat.loot_multiplier(None, mob, fighter), 1)
+        st = NS(role='mob', level=10)
+        with patch.object(mobs, 'carried') as carried:
+            self.assertEqual(mobs.loot_for(st, None, killer_level=14, multiplier=3), [])
+            carried.assert_not_called()
+
+    def test_four_level_cutoff_preserves_only_wanted_personal_quest_loot(self):
+        st = NS(role='mob', level=10, type_id=1411)
+        class Rng:
+            def random(self):
+                return 0
+        with patch.object(mobs, 'quest_table', return_value=[(3770, 1), (2408, 1)]):
+            self.assertEqual(mobs.loot_for(st, Rng(), {3770, 2408}, killer_level=14), [(3770, 1)])
+            self.assertEqual(mobs.loot_for(st, Rng(), (), killer_level=14), [])
+
+    def test_scanner_never_multiplies_gold_ingot_chance(self):
+        ingot = next(iter(items.GOLD_INGOTS))
+        class Rng:
+            def random(self):
+                return .25
+        with patch.object(mobs, 'loot_table', return_value=[(ingot, .1, False), (333, .1, False)]), \
+                patch.object(mobs, 'independent_loot', return_value={ingot, 333}), \
+                patch.object(mobs, 'one_of_groups', return_value=[]):
+            self.assertEqual(mobs.roll_table(82, Rng(), 3), [(333, 1)])
+
+    def test_ordinary_mob_pools_are_reduced_with_original_values_as_floor(self):
+        import battle_balance
+        frozen = copy.deepcopy(battle_balance.data()['mob_records'])
+        tested = 0
+        for key, index in battle_balance.data()['mobs'].items():
+            original = mobs.MobStats(int(key), balanced=False)
+            current = mobs.stats(int(key))
+            source = battle_balance.ordinary_mob_reference()[0].get(current.level, frozen[index])
+            if original.role != 'mob':
+                continue
+            tested += 1
+            for field in ('hp_max', 'sp_max'):
+                self.assertEqual(getattr(current, field),
+                                 max(getattr(original, field), round(source[field] / 1.5)))
+                self.assertGreaterEqual(getattr(current, field), getattr(original, field))
+            # Fresh instances cannot compound the reduction or edit the simulator.
+            self.assertEqual(mobs.MobStats(int(key)).hp_max, current.hp_max)
+            self.assertEqual(mobs.MobStats(int(key)).sp_max, current.sp_max)
+        self.assertGreater(tested, 100)
+        self.assertEqual(battle_balance.data()['mob_records'], frozen)
+
+    def test_boss_adjustments_and_common_reduction_cannot_modify_pinned_modes(self):
+        import battle_balance
+        frozen = copy.deepcopy(battle_balance.data()['mob_records'])
+        treasurers = {586, 590, 591, 592, 593, 764, 1024, 1736}
+        for tid, adjustment in battle_balance.boss_adjustments().items():
+            source = frozen[battle_balance.data()['mobs'][str(tid)]]
+            current = mobs.stats(tid)
+            original = mobs.MobStats(tid, balanced=False)
+            expected = max(original.hp_max, round(source['hp_max'] * adjustment['hp_scale'] / 1.5))
+            self.assertEqual(current.hp_max, expected)
+            self.assertEqual(current.sp_max, max(original.sp_max, round(source['sp_max'] / 1.5)))
+            if tid in treasurers:
+                ordinary = [mobs.stats(int(key)).hp_max for key in battle_balance.data()['mobs']
+                            if mobs.stats(int(key)).role == 'mob' and mobs.stats(int(key)).level == current.level]
+                if ordinary:
+                    self.assertGreater(current.hp_max, max(ordinary))
+            for mode, before in zip(current.balanced_modes, source['modes']):
+                self.assertEqual(mode['dmax'], max(1, round(before['dmax'] * adjustment['damage_scale'] / 1.5)))
+        self.assertEqual(battle_balance.data()['mob_records'], frozen)
+
     def test_contributor_level_survives_character_selection_and_resets_on_respawn(self):
         fixture = xp_fixture.CombatXpCap()
         fighter, character, spec = fixture.fighter(14)
@@ -241,6 +354,10 @@ class ReleaseCatalogue(unittest.TestCase):
         self.assertEqual(multiplier(), 1.5)
         mob.stats.level = 14
         self.assertEqual(multiplier(), 1.75)
+        for gap, reward in ((1, 1.15), (2, 1.3)):
+            mob.stats.level = low.level + gap
+            self.assertEqual(multiplier(), reward)
+        mob.stats.level = 14
         with patch.object(effects, 'multiplier', return_value=3):
             self.assertEqual(multiplier(), 5.25)
         mob.xp_ledger[senior] = [1]
@@ -280,33 +397,44 @@ class ReleaseCatalogue(unittest.TestCase):
                 self.assertEqual(battle_balance.split(shooter, boss, 100, 1, critical, 500, ordinary=True),
                                  battle_balance.split(shooter, mob, 100, 1, critical, 500, ordinary=True))
 
-    def test_plus_two_and_three_adjustments_leave_other_mobs_and_private_profile_unchanged(self):
+    def test_difficulty_steps_keep_plus_five_as_the_previous_plus_four(self):
+        import battle_balance
+        shooter = NS(is_player=True, character=lambda: NS(level=16))
+        for gap, expected in ((0, 10000), (1, 10000), (2, 8590), (3, 7775), (4, 5636), (5, 500), (6, 500)):
+            target = NS(is_player=False, stats=NS(level=16 + gap, role='mob'), armor=lambda: 0)
+            self.assertEqual(battle_balance.split(shooter, target, 10000, 1, False, 0, ordinary=True),
+                             (expected, 0))
+        player = NS(is_player=True, character=lambda: NS(level=21), armor=lambda: 0)
+        self.assertEqual(battle_balance.split(shooter, player, 10000, 1, False, 0, ordinary=True),
+                         battle_balance.split(shooter, player, 10000, 1, False, 0))
+
+    def test_ordinary_difficulty_moves_up_one_level_without_changing_private_profile(self):
         import battle_balance
         for level in range(1, 21):
             shooter = NS(is_player=True, character=lambda: NS(level=level))
-            for gap in (-1, 0, 1, 2, 3, 4, 8):
+            for gap in (-1, 0, 1, 2, 3, 4, 5, 8):
                 target = NS(is_player=False, stats=NS(level=level + gap, role='mob'), armor=lambda: 0)
                 before = battle_balance.split(shooter, target, 10000, 1, False, 0)
                 after = battle_balance.split(shooter, target, 10000, 1, False, 0, ordinary=True)
-                if gap in (2, 3):
+                if gap in (1, 2, 3, 4):
                     self.assertGreaterEqual(after[0], before[0])
                 else:
                     self.assertEqual(after, before, (level, gap))
 
-    def test_plus_three_curve_affects_only_ordinary_encounter_and_not_bosses_or_pvp(self):
+    def test_plus_four_curve_affects_only_ordinary_encounter_and_not_bosses_or_pvp(self):
         import battle_balance
         for level in range(1, 18):
             player = NS(is_player=True, character=lambda: NS(level=level), armor=lambda: 0)
             for role in ('mob', 'animal', 'turret', 'boss', 'object'):
-                mob = NS(is_player=False, stats=NS(level=level + 3, role=role), armor=lambda: 0)
+                mob = NS(is_player=False, stats=NS(level=level + 4, role=role), armor=lambda: 0)
                 native = battle_balance.split(mob, player, 1000, 1, False, 10000, 200)
                 ordinary = battle_balance.split(mob, player, 1000, 1, False, 10000, 200, ordinary=True)
                 if role in ('mob', 'animal', 'turret'):
                     self.assertEqual(ordinary, (875, 175))
                 else:
                     self.assertEqual(ordinary, native)
-                # +4 and own-level encounters retain their previous incoming damage.
-                for gap in (0, 2, 4):
+                # Other gaps retain their previous incoming damage.
+                for gap in (0, 1, 2, 3, 5):
                     mob.stats.level = level + gap
                     self.assertEqual(battle_balance.split(mob, player, 1000, 1, False, 10000, 200, ordinary=True),
                                      battle_balance.split(mob, player, 1000, 1, False, 10000, 200))
@@ -363,7 +491,7 @@ class ReleaseCatalogue(unittest.TestCase):
             self.assertEqual(items.params_of(type_id)['g_cost'], price)
         self.assertNotIn(3561, items.stock_for(2015, 36))
         self.assertNotIn(3561, items.stock_for(2015))
-        self.assertIn(3561, items.stock_for(1221, 126))
+        self.assertIn(3561, items.stock_for(1013, 127))
         from training import effects as private_effects
         self.assertFalse(boosters.intersection(private_effects.definitions()))
         from training import catalog as private_catalog

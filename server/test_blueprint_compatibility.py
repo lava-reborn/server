@@ -103,8 +103,8 @@ class BlueprintCompatibility(unittest.TestCase):
         for t, capacity in expected.items():
             self.assertEqual(items.params_of(t)['clip_size'], capacity, t)
         mod = items.params_of(26071)
-        self.assertEqual(mod['h_damage_min'][0], 20)
-        self.assertEqual(mod['h_damage_max'][0], 35)
+        self.assertEqual(mod['h_damage_min'][0], 22)
+        self.assertEqual(mod['h_damage_max'][0], 40)
 
     def test_exact_copy_preferred_and_only_one_is_taken(self):
         q = self.recipe(26075)

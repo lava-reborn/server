@@ -920,7 +920,7 @@ KILLS_START = 5
 KILLS_GROWTH = 1.5
 GAP_SHARE = {0: 0.5, -1: 0.25}
 GREY_GAP = 2
-COMBAT_GAP_REWARD = (.8, 1.0, 1.1, 1.2)
+COMBAT_GAP_REWARD = (1.0, 1.1, 1.2, 1.3)
 
 
 def kills_per_level(level):
@@ -955,7 +955,7 @@ def mob_xp(mob_level, player_level, share=1.0, xp_mult=1):
 
 
 def combat_mob_xp(mob_level, skill_level, share=1.0, xp_mult=1):
-    """A +2 mob is the reference reward; +1/+3/+4 pay 80/110/120 percent.
+    """Above-level mobs pay 100/110/120/130% of the previous +2 reference.
 
     Equal/lower targets keep their rewards. Gaps above four pay no extra.
     Skill 17 stops advancing; specialisations retain the level-16 curve,

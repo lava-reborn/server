@@ -203,8 +203,7 @@ except Exception:
 # --- 2. no way in --------------------------------------------------------------------------
 print("no way in")
 try:
-    files = sorted(int(os.path.basename(p)[:-4])
-                   for p in glob.glob(os.path.join(world.RES, "locations", "static", "*.xml")))
+    files = sorted(world.static_ids())
     followed = []
     for lid in files:
         for side in "ab":

@@ -180,7 +180,8 @@ class BossBlueprints(unittest.TestCase):
                             patch.object(mobs, 'roll_table', return_value=[(blueprint, 1), (7620, 4)]), \
                             patch.object(mobs, 'quest_table', return_value=[(blueprint, 1.0)]):
                         self.assertEqual(mobs.loot_for(st, FixedRandom(0), wanted,
-                            loc_id=loc, killer_level=player_level), [(7620, 4)])
+                            loc_id=loc, killer_level=player_level),
+                            [] if player_level - st.level >= 4 else [(7620, 4)])
 
     def test_chance_and_finisher_level_boundaries_without_quests(self):
         for (loc, mob), item in bosses.BLUEPRINTS.items():
@@ -198,6 +199,8 @@ class BossBlueprints(unittest.TestCase):
                         expected = [(4796, 1), (7620, 2)]
                         if value < chance:
                             expected.append((item, 1))
+                        if blueprint_level + delta - st.level >= 4:
+                            expected = []
                         self.assertEqual(result, expected)
             with patch.object(mobs, 'carried', return_value=[]), \
                     patch.object(mobs, 'roll_table', return_value=[]), \
@@ -223,7 +226,7 @@ class BossBlueprints(unittest.TestCase):
             blocked = mobs.loot_for(st, FixedRandom(0.10), wanted, loc_id=82,
                                     killer_level=5)  # blueprint level 1, difference +4
             self.assertNotIn((encrypted, 1), blocked)
-            self.assertIn((ready, 1), blocked)
+            self.assertEqual(blocked, [])  # No loot at all from a victim four levels below.
             self.assertIn((3742, 1), blocked)
             # Wrong locations cannot fall back to legacy quest sources.
             self.assertEqual(mobs.loot_for(st, FixedRandom(0), wanted,
@@ -241,7 +244,7 @@ class BossBlueprints(unittest.TestCase):
                 self.assertEqual(mobs.loot_for(st, FixedRandom(0.21), wanted,
                     loc_id=82, killer_level=4), [])
                 self.assertEqual(mobs.loot_for(st, FixedRandom(0.03), wanted,
-                    loc_id=82, killer_level=5), [(2408, 1)])
+                    loc_id=82, killer_level=5), [])
 
     def test_boss_combat_level_does_not_affect_blueprint_chance(self):
         # Asmund drops a level-1 blueprint even if his combat stats change.
@@ -251,7 +254,7 @@ class BossBlueprints(unittest.TestCase):
             for boss_level in (0, 10, 100):
                 st = SimpleNamespace(type_id=269, level=boss_level, role='boss')
                 self.assertEqual(mobs.loot_for(st, FixedRandom(0.015), (),
-                    loc_id=82, killer_level=4), [(2408, 1)])
+                    loc_id=82, killer_level=4), [] if boss_level == 0 else [(2408, 1)])
                 self.assertEqual(mobs.loot_for(st, FixedRandom(0.1), (),
                     loc_id=82, killer_level=5), [])
 

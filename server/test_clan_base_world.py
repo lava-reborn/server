@@ -1,7 +1,9 @@
 """Restored clan bases use native maps, safe ways and only approved staff."""
 from collections import Counter, deque
+from contextlib import closing
 import hashlib
 import json
+import math
 from pathlib import Path
 import re
 import unittest
@@ -19,11 +21,11 @@ from testkit import run_cases
 
 
 ROOT = Path(__file__).resolve().parents[1]
-BASES = {118: (6154, 1963), 382: (5955, 2032)}
-STAFF = {118: Counter({688: 3, 4427: 1}), 609: Counter({689: 3, 714: 1, 716: 1}),
-         382: Counter(), 380: Counter({5275: 2}), 958: Counter({5239: 1, 5240: 1})}
+BASES = {118: (6083, 1957), 1442: (5926, 2068)}
+STAFF = {118: Counter({688: 3, 4427: 1}), 609: Counter({689: 3, 714: 1, 1013: 1}),
+         1442: Counter({5275: 3, 4428: 1}), 1443: Counter({689: 3, 1013: 1, 5240: 1})}
 ROUTES = ((118, 18201, 609, BASES[118]), (609, 18202, 118, BASES[118]),
-          (380, 18203, 958, BASES[382]))
+          (1442, 18203, 1443, BASES[1442]), (1443, 18204, 1442, BASES[1442]))
 
 
 def read(name):
@@ -51,6 +53,61 @@ def reachable(loc, start):
 
 
 class ClanBaseWorldTests(unittest.TestCase):
+    def test_relocated_bases_retire_both_old_squares_and_reach_dongola(self):
+        import map_cells
+        plan = map_cells.load()
+        old = {(6032, 1957), (6033, 1957)}
+        self.assertTrue(old <= set(plan.cells))
+        self.assertFalse(old & (set(plan.keep) | set(plan.paint)))
+        self.assertTrue(all(world.is_wilderness(world.location_at(*cell)) for cell in old))
+        shown = map_labels.apply(Path(world.RES, 'database', 'locations.xml').read_bytes())[0]
+        labels = {map_labels._key(row[0])[:2] for row in map_labels.ROW.finditer(shown)}
+        self.assertFalse(old & labels)
+        self.assertEqual(BASES[118], (6033 + 50, 1957))
+        self.assertEqual({cell for cell, (colour, _why) in plan.paint.items() if colour == 'clan'},
+                         set(BASES.values()))
+        town, south, east = (world.cell_of(lid) for lid in (49, 112, 114))
+        base = BASES[1442]
+        ratio = math.dist(town, base) / max(math.dist(town, south), math.dist(town, east))
+        self.assertTrue(1.30 <= ratio <= 1.32, ratio)
+        slope = lambda cell: (cell[1] - town[1]) / (cell[0] - town[0])
+        self.assertTrue(slope(east) < slope(base) < slope(south))
+        self.assertTrue(all(world.passable(base[0] + dx, base[1] + dy)
+                            for dx in (-1, 0, 1) for dy in (-1, 0, 1)))
+        seen, todo = {town}, deque([town])
+        while todo and base not in seen:
+            x, y = todo.popleft()
+            for dx, dy in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+                cell = x + dx, y + dy
+                if (cell not in seen and town[0] - 20 <= cell[0] <= east[0] + 20
+                        and town[1] - 20 <= cell[1] <= base[1] + 20
+                        and world.passable(*cell)):
+                    seen.add(cell)
+                    todo.append(cell)
+        self.assertIn(base, seen)
+
+    def test_saved_base_occupants_follow_yards_without_moving_map_walkers(self):
+        import accounts
+        with closing(accounts.Store(':memory:')) as store:
+            for lid in (118, 609, 1442, 1443):
+                aid, _ = store.register('base-' + str(lid), 'local-password')
+                cid, _ = store.create_character(aid, 'Base ' + str(lid), 0, '1')
+                store.save_position(cid, lid, 123, 6033, 1957, False)
+                store.set_home(cid, lid, 6033, 1957)
+            aid, _ = store.register('walker', 'local-password')
+            walker, _ = store.create_character(aid, 'Walker', 0, '1')
+            store.save_position(walker, 1442, None, 6000.25, 2000.75, True)
+            result = accounts.relocate_clan_base_cells(store.db)
+            self.assertEqual(result, dict(moved=4, homes=4))
+            for lid in (118, 609, 1442, 1443):
+                row = store.character_by_name('Base ' + str(lid))
+                target = BASES[118 if lid in (118, 609) else 1442]
+                self.assertEqual((row['gx'], row['gy']), target)
+                self.assertEqual((row['home_gx'], row['home_gy']), target)
+                self.assertEqual((row['loc'], row['pos'], row['home_loc']), (lid, 123, lid))
+            self.assertEqual((store.character(walker)['gx'], store.character(walker)['gy']),
+                             (6000.25, 2000.75))
+
     def test_service_names_are_preloaded_without_renaming_shared_npcs(self):
         from training import api
         api.preload_strings()
@@ -60,9 +117,9 @@ class ClanBaseWorldTests(unittest.TestCase):
                     689: 'Подъёмник<br>На поверхность',
                     5275: 'Вход в бункер', 4427: 'Флаг базы', 4428: 'Флаг базы',
                     716: 'Снабжение базы<br>Медицина и патроны за афро',
-                    714: 'Снабжение базы<br>Медицина и патроны за G',
+                    714: 'Снабжение базы<br>Патроны за афро и G',
                     5239: 'Снабжение базы<br>Медицина и патроны за афро',
-                    5240: 'Снабжение базы<br>Медицина и патроны за G'}
+                    5240: 'Снабжение базы<br>Патроны за афро и G'}
         for type_id, title in services.items():
             with self.subTest(type_id=type_id):
                 self.assertEqual(texts[type_id], title)
@@ -84,25 +141,23 @@ class ClanBaseWorldTests(unittest.TestCase):
         self.assertFalse(set(STAFF) & {int(i) for i in retired['places']})
         # Adjacent historical arenas, transport rooms and other clan bases
         # must not become accessible as a side effect of this restoration.
-        still_closed = {381, 385, 386, 387, 388, 959, 960, 1196, 610, 328, 936, 297, 938}
+        still_closed = {380, 382, 958, 381, 385, 386, 387, 388, 959, 960, 1196, 610, 328, 936, 297, 938}
         self.assertTrue(still_closed <= {int(i) for i in retired['places']})
         self.assertFalse(still_closed & set(world.settlements().values()))
         self.assertIsNone(world.cell_of(380))
         self.assertIsNone(world.cell_of(609))
-        self.assertIsNone(world.cell_of(958))
+        self.assertIsNone(world.cell_of(1443))
 
     def test_original_art_and_geometry_are_unchanged(self):
         for lid in STAFF:
             with self.subTest(lid=lid):
-                source = Path(world.RES) / 'locations' / 'static' / ('%d.xml' % lid)
+                source_id = {1442: 118, 1443: 609}.get(lid, lid)
+                source = Path(world.RES) / 'locations' / 'static' / ('%d.xml' % source_id)
                 original, art = parts(source.read_bytes())
                 current, restored_art = parts(Path(world.overlay_path(lid)).read_bytes())
                 self.assertEqual(restored_art, art)
                 original.pop(b'title')
                 current.pop(b'title')
-                if lid == 382:
-                    self.assertEqual((current.pop(b'war'), current.pop(b'pvp')), (b'1', b'1'))
-                    self.assertEqual((original.pop(b'war'), original.pop(b'pvp')), (b'0', b'0'))
                 self.assertEqual(current, original)
                 self.assertEqual(world.location(lid).title,
                                  world.overlay_index()[lid]['title'])
@@ -113,8 +168,8 @@ class ClanBaseWorldTests(unittest.TestCase):
                 self.assertEqual(Counter(t for _cell, t in world.location(lid).spawns), expected)
         placed = {lid: Counter(r['type'] for r in world.placed_in(lid)) for lid in STAFF}
         self.assertEqual(placed, {118: Counter({7454: 1, 4829: 3, 2312: 6}),
-                                  382: Counter({7451: 1, 4428: 1, 4828: 3, 918: 6}),
-                                  609: Counter(), 380: Counter(), 958: Counter()})
+                                  1442: Counter({7451: 1, 4828: 3, 918: 6}),
+                                  609: Counter({989: 1}), 1443: Counter({989: 1})})
         self.assertIsNone(rooms.check_placements(world.mob_types()))
 
     def test_site_defenders_have_reachable_spread_out_spawn_cells(self):
@@ -145,9 +200,9 @@ class ClanBaseWorldTests(unittest.TestCase):
                                        loc.height / 2)
 
     def test_lifts_are_quest_only_and_do_not_expose_trade_or_repair(self):
-        for lid in (118, 609):
+        for lid in STAFF:
             room = rooms.Room(world.location(lid), rooms.IdAllocator(), world.mob_types())
-            lifts = [npc for npc in room.npcs.values() if npc.type_id in (688, 689)]
+            lifts = [npc for npc in room.npcs.values() if npc.type_id in (688, 689, 5275)]
             self.assertEqual(len(lifts), 3)
             self.assertEqual({npc.root for npc in lifts}, {world.COMMONER})
 
@@ -170,38 +225,27 @@ class ClanBaseWorldTests(unittest.TestCase):
                                  target)
 
     def test_inner_edges_and_door_return_only_to_their_own_base(self):
-        for source, expected in [(380, 382), (958, 380)]:
-            loc = world.location(source)
-            self.assertTrue(travel.no_map(source))
-            for cell in travel.exit_sides(loc):
-                result = travel.plan_exit(loc, cell, *BASES[382])
-                self.assertEqual((result.loc_id, result.gx, result.gy), (expected, *BASES[382]))
+        self.assertTrue(travel.no_map(1443))
         self.assertTrue(travel.no_map(609))
         for source, cell in BASES.items():
             self.assertFalse(travel.no_map(source))
             loc = world.location(source)
             for pos, side in travel.exit_sides(loc).items():
                 result = travel.plan_exit(loc, pos, *cell)
-                if source == 382 and side == 'N':
-                    self.assertEqual(result.loc_id, 380)
-                else:
-                    destination = travel.neighbour(*cell, side)
-                    self.assertEqual((result.loc_id, result.gx, result.gy),
-                                     (world.location_at(*destination), *destination))
+                destination = travel.neighbour(*cell, side)
+                self.assertEqual((result.loc_id, result.gx, result.gy),
+                                 (world.location_at(*destination), *destination))
 
     def test_arrivals_can_reach_services_and_a_return_route(self):
         arrivals = [travel.plan_quest_way(world.location(source), qid, *cell)
                     for source, qid, _target, cell in ROUTES]
-        post = world.location(382)
-        north = next(c for c, side in travel.exit_sides(post).items() if side == 'N')
-        arrivals.append(travel.plan_exit(post, north, *BASES[382]))
         for result in arrivals:
             loc = world.location(result.loc_id)
             with self.subTest(lid=loc.id):
                 self.assertNotIn(result.pos, loc.obstacles)
                 accessible = reachable(loc, result.pos)
-                if loc.id in (609, 380):
-                    qid = 18202 if loc.id == 609 else 18203
+                if loc.id in (609, 1443):
+                    qid = 18202 if loc.id == 609 else 18204
                     return_cells = next(cells for cells, row in travel.quest_ways(loc)
                                         if row['quest'] == qid)
                 else:
@@ -249,7 +293,8 @@ class ClanBaseWorldTests(unittest.TestCase):
                              for x, y, was, _new in edits if was is not None)
         expected = {(x, y, new) for x, y, _was, new in edits if new is not None}
         for x, y, text in expected:
-            self.assertIn('минимум 3 живых соклановца ' + ('12+' if x == 5955 else '16+'), text)
+            self.assertIn('Минимум 3 живых соклановца ' + ('12+' if (x, y) == BASES[1442] else '16+'), text)
+            self.assertIn('каждый наносил урон хозяину', text)
             for value in ('20:00–21:00', '19:55', '1 500 000', '21:15'):
                 self.assertIn(value, text)
         for raw in (b'<data>' + originals + b'</data>', b'<data></data>'):

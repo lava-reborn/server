@@ -56,7 +56,9 @@
   "6220,1947": "The owner's cut of Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»: the cut of Абри's and Донгола's kinds), decision 10 of its plan (the clan bases go as Liberty, Blackwater, KKND and Донгола's three did): the dark red square with a white centre of «База Доктора \"Д\"» (see 6219,1947). Tile 15554.",
   "6111,2002": "The owner's cut of Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»: the cut of Абри's and Донгола's kinds), decision 10 of its plan (the clan bases go as Liberty, Blackwater, KKND and Донгола's three did): a clan base's pair of squares with no name and no letters, by the Nile south-west of Абу-Хамед: this one dark red with a white centre, as every base's. No file of it is known. Tile 16062.",
   "6112,2002": "The owner's cut of Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»: the cut of Абри's and Донгола's kinds), decision 10 of its plan (the clan bases go as Liberty, Blackwater, KKND and Донгола's three did): the green square with a black centre of the same nameless pair (see 6111,2002). Tile 16063.",
-  "6137,1879": "The owner's cut of Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»: the cut of Абри's and Донгола's kinds), decision 10 of its plan: a green mark with no name over it in the desert north of the town, as Абри's green mark the owner had taken off (2026-10-12, «зеленая метка, её тоже убрать»). No file stands on the cell. Tile 15039."
+  "6137,1879": "The owner's cut of Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»: the cut of Абри's and Донгола's kinds), decision 10 of its plan: a green mark with no name over it in the desert north of the town, as Абри's green mark the owner had taken off (2026-10-12, «зеленая метка, её тоже убрать»). No file stands on the cell. Tile 15039.",
+  "6032,1957": "Owner correction, 2026-11-22: erase both historical NeutralClan squares.",
+  "6033,1957": "Owner correction, 2026-11-22: erase both historical NeutralClan squares."
  },
  "captions": [
   {
@@ -352,6 +354,54 @@
     ]
    ],
    "why": "The owner's cut of Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»: the cut of Абри's and Донгола's kinds), decision 10 of its plan (the clan bases go as Liberty, Blackwater, KKND and Донгола's three did): the letters «База Доктора \"Д\"» painted right of the base's squares at 6219-6220,1947 (cells 6221..6230, 1947), tile 15554: the line with its light rim, and the feet of its two «Д» and the tail of its «р» below. Measured on the picture (pixels of the letters 49774-49844 by 15577-15585); the «Горные тропы» left of the squares stay."
+  },
+  {
+    "was": "Заброшенная база - бункер",
+    "boxes": [
+      [
+        49248,
+        15698,
+        49303,
+        15707
+      ],
+      [
+        49248,
+        15707,
+        49301,
+        15715
+      ],
+      [
+        49276,
+        15715,
+        49280,
+        15717
+      ],
+      [
+        49293,
+        15715,
+        49298,
+        15717
+      ]
+    ],
+    "why": "The owner's cut of Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»: the cut of Абри's and Донгола's kinds), decision 11 of its plan: the two lines of letters «Заброшенная / база - бункер» painted right of the abandoned clan base's square at 6154,1963 (which goes with the retired cell of 118), cells 6156..6162, 1962..1964, tile 15808: a box a line, with its light rim, and the tails of the «у» and the «р». The plan named the base's square and missed its letters. Measured on the picture (pixels of the letters 49249-49302 by 15699-15716)."
+  },
+  {
+    "was": "База НейтралКлана",
+    "boxes": [
+      [
+        48274,
+        15651,
+        48306,
+        15668
+      ],
+      [
+        48307,
+        15651,
+        48339,
+        15668
+      ]
+    ],
+    "why": "Relocated/unified clan bases: remove baked old caption, actual current name is in locations.xml."
   }
  ],
  "tint": {
@@ -1593,6 +1643,14 @@
   "5858,1929": {
    "colour": "green",
    "why": "The owner's Eden update, 2026-11-16: mark only the recovered town with the standard green settlement square; all sixty-one work cells retain the original photograph."
+  },
+  "6083,1957": {
+    "colour": "clan",
+    "why": "DESIGNED one visible yard marker per base, 2026-11-22."
+  },
+  "5926,2068": {
+    "colour": "clan",
+    "why": "Approved Dongola base on open ground between warehouses."
   }
  },
  "bare": {

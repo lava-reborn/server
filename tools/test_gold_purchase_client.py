@@ -13,7 +13,7 @@ class GoldPurchaseClient(unittest.TestCase):
         self.frames = []
         self.pan = dict(trader=dict(pmod=1, type_list={8: 25217, 9: 25218}))
         self.windows = dict(trade=dict(instance=dict(content=self.pan)), query=dict(instance=None))
-        self.env = dict(_global={}, String=str, Math=dict(ceil=math.ceil, floor=math.floor, max=max), isNaN=lambda n: n is None or math.isnan(float(n)),
+        self.env = dict(_global={}, String=str, Math=dict(ceil=math.ceil, floor=math.floor, max=max, min=min), isNaN=lambda n: n is None or math.isnan(float(n)),
                         TextFormat=lambda font, size: dict(font=font, size=size),
                         Selection=dict(setFocus=lambda field: None),
                         lol=dict(core=dict(SceneShifter=dict(_ref=dict(UIPanels=self.windows),
@@ -148,7 +148,8 @@ class GoldPurchaseClient(unittest.TestCase):
                 self.pan['trader']['pmod'] = 0.9
                 item = self.item(root=root, gold=price)
                 self.methods['buy'].invoke(self.trade, [item, n])
-                expected = math.ceil(price * n * 0.9) / 100
+                expected = (max(1, min(math.ceil(price * n * 0.9), math.ceil(price * n) - 1))
+                            if root != 3 and price * n > 1 else math.ceil(price * n * 0.9)) / 100
                 self.assertIn(str(expected) + ' G', self.trade['__gcBuyDialog']['label'])
                 self.answer()
                 self.assertEqual(self.bought, [(25218, n)])

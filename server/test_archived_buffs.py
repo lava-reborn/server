@@ -21,6 +21,46 @@ class ArchivedBuffs(unittest.IsolatedAsyncioTestCase):
     asyncTearDown = fixtures.TrainingGround.asyncTearDown
     manager = TimedItems.manager
 
+    async def test_alpha_changes_only_crit_and_omega_only_anticrit_in_real_fights(self):
+        manager = self.manager()
+        f = self.s.combat
+        self.s.char.rep = 0
+        self.s.char.skill[p.SHOOTING][0] = 20
+        self.s.char.skill[p.MELEE][0] = 10
+        baseline = p.crit_chance(self.s.char, items.PISTOL, card=False)
+        # A/G of every ordinary rank; values are the archived reagent bonuses.
+        for alpha, omega, cp, ce in ((4181, 3208, 5, 10), (3115, 3209, 10, 20),
+                                    (3116, 3210, 15, 20), (3117, 3211, 20, 30),
+                                    (3118, 3212, 25, 30), (3119, 3213, 30, 40),
+                                    (4182, 4184, 30, 40), (4183, 4185, 60, 75)):
+            with self.subTest(alpha=alpha, omega=omega):
+                for tid, expected in ((alpha, (cp, 0)), (omega, (0, ce))):
+                    value = effects.definition(tid)
+                    self.assertEqual((value['bonuses']['cp'], value['bonuses']['ce']), expected)
+                    self.s.writer.frames.clear()
+                    self.assertTrue(manager.static(effects.FIRST + tid))
+                    packet = next(data for cmd, data in
+                                  (decode(frame[:-1]) for frame in self.s.writer.frames) if cmd == 'e_si')
+                    self.assertEqual((packet['critical_probability'], packet['critical_evade']), expected)
+                    row = self.s.inv.create(tid)
+                    effects.activate(f, row['uniq'], f, 0)
+                    self.assertIsNone(self.store.item(row['uniq']))
+                    actual = p.crit_chance(self.s.char, items.PISTOL, card=False)
+                    self.assertEqual(actual, (baseline[0] + cp,
+                                             baseline[1] + (ce if tid == omega else 0)))
+                    self.assertEqual(f.crit_evade_ranged(), actual[1])
+                self.assertEqual(len(manager.active), 2)
+                manager.close()
+                manager.load()
+                self.assertEqual(p.crit_chance(self.s.char, items.PISTOL, card=False),
+                                 (baseline[0] + cp, baseline[1] + ce))
+                deadline = max(active.deadline for active in manager.active.values())
+                with patch.object(manager, 'clock', return_value=deadline + 1):
+                    manager.refresh()
+                self.assertFalse(manager.active)
+                self.assertEqual(p.crit_chance(self.s.char, items.PISTOL, card=False), baseline)
+                self.assertEqual(f.crit_evade_ranged(), baseline[1])
+
     def test_catalogue_preserves_archived_prices_doses_and_explicit_effects(self):
         for tid, cost, gold, duration, strength, od in (
                 (3474, 500, 0, 3600, 1, 0), (3475, 2500, 0, 3600, 3, 0),
@@ -46,15 +86,17 @@ class ArchivedBuffs(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(set(stock) & {3474, 3475, 3476}, {strength} if strength else set())
             self.assertEqual(3897 in stock, top >= 8)
             self.assertFalse(set(stock) & {3449, 3450, 3451, 3830, 7647, 7648})
-        self.assertIn(3474, items.stock_for(1206, 102))
-        self.assertIn(3475, items.stock_for(202, 76))
-        self.assertIn(3476, items.stock_for(714, 609))
-        self.assertIn(3897, items.stock_for(5240, 958))
+        self.assertIn(3474, items.stock_for(1196, 36))
+        self.assertIn(3475, items.stock_for(1196, 188))
+        self.assertIn(3476, items.stock_for(1013, 609))
+        self.assertIn(3897, items.stock_for(1013, 1443))
 
     async def test_strength_is_consumed_once_persists_and_expires_without_changing_base(self):
         manager = self.manager()
         f = self.s.combat
         before = (self.s.char.attrib[:], self.s.char.hp, self.s.char.sp)
+        self.s.char.skill[p.SHOOTING][0] = 20
+        self.s.char.skill[p.MELEE][0] = 10
         base = self.s.char.attr(p.STRENGTH)
         limits = (self.s.char.hp_max, self.s.char.max_weight())
         row = self.s.inv.create(3476)
@@ -193,7 +235,7 @@ class GofusStock(unittest.TestCase):
                 (197, 3114, 3476, 3826, {5, 6, 7}),
                 (127, 3561, 3476, 3826, {7, 8, 9})):
             with self.subTest(location=loc):
-                stock = items.stock_for(1013, loc)
+                stock = items.stock_for(1013, loc) + items.stock_for(1196, loc)
                 self.assertEqual(len(stock), len(set(stock)))
                 self.assertEqual(set(stock) & {3112, 3113, 3114, 3561}, {booster})
                 self.assertEqual(set(stock) & {3474, 3475, 3476}, {strength})
@@ -215,6 +257,43 @@ class GofusStock(unittest.TestCase):
             for helper in (1196, junior):
                 with self.subTest(location=loc, helper=helper):
                     self.assertFalse(doctor.intersection(items.stock_for(helper, loc)))
+
+    def test_both_assistants_sell_afro_and_doctor_sells_gold_with_safe_fallback(self):
+        for loc, senior in ((36, 2015), (188, 2016), (197, 2017), (127, 2018)):
+            doctor = items.stock_for(1013, loc)
+            self.assertTrue(doctor)
+            self.assertTrue(all(items.params_of(t)['g_cost'] for t in doctor))
+            for helper in (1196, senior):
+                stock = [t for t in items.stock_for(helper, loc) if effects.definition(t)]
+                self.assertTrue(stock)
+                self.assertTrue(all(items.params_of(t)['cost'] and not items.params_of(t)['g_cost'] for t in stock))
+        for loc in (185, 609, 1443):
+            stock = [t for t in items.stock_for(1013, loc) if effects.definition(t)]
+            self.assertTrue(any(items.params_of(t)['cost'] for t in stock))
+            self.assertTrue(any(items.params_of(t)['g_cost'] for t in stock) if loc != 185 else True)
+        for trader, loc in ((1206, 102), (202, 76), (714, 609), (5240, 1443)):
+            self.assertFalse(any(effects.definition(t) for t in items.stock_for(trader, loc)))
+
+    def test_afro_buffs_have_real_skill_requirements_and_no_zero_packed_rows(self):
+        for tid in effects.definitions():
+            params = items.params_of(tid)
+            for field in ('need_attribs', 'need_skills', 'need_specs', 'bonus_attribs', 'bonus_skills', 'bonus_specs'):
+                self.assertTrue(all(params.get(field, ())), (tid, field))
+                self.assertEqual(int(params.get(field + '_m', 0)).bit_count(), len(params.get(field, ())))
+            if params.get('cost') and not params.get('g_cost'):
+                self.assertEqual(params.get('need_pvp_rep', 0), 0)
+                self.assertEqual(params['need_skills_m'], 3)
+                melee, shooting = params['need_skills']
+                self.assertTrue(2 <= shooting <= 17)
+                self.assertEqual(melee, (shooting + 1) // 2)
+                ch = p.Character()
+                fighter = type('BuffUser', (), {'character': lambda self: ch})()
+                ch.skill[p.SHOOTING][0], ch.skill[p.MELEE][0] = shooting, melee - 1
+                self.assertIsNotNone(effects.use_error(fighter, fighter, tid))
+                ch.skill[p.MELEE][0] = melee
+                self.assertIsNone(effects.use_error(fighter, fighter, tid))
+                ch.skill[p.SHOOTING][0] = shooting - 1
+                self.assertIsNotNone(effects.use_error(fighter, fighter, tid))
 
     def test_outside_city_and_without_location_keep_the_archive_list(self):
         for trader in (1013, 1196, 2018):

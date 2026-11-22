@@ -15965,7 +15965,7 @@
      12,
      21
     ],
-    "why": "DESIGNED approved six outer base soldiers, 2026-11-22. Native mob type; HP/SP one quarter of the bodyguards, normal damage. Weekly death checkpoints and owner friendliness reuse the base defender rules; no repeatable farm."
+    "why": "DESIGNED approved six outer base soldiers, 2026-11-22. Native mob type; HP/SP one quarter of the bodyguards, local damage scale. Weekly death checkpoints and owner friendliness reuse the base defender rules; no repeatable farm."
    },
    {
     "type": 2312,
@@ -15973,7 +15973,7 @@
      52,
      23
     ],
-    "why": "DESIGNED approved six outer base soldiers, 2026-11-22. Native mob type; HP/SP one quarter of the bodyguards, normal damage. Weekly death checkpoints and owner friendliness reuse the base defender rules; no repeatable farm."
+    "why": "DESIGNED approved six outer base soldiers, 2026-11-22. Native mob type; HP/SP one quarter of the bodyguards, local damage scale. Weekly death checkpoints and owner friendliness reuse the base defender rules; no repeatable farm."
    },
    {
     "type": 2312,
@@ -15981,7 +15981,7 @@
      12,
      64
     ],
-    "why": "DESIGNED approved six outer base soldiers, 2026-11-22. Native mob type; HP/SP one quarter of the bodyguards, normal damage. Weekly death checkpoints and owner friendliness reuse the base defender rules; no repeatable farm."
+    "why": "DESIGNED approved six outer base soldiers, 2026-11-22. Native mob type; HP/SP one quarter of the bodyguards, local damage scale. Weekly death checkpoints and owner friendliness reuse the base defender rules; no repeatable farm."
    },
    {
     "type": 2312,
@@ -15989,7 +15989,7 @@
      52,
      64
     ],
-    "why": "DESIGNED approved six outer base soldiers, 2026-11-22. Native mob type; HP/SP one quarter of the bodyguards, normal damage. Weekly death checkpoints and owner friendliness reuse the base defender rules; no repeatable farm."
+    "why": "DESIGNED approved six outer base soldiers, 2026-11-22. Native mob type; HP/SP one quarter of the bodyguards, local damage scale. Weekly death checkpoints and owner friendliness reuse the base defender rules; no repeatable farm."
    },
    {
     "type": 2312,
@@ -15997,7 +15997,7 @@
      12,
      105
     ],
-    "why": "DESIGNED approved six outer base soldiers, 2026-11-22. Native mob type; HP/SP one quarter of the bodyguards, normal damage. Weekly death checkpoints and owner friendliness reuse the base defender rules; no repeatable farm."
+    "why": "DESIGNED approved six outer base soldiers, 2026-11-22. Native mob type; HP/SP one quarter of the bodyguards, local damage scale. Weekly death checkpoints and owner friendliness reuse the base defender rules; no repeatable farm."
    },
    {
     "type": 2312,
@@ -16005,97 +16005,7 @@
      52,
      105
     ],
-    "why": "DESIGNED approved six outer base soldiers, 2026-11-22. Native mob type; HP/SP one quarter of the bodyguards, normal damage. Weekly death checkpoints and owner friendliness reuse the base defender rules; no repeatable farm."
-   }
-  ],
-  "382": [
-   {
-    "type": 7451,
-    "cell": [
-     39,
-     37
-    ],
-    "why": "DESIGNED approved capturable clan base, 2026-11-22. Existing native boss/flag artwork; capture strength and ownership are location-scoped in holdings, preserving warehouse behaviour."
-   },
-   {
-    "type": 4428,
-    "cell": [
-     41,
-     38
-    ],
-    "why": "DESIGNED approved clan-base flag, 2026-11-22. Existing native flag artwork, dedicated type4428 prevents rent-window refreshes from replacing ordinary warehouse flag entities."
-   },
-   {
-    "type": 4828,
-    "cell": [
-     30,
-     37
-    ],
-    "why": "DESIGNED weekly base bodyguard. Original guardian art; locally tuned stats, persistent weekly deaths, friendly to the paid owner until 19:55."
-   },
-   {
-    "type": 4828,
-    "cell": [
-     46,
-     31
-    ],
-    "why": "DESIGNED weekly base bodyguard. Original guardian art; locally tuned stats, persistent weekly deaths, friendly to the paid owner until 19:55."
-   },
-   {
-    "type": 4828,
-    "cell": [
-     46,
-     43
-    ],
-    "why": "DESIGNED weekly base bodyguard. Original guardian art; locally tuned stats, persistent weekly deaths, friendly to the paid owner until 19:55."
-   },
-   {
-    "type": 918,
-    "cell": [
-     12,
-     23
-    ],
-    "why": "DESIGNED approved six outer base soldiers, 2026-11-22. Native mob type; HP/SP one quarter of the bodyguards, normal damage. Weekly death checkpoints and owner friendliness reuse the base defender rules; no repeatable farm."
-   },
-   {
-    "type": 918,
-    "cell": [
-     52,
-     23
-    ],
-    "why": "DESIGNED approved six outer base soldiers, 2026-11-22. Native mob type; HP/SP one quarter of the bodyguards, normal damage. Weekly death checkpoints and owner friendliness reuse the base defender rules; no repeatable farm."
-   },
-   {
-    "type": 918,
-    "cell": [
-     12,
-     64
-    ],
-    "why": "DESIGNED approved six outer base soldiers, 2026-11-22. Native mob type; HP/SP one quarter of the bodyguards, normal damage. Weekly death checkpoints and owner friendliness reuse the base defender rules; no repeatable farm."
-   },
-   {
-    "type": 918,
-    "cell": [
-     52,
-     64
-    ],
-    "why": "DESIGNED approved six outer base soldiers, 2026-11-22. Native mob type; HP/SP one quarter of the bodyguards, normal damage. Weekly death checkpoints and owner friendliness reuse the base defender rules; no repeatable farm."
-   },
-   {
-    "type": 918,
-    "cell": [
-     12,
-     105
-    ],
-    "why": "DESIGNED approved six outer base soldiers, 2026-11-22. Native mob type; HP/SP one quarter of the bodyguards, normal damage. Weekly death checkpoints and owner friendliness reuse the base defender rules; no repeatable farm."
-   },
-   {
-    "type": 918,
-    "cell": [
-     52,
-     105
-    ],
-    "why": "DESIGNED approved six outer base soldiers, 2026-11-22. Native mob type; HP/SP one quarter of the bodyguards, normal damage. Weekly death checkpoints and owner friendliness reuse the base defender rules; no repeatable farm."
+    "why": "DESIGNED approved six outer base soldiers, 2026-11-22. Native mob type; HP/SP one quarter of the bodyguards, local damage scale. Weekly death checkpoints and owner friendliness reuse the base defender rules; no repeatable farm."
    }
   ],
   "111": [
@@ -16223,6 +16133,118 @@
     ],
     "why": "DESIGNED approved warehouse guard, 2026-11-22. Half the corresponding base bodyguard HP/SP and damage; lower Wadi-Halfa tier. Daily master schedule and persistent death checkpoints, not normal respawn farming."
    }
+  ],
+  "1442": [
+    {
+      "type": 7451,
+      "cell": [
+        32,
+        26
+      ],
+      "why": "DESIGNED approved capturable clan base, 2026-11-22. Existing native boss/flag artwork; capture strength and ownership are location-scoped in holdings, preserving warehouse behaviour."
+    },
+    {
+      "type": 4828,
+      "cell": [
+        24,
+        25
+      ],
+      "why": "DESIGNED weekly base bodyguard. Original guardian art; locally tuned stats, persistent weekly deaths, friendly to the paid owner until 19:55."
+    },
+    {
+      "type": 4828,
+      "cell": [
+        40,
+        21
+      ],
+      "why": "DESIGNED weekly base bodyguard. Original guardian art; locally tuned stats, persistent weekly deaths, friendly to the paid owner until 19:55."
+    },
+    {
+      "type": 4828,
+      "cell": [
+        39,
+        32
+      ],
+      "why": "DESIGNED weekly base bodyguard. Original guardian art; locally tuned stats, persistent weekly deaths, friendly to the paid owner until 19:55."
+    },
+    {
+      "type": 918,
+      "cell": [
+        12,
+        21
+      ],
+      "why": "DESIGNED approved six outer base soldiers, 2026-11-22. Native mob type; HP/SP one quarter of the bodyguards, local damage scale. Weekly death checkpoints and owner friendliness reuse the base defender rules; no repeatable farm."
+    },
+    {
+      "type": 918,
+      "cell": [
+        52,
+        23
+      ],
+      "why": "DESIGNED approved six outer base soldiers, 2026-11-22. Native mob type; HP/SP one quarter of the bodyguards, local damage scale. Weekly death checkpoints and owner friendliness reuse the base defender rules; no repeatable farm."
+    },
+    {
+      "type": 918,
+      "cell": [
+        12,
+        64
+      ],
+      "why": "DESIGNED approved six outer base soldiers, 2026-11-22. Native mob type; HP/SP one quarter of the bodyguards, local damage scale. Weekly death checkpoints and owner friendliness reuse the base defender rules; no repeatable farm."
+    },
+    {
+      "type": 918,
+      "cell": [
+        52,
+        64
+      ],
+      "why": "DESIGNED approved six outer base soldiers, 2026-11-22. Native mob type; HP/SP one quarter of the bodyguards, local damage scale. Weekly death checkpoints and owner friendliness reuse the base defender rules; no repeatable farm."
+    },
+    {
+      "type": 918,
+      "cell": [
+        12,
+        105
+      ],
+      "why": "DESIGNED approved six outer base soldiers, 2026-11-22. Native mob type; HP/SP one quarter of the bodyguards, local damage scale. Weekly death checkpoints and owner friendliness reuse the base defender rules; no repeatable farm."
+    },
+    {
+      "type": 918,
+      "cell": [
+        52,
+        105
+      ],
+      "why": "DESIGNED approved six outer base soldiers, 2026-11-22. Native mob type; HP/SP one quarter of the bodyguards, local damage scale. Weekly death checkpoints and owner friendliness reuse the base defender rules; no repeatable farm."
+    }
+  ],
+  "185": [
+    {
+      "type": 1013,
+      "cell": [
+        26,
+        49
+      ],
+      "why": "DESIGNED existing NPC on verified walkable cell; approved 2026-11-22."
+    }
+  ],
+  "609": [
+    {
+      "type": 989,
+      "cell": [
+        39,
+        48
+      ],
+      "why": "DESIGNED existing NPC on verified walkable cell; approved 2026-11-22."
+    }
+  ],
+  "1443": [
+    {
+      "type": 989,
+      "cell": [
+        39,
+        48
+      ],
+      "why": "DESIGNED existing NPC on verified walkable cell; approved 2026-11-22."
+    }
   ]
  }
 }

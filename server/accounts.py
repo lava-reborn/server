@@ -817,6 +817,8 @@ def migrate(db):
     run_once(db, ABRI_CLOTHES_FIX, relocate_abri_clothes)
     run_once(db, RIVER_ALL_FIX, relocate_river_all)
     run_once(db, DONGOLA_CUT_FIX, relocate_dongola_cut)
+    run_once(db, DELTA_BASE_CUT_FIX, relocate_delta_base)
+    run_once(db, CLAN_BASE_CELLS_FIX, relocate_clan_base_cells)
     run_once(db, ABUHAMED_CUT_FIX, relocate_abuhamed_cut)
     # Only with the client's tables to tell a premium thing by: a process
     # without them (a tool run outside the container) leaves the fix for
@@ -1250,8 +1252,8 @@ def relocate_river_all(db):
 # quest gives, takes, asks for or points into these places
 # (server/test_dongola_cut.py holds that).
 DONGOLA_CUT_FIX = "retire-dongola-cut-2026-10-13"
-# 2026-11-22: the restored base rooms 382/380/958 remain saved there.
-# Keep the migration id: restoring them must not repeat the old relocation.
+# Keep the old migration id; retiring the briefly restored Delta rooms has
+# its own step, so existing databases also move their occupants safely.
 DONGOLA_CUT_PLACES = (455, 460, 518, 448, 469, 530,
                       381, 385, 386, 387, 388, 959, 960, 1196,
                       534, 535, 536, 537, 593, 594, 991, 992, 993, 1207,
@@ -1264,6 +1266,33 @@ def relocate_dongola_cut(db):
     """Whoever is in a place of Донгола's cut, or calls one home, to the
     town's station 49; returns the counts it logs."""
     return _move_out(db, DONGOLA_CUT_FIX, DONGOLA_CUT_PLACES, DONGOLA_CUT_TO)
+
+
+DELTA_BASE_CUT_FIX = "retire-delta-base-2026-11-22"
+
+
+def relocate_delta_base(db):
+    return _move_out(db, DELTA_BASE_CUT_FIX, (380, 382, 958), DONGOLA_CUT_TO)
+
+
+CLAN_BASE_CELLS_FIX = "clan-base-cells-2026-11-22"
+
+
+def relocate_clan_base_cells(db):
+    """Keep saved base occupants and homes attached to their relocated yards.
+
+    A player already walking the global map keeps that position. Interiors
+    share their yard's map cell, without changing the local entry or progress.
+    """
+    import world
+    moved = homes = 0
+    for yard, bunker in ((118, 609), (1442, 1443)):
+        gx, gy = world.cell_of(yard)
+        moved += db.execute('UPDATE characters SET gx=?, gy=? '
+            'WHERE loc IN (?,?) AND on_map=0', (gx, gy, yard, bunker)).rowcount
+        homes += db.execute('UPDATE characters SET home_gx=?, home_gy=? '
+            'WHERE home_loc IN (?,?)', (gx, gy, yard, bunker)).rowcount
+    return dict(moved=moved, homes=homes)
 
 
 # The owner's cut of Абу-Хамед (2026-10-14, «сделай потом абу хамед в таком

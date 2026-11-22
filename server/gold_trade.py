@@ -1,6 +1,7 @@
 """Gold commerce valuations, separate from purchase prices and death rules."""
 from functools import lru_cache
 from fractions import Fraction
+import math
 import re
 
 import items
@@ -130,6 +131,11 @@ def sale_unit(type_id, params, share=NPC_SALE_SHARE):
     if protected(type_id, params) or not gold_priced(type_id, params):
         return 0
     nominal = Fraction(str(params['g_cost']))
+    # The base's minimum one-cent medicine discount must not fund resale.
+    # This caps buyback, without changing any catalogue purchase price.
+    if items.root_of(type_id) == items.HEAL and nominal > 1:
+        cheapest = max(1, min(math.ceil(nominal * Fraction(9, 10)), math.ceil(nominal) - 1))
+        nominal = min(nominal, Fraction(cheapest) / BASE_SALE_SHARE)
     # Buying a finished lab pouch skips five personal daily parts. That
     # convenience premium must not become cash when crafting it instead.
     # Keep ordinary/base buyback tied to the two wearable ingredients;

@@ -169,8 +169,7 @@ def place_ids(v):
     return [int(v)] if str(v).lstrip("-").isdigit() else []
 
 
-files = sorted(int(os.path.basename(p)[:-4])
-               for p in glob.glob(os.path.join(world.RES, "locations", "static", "*.xml")))
+files = sorted(world.static_ids())
 
 
 # --- 1. the places -------------------------------------------------------------------------

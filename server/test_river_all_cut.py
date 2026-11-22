@@ -262,8 +262,7 @@ def walk(starts, open_=lambda c: world.passable(*c)):
     return seen
 
 
-files = sorted(int(os.path.basename(p)[:-4])
-               for p in glob.glob(os.path.join(world.RES, "locations", "static", "*.xml")))
+files = sorted(world.static_ids())
 
 
 # --- 1. the places -------------------------------------------------------------------------

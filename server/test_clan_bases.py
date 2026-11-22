@@ -21,6 +21,7 @@ logging.disable(logging.CRITICAL)
 
 import accounts
 import bosses
+import battle_balance
 import combat
 import events
 import holdings
@@ -34,6 +35,14 @@ import rooms
 import world
 from test_quest_state import session
 from testkit import attack_fixture, run_cases
+
+
+def site_damage(type_id, scale):
+    """Site profiles use archived or pinned attacks, then one common /1.5."""
+    source = mobs.MobStats(type_id, balanced=False)
+    index = battle_balance.data()['mobs'].get(str(type_id))
+    row = battle_balance.data()['mob_records'][index] if index is not None else vars(source)
+    return tuple(round(row[field] * scale / 1.5) for field in ('dmg_min', 'dmg_max'))
 
 
 SLOT = datetime(2026, 11, 21, 20, tzinfo=bosses.ZONE).timestamp()
@@ -99,7 +108,7 @@ class ClanBases(unittest.TestCase):
             cid, _ = self.store.create_character(account, 'Support%s_%s' % (clan, index), 0, '1')
             self.store.clan_member_add(cid, clan, 0, '')
             members.append(dict(char=cid, clan=clan, clan_name='Support clan',
-                                here=True, alive=True, level=16, harm=0))
+                                here=True, alive=True, level=16, harm=1))
         return members
 
     def test_capture_health_is_local_and_survives_reset_without_growing(self):
@@ -110,51 +119,38 @@ class ClanBases(unittest.TestCase):
                 room = rooms.Room(world.location(base.loc), rooms.IdAllocator(), world.mob_types())
                 rc = combat.RoomCombat(room, self.store)
                 target = next(m for m in rc.mobs.values() if m.type_id == base.boss)
+                hp = 21600 if base.key == 'base_ah' else 18000
                 self.assertIsNot(target.stats, original)
-                self.assertEqual((target.hp, target.sp),
-                                 (round(original.hp_max * 30), round(original.sp_max * 30)))
-                self.assertEqual(target.vitals(), dict(hcur=target.hp, hmax=target.hp,
-                                                      scur=target.sp, smax=target.sp))
-                for field, value in before.items():
-                    if field in ("dmg_min", "dmg_max"):
-                        self.assertEqual(getattr(target.stats, field), round(value * base.damage_scale))
-                    elif field not in ("hp_max", "sp_max"):
-                        self.assertEqual(getattr(target.stats, field), value)
+                self.assertEqual(target.vitals(), dict(hcur=hp, hmax=hp, scur=hp, smax=hp))
+                self.assertEqual((target.stats.dmg_min, target.stats.dmg_max),
+                                 site_damage(base.boss, base.damage_scale))
                 target.hp = target.sp = 1
                 holdings.prepare_room(rc)
                 self.assertEqual((target.hp, target.sp), (1, 1))
                 target.reset()
-                self.assertEqual((target.hp, target.sp), (original.hp_max * 30, original.sp_max * 30))
-                self.assertEqual(target.stats.dmg_min, round(original.dmg_min * base.damage_scale))
+                self.assertEqual((target.hp, target.sp), (hp, hp))
                 self.assertEqual(vars(original), before)
                 for guard in (m for m in rc.mobs.values() if m.type_id in base.guards):
-                    plain = mobs.stats(guard.type_id)
-                    self.assertIsNot(guard.stats, plain)
-                    self.assertEqual((guard.stats.hp_max, guard.stats.sp_max),
-                                     (round(plain.hp_max * base.guard_health_scale),
-                                      round(plain.sp_max * base.guard_health_scale)))
+                    guard_hp = 4800 if base.key == 'base_ah' else 4000
+                    self.assertIsNot(guard.stats, mobs.stats(guard.type_id))
+                    self.assertEqual((guard.hp, guard.sp), (guard_hp, guard_hp))
                     self.assertEqual((guard.stats.dmg_min, guard.stats.dmg_max),
-                                     (round(plain.dmg_min * base.guard_damage_scale),
-                                      round(plain.dmg_max * base.guard_damage_scale)))
+                                     site_damage(guard.type_id, base.guard_damage_scale))
                 other = next(s for s in holdings.sites().values()
                              if s.kind != "base" and s.boss == base.boss)
                 normal = mobs.Mob(1, base.boss, 0)
                 holdings.prepare_room(NS(room=NS(loc=NS(id=other.loc)), mobs={1: normal}))
                 self.assertIsNot(normal.stats, original)
-                self.assertEqual(normal.vitals(), dict(
-                    hcur=original.hp_max * other.health_scale,
-                    hmax=original.hp_max * other.health_scale,
-                    scur=original.sp_max * other.health_scale,
-                    smax=original.sp_max * other.health_scale))
+                self.assertEqual((normal.hp * 2, normal.sp * 2), (hp, hp))
                 outside = mobs.Mob(2, base.boss, 0)
                 holdings.prepare_room(NS(room=NS(loc=NS(id=0)), mobs={2: outside}))
                 self.assertIs(outside.stats, original)
                 self.assertEqual(vars(original), before)
 
     def test_warehouse_masters_and_two_guards_use_only_their_local_scales(self):
-        expected = {111: (8100, 2200), 110: (8100, 2200), 109: (8100, 3000),
-                    113: (13500, 3000), 114: (13500, 3000), 112: (13500, 3000),
-                    128: (16200, 3600)}
+        expected = {111: (5400, 1467), 110: (5400, 1467), 109: (5400, 2000),
+                    113: (9000, 2000), 114: (9000, 2000), 112: (9000, 2000),
+                    128: (10800, 2400)}
         for site in holdings.sites().values():
             if site.kind != 'warehouse':
                 continue
@@ -169,16 +165,16 @@ class ClanBases(unittest.TestCase):
                 for guard in guards:
                     self.assertEqual((guard.hp, guard.sp), (guard_hp, guard_hp))
                     self.assertEqual((guard.stats.dmg_min, guard.stats.dmg_max),
-                                     (mobs.stats(guard.type_id).dmg_min, mobs.stats(guard.type_id).dmg_max))
+                                     site_damage(guard.type_id, site.guard_damage_scale))
                     self.assertIsNot(guard.stats, mobs.stats(guard.type_id))
                 self.assertEqual((master.stats.dmg_min, master.stats.dmg_max),
-                                 (mobs.stats(site.boss).dmg_min, mobs.stats(site.boss).dmg_max))
+                                 site_damage(site.boss, site.damage_scale))
                 master.hp = 1
                 holdings.prepare_room(rc)
                 self.assertEqual(master.hp, 1)
-                self.assertEqual(mobs.stats(site.boss).hp_max * 15, hp)
+                self.assertGreaterEqual(hp, mobs.MobStats(site.boss, balanced=False).hp_max)
 
-    def test_six_outer_soldiers_have_quarter_bodyguard_health_and_normal_damage(self):
+    def test_six_outer_soldiers_have_quarter_bodyguard_health_and_local_damage(self):
         for base in (self.base, holdings.site('base_dn')):
             with self.subTest(base=base.key):
                 room = rooms.Room(world.location(base.loc), rooms.IdAllocator(), world.mob_types())
@@ -191,7 +187,7 @@ class ClanBases(unittest.TestCase):
                     self.assertEqual((soldier.hp * 4, soldier.sp * 4),
                                      (bodyguard.hp, bodyguard.sp))
                     self.assertEqual((soldier.stats.dmg_min, soldier.stats.dmg_max),
-                                     (original.dmg_min, original.dmg_max))
+                                     site_damage(soldier.type_id, base.troop_damage_scale))
                     self.assertIsNot(soldier.stats, original)
                     self.assertTrue(bosses.keeps_hours(soldier.type_id, base.loc))
                     self.assertFalse(bosses.keeps_hours(soldier.type_id, 0))
@@ -217,7 +213,10 @@ class ClanBases(unittest.TestCase):
                                  if m.type_id in base.guards + base.troops), 8)
             self.now = SLOT + 7 * 86400 - 300
             restored.keep_hours()
-            self.assertFalse(any(m.alive and not m.away for m in restored.mobs.values()))
+            self.assertEqual(sum(m.alive and not m.away for m in restored.mobs.values()
+                                 if m.type_id in base.troops), 6)
+            self.assertFalse(any(m.alive and not m.away for m in restored.mobs.values()
+                                 if m.type_id in base.guards or m.type_id == base.boss))
             self.now += 300
             restored.keep_hours()
             self.assertEqual(sum(m.alive and not m.away for m in restored.mobs.values()
@@ -269,7 +268,7 @@ class ClanBases(unittest.TestCase):
         pending.cancel.assert_called_once_with()
         self.assertIsNone(guard.aim)
         self.assertIsNone(guard.target)
-        self.assertEqual((guard.hp, guard.sp), (7200, 7200))
+        self.assertEqual((guard.hp, guard.sp), (4800, 4800))
         self.assertEqual(guard.slot, self.now)
 
     def test_owner_melee_cannot_harm_paid_defenders(self):
@@ -438,7 +437,7 @@ class ClanBases(unittest.TestCase):
         rec = dict(loc=118, boss=7454, flag=4427, min_level=16, title="base")
         self.assertEqual(holdings.Site("default", rec).health_scale, 1)
         for field in ('health_scale', 'guard_health_scale', 'damage_scale', 'guard_damage_scale',
-                      'troop_health_scale'):
+                      'troop_health_scale', 'troop_damage_scale'):
             for value in (0, -1, 101, float("nan"), float("inf"), -float("inf")):
                 with self.subTest(field=field, value=value), self.assertRaises(ValueError):
                     holdings.Site("invalid", dict(rec, **{field: value}))
@@ -719,7 +718,7 @@ class ClanBases(unittest.TestCase):
             self.assertIsNotNone(self.store.quest(qid))
             self.assertEqual(self.store.clan_treasury(self.clan), 4_500_000)
 
-    def test_live_capture_three_present_members_and_death_checkpoint_are_persistent(self):
+    def test_live_capture_three_contributors_and_death_checkpoint_are_persistent(self):
         support = self.supporters()
         for base in (self.base, holdings.site('base_dn')):
             with self.subTest(base=base.key):
@@ -733,9 +732,9 @@ class ClanBases(unittest.TestCase):
                 rc.mobs = {1: NS(type_id=base.guards[0], alive=False, slot=SLOT)}
                 rc.boss_spot = lambda mob: combat.RoomCombat.boss_spot(rc, mob)
                 mob = NS(type_id=base.boss, slot=SLOT, hp_max=100, sp_max=0,
-                         home=100, capture_harm={self.cid: 100})
+                         home=100, capture_harm={self.cid: 98, **{f['char']: 1 for f in support}})
                 snap = holdings.snapshot(rc, mob, None)
-                self.assertIsNone(holdings.winner(snap, 3, base.min_level, require_harm=False))
+                self.assertIsNone(holdings.winner(snap, 3, base.min_level))
                 sess.combat.level += 1
                 mob.capture = holdings.snapshot(rc, mob, None)
                 self.assertEqual(holdings.settle(rc, mob), 'capture')
@@ -749,7 +748,7 @@ class ClanBases(unittest.TestCase):
                 # still-open reservation for the other base.
                 self.store.holding_clear(base.key, 'admin')
 
-    def test_base_capture_counts_only_living_eligible_clanmates_here_at_the_kill(self):
+    def test_base_capture_counts_only_living_eligible_contributors_here_at_the_kill(self):
         support = self.supporters()
         for base in (self.base, holdings.site('base_dn')):
             lead = NS(char_id=self.cid, combat=NS(dead=False, level=base.min_level))
@@ -759,7 +758,7 @@ class ClanBases(unittest.TestCase):
             rc = NS(store=self.store, room=room,
                     mobs={1: NS(type_id=base.guards[0], alive=False, slot=SLOT)})
             mob = NS(type_id=base.boss, slot=SLOT, hp_max=100, sp_max=0,
-                     capture_harm={self.cid: 100})
+                     capture_harm={self.cid: 98, **{f['char']: 1 for f in support}})
             for missing in ('absent', 'dead', 'underlevel', 'clanless'):
                 with self.subTest(base=base.key, missing=missing):
                     last = helpers[-1]
@@ -772,7 +771,7 @@ class ClanBases(unittest.TestCase):
                     else:
                         self.store.clan_leave(last.char_id, self.clan)
                     snap = holdings.snapshot(rc, mob, None)
-                    self.assertIsNone(holdings.winner(snap, 3, base.min_level, require_harm=False))
+                    self.assertIsNone(holdings.winner(snap, 3, base.min_level))
                     if missing == 'absent':
                         room.players.append(last)
                     elif missing == 'dead':
@@ -782,18 +781,49 @@ class ClanBases(unittest.TestCase):
                     else:
                         self.store.clan_member_add(last.char_id, self.clan, 0, '')
             snap = holdings.snapshot(rc, mob, None)
-            self.assertEqual(holdings.winner(snap, 3, base.min_level, require_harm=False)[0], self.clan)
-            self.assertEqual(mob.capture_harm, {self.cid: 100})
+            self.assertEqual(holdings.winner(snap, 3, base.min_level)[0], self.clan)
+            self.assertEqual(mob.capture_harm, {self.cid: 98, **{f['char']: 1 for f in support}})
+            # Presence alone cannot replace the third contributor.
+            mob.capture_harm[support[-1]['char']] = 0
+            self.assertIsNone(holdings.winner(holdings.snapshot(rc, mob, None), 3, base.min_level))
+            mob.capture_harm[support[-1]['char']] = 1
             # A reconnect cannot turn one character into two supporters.
             room.players[-1] = helpers[0]
-            self.assertIsNone(holdings.winner(holdings.snapshot(rc, mob, None), 3,
-                                             base.min_level, require_harm=False))
+            self.assertIsNone(holdings.winner(holdings.snapshot(rc, mob, None), 3, base.min_level))
             room.players = [lead] + helpers
             mob.capture_harm.clear()
-            self.assertIsNone(holdings.winner(holdings.snapshot(rc, mob, None), 3,
-                                             base.min_level, require_harm=False))
-            # Warehouse policy still requires actual harm from the squad.
-            self.assertIsNone(holdings.winner(snap, 2, base.min_level))
+            self.assertIsNone(holdings.winner(holdings.snapshot(rc, mob, None), 3, base.min_level))
+
+    def test_foreign_last_hit_with_fewer_than_three_members_cannot_neutralise_base(self):
+        support = self.supporters()
+        account, _ = self.store.register('foreign-last-hit', 'local-password')
+        outsider, _ = self.store.create_character(account, 'ForeignLastHit', 0, '1')
+        foreign_clan = self.store.clan_create(outsider, 'Foreign clan', 'foreign-clan', '', None)
+        foreign_support = self.supporters(foreign_clan)
+        for base in (self.base, holdings.site('base_dn')):
+            for foreign_count in (1, 3):
+                with self.subTest(base=base.key, foreign_count=foreign_count):
+                    ids = [self.cid] + [f['char'] for f in support] + [outsider]
+                    if foreign_count == 3:
+                        ids += [f['char'] for f in foreign_support]
+                    players = [NS(char_id=cid, combat=NS(dead=False, level=base.min_level),
+                                  answer=lambda _text: None) for cid in ids]
+                    room = NS(loc=world.location(base.loc), players=players, npcs={})
+                    rc = NS(store=self.store, room=room, place=(base.loc, None, None),
+                            mobs={1: NS(type_id=base.guards[0], alive=False, slot=SLOT)})
+                    rc.boss_spot = lambda mob: combat.RoomCombat.boss_spot(rc, mob)
+                    harm = {self.cid: 40, support[0]['char']: 30, support[1]['char']: 20, outsider: 10}
+                    if foreign_count == 3:
+                        harm.update({f['char']: 1 for f in foreign_support})
+                    boss = NS(type_id=base.boss, slot=SLOT, hp_max=100, sp_max=0,
+                              home=100, capture_harm=harm)
+                    killer = NS(is_player=True, sess=NS(char_id=outsider))
+                    boss.capture = holdings.snapshot(rc, boss, killer)
+                    self.assertEqual(holdings.settle(rc, boss), 'capture')
+                    held = self.store.holding(base.key)
+                    self.assertEqual(held['clan_id'], self.clan)
+                    self.assertEqual(held['by_char'], self.cid)
+                    self.store.holding_clear(base.key, 'admin')
 
     def test_capture_and_boss_death_roll_back_together(self):
         snap = dict(site=self.base.key, slot=SLOT, at=self.now, pool=100,

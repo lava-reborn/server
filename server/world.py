@@ -98,7 +98,8 @@ def entity_root(type_id, root):
     # original Trader class must not expose an unrelated shop or repair tab.
     if type_id in INACTIVE_SET_EXCHANGERS or type_id in (688, 689):
         return COMMONER
-    return TRADER if type_id in TROPHY_REGISTRARS else root
+    # Alma's unused upgrade service now offers the approved golden gifts.
+    return TRADER if type_id in TROPHY_REGISTRARS or type_id == 1797 else root
 
 
 def _read(path):

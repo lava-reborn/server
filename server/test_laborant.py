@@ -138,6 +138,65 @@ class Laborant(unittest.TestCase):
         self.assertIn("спецназовца", names.ALL[items.STRING_ID_OFFSET + 3737])
         self.assertEqual(items.params_of(3737)["bonus_specs_m"], 131)
 
+    def test_four_A0_routes_charge_six_G_preserve_wear_and_keep_experiment(self):
+        self.store.set_money(self.cid, 1000, 10000)
+        self.s.char.afro, self.s.char.gold = self.store.money(self.cid)
+        for kind, source in quests.LABORANT_MOD_UPGRADES.items():
+            with self.subTest(source=source):
+                quest = quests.get(kind)
+                self.assertEqual((dict(quest.wants()), quest.cost_gold, quest.rew_obj),
+                                 ({source: 1}, 600, [3726]))
+                self.assertEqual(items.params_of(source)['g_cost'] + quest.cost_gold,
+                                 items.params_of(3726)['g_cost'])
+                qid = self.ready(kind)
+                row = next(r for r in self.s.inv.rows() if r['type_id'] == source)
+                self.store.update_item(row['uniq'], brk=1000, max_break_cur=4000)
+                before = self.store.money(self.cid)
+                self.assertEqual(self.finish(qid), [0])
+                self.assertEqual(self.store.money(self.cid), (before[0], before[1] - 600))
+                output = next(r for r in self.s.inv.rows() if r['type_id'] == 3726)
+                self.assertEqual((output['brk'], output['max_break_cur']), (1000, 4000))
+                self.assertNotIn(source, self.s.inv.bag_pieces())
+                self.assertNotEqual(self.finish(qid), [0])
+                self.assertEqual(self.store.money(self.cid), (before[0], before[1] - 600))
+                self.assertEqual(self.store.boss_kills([quests.LABORANT_SPOT]), {})
+                self.assertTrue(self.s.quest_available(quests.get(18306)))
+                self.s.inv.take_pieces(3726, 1)
+
+    def test_A0_route_failure_rolls_back_fee_item_and_wear_then_retries(self):
+        self.store.set_money(self.cid, 1000, 600)
+        self.s.char.afro, self.s.char.gold = self.store.money(self.cid)
+        qid = self.ready(18308)
+        before = self.s.inv.rows()
+        original = self.s.inv.give_pieces
+        def fail(*args):
+            original(*args)
+            raise RuntimeError('A0 reward failed after insertion')
+        with patch.object(self.s.inv, 'give_pieces', fail):
+            self.assertEqual(self.finish(qid), [1])
+        self.assertEqual(self.store.money(self.cid), (1000, 600))
+        self.assertEqual(self.s.inv.rows(), before)
+        self.assertIsNotNone(self.store.quest(qid))
+        self.assertEqual(self.finish(qid), [0])
+        self.assertEqual(self.store.money(self.cid), (1000, 0))
+        self.assertEqual(self.s.inv.bag_pieces(), {3726: 1})
+
+    def test_A0_route_refuses_changed_ownership_insufficient_money_and_reserved_input(self):
+        self.store.set_money(self.cid, 1000, 600)
+        self.s.char.afro, self.s.char.gold = self.store.money(self.cid)
+        qid = self.ready(18308)
+        row = next(r for r in self.s.inv.rows() if r['type_id'] == 3722)
+        self.s.inv.locked.add(row['uniq'])
+        self.assertNotEqual(self.finish(qid), [0])
+        self.s.inv.locked.clear()
+        self.s.char.gold = 599
+        self.store.set_money(self.cid, 1000, 599)
+        self.assertNotEqual(self.finish(qid), [0])
+        self.store.holding_clear('wh_ah_center', 'admin')
+        self.assertNotEqual(self.finish(qid), [0])
+        self.assertIsNotNone(self.store.item(row['uniq']))
+        self.assertEqual(self.store.money(self.cid), (1000, 599))
+
     def test_research_kit_buy_at_both_markets_and_carry_to_saved_laboratory(self):
         for loc in (35, 104):
             with self.subTest(location=loc):
@@ -184,7 +243,20 @@ class Laborant(unittest.TestCase):
             self.assertEqual(stock.count(type_id), 1)
         self.assertEqual([items.params_of(t)["g_cost"] for t in (3735, 3736, 3738, 5615)],
                          [6000, 5500, 7000, 6000])
-        self.assertFalse({3737, 3739, 3740}.intersection(stock))
+        for _base, output in quests.LABORANT_RECIPES.values():
+            self.assertEqual(stock.count(output), 1)
+
+    def test_all_finished_pouches_can_be_bought_without_consuming_the_laboratory_quota(self):
+        self.store.set_money(self.cid, 0, 100000)
+        self.s.char.afro, self.s.char.gold = self.store.money(self.cid)
+        self.visit(126, 1219)
+        for _base, output in quests.LABORANT_RECIPES.values():
+            before = self.store.money(self.cid)
+            self.buy(output, True)
+            self.assertEqual(self.store.money(self.cid),
+                             (before[0], before[1] - items.params_of(output)['g_cost']))
+            self.assertEqual(self.s.inv.bag_pieces()[output], 1)
+        self.assertEqual(self.store.boss_kills([quests.LABORANT_SPOT]), {})
 
     def test_crafting_each_retail_pouch_saves_money_without_resale_arbitrage(self):
         mod = items.params_of(quests.LABORANT_MOD)
@@ -207,7 +279,7 @@ class Laborant(unittest.TestCase):
                                          gold_trade.sale_unit(quests.LABORANT_MOD, mod, share)
                                          + gold_trade.sale_unit(base, source, share))
                 compared.append(output)
-        self.assertCountEqual(compared, [3735, 3736, 3738, 5615])
+        self.assertCountEqual(compared, [output for _base, output in quests.LABORANT_RECIPES.values()])
 
     def test_original_inputs_and_ready_pouch_combat_stats_stay_unchanged(self):
         for type_id, price, attr in ((3722, 3000, [3]), (3723, 3000, [3]),

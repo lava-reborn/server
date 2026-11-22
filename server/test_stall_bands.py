@@ -70,6 +70,7 @@ for _knob in ("LAVA_LOC", "LAVA_START"):
 sys.path.insert(0, HERE)
 import accounts  # noqa: E402
 import craft  # noqa: E402
+import effects  # noqa: E402
 import inventory  # noqa: E402
 import items  # noqa: E402
 import names  # noqa: E402
@@ -208,7 +209,7 @@ LEFT_ALONE = sorted((p, t) for p, types in AT.items() for t in types
 # The gifts, cold arms of level 0 to the client: Фрея Каплан's 24 in Абри's slums
 # (2026-10-12) and Элизабет Стюарт's, the same 24, at Донгола's pier (2026-10-13,
 # server/test_dongola_trade.py).
-LEFT_HOLDING = [(41, 1959), (127, 1968), (255, 1962), (445, 1965)]
+LEFT_HOLDING = [(41, 1959), (127, 1968), (255, 1962), (445, 1797), (445, 1965)]
 check("  ..other traders keep their own goods, except duplicates already sold by the"
       " location's configured sellers; flower sellers keep their bouquets",
       [(p, t) for p, t in LEFT_ALONE if items.stock_for(t, p) != [x for x in items.stock_for(t)
@@ -306,8 +307,8 @@ for t, places in sorted(WHERE.items()):
                 gone_own[(p, t)] = rest
         else:
             cut = [x for x in own if not weapon_or_piece(x) or lo <= level_of(x) <= hi]
-            if [x for x in stall if not release_extra(x) and items.root_of(x) != items.AMMO] != [
-                    x for x in cut if not out_of_game(x) and items.root_of(x) != items.AMMO
+            if [x for x in stall if not release_extra(x) and not med_line(x) and items.root_of(x) != items.AMMO] != [
+                    x for x in cut if not out_of_game(x) and not med_line(x) and items.root_of(x) != items.AMMO
                     and not release_extra(x) and x not in other_stock]:
                 wrong[(p, t)] = ("own list cut", stall)
 check("each seller at each of its city's places: exactly the band's things of its kinds,"
@@ -318,6 +319,7 @@ check("one merchant per non-ammunition item within a location",
       [(p, x) for p, traders in AT.items()
        for x in {item for t in traders if t in shop_bands.SELLERS for item in items.stock_for(t, p)}
        if items.root_of(x) != items.AMMO
+       and not (effects.definition(x) and not gold_of(x))
        and sum(x in items.stock_for(t, p) for t in traders if t in shop_bands.SELLERS) > 1], [])
 
 
@@ -332,7 +334,7 @@ def ag(stall):
 # among them.
 COUNTS = {
     "Нубийская долина": {5212: (9, 8), 5221: (9, 8), 5222: (4, 2), 5213: (15, 15), 5223: (15, 15),
-                         1187: (6, 0), 5211: (0, 0), 5224: (0, 0), 5217: (0, 0), 5225: (0, 0)},
+                         1187: (6, 0), 5211: (0, 0), 5224: (0, 0), 5217: (0, 0), 5225: (0, 0), 1013: (0, 0)},
     "Вади-Хальфа": {1200: (4, 4), 1201: (10, 10), 1202: (3, 3), 1203: (2, 2), 1152: (5, 4),
                     1224: (19, 19), 1205: (15, 15), 1204: (0, 0), 650: (15, 15), 2391: (0, 7),
                     1206: (0, 0), 1207: (0, 0), 202: (0, 0), 81: (0, 0), 2180: (0, 0),
@@ -353,7 +355,7 @@ COUNTS = {
     "Донгола": {1209: (10, 10), 1210: (5, 5), 1211: (4, 4), 1153: (3, 3), 1208: (2, 2),
                 1229: (23, 23), 1213: (20, 20), 1233: (0, 0), 5161: (20, 20), 2391: (0, 8),
                 207: (0, 0), 1214: (0, 0), 1215: (0, 0), 155: (0, 0), 2181: (0, 0),
-                1230: (0, 0), 5239: (0, 0), 5240: (0, 0),
+                1230: (0, 0), 5240: (0, 0),
                 1013: (0, 0), 1196: (0, 0), 2017: (0, 0)},
     # Киплер (1221) sells battle medicine; the town's knives are Шрам's (2274) alone.
     # Тёмное Эхо[17], A and G, on its set sellers' stalls since 2026-10-14 (the
@@ -362,7 +364,7 @@ COUNTS = {
     # kinds, as Донгола's 1230 (server/test_abuhamed_trade.py).
     "Абу-Хамед": {1216: (3, 3), 1217: (3, 3), 1218: (1, 1), 2274: (1, 1), 1221: (0, 0),
                   1223: (10, 10), 1219: (0, 0), 5161: (10, 10), 2391: (0, 3), 207: (0, 0),
-                  1222: (0, 0), 880: (0, 0), 1232: (0, 0), 714: (0, 0), 716: (0, 0),
+                  1222: (0, 0), 880: (0, 0), 1232: (0, 0), 714: (0, 0),
                   1013: (0, 0), 1196: (0, 0), 2018: (0, 0)},
 }
 got = {}

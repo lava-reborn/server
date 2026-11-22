@@ -336,7 +336,7 @@ check("  ..and Абри's tiers of medicine (4_7-12_15) keep their articles on t
       ([t for t in TORSI_ARTICLE if t not in items.stock_for(TORSI, PORT)],
        [t for t in MUKHSIM_ARTICLE if t not in items.stock_for(MUKHSIM, PORT)],
        [t for t in items.stock_for(TORSI, PORT) if t not in TORSI_ARTICLE]),
-      ([], [6898], [7101, 7102, 7103] + [3113, 3116, 3117, 3202, 3206, 3210, 3211, 3469, 3472, 3475, 3789, 3897, 4922, 4923, 4924, 4925, 4926, 4927, 4942, 4943, 4944, 4945, 4946, 4947]))
+      ([], [6898], [7101, 7102, 7103]))
 check("Хассир sells both tickets at Вади-Хальфа's station: the way home is bought before the"
       " ride", (HASSIR in stood(STATION), items.stock_for(HASSIR, STATION)),
       (True, [TICKET_TO_ABRI, TICKET_TO_HALFA]))
@@ -632,7 +632,7 @@ async def main():
     check("Торси: Абри's tiers of battle medicine, her article's and their packs of 20 doses;"
           " «В.И.Л.К.А. (G)» for 0.03 ounces",
           (stall, opened, buy(sess, stall, 6075, GOLD)),
-          ([6056, 6062, 6074, 7101, 6057, 6063, 6075, 7102, 6058, 6064, 6076, 7103, 3113, 3116, 3117, 3202, 3206, 3210, 3211, 3469, 3472, 3475, 3789, 3897, 4922, 4923, 4924, 4925, 4926, 4927, 4942, 4943, 4944, 4945, 4946, 4947], [0],
+          ([6056, 6062, 6074, 7101, 6057, 6063, 6075, 7102, 6058, 6064, 6076, 7103], [0],
            ([0], [6075], 0, 3)))
     close_stall(sess)
 

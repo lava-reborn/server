@@ -115,9 +115,21 @@ MED_REACH = 4
 
 # City ceilings select the agreed stimulant ranks, independently of player level.
 BUFF_RANKS = {4: (0, 0), 8: (1, 3), 12: (3, 5), 16: (5, 7), 20: (7, 9)}
-BUFF_SELLERS = frozenset((1013, 1196, 2015, 2016, 2017, 2018,
-                          5211, 5224, 5225, 1206, 202, 1167, 207, 1214, 1221,
-                          714, 716, 5239, 5240))
+BUFF_ASSISTANTS = frozenset((1196, 2015, 2016, 2017, 2018))
+BUFF_SELLERS = BUFF_ASSISTANTS | {1013}
+BASE_AMMO_SELLERS = frozenset((714, 5240))
+
+
+@lru_cache(maxsize=256)
+def stimulant_currency(trader_type, loc_id):
+    """Assistants sell A; the doctor also sells A where no assistant stands."""
+    if trader_type in BUFF_ASSISTANTS:
+        return 'afro'
+    import world
+    loc = world.location(loc_id)
+    present = {t for _cell, t in loc.spawns}
+    present.update(int(row['type']) for row in world.placed_in(loc_id))
+    return 'gold' if present & BUFF_ASSISTANTS else None
 
 
 def stimulants(top, currency=None):
@@ -558,6 +570,10 @@ def apply(trader_type, loc_id, own):
     """What the trader's stall holds at this place, given its own list."""
     which = SELLERS.get(trader_type)
     b = band(loc_id) if loc_id is not None else None
+    import effects
+    import items
+    if trader_type not in BUFF_SELLERS:
+        own = [t for t in own if effects.definition(t) is None]
     # The archived assistant's own list carries IV outside the city ladder.
     if b is None or b[1] != 20:
         own = [t for t in own if t != 3561]
@@ -569,15 +585,18 @@ def apply(trader_type, loc_id, own):
     if trader_type == 1152 and loc_id == 102:
         low = 1
     if trader_type in BUFF_SELLERS:
-        import effects
         own = [t for t in own if effects.definition(t) is None]
+    if trader_type in BASE_AMMO_SELLERS:
+        own = [t for t in own if items.root_of(t) == items.AMMO
+               and (items.params_of(t).get('g_cost') or ammunition_order(t)[1] == 2)]
+    if trader_type == 1013 and loc_id in (609, 1443):
+        which = MED_KINDS
     stock = goods(which, low, top, ONLY.get(trader_type)) if which else []
     if trader_type in BUFF_SELLERS:
-        stock += stimulants(top, ONLY.get(trader_type))
+        stock += stimulants(top, stimulant_currency(trader_type, loc_id))
     stock += [t for t in own if not band_ware(t) or (not which and fits(t, low, top))]
     if any(kind in FIREARM_KINDS for kind in which):
         stock += gold_ammunition(stock)
-    import items
     if stock and all(items.root_of(t) == items.AMMO for t in stock):
         stock += gold_ammunition(stock)
     return list(dict.fromkeys(stock))

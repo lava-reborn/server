@@ -108,7 +108,7 @@ FOOD, SUPPLY, KHAN_SELL, JUT, SAMUEL, FLAG = 155, 2181, 2391, 207, 893, 1011
 BLUEPRINT_STALLS = {"assault": 580, "mg": 583, "rifle": 584, "smg": 585}
 TICKET_TO_ABRI, TICKET_TO_HALFA, TICKET_TO_DONGOLA, TICKET_FROM_DONGOLA = 6544, 6545, 6546, 6547
 KEY, GOLD_KEY, ENVELOPE = 2648, 2651, 1309
-GIFTS = tuple(range(4329, 4353)) + (1069, 1070, 1071, 1072)                # gift_kid_1..10, gift_girl_1..10, gift_0..3
+GIFTS = tuple(range(4329, 4353))                # gift_kid_1..10, gift_girl_1..10, gift_0..3
 KNIFE_PRINTS = tuple(range(6626, 6632))         # Заточка / Эргономика / both, 14у and 16у
 INGOTS = (7620, 4796, 4797)
 POUCHES = [3577, 3580, 5613, 3578, 3579]        # автоматчика, пулеметчика, рукопашника, снайпера,
@@ -144,7 +144,7 @@ DECIDED = {
     OASIS: {JUT: BAND, 1229: BAND, AMMO_OASIS: OWN_},
     NEW_MARKET: {FOOD: BAND, 580: OWN_, 583: OWN_, 584: OWN_, 585: OWN_, LOTTERY: OWN_,
                  1013: BAND, MORTIMER: OWN_, 1196: BAND, 2017: BAND},
-    PIER: {ELIZABETH: OWN_, KHAN_SELL: BAND},
+    PIER: {ELIZABETH: OWN_, KHAN_SELL: BAND, 1797: OWN_},
     112: {FLAG: NONE}, 113: {FLAG: NONE}, 114: {FLAG: NONE},
 }
 # The lists of data/npcs.json this restoration wrote (or kept: Мортимер's, Абу-бакр's
@@ -162,6 +162,7 @@ OWN = {
     LOTTERY: [KEY],
     GOLD_LOTTERY: [GOLD_KEY],
     ELIZABETH: list(GIFTS),
+    1797: [1069, 1070, 1071, 1072],
     PILOT: [],
     AMMO_OASIS: OASIS_ROUNDS[:24],
     ONE_LEG: list(KNIFE_PRINTS),
@@ -325,7 +326,7 @@ STALLS = {(p, t): items.stock_for(t, p) for p in DONGOLA_PLACES for t in AT[p]}
 STALLS.update({(p, t): items.stock_for(t, p) for p, ts in WORLD_PUTS.items() for t in ts})
 check("Донгола is the band 12-16 of data/shop_bands.json, its places these",
       [(c[0], c[1], c[2], sorted(c[3])) for c in shop_bands.CITIES if c[0] == "Донгола"],
-      [("Донгола", LO, HI, [49, 50, 79, 103, 159, 195, 197, 445, 469, 958])])
+      [("Донгола", LO, HI, [49, 50, 79, 103, 159, 195, 197, 445, 469, 1443])])
 check("no gun, knife or set piece out of 12-16 on a seller's stall of Донгола, no medicine out"
       " of its tiers 8_11-16_19; every one of a seller's band both ways, the ordinary for afro"
       " and the (G) for gold, but the apothecary Джут's gold alone and Абу-бакр's afro alone",
@@ -802,7 +803,7 @@ async def main():
     close_stall(sess)
 
     stall, opened = open_stall(sess, PIER, ELIZABETH)
-    check("Элизабет Стюарт (the pier 445): her 24 original gifts and four golden valentines; «Пистолет» for 500 afro, «Zippo» for"
+    check("Элизабет Стюарт (the pier 445): her 24 original gifts; golden valentines moved to Alma; «Пистолет» for 500 afro, «Zippo» for"
           " 1 ounce, the gold one not bought back",
           (stall, opened, buy(sess, stall, 4329, BUY), buy(sess, stall, 4338, GOLD),
            sell(sess, 4338)),

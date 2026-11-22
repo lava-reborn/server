@@ -12,7 +12,7 @@ Only the six ordinary soldiers return five minutes after death; the existing
 boss checkpoints also hold that deadline across restarts. Capture waves do
 not respawn, including after an early payment in the same battle window.
 At least three living clan members of the site's minimum level must be in
-the boss's room at the kill; only one of them needs to hurt him. Capture and weekly
+the boss's room at the kill, each having hurt him. Capture and weekly
 boss-death record commit at the kill, before the corpse timer. Everything
 below describes the existing warehouses unless it explicitly names a base.
 
@@ -97,12 +97,12 @@ clans.py reads every membership -- tools/admin_account.py disbands clans
 from another process. This module imports neither clans nor inventory nor
 mail (trophies.clan_of says why): membership is Store.clan_member's.
 """
-import copy
 import json
 import logging
 import math
 import os
 import time
+from datetime import datetime, timedelta
 
 import bosses
 import events
@@ -126,7 +126,8 @@ class Site(object):
     __slots__ = ("key", "loc", "boss", "flag", "box", "quest", "min_level", "title",
                  "kind", "rooms", "traders", "rent_quest", "rent", "battle", "payment",
                  "gold_quest", "health_scale", "guards", "guard_health_scale",
-                 "damage_scale", "guard_damage_scale", "troops", "troop_health_scale")
+                 "damage_scale", "guard_damage_scale", "troops", "troop_health_scale",
+                 "troop_damage_scale")
 
     def __init__(self, key, rec):
         self.key = str(key)
@@ -152,8 +153,9 @@ class Site(object):
         self.troop_health_scale = float(rec.get("troop_health_scale", 1))
         self.damage_scale = float(rec.get("damage_scale", 1))
         self.guard_damage_scale = float(rec.get("guard_damage_scale", 1))
+        self.troop_damage_scale = float(rec.get("troop_damage_scale", 1))
         for field in ('health_scale', 'guard_health_scale', 'damage_scale', 'guard_damage_scale',
-                      'troop_health_scale'):
+                      'troop_health_scale', 'troop_damage_scale'):
             if not math.isfinite(getattr(self, field)) or not 1 <= getattr(self, field) <= 100:
                 raise ValueError("data/holdings.json: %s %s must be finite, 1..100" % (self.key, field))
 
@@ -224,21 +226,20 @@ def base_for(loc_id, boss_type=None):
 
 def prepare_room(rc):
     """Site defenders use local stat copies, never a shared type edit."""
+    import battle_balance
+    import mobs
     for target in rc.mobs.values():
         s = site_for(rc.room.loc.id, target.type_id) or guard_site(rc.room.loc.id, target.type_id)
         if s is None or getattr(target, "_holding_prepared", False):
             continue
-        target.stats = copy.copy(target.stats)
         if target.type_id == s.boss:
             scale, damage = s.health_scale, s.damage_scale
         elif target.type_id in s.guards:
             scale, damage = s.guard_health_scale, s.guard_damage_scale
         else:
-            scale, damage = s.troop_health_scale, 1
-        target.stats.hp_max = max(1, int(round(target.stats.hp_max * scale)))
-        target.stats.sp_max = max(0, int(round(target.stats.sp_max * scale)))
-        target.stats.dmg_min = max(0, int(round(target.stats.dmg_min * damage)))
-        target.stats.dmg_max = max(target.stats.dmg_min, int(round(target.stats.dmg_max * damage)))
+            scale, damage = s.troop_health_scale, s.troop_damage_scale
+        target.stats = mobs.MobStats(target.type_id, balanced=False)
+        battle_balance.configure_mob(target.stats, health_scale=scale, damage_scale=damage, site=True)
         target.hp, target.sp = target.stats.hp_max, target.stats.sp_max
         target._holding_prepared = True
 
@@ -329,19 +330,30 @@ def defender_friendly(rc, mob, fighter):
     if not getattr(fighter, 'is_player', False) or getattr(mob, 'is_player', False):
         return False
     loc_id = getattr(rc.room.loc, 'id', None)
-    s = base_for(loc_id, mob.type_id) or guard_site(loc_id, mob.type_id)
-    if s is None or s.kind != 'base':
+    s = base_for(loc_id)
+    if s is None:
+        return False
+    type_id = getattr(mob, 'type_id', None)
+    if type_id != s.boss and (s.loc != loc_id or type_id not in s.guards + s.troops):
         return False
     return member_of(rc.store, paid_holder(rc.store, s), fighter.sess.char_id)
 
 
 def soldier_respawns(store, loc_id, type_id, now=None):
-    """Only the six ordinary soldiers return between paid base battles."""
+    """The six outer soldiers return between battles, including neutral bases."""
     s = guard_site(loc_id, type_id)
     if s is None or s.kind != 'base' or type_id not in s.troops:
         return False
     now = bosses.clock() if now is None else now
-    return battle_slot(s, now) is None and paid_holder(store, s, now) is not None
+    return battle_slot(s, now) is None
+
+
+def occupation_slot(s, now):
+    """The last battle's end names the soldiers' ordinary five-minute phase."""
+    window = events.table().window(s.battle)
+    day = datetime.fromtimestamp(now, bosses.ZONE).date()
+    return max(end for ago in range(8) for _start, end in window.openings(day - timedelta(days=ago))
+               if end <= now)
 
 
 def rent_refusal(store, s, char_id, loc_id=None, now=None):
@@ -593,11 +605,6 @@ def snapshot(rc, mob, killer):
     store = rc.store
     fighters = []
     harm_by_char = dict(getattr(mob, "capture_harm", {}))
-    if s.kind == "base":
-        # Base support counts by presence at the kill, without requiring a
-        # token shot from every member. Ordinary warehouses keep harm-only squads.
-        for char_id in here:
-            harm_by_char.setdefault(char_id, 0)
     for char_id, harm in sorted(harm_by_char.items()):
         f = here.get(char_id)
         m = store.clan_member(char_id)
@@ -671,7 +678,7 @@ def settle(rc, mob):
     if s.kind == "base":
         excluded = {f["clan"] for f in snap["fighters"] if f["clan"] is not None
                     and store.base_reserved(f["clan"], base_keys(), snap["at"], s.key)}
-        won = winner(snap, BASE_SQUAD, s.min_level, excluded, require_harm=False)
+        won = winner(snap, BASE_SQUAD, s.min_level, excluded)
         # A base's capture and the boss's weekly death survive together,
         # before the corpse timer. Warehouses keep their established path.
         with storage.atomic(store.db):

@@ -333,8 +333,11 @@ def stock_for(trader_type, loc_id=None):
     the owner's choice, and the rule stays a rule.
     """
     chosen = _shop_stock(trader_type, loc_id)
+    import effects
     owners = shop_bands.stock_owners(loc_id) if loc_id in shop_bands.CITY_OF else {}
-    chosen = [t for t in chosen if owners.get(t, trader_type) == trader_type]
+    chosen = [t for t in chosen if owners.get(t, trader_type) == trader_type
+              or (trader_type in shop_bands.BUFF_ASSISTANTS
+                  and effects.definition(t) is not None)]
     # Compatible rounds are an intentional exception to location-wide ownership:
     # a gun must not require buying its ammunition from a different seller.
     return shop_bands.with_weapon_ammunition(chosen)
@@ -1303,6 +1306,22 @@ def static_info(type_id):
             if effect is not None:
                 info[1].update(bonus_act_time=effect['duration'],
                                effects=[effects.FIRST + type_id], effects_prob=[100])
+                # Packed masks and their dense lists must change together.
+                # Zero rows are noise in a stimulant's requirements/bonuses.
+                for prefix in ('need', 'bonus'):
+                    for field in ('attribs', 'skills', 'specs'):
+                        key = prefix + '_' + field
+                        mask = int(info[1].get(key + '_m', 0))
+                        values = iter(info[1].get(key, ()))
+                        kept, dense = 0, []
+                        for i in range(mask.bit_length()):
+                            if mask & (1 << i):
+                                value = next(values)
+                                if value:
+                                    kept |= 1 << i
+                                    dense.append(value)
+                        if mask:
+                            info[1][key + '_m'], info[1][key] = kept, dense
             name = catalogue()[type_id][1]
             if name.startswith("Med_Battle_") and (name.endswith('_A') or '_G' in name):
                 multiplier = (BATTLE_HEAL_AFRO_AP_MULTIPLIER if name.endswith('_A')

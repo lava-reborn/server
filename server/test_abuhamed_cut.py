@@ -185,8 +185,7 @@ except Exception:
 # --- 2. no way in --------------------------------------------------------------------------
 print("no way in")
 try:
-    files = sorted(int(os.path.basename(p)[:-4])
-                   for p in glob.glob(os.path.join(world.RES, "locations", "static", "*.xml")))
+    files = sorted(world.static_ids())
     followed = []
     for lid in files:
         for side in "ab":
@@ -337,8 +336,7 @@ try:
           (724 in standing(446), 724 in pier, 762 in pier), (True, False, True))
     CAMPS = {(6160, 1975), (6161, 1973), (6210, 1986), (6273, 1953), (6274, 1952)}
     check("  ..the other retexts over Абу-Хамед are the camps, works and updated prison hours: no other",
-          sorted(set(retexts) - set(TEXTS)), sorted(CAMPS | {(6139, 1950), (6193, 1966), (6183, 1976),
-                                                          (6154, 1963)}))
+          sorted(set(retexts) - set(TEXTS)), sorted(CAMPS | {(6139, 1950), (6193, 1966), (6183, 1976)}))
     check("  ..the camps say they are fought for gold, the chiefs' places that the chiefs come with it",
           {c: ("Сражение за золото в 00:00, 02:00, 04:00, 06:00, 08:00, 10:00, 12:00, 14:00, 16:00, 18:00, 20:00 и 22:00" in retexts[c]
                or "В 00:00, 02:00, 04:00, 06:00, 08:00, 10:00, 12:00, 14:00, 16:00, 18:00, 20:00 и 22:00 часто кто-то приезжает с золотом." in retexts[c]) for c in CAMPS},
@@ -347,10 +345,11 @@ try:
     want = [(x, y, retexts.get((x, y), t)) for x, y, t in rows_in(raw, BOX) if (x, y, t) not in hide_any]
     ours = {i for i in world.overlay_ids() if i >= world.FIRST_NEW_ID}
     added = {(e["x"], e["y"], e["text"]) for e in LABELS if e.get("add")
-             and world.settlements().get((e["x"], e["y"])) in ours}
+             and (world.settlements().get((e["x"], e["y"])) in ours
+                  or (e["x"], e["y"]) == (6083, 1957))}
     check("every other name over Абу-Хамед is the file's own, row for row (the places of ours aside)",
           [r for r in rows_in(out, BOX) if r not in added], want)
-    check("  ..of which there are thirty, including the restored base", len(want), 30)
+    check("  ..twenty-nine original labels remain after relocating the base", len(want), 29)
     painted = map_cells.load()
     check("the squares of the hidden names with no place under them, and of the places the client has no"
           " file for, are painted over or bare, each decided (data/map_cells.json): the set upgrade's, the"

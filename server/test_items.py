@@ -540,7 +540,7 @@ import re                                             # noqa: E402
 import npcs                                           # noqa: E402
 MORIS = [6055, 6061, 6073, 7100, 6056, 6062, 6074, 7101,
          6043, 6898, 6049, 6904, 6044, 6899, 6050, 6905,
-         4917, 4937, 2178, 2184]
+         2178, 2184]
 # HealItem.initialize (HealItem.as:35-51) reads these seventeen; a missing one
 # is an undefined the client carries into its arithmetic.
 HEAL_FIELDS = ("heal_time", "max_h_rest", "max_st_rest", "min_h_rest", "min_st_rest",
@@ -652,9 +652,9 @@ _offered = sorted({t for tr in list(npcs.STOCK) + list(items.stock_table())
                    for t in items.stock_for(tr)})
 check("no stall anywhere offers a premium item",
       [t for t in _offered if items.premium(t)], [])
-check("Морис sells no P kit: 20 things at his market, none of 6067-6069",
+check("Морис sells no P kit: 18 things at his market, none of 6067-6069",
       (len(items.stock_for(5211, 185)), {6067, 6068, 6069} & set(items.stock_for(5211, 185))),
-      (20, set()))
+      (18, set()))
 check("Борис sells no P pistol",
       [t for t in items.stock_for(5212) if items.premium(t)], [])
 

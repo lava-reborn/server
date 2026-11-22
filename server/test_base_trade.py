@@ -58,12 +58,12 @@ class BaseTrade(unittest.TestCase):
         info = next(p for cmd, p in self.frames if cmd == 'userInfo_Trader')
         self.assertEqual((info['pmod'], info['smod'], info['rmod']), (0.9, 0.85, inventory.RMOD * 0.5))
         self.assertLess(len(protocol.frame('userInfo_Trader', **info)), 4096)
-        for trader, gold in ((714, True), (716, False)):
+        for trader, gold in ((714, True), (714, False), (1013, True), (1013, False)):
             self.open(trader)
             stock = items.stock_for(trader, 609)
-            ammo = next(t for t in stock if items.root_of(t) == items.AMMO)
-            heal = next(t for t in stock if items.root_of(t) == items.HEAL)
-            for t, n in ((ammo, 1), (ammo, 20), (ammo, 5000), (heal, 1)):
+            available = [t for t in stock if bool(items.params_of(t).get('g_cost')) == gold]
+            t = available[0]
+            for n in ((1, 20, 5000) if items.root_of(t) == items.AMMO else (1,)):
                 before = self.store.money(self.cid)
                 cost = inventory.buy_price(items.params_of(t), items.root_of(t), n, gold, 0.9)
                 self.assertEqual(self.buy(t, n, gold), [0])
@@ -82,7 +82,8 @@ class BaseTrade(unittest.TestCase):
         self.assertEqual(inventory.trade_rates(self.store, 609, 714, self.cid)['smod'], inventory.SMOD)
 
     def test_stimulants_and_scanner_use_gold_discount_and_gear_has_no_purchase_discount(self):
-        stock = items.stock_for(714, 609)
+        self.open(1013)
+        stock = items.stock_for(1013, 609)
         self.assertIn(3826, stock)
         self.assertIn(3561, stock)
         for t in (3826, 3561):
@@ -95,7 +96,7 @@ class BaseTrade(unittest.TestCase):
         self.assertEqual(inventory.repair_rmod(self.site.loc, self.site.flag), inventory.RMOD)
 
     def test_changed_membership_or_expired_rent_refuses_stale_window_without_payment(self):
-        ammo = next(t for t in items.stock_for(714, 609) if items.root_of(t) == items.AMMO)
+        ammo = next(t for t in items.stock_for(714, 609) if items.root_of(t) == items.AMMO and items.params_of(t).get('g_cost'))
         before = self.store.money(self.cid)
         self.store.db.execute('DELETE FROM clan_members WHERE char_id=?', (self.cid,))
         self.store.db.commit()
@@ -172,7 +173,7 @@ class BaseTrade(unittest.TestCase):
                     unit = min(unit, cap)
                 self.assertEqual(self.sell(row, 1), 0)
             self.assertEqual(self.store.money(self.cid)[0] - before[0], max(1, math.floor(unit * quality)))
-        heal = next(t for t in items.stock_for(714, 609)
+        heal = next(t for t in items.stock_for(1013, 609)
                     if items.root_of(t) == items.HEAL and items.params_of(t).get('use_count', 0) > 1)
         row = self.give(heal)
         self.store.update_item(row['uniq'], use_count=1)
@@ -196,7 +197,7 @@ class BaseTrade(unittest.TestCase):
         self.assertFalse(self.inv.rows())
 
     def test_base_stock_is_city_consumables_only_without_duplicates_or_client_overflow(self):
-        for loc, traders in ((609, (714, 716)), (958, (5239, 5240))):
+        for loc, traders in ((609, (714, 1013)), (1443, (1013, 5240))):
             stocks = [items.stock_for(t, loc) for t in traders]
             self.assertFalse(set(stocks[0]) & set(stocks[1]))
             for trader, stock in zip(traders, stocks):
@@ -211,7 +212,7 @@ class BaseTrade(unittest.TestCase):
     def test_all_base_stock_buy_resale_and_repair_sale_routes_are_unprofitable(self):
         rate = progression.GOLD_TO_AFRO_RATE / progression.GOLD_OUNCE
         checked = 0
-        for loc, traders in ((609, (714, 716)), (958, (5239, 5240))):
+        for loc, traders in ((609, (714, 1013)), (1443, (1013, 5240))):
             for trader in traders:
                 for t in items.stock_for(trader, loc):
                     p, root = items.params_of(t), items.root_of(t)
@@ -250,9 +251,9 @@ class BaseTrade(unittest.TestCase):
 
     def test_repeated_real_bulk_purchase_and_single_piece_sales_do_not_create_money(self):
         rate = progression.GOLD_TO_AFRO_RATE / progression.GOLD_OUNCE
-        for trader, gold in ((716, False), (714, True)):
+        for trader, gold in ((714, False), (714, True)):
             self.open(trader)
-            t = next(t for t in items.stock_for(trader, 609) if items.root_of(t) == items.AMMO)
+            t = next(t for t in items.stock_for(trader, 609) if items.root_of(t) == items.AMMO and bool(items.params_of(t).get('g_cost')) == gold)
             for _ in range(3):
                 before = self.store.money(self.cid)
                 self.assertEqual(self.buy(t, 20, gold), [0])
@@ -308,7 +309,7 @@ class BaseTrade(unittest.TestCase):
 
     def test_gold_valuable_quotes_refuse_wrong_trader_and_failed_payment_rolls_back(self):
         row = self.give(6950, 5)
-        self.open(716)
+        self.open(1013)
         _, q = self.quote(row, 2)
         self.assertNotEqual(q['res'], 0)
         self.open(714)
@@ -334,12 +335,12 @@ class BaseTrade(unittest.TestCase):
 
     def test_dongola_gold_supplier_uses_its_actual_paid_base_and_same_gold_buyback(self):
         self.store.holding_clear(self.site.key, 'admin')
-        site = holdings.site_at(958)
+        site = holdings.site_at(1443)
         self.store.holding_set(site.key, self.clan, 'admin', slot=1000, when=1000)
         self.store.db.execute('UPDATE clan_holdings SET paid_until=? WHERE site=?',
                               (1000 + 7 * 86400, site.key))
         self.store.db.commit()
-        self.s.loc = NS(id=958, width=20, height=20, spawns=[])
+        self.s.loc = NS(id=1443, width=20, height=20, spawns=[])
         self.s.room.loc = self.s.loc
         self.open(5240)
         row = self.give(6950)

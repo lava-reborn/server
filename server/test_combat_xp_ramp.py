@@ -11,10 +11,10 @@ class CombatXpRamp(unittest.TestCase):
             base = p.mob_price(skill + 1)
             values = [p.combat_mob_xp(skill + gap, skill) for gap in range(5)]
             self.assertEqual(values[0], p.mob_price(skill) * .5)
-            for gap, factor in enumerate((.8, 1, 1.1, 1.2), 1):
+            for gap, factor in enumerate((1, 1.1, 1.2, 1.3), 1):
                 self.assertAlmostEqual(values[gap], base * factor)
                 self.assertGreater(values[gap], values[gap - 1])
-            self.assertEqual(p.combat_mob_xp(skill + 50, skill), base * 1.2)
+            self.assertEqual(p.combat_mob_xp(skill + 50, skill), base * 1.3)
 
     def test_mob_multipliers_and_shares_apply_once(self):
         for skill in (0, 5, 12, 16):

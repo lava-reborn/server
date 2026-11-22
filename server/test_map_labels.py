@@ -79,9 +79,9 @@ out, changed = M.apply(raw)
 retexted = {(x, y, new) for x, y, was, new in edits
             if was is not None and new is not None and (x, y, was) not in COMPATIBILITY}
 fallbacks = {(x, y, new) for x, y, was, new in edits if was is None} & retexted
-check("retext/add fallbacks restore only the Eden town and two clan-base labels",
+check("only the Eden town needs a historical retext/add fallback",
       sorted((x, y) for x, y, _text in fallbacks),
-      [(5858, 1929), (5955, 2032), (6154, 1963)])
+      [(5858, 1929)])
 check("every original edit applied once; matching recovery fallbacks add no duplicate",
       changed, len(edits) - len(fallbacks) - len(COMPATIBILITY))
 tree = rows_at(raw, 6266, 1822, "Новогодняя Елка")
@@ -476,7 +476,7 @@ def rows_bytes(doc, cell):
 check("other timed names are the retained original places plus the two restored weekly bases",
       sorted({(x, y) for x, y, t in rows_of(out, EVERYWHERE) if TIMED.search(t)}
              - set(CLOCK_CELLS) - set(WAREHOUSES)),
-      sorted(set(ORIGINAL) | set(PRISONS) | {(5955, 2032), (6154, 1963)}))
+      sorted(set(ORIGINAL) | set(PRISONS) | {(6033, 1957), (6083, 1957)}))
 check("  ..warehouse bytes change only the agreed minimum-level wording",
       [rows_bytes(out, c) for c in WAREHOUSES],
       [[warehouse_wording(r.decode('utf-8'), c).encode('utf-8')

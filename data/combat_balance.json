@@ -7,26 +7,6 @@
         0,
         0
       ],
-      "h_damage_min": [
-        18,
-        0,
-        0
-      ],
-      "h_damage_max": [
-        30,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        18,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        30,
-        0,
-        0
-      ],
       "max_range": [
         11,
         10,
@@ -1174,139 +1154,7 @@
         202
       ]
     },
-    "25866": {
-      "h_damage_max": [
-        16,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        16,
-        0,
-        0
-      ]
-    },
-    "25867": {
-      "h_damage_max": [
-        19,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        19,
-        0,
-        0
-      ]
-    },
-    "25886": {
-      "h_damage_min": [
-        6,
-        0,
-        0
-      ],
-      "h_damage_max": [
-        24,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        6,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        24,
-        0,
-        0
-      ]
-    },
-    "25887": {
-      "h_damage_min": [
-        7,
-        0,
-        0
-      ],
-      "h_damage_max": [
-        27,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        7,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        27,
-        0,
-        0
-      ]
-    },
-    "25899": {
-      "h_damage_min": [
-        2,
-        0,
-        0
-      ],
-      "h_damage_max": [
-        15,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        2,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        15,
-        0,
-        0
-      ]
-    },
-    "25900": {
-      "h_damage_min": [
-        2,
-        0,
-        0
-      ],
-      "h_damage_max": [
-        18,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        2,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        18,
-        0,
-        0
-      ]
-    },
     "25925": {
-      "h_damage_min": [
-        7,
-        0,
-        0
-      ],
-      "h_damage_max": [
-        19,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        7,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        19,
-        0,
-        0
-      ],
       "fire_costs": [
         25,
         0,
@@ -1314,26 +1162,6 @@
       ]
     },
     "25926": {
-      "h_damage_min": [
-        9,
-        0,
-        0
-      ],
-      "h_damage_max": [
-        23,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        9,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        23,
-        0,
-        0
-      ],
       "fire_costs": [
         25,
         0,
@@ -1341,26 +1169,6 @@
       ]
     },
     "25938": {
-      "h_damage_min": [
-        7,
-        0,
-        0
-      ],
-      "h_damage_max": [
-        15,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        7,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        15,
-        0,
-        0
-      ],
       "fire_costs": [
         24,
         0,
@@ -1368,26 +1176,6 @@
       ]
     },
     "25939": {
-      "h_damage_min": [
-        9,
-        0,
-        0
-      ],
-      "h_damage_max": [
-        18,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        9,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        18,
-        0,
-        0
-      ],
       "fire_costs": [
         24,
         0,
@@ -1395,26 +1183,6 @@
       ]
     },
     "25951": {
-      "h_damage_min": [
-        9,
-        0,
-        0
-      ],
-      "h_damage_max": [
-        26,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        9,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        26,
-        0,
-        0
-      ],
       "fire_costs": [
         18,
         0,
@@ -1422,26 +1190,6 @@
       ]
     },
     "25952": {
-      "h_damage_min": [
-        10,
-        0,
-        0
-      ],
-      "h_damage_max": [
-        30,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        10,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        30,
-        0,
-        0
-      ],
       "fire_costs": [
         18,
         0,
@@ -1449,26 +1197,6 @@
       ]
     },
     "25967": {
-      "h_damage_min": [
-        5,
-        0,
-        0
-      ],
-      "h_damage_max": [
-        19,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        5,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        19,
-        0,
-        0
-      ],
       "fire_costs": [
         15,
         0,
@@ -1476,26 +1204,6 @@
       ]
     },
     "25968": {
-      "h_damage_min": [
-        6,
-        0,
-        0
-      ],
-      "h_damage_max": [
-        23,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        6,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        23,
-        0,
-        0
-      ],
       "fire_costs": [
         15,
         0,
@@ -1503,26 +1211,6 @@
       ]
     },
     "25983": {
-      "h_damage_min": [
-        6,
-        0,
-        0
-      ],
-      "h_damage_max": [
-        17,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        6,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        17,
-        0,
-        0
-      ],
       "max_range": [
         13,
         10,
@@ -1535,26 +1223,6 @@
       ]
     },
     "25984": {
-      "h_damage_min": [
-        7,
-        0,
-        0
-      ],
-      "h_damage_max": [
-        20,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        7,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        20,
-        0,
-        0
-      ],
       "max_range": [
         13,
         10,
@@ -1567,26 +1235,6 @@
       ]
     },
     "25996": {
-      "h_damage_min": [
-        7,
-        0,
-        0
-      ],
-      "h_damage_max": [
-        16,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        7,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        16,
-        0,
-        0
-      ],
       "max_range": [
         11,
         10,
@@ -1599,26 +1247,6 @@
       ]
     },
     "25997": {
-      "h_damage_min": [
-        9,
-        0,
-        0
-      ],
-      "h_damage_max": [
-        20,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        9,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        20,
-        0,
-        0
-      ],
       "max_range": [
         11,
         10,
@@ -1631,26 +1259,6 @@
       ]
     },
     "26009": {
-      "h_damage_min": [
-        9,
-        0,
-        0
-      ],
-      "h_damage_max": [
-        17,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        9,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        17,
-        0,
-        0
-      ],
       "max_range": [
         9,
         10,
@@ -1663,26 +1271,6 @@
       ]
     },
     "26010": {
-      "h_damage_min": [
-        10,
-        0,
-        0
-      ],
-      "h_damage_max": [
-        20,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        10,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        20,
-        0,
-        0
-      ],
       "max_range": [
         9,
         10,
@@ -1695,26 +1283,6 @@
       ]
     },
     "26022": {
-      "h_damage_min": [
-        6,
-        0,
-        0
-      ],
-      "h_damage_max": [
-        12,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        6,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        12,
-        0,
-        0
-      ],
       "max_range": [
         12,
         10,
@@ -1727,26 +1295,6 @@
       ]
     },
     "26023": {
-      "h_damage_min": [
-        8,
-        0,
-        0
-      ],
-      "h_damage_max": [
-        15,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        8,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        15,
-        0,
-        0
-      ],
       "max_range": [
         12,
         10,
@@ -1754,182 +1302,6 @@
       ],
       "end_opt_range": [
         6,
-        0,
-        0
-      ]
-    },
-    "26035": {
-      "h_damage_min": [
-        9,
-        0,
-        0
-      ],
-      "h_damage_max": [
-        18,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        9,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        18,
-        0,
-        0
-      ]
-    },
-    "26036": {
-      "h_damage_min": [
-        12,
-        0,
-        0
-      ],
-      "h_damage_max": [
-        22,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        12,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        22,
-        0,
-        0
-      ]
-    },
-    "26048": {
-      "h_damage_min": [
-        9,
-        0,
-        0
-      ],
-      "h_damage_max": [
-        15,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        9,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        15,
-        0,
-        0
-      ]
-    },
-    "26049": {
-      "h_damage_min": [
-        11,
-        0,
-        0
-      ],
-      "h_damage_max": [
-        18,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        11,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        18,
-        0,
-        0
-      ]
-    },
-    "26061": {
-      "h_damage_min": [
-        14,
-        0,
-        0
-      ],
-      "h_damage_max": [
-        27,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        14,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        27,
-        0,
-        0
-      ]
-    },
-    "26062": {
-      "h_damage_min": [
-        18,
-        0,
-        0
-      ],
-      "h_damage_max": [
-        32,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        18,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        32,
-        0,
-        0
-      ]
-    },
-    "26074": {
-      "h_damage_min": [
-        10,
-        0,
-        0
-      ],
-      "h_damage_max": [
-        17,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        10,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        17,
-        0,
-        0
-      ]
-    },
-    "26075": {
-      "h_damage_min": [
-        12,
-        0,
-        0
-      ],
-      "h_damage_max": [
-        21,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        12,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        21,
         0,
         0
       ]
@@ -2467,175 +1839,9 @@
         101
       ]
     },
-    "25869": {
-      "h_damage_max": [
-        18,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        18,
-        0,
-        0
-      ]
-    },
-    "25872": {
-      "h_damage_max": [
-        16,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        16,
-        0,
-        0
-      ]
-    },
-    "25889": {
-      "h_damage_max": [
-        24,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        6,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        24,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        6,
-        0,
-        0
-      ]
-    },
-    "25892": {
-      "h_damage_max": [
-        24,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        6,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        24,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        6,
-        0,
-        0
-      ]
-    },
-    "25895": {
-      "h_damage_max": [
-        26,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        26,
-        0,
-        0
-      ]
-    },
-    "25902": {
-      "h_damage_max": [
-        15,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        2,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        15,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        2,
-        0,
-        0
-      ]
-    },
-    "25905": {
-      "h_damage_max": [
-        17,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        2,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        17,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        2,
-        0,
-        0
-      ]
-    },
-    "25908": {
-      "h_damage_max": [
-        17,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        2,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        17,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        2,
-        0,
-        0
-      ]
-    },
     "25931": {
       "fire_costs": [
         25,
-        0,
-        0
-      ],
-      "h_damage_max": [
-        21,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        8,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        21,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        8,
         0,
         0
       ]
@@ -2645,51 +1851,11 @@
         20,
         0,
         0
-      ],
-      "h_damage_max": [
-        19,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        7,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        19,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        7,
-        0,
-        0
       ]
     },
     "25934": {
       "fire_costs": [
         25,
-        0,
-        0
-      ],
-      "h_damage_max": [
-        21,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        8,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        21,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        8,
         0,
         0
       ]
@@ -2699,51 +1865,11 @@
         24,
         0,
         0
-      ],
-      "h_damage_max": [
-        17,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        8,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        17,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        8,
-        0,
-        0
       ]
     },
     "25941": {
       "fire_costs": [
         24,
-        0,
-        0
-      ],
-      "h_damage_max": [
-        15,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        7,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        15,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        7,
         0,
         0
       ]
@@ -2753,41 +1879,11 @@
         24,
         0,
         0
-      ],
-      "h_damage_max": [
-        17,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        17,
-        0,
-        0
       ]
     },
     "25957": {
       "fire_costs": [
         18,
-        0,
-        0
-      ],
-      "h_damage_max": [
-        26,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        9,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        26,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        9,
         0,
         0
       ]
@@ -2797,51 +1893,11 @@
         14,
         0,
         0
-      ],
-      "h_damage_max": [
-        26,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        9,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        26,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        9,
-        0,
-        0
       ]
     },
     "25963": {
       "fire_costs": [
         18,
-        0,
-        0
-      ],
-      "h_damage_max": [
-        26,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        9,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        26,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        9,
         0,
         0
       ]
@@ -2851,51 +1907,11 @@
         18,
         0,
         0
-      ],
-      "h_damage_max": [
-        29,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        10,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        29,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        10,
-        0,
-        0
       ]
     },
     "25970": {
       "fire_costs": [
         15,
-        0,
-        0
-      ],
-      "h_damage_max": [
-        21,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        6,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        21,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        6,
         0,
         0
       ]
@@ -2905,51 +1921,11 @@
         15,
         0,
         0
-      ],
-      "h_damage_max": [
-        19,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        5,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        19,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        5,
-        0,
-        0
       ]
     },
     "25979": {
       "fire_costs": [
         15,
-        0,
-        0
-      ],
-      "h_damage_max": [
-        19,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        5,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        19,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        5,
         0,
         0
       ]
@@ -2959,175 +1935,11 @@
         15,
         0,
         0
-      ],
-      "h_damage_max": [
-        21,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        6,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        21,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        6,
-        0,
-        0
-      ]
-    },
-    "25870": {
-      "h_damage_max": [
-        21,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        21,
-        0,
-        0
-      ]
-    },
-    "25873": {
-      "h_damage_max": [
-        19,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        19,
-        0,
-        0
-      ]
-    },
-    "25890": {
-      "h_damage_max": [
-        27,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        7,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        27,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        7,
-        0,
-        0
-      ]
-    },
-    "25893": {
-      "h_damage_max": [
-        27,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        7,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        27,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        7,
-        0,
-        0
-      ]
-    },
-    "25896": {
-      "h_damage_min": [
-        8,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        8,
-        0,
-        0
-      ]
-    },
-    "25903": {
-      "h_damage_max": [
-        18,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        2,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        18,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        2,
-        0,
-        0
-      ]
-    },
-    "25906": {
-      "h_damage_max": [
-        20,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        2,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        20,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        2,
-        0,
-        0
       ]
     },
     "25932": {
       "fire_costs": [
         25,
-        0,
-        0
-      ],
-      "h_damage_max": [
-        25,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        10,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        25,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        10,
         0,
         0
       ]
@@ -3137,51 +1949,11 @@
         20,
         0,
         0
-      ],
-      "h_damage_max": [
-        23,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        9,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        23,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        9,
-        0,
-        0
       ]
     },
     "25935": {
       "fire_costs": [
         25,
-        0,
-        0
-      ],
-      "h_damage_max": [
-        25,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        10,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        25,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        10,
         0,
         0
       ]
@@ -3191,51 +1963,11 @@
         24,
         0,
         0
-      ],
-      "h_damage_max": [
-        20,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        10,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        20,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        10,
-        0,
-        0
       ]
     },
     "25942": {
       "fire_costs": [
         24,
-        0,
-        0
-      ],
-      "h_damage_max": [
-        18,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        9,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        18,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        9,
         0,
         0
       ]
@@ -3245,41 +1977,11 @@
         24,
         0,
         0
-      ],
-      "h_damage_max": [
-        20,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        20,
-        0,
-        0
       ]
     },
     "25958": {
       "fire_costs": [
         18,
-        0,
-        0
-      ],
-      "h_damage_max": [
-        30,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        10,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        30,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        10,
         0,
         0
       ]
@@ -3289,51 +1991,11 @@
         14,
         0,
         0
-      ],
-      "h_damage_max": [
-        30,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        10,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        30,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        10,
-        0,
-        0
       ]
     },
     "25964": {
       "fire_costs": [
         18,
-        0,
-        0
-      ],
-      "h_damage_max": [
-        30,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        10,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        30,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        10,
         0,
         0
       ]
@@ -3343,41 +2005,11 @@
         18,
         0,
         0
-      ],
-      "h_damage_min": [
-        11,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        11,
-        0,
-        0
       ]
     },
     "25971": {
       "fire_costs": [
         15,
-        0,
-        0
-      ],
-      "h_damage_max": [
-        25,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        7,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        25,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        7,
         0,
         0
       ]
@@ -3387,26 +2019,6 @@
         15,
         0,
         0
-      ],
-      "h_damage_max": [
-        23,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        6,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        23,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        6,
-        0,
-        0
       ]
     },
     "25980": {
@@ -3414,41 +2026,11 @@
         15,
         0,
         0
-      ],
-      "h_damage_max": [
-        23,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        6,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        23,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        6,
-        0,
-        0
       ]
     },
     "25977": {
       "fire_costs": [
         15,
-        0,
-        0
-      ],
-      "h_damage_max": [
-        25,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        25,
         0,
         0
       ]
@@ -6300,30 +4882,10 @@
         0,
         0
       ],
-      "h_damage_max": [
-        17,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        9,
-        0,
-        0
-      ],
       "max_range": [
         9,
         10,
         6
-      ],
-      "st_damage_max": [
-        17,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        9,
-        0,
-        0
       ]
     },
     "26015": {
@@ -6332,30 +4894,10 @@
         0,
         0
       ],
-      "h_damage_max": [
-        19,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        10,
-        0,
-        0
-      ],
       "max_range": [
         9,
         10,
         6
-      ],
-      "st_damage_max": [
-        19,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        10,
-        0,
-        0
       ]
     },
     "26205": {
@@ -6364,30 +4906,10 @@
         0,
         0
       ],
-      "h_damage_max": [
-        20,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        10,
-        0,
-        0
-      ],
       "max_range": [
         9,
         10,
         6
-      ],
-      "st_damage_max": [
-        20,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        10,
-        0,
-        0
       ]
     },
     "26016": {
@@ -6396,30 +4918,10 @@
         0,
         0
       ],
-      "h_damage_max": [
-        22,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        11,
-        0,
-        0
-      ],
       "max_range": [
         9,
         10,
         6
-      ],
-      "st_damage_max": [
-        22,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        11,
-        0,
-        0
       ]
     },
     "26019": {
@@ -6428,218 +4930,10 @@
         0,
         0
       ],
-      "h_damage_max": [
-        22,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        11,
-        0,
-        0
-      ],
       "max_range": [
         9,
         10,
         6
-      ],
-      "st_damage_max": [
-        22,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        11,
-        0,
-        0
-      ]
-    },
-    "26041": {
-      "h_damage_max": [
-        20,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        10,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        20,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        10,
-        0,
-        0
-      ]
-    },
-    "26038": {
-      "h_damage_max": [
-        18,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        9,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        18,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        9,
-        0,
-        0
-      ]
-    },
-    "26042": {
-      "h_damage_max": [
-        24,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        13,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        24,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        13,
-        0,
-        0
-      ]
-    },
-    "26045": {
-      "h_damage_max": [
-        24,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        24,
-        0,
-        0
-      ]
-    },
-    "26039": {
-      "h_damage_max": [
-        22,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        12,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        22,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        12,
-        0,
-        0
-      ]
-    },
-    "26067": {
-      "h_damage_max": [
-        30,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        15,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        30,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        15,
-        0,
-        0
-      ]
-    },
-    "26064": {
-      "h_damage_max": [
-        27,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        14,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        27,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        14,
-        0,
-        0
-      ]
-    },
-    "26068": {
-      "h_damage_max": [
-        35,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        20,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        35,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        20,
-        0,
-        0
-      ]
-    },
-    "26065": {
-      "h_damage_max": [
-        32,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        18,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        32,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        18,
-        0,
-        0
       ]
     },
     "25986": {
@@ -6648,30 +4942,10 @@
         0,
         0
       ],
-      "h_damage_max": [
-        17,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        6,
-        0,
-        0
-      ],
       "max_range": [
         13,
         10,
         6
-      ],
-      "st_damage_max": [
-        17,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        6,
-        0,
-        0
       ]
     },
     "25989": {
@@ -6680,20 +4954,10 @@
         0,
         0
       ],
-      "h_damage_max": [
-        19,
-        0,
-        0
-      ],
       "max_range": [
         13,
         10,
         6
-      ],
-      "st_damage_max": [
-        19,
-        0,
-        0
       ]
     },
     "25987": {
@@ -6702,30 +4966,10 @@
         0,
         0
       ],
-      "h_damage_max": [
-        20,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        7,
-        0,
-        0
-      ],
       "max_range": [
         13,
         10,
         6
-      ],
-      "st_damage_max": [
-        20,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        7,
-        0,
-        0
       ]
     },
     "25990": {
@@ -6734,30 +4978,10 @@
         0,
         0
       ],
-      "h_damage_max": [
-        22,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        8,
-        0,
-        0
-      ],
       "max_range": [
         13,
         10,
         6
-      ],
-      "st_damage_max": [
-        22,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        8,
-        0,
-        0
       ]
     },
     "25993": {
@@ -6778,30 +5002,10 @@
         0,
         0
       ],
-      "h_damage_max": [
-        13,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        7,
-        0,
-        0
-      ],
       "max_range": [
         12,
         10,
         6
-      ],
-      "st_damage_max": [
-        13,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        7,
-        0,
-        0
       ]
     },
     "26025": {
@@ -6810,30 +5014,10 @@
         0,
         0
       ],
-      "h_damage_max": [
-        12,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        6,
-        0,
-        0
-      ],
       "max_range": [
         14,
         12,
         8
-      ],
-      "st_damage_max": [
-        12,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        6,
-        0,
-        0
       ],
       "target_size": [
         0.641,
@@ -6847,30 +5031,10 @@
         0,
         0
       ],
-      "h_damage_max": [
-        17,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        9,
-        0,
-        0
-      ],
       "max_range": [
         12,
         10,
         6
-      ],
-      "st_damage_max": [
-        17,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        9,
-        0,
-        0
       ]
     },
     "26032": {
@@ -6879,20 +5043,10 @@
         0,
         0
       ],
-      "h_damage_max": [
-        17,
-        0,
-        0
-      ],
       "max_range": [
         12,
         10,
         6
-      ],
-      "st_damage_max": [
-        17,
-        0,
-        0
       ]
     },
     "26026": {
@@ -6901,245 +5055,15 @@
         0,
         0
       ],
-      "h_damage_max": [
-        15,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        8,
-        0,
-        0
-      ],
       "max_range": [
         14,
         12,
         8
       ],
-      "st_damage_max": [
-        15,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        8,
-        0,
-        0
-      ],
       "target_size": [
         0.641,
         1.44,
         1.28
-      ]
-    },
-    "26054": {
-      "h_damage_max": [
-        17,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        10,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        17,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        10,
-        0,
-        0
-      ]
-    },
-    "26051": {
-      "h_damage_max": [
-        15,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        9,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        15,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        9,
-        0,
-        0
-      ]
-    },
-    "26055": {
-      "h_damage_max": [
-        20,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        12,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        20,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        12,
-        0,
-        0
-      ]
-    },
-    "26058": {
-      "h_damage_max": [
-        20,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        20,
-        0,
-        0
-      ]
-    },
-    "26052": {
-      "h_damage_max": [
-        18,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        11,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        18,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        11,
-        0,
-        0
-      ]
-    },
-    "26080": {
-      "h_damage_max": [
-        19,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        11,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        19,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        11,
-        0,
-        0
-      ]
-    },
-    "26077": {
-      "h_damage_max": [
-        17,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        10,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        17,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        10,
-        0,
-        0
-      ]
-    },
-    "26081": {
-      "h_damage_max": [
-        23,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        13,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        23,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        13,
-        0,
-        0
-      ]
-    },
-    "26084": {
-      "h_damage_max": [
-        23,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        13,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        23,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        13,
-        0,
-        0
-      ]
-    },
-    "26078": {
-      "h_damage_max": [
-        21,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        12,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        21,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        12,
-        0,
-        0
       ]
     },
     "26002": {
@@ -7148,30 +5072,10 @@
         0,
         0
       ],
-      "h_damage_max": [
-        16,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        7,
-        0,
-        0
-      ],
       "max_range": [
         11,
         10,
         6
-      ],
-      "st_damage_max": [
-        16,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        7,
-        0,
-        0
       ]
     },
     "25999": {
@@ -7180,20 +5084,10 @@
         0,
         0
       ],
-      "h_damage_max": [
-        18,
-        0,
-        0
-      ],
       "max_range": [
         11,
         10,
         6
-      ],
-      "st_damage_max": [
-        18,
-        0,
-        0
       ]
     },
     "26003": {
@@ -7202,30 +5096,10 @@
         0,
         0
       ],
-      "h_damage_max": [
-        20,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        9,
-        0,
-        0
-      ],
       "max_range": [
         11,
         10,
         6
-      ],
-      "st_damage_max": [
-        20,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        9,
-        0,
-        0
       ]
     },
     "26000": {
@@ -7234,20 +5108,10 @@
         0,
         0
       ],
-      "h_damage_max": [
-        22,
-        0,
-        0
-      ],
       "max_range": [
         11,
         10,
         6
-      ],
-      "st_damage_max": [
-        22,
-        0,
-        0
       ]
     },
     "26006": {
@@ -7256,20 +5120,10 @@
         0,
         0
       ],
-      "h_damage_max": [
-        22,
-        0,
-        0
-      ],
       "max_range": [
         11,
         10,
         6
-      ],
-      "st_damage_max": [
-        22,
-        0,
-        0
       ]
     },
     "25015": {
@@ -7458,74 +5312,10 @@
         0,
         0
       ],
-      "h_damage_max": [
-        19,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        10,
-        0,
-        0
-      ],
       "max_range": [
         9,
         10,
         6
-      ],
-      "st_damage_max": [
-        19,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        10,
-        0,
-        0
-      ]
-    },
-    "26044": {
-      "h_damage_max": [
-        20,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        10,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        20,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        10,
-        0,
-        0
-      ]
-    },
-    "26070": {
-      "h_damage_max": [
-        30,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        15,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        30,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        15,
-        0,
-        0
       ]
     },
     "25992": {
@@ -7534,30 +5324,10 @@
         0,
         0
       ],
-      "h_damage_max": [
-        19,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        7,
-        0,
-        0
-      ],
       "max_range": [
         13,
         10,
         6
-      ],
-      "st_damage_max": [
-        19,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        7,
-        0,
-        0
       ]
     },
     "26031": {
@@ -7566,74 +5336,10 @@
         0,
         0
       ],
-      "h_damage_max": [
-        13,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        7,
-        0,
-        0
-      ],
       "max_range": [
         12,
         10,
         6
-      ],
-      "st_damage_max": [
-        13,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        7,
-        0,
-        0
-      ]
-    },
-    "26057": {
-      "h_damage_max": [
-        17,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        10,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        17,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        10,
-        0,
-        0
-      ]
-    },
-    "26083": {
-      "h_damage_max": [
-        19,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        11,
-        0,
-        0
-      ],
-      "st_damage_max": [
-        19,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        11,
-        0,
-        0
       ]
     },
     "26005": {
@@ -7642,30 +5348,10 @@
         0,
         0
       ],
-      "h_damage_max": [
-        18,
-        0,
-        0
-      ],
-      "h_damage_min": [
-        8,
-        0,
-        0
-      ],
       "max_range": [
         11,
         10,
         6
-      ],
-      "st_damage_max": [
-        18,
-        0,
-        0
-      ],
-      "st_damage_min": [
-        8,
-        0,
-        0
       ]
     }
   },
@@ -20663,5 +18349,398 @@
     "15": 0.6939,
     "16": 0.7775,
     "17": 0.94
+  },
+  "boss_adjustments": {
+    "269": {
+      "damage_scale": 1.1,
+      "hp_scale": 1
+    },
+    "270": {
+      "damage_scale": 0.7,
+      "hp_scale": 1
+    },
+    "283": {
+      "damage_scale": 0.85,
+      "hp_scale": 1
+    },
+    "284": {
+      "damage_scale": 0.5,
+      "hp_scale": 1
+    },
+    "299": {
+      "damage_scale": 1,
+      "hp_scale": 1
+    },
+    "300": {
+      "damage_scale": 0.9,
+      "hp_scale": 1
+    },
+    "313": {
+      "damage_scale": 0.6,
+      "hp_scale": 1
+    },
+    "314": {
+      "damage_scale": 0.65,
+      "hp_scale": 1
+    },
+    "327": {
+      "damage_scale": 0.75,
+      "hp_scale": 1
+    },
+    "328": {
+      "damage_scale": 0.65,
+      "hp_scale": 1
+    },
+    "360": {
+      "damage_scale": 0.5,
+      "hp_scale": 1
+    },
+    "361": {
+      "damage_scale": 0.55,
+      "hp_scale": 1
+    },
+    "374": {
+      "damage_scale": 0.5,
+      "hp_scale": 1
+    },
+    "375": {
+      "damage_scale": 0.6,
+      "hp_scale": 1
+    },
+    "407": {
+      "damage_scale": 0.35,
+      "hp_scale": 1
+    },
+    "408": {
+      "damage_scale": 0.4,
+      "hp_scale": 1
+    },
+    "2103": {
+      "damage_scale": 0.95,
+      "hp_scale": 1
+    },
+    "586": {
+      "damage_scale": 0.4,
+      "hp_scale": 0.5
+    },
+    "590": {
+      "damage_scale": 0.25,
+      "hp_scale": 0.5
+    },
+    "591": {
+      "damage_scale": 0.25,
+      "hp_scale": 0.5
+    },
+    "592": {
+      "damage_scale": 0.4,
+      "hp_scale": 0.5
+    },
+    "593": {
+      "damage_scale": 0.15,
+      "hp_scale": 0.5
+    },
+    "764": {
+      "damage_scale": 0.25,
+      "hp_scale": 0.5
+    },
+    "1024": {
+      "damage_scale": 0.25,
+      "hp_scale": 0.5
+    },
+    "1736": {
+      "damage_scale": 0.25,
+      "hp_scale": 0.5
+    }
+  },
+  "ordinary_mob_reference": {
+    "1": {
+      "hp_max": 122,
+      "sp_max": 122,
+      "armor": 9.5,
+      "dodge": 13.333333,
+      "hit": 50.25,
+      "crit": 10.25,
+      "crit_evade": 5.8125,
+      "spec": 0,
+      "damage_per_ap": 2.875
+    },
+    "2": {
+      "hp_max": 122,
+      "sp_max": 122,
+      "armor": 15.5,
+      "dodge": 13.333333,
+      "hit": 51.5,
+      "crit": 10.5,
+      "crit_evade": 7.125,
+      "spec": 0,
+      "damage_per_ap": 4.03125
+    },
+    "3": {
+      "hp_max": 142,
+      "sp_max": 142,
+      "armor": 16.5,
+      "dodge": 13.333333,
+      "hit": 52.75,
+      "crit": 10.75,
+      "crit_evade": 7.4375,
+      "spec": 0,
+      "damage_per_ap": 4.265625
+    },
+    "4": {
+      "hp_max": 162,
+      "sp_max": 162,
+      "armor": 27.5,
+      "dodge": 19.0,
+      "hit": 59.0,
+      "crit": 14.5,
+      "crit_evade": 12.0,
+      "spec": 1,
+      "damage_per_ap": 6.758333
+    },
+    "5": {
+      "hp_max": 267,
+      "sp_max": 267,
+      "armor": 28.0,
+      "dodge": 20.0,
+      "hit": 60.25,
+      "crit": 14.75,
+      "crit_evade": 12.21875,
+      "spec": 1,
+      "damage_per_ap": 6.758333
+    },
+    "6": {
+      "hp_max": 267,
+      "sp_max": 267,
+      "armor": 34.5,
+      "dodge": 21.0,
+      "hit": 61.5,
+      "crit": 15.0,
+      "crit_evade": 12.21875,
+      "spec": 1,
+      "damage_per_ap": 9.125
+    },
+    "7": {
+      "hp_max": 290,
+      "sp_max": 290,
+      "armor": 35.5,
+      "dodge": 22.0,
+      "hit": 62.75,
+      "crit": 15.25,
+      "crit_evade": 13.1875,
+      "spec": 1,
+      "damage_per_ap": 9.125
+    },
+    "8": {
+      "hp_max": 359,
+      "sp_max": 359,
+      "armor": 41.5,
+      "dodge": 28.0,
+      "hit": 69.0,
+      "crit": 19.0,
+      "crit_evade": 17.75,
+      "spec": 2,
+      "damage_per_ap": 10.041667
+    },
+    "9": {
+      "hp_max": 359,
+      "sp_max": 359,
+      "armor": 42.0,
+      "dodge": 29.0,
+      "hit": 70.25,
+      "crit": 19.25,
+      "crit_evade": 18.0625,
+      "spec": 2,
+      "damage_per_ap": 10.87634
+    },
+    "10": {
+      "hp_max": 359,
+      "sp_max": 359,
+      "armor": 61.0,
+      "dodge": 30.0,
+      "hit": 71.5,
+      "crit": 19.5,
+      "crit_evade": 20.875,
+      "spec": 2,
+      "damage_per_ap": 10.87634
+    },
+    "11": {
+      "hp_max": 359,
+      "sp_max": 359,
+      "armor": 62.0,
+      "dodge": 31.0,
+      "hit": 72.75,
+      "crit": 19.75,
+      "crit_evade": 21.1875,
+      "spec": 2,
+      "damage_per_ap": 11.708333
+    },
+    "12": {
+      "hp_max": 359,
+      "sp_max": 359,
+      "armor": 85.5,
+      "dodge": 37.0,
+      "hit": 79.0,
+      "crit": 23.5,
+      "crit_evade": 26.25,
+      "spec": 3,
+      "damage_per_ap": 15.583333
+    },
+    "13": {
+      "hp_max": 504,
+      "sp_max": 504,
+      "armor": 152.25,
+      "dodge": 38.0,
+      "hit": 80.25,
+      "crit": 23.75,
+      "crit_evade": 29.8125,
+      "spec": 3,
+      "damage_per_ap": 26.85
+    },
+    "14": {
+      "hp_max": 564,
+      "sp_max": 564,
+      "armor": 194.5,
+      "dodge": 39.0,
+      "hit": 81.5,
+      "crit": 24.0,
+      "crit_evade": 34.375,
+      "spec": 3,
+      "damage_per_ap": 30.671437
+    },
+    "15": {
+      "hp_max": 564,
+      "sp_max": 564,
+      "armor": 195.5,
+      "dodge": 40.0,
+      "hit": 82.75,
+      "crit": 24.25,
+      "crit_evade": 34.6875,
+      "spec": 3,
+      "damage_per_ap": 30.671437
+    },
+    "16": {
+      "hp_max": 564,
+      "sp_max": 564,
+      "armor": 230.5,
+      "dodge": 46.0,
+      "hit": 89.0,
+      "crit": 28.0,
+      "crit_evade": 39.0,
+      "spec": 4,
+      "damage_per_ap": 30.671437
+    },
+    "17": {
+      "hp_max": 564,
+      "sp_max": 564,
+      "armor": 405.0,
+      "dodge": 47.0,
+      "hit": 90.25,
+      "crit": 28.25,
+      "crit_evade": 44.3125,
+      "spec": 4,
+      "damage_per_ap": 30.671437
+    },
+    "18": {
+      "hp_max": 564,
+      "sp_max": 564,
+      "armor": 442.0,
+      "dodge": 48.0,
+      "hit": 91.5,
+      "crit": 28.5,
+      "crit_evade": 52.875,
+      "spec": 4,
+      "damage_per_ap": 41.833333
+    },
+    "19": {
+      "hp_max": 770,
+      "sp_max": 770,
+      "armor": 992.75,
+      "dodge": 49.0,
+      "hit": 92.75,
+      "crit": 28.75,
+      "crit_evade": 57.1875,
+      "spec": 4,
+      "damage_per_ap": 43.5
+    },
+    "20": {
+      "hp_max": 931,
+      "sp_max": 931,
+      "armor": 1255.0,
+      "dodge": 55.0,
+      "hit": 95.0,
+      "crit": 32.5,
+      "crit_evade": 62.0,
+      "spec": 5,
+      "damage_per_ap": 44.465278
+    }
+  },
+  "ordinary_mob_fallbacks": {
+    "10:assault": 110,
+    "10:knife": 115,
+    "10:machinegun": 49,
+    "10:pistol": 48,
+    "10:rifle": 53,
+    "11:knife": 54,
+    "11:rifle": 55,
+    "12:assault": 130,
+    "12:knife": 129,
+    "12:pistol": 111,
+    "12:rifle": 57,
+    "13:assault": 63,
+    "13:pistol": 62,
+    "14:assault": 65,
+    "14:knife": 116,
+    "14:pistol": 64,
+    "14:rifle": 68,
+    "15:assault": 69,
+    "15:rifle": 70,
+    "16:assault": 71,
+    "16:knife": 131,
+    "16:pistol": 132,
+    "16:rifle": 72,
+    "17:assault": 102,
+    "17:knife": 86,
+    "17:pistol": 103,
+    "17:rifle": 104,
+    "18:assault": 105,
+    "18:knife": 117,
+    "18:pistol": 106,
+    "18:rifle": 107,
+    "19:assault": 118,
+    "19:pistol": 119,
+    "19:rifle": 120,
+    "1:assault": 8,
+    "1:knife": 7,
+    "1:rifle": 11,
+    "1:shotgun": 10,
+    "1:smg": 9,
+    "20:assault": 2,
+    "20:machinegun": 121,
+    "20:pistol": 123,
+    "20:rifle": 122,
+    "2:assault": 13,
+    "2:knife": 12,
+    "2:pistol": 18,
+    "2:rifle": 14,
+    "3:knife": 19,
+    "3:pistol": 20,
+    "4:assault": 27,
+    "4:knife": 22,
+    "4:pistol": 21,
+    "5:assault": 29,
+    "5:knife": 114,
+    "6:assault": 32,
+    "6:knife": 31,
+    "6:pistol": 36,
+    "7:assault": 37,
+    "7:pistol": 38,
+    "8:assault": 128,
+    "8:knife": 126,
+    "8:machinegun": 44,
+    "8:pistol": 127,
+    "8:smg": 94,
+    "9:machinegun": 47,
+    "9:pistol": 46,
+    "9:smg": 95
   }
 }

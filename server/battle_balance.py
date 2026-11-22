@@ -29,6 +29,7 @@ LEVEL_DAMAGE = .12
 MIN_LEVEL_DAMAGE = .1
 GAP_MAX = 3
 ORDINARY_LEVEL_ACCURACY = .05
+MOB_BALANCE_DIVISOR = 1.5
 
 
 @lru_cache(maxsize=1)
@@ -122,6 +123,11 @@ def split(shooter, target, damage, piercing, critical, stamina_left, stamina_dam
     if shooter.is_player and not target.is_player and getattr(target.stats, 'role', None) != 'object':
         player_level = level(shooter)
         gap = level(target) - player_level
+        # Ordinary PvE moves the reviewed difficulty steps up one level:
+        # +1 uses the former equal-level factor, +5 the former +4 factor.
+        # The private simulator and player-versus-player formulas stay pinned.
+        if ordinary:
+            gap -= 1
         if ordinary and getattr(target.stats, 'role', None) == 'boss':
             gap -= 2
         factors = coefficients()[1].get(max(1, min(20, player_level)), {})
@@ -134,7 +140,7 @@ def split(shooter, target, damage, piercing, critical, stamina_left, stamina_dam
         stamina_damage = int(stamina_damage * factor)
     elif (ordinary and not shooter.is_player and target.is_player
             and getattr(shooter.stats, 'role', None) in ('mob', 'animal', 'turret')
-            and level(shooter) - level(target) == 3):
+            and level(shooter) - level(target) == 4):
         factor = ordinary_plus_three()['mob_damage_ratio']
         damage = max(1, int(damage * factor)) if damage > 0 else 0
         stamina_damage = int(stamina_damage * factor)
@@ -151,18 +157,25 @@ def split(shooter, target, damage, piercing, critical, stamina_left, stamina_dam
     return damage - moved + max(0, stamina - left), min(stamina, left)
 
 
-def critical(shooter, target, chance, optimal=True):
-    if shooter.is_player and not optimal:
+def critical(shooter, target, chance, optimal=True, *, ordinary=False):
+    if shooter.is_player and not optimal and not ordinary:
         return False
     chance = max(0, min(100, chance))
     if not shooter.is_player and target.is_player:
         chance = max(MOB_CRIT_FLOOR, chance)
+        if (ordinary and getattr(shooter.stats, 'role', None) in ('mob', 'animal', 'turret')
+                and 1 <= level(shooter) - level(target) <= 2
+                and not getattr(shooter, '_holding_prepared', False)):
+            chance *= .5
+    if ordinary and not optimal:
+        chance *= .5
     import combat
     return combat.roll(chance)
 
 
-def ranged_critical(shooter, target, weapon, optimal):
-    return critical(shooter, target, weapon.crit - target.crit_evade_ranged(), optimal)
+def ranged_critical(shooter, target, weapon, optimal, *, ordinary=False):
+    return critical(shooter, target, weapon.crit - target.crit_evade_ranged(), optimal,
+                    ordinary=ordinary)
 
 
 @lru_cache(maxsize=1)
@@ -192,19 +205,103 @@ def melee(bounds, character, row):
     return tuple(max(1, round(value * power)) for value in bounds)
 
 
-def configure_mob(stats):
+@lru_cache(maxsize=1)
+def boss_adjustments():
+    """Reviewed ordinary bosses only; site defenders use local room copies."""
+    raw = json.loads(PATH.with_name('combat_balance.json').read_text(encoding='utf-8'))
+    result = {int(key): row for key, row in raw.get('boss_adjustments', {}).items()}
+    for type_id, row in result.items():
+        if (str(type_id) not in data()['mobs'] or set(row) != {'damage_scale', 'hp_scale'}
+                or any(isinstance(v, bool) or not isinstance(v, (int, float))
+                       or not math.isfinite(v) or not 0 < v <= 2 for v in row.values())
+                or row['hp_scale'] not in (.5, 1)):
+            raise ValueError('Invalid ordinary boss adjustment: ' + str(type_id))
+    return result
+
+
+@lru_cache(maxsize=1)
+def ordinary_mob_reference():
+    """One reviewed level ladder for ordinary mobs, including legacy types."""
+    raw = json.loads(PATH.with_name('combat_balance.json').read_text(encoding='utf-8'))
+    if raw['source_commit'] != data()['source_commit']:
+        raise ValueError('Mob references and equations have different sources')
+    references = {int(key): row for key, row in raw['ordinary_mob_reference'].items()}
+    fields = {'hp_max', 'sp_max', 'armor', 'dodge', 'hit', 'crit', 'crit_evade', 'spec', 'damage_per_ap'}
+    if (set(references) != set(range(1, 21))
+            or any(set(row) != fields or any(isinstance(v, bool) or not isinstance(v, (int, float))
+                   or not math.isfinite(v) or v < 0 for v in row.values())
+                   or row['hp_max'] <= 0 or row['damage_per_ap'] <= 0 for row in references.values())):
+        raise ValueError('Invalid ordinary mob references')
+    if any(references[level][field] > references[level + 1][field]
+           for level in range(1, 20) for field in fields):
+        raise ValueError('Ordinary mob references must not decrease with level')
+    fallbacks = {}
+    for key, index in raw['ordinary_mob_fallbacks'].items():
+        level, weapon_class = key.split(':')
+        if type(index) is not int or not 0 <= index < len(data()['mob_records']):
+            raise ValueError('Invalid ordinary mob fallback')
+        row = data()['mob_records'][index]
+        if row['level'] != int(level) or row['weapon_class'] != weapon_class:
+            raise ValueError('Ordinary mob fallback has a different level or weapon')
+        fallbacks[(int(level), weapon_class)] = index
+    return references, fallbacks
+
+
+def configure_mob(stats, *, health_scale=1, damage_scale=1, site=False):
     """Only existing combat creatures; harvest objects keep their own rules."""
-    index = data()['mobs'].get(str(stats.type_id))
-    if index is None or stats.role not in ('mob', 'boss', 'animal', 'turret'):
+    if stats.role not in ('mob', 'boss', 'animal', 'turret'):
         return
-    row = data()['mob_records'][index]
-    for key in ('level', 'hp_max', 'sp_max', 'ap_max', 'armor', 'dodge', 'hit', 'crit_evade',
-                'crit', 'spec', 'ranged', 'range', 'shots', 'dmg_min', 'dmg_max', 'attack_ap', 'attack_time'):
-        setattr(stats, key, row[key])
-    stats.balanced_modes = tuple(row['modes'])
-    stats.weapon_class = row['weapon_class']
+    original_hp, original_sp = stats.hp_max, stats.sp_max
+    references, fallbacks = ordinary_mob_reference()
+    index = data()['mobs'].get(str(stats.type_id))
+    if index is None and stats.role == 'mob' and stats.can_attack and not site:
+        index = fallbacks.get((stats.level, stats.weapon_class))
+    row = data()['mob_records'][index] if index is not None else None
+    if row is not None:
+        for key in ('level', 'hp_max', 'sp_max', 'ap_max', 'armor', 'dodge', 'hit', 'crit_evade',
+                    'crit', 'spec', 'ranged', 'range', 'shots', 'dmg_min', 'dmg_max', 'attack_ap', 'attack_time'):
+            setattr(stats, key, row[key])
+        stats.weapon_class = row['weapon_class']
+        stats.balanced_modes = tuple(row['modes'])
+    reference = references.get(stats.level) if stats.role == 'mob' and stats.can_attack and not site else None
+    if reference is not None:
+        for key, value in reference.items():
+            if key != 'damage_per_ap':
+                setattr(stats, key, value)
+    adjustment = boss_adjustments().get(stats.type_id)
+    if adjustment is not None and stats.role == 'boss':
+        stats.hp_max = max(1, round(stats.hp_max * adjustment['hp_scale']))
+        damage_scale *= adjustment['damage_scale']
+    # Apply site multipliers before the common reduction, exactly once.
+    # Even creatures absent from the simulator retain the original pool floor.
+    stats.hp_max = max(original_hp, round(stats.hp_max * health_scale / MOB_BALANCE_DIVISOR))
+    stats.sp_max = max(original_sp, round(stats.sp_max * health_scale / MOB_BALANCE_DIVISOR))
+    factor = damage_scale / MOB_BALANCE_DIVISOR
+    if reference is not None and stats.shots > 0 and stats.attack_ap > 0:
+        power = (stats.dmg_min + stats.dmg_max) / 2 * stats.shots / stats.attack_ap
+        if power > 0:
+            factor *= reference['damage_per_ap'] / power
+    stats.dmg_min = max(0, round(stats.dmg_min * factor))
+    stats.dmg_max = max(stats.dmg_min, round(stats.dmg_max * factor))
+    if row is not None:
+        # Never mutate the shared pinned modes: private range clones and
+        # another mob of the same type must not accumulate this multiplier.
+        modes = []
+        for mode in row['modes']:
+            factor = damage_scale / MOB_BALANCE_DIVISOR
+            if reference is not None:
+                power = (mode['dmin'] + mode['dmax']) / 2 * mode['shots'] / max(1, mode['ap'])
+                if power > 0:
+                    factor *= reference['damage_per_ap'] / power
+            modes.append(dict(mode,
+                crit=stats.crit, hit=stats.hit,
+                dmin=max(1, round(mode['dmin'] * factor)),
+                dmax=max(1, round(mode['dmax'] * factor)),
+                sdmin=round(mode.get('sdmin', 0) * factor),
+                sdmax=round(mode.get('sdmax', 0) * factor)))
+        stats.balanced_modes = tuple(modes)
     import items
-    if row['gun'] in items.catalogue():
+    if row is not None and row['gun'] in items.catalogue():
         stats.weapon_type_id = row['gun']
         # Retain an explicit carried-ammo quality when the reviewed profile
         # changes calibre. Never leave a mob carrying incompatible rounds.

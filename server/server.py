@@ -3752,8 +3752,10 @@ class Session:
                      if row and row["char_id"] == self.char_id else None)
         lab = bool(row and row["char_id"] == self.char_id
                    and row["type"] in quests.LABORANT_RECIPES)
+        lab_access = bool(row and row["char_id"] == self.char_id
+                          and row["type"] in quests.LABORANT_QUESTS)
         committed = self.quest_write(self.hand_in_quest, p,
-                                    clan_first=base is not None or gold_site is not None)
+                                    clan_first=base is not None or gold_site is not None or lab_access)
         if committed and base is not None and STORE.quest(q_id) is None:
             # Other sessions' frames must follow COMMIT, just like the
             # payer's buffered quest ACK. No stale treasury on rollback.

@@ -178,7 +178,7 @@ BUFFS = {
     16: [3114, 3118, 3119, 3203, 3207, 3212, 3213, 3470, 3473, 3476, 3826, 3897, 4926, 4927, 4928, 4929, 4930, 4931, 4946, 4947, 4948, 4949, 4950, 4951],
     20: [3203, 3207, 3470, 3473, 3476, 3561, 3826, 3897, 4182, 4183, 4184, 4185, 4930, 4931, 4932, 4933, 4934, 4935, 4936, 4950, 4951, 4952, 4953, 4954, 4955, 4956],
 }
-BUFF_SELLERS = {5211, 5224, 5225, 1206, 202, 1167, 207, 1214, 1221, 714, 716, 5239, 5240}
+BUFF_SELLERS = set()  # Stimulants moved to Gofus and assistants; tested separately.
 
 
 def buffs(trader, top):
@@ -352,8 +352,7 @@ check("the medicine sellers of data/shop_bands.json sell medicine alone, and one
       " where the file says so: Джут gold, the grocers afro",
       ({t: k for t, k in shop_bands.SELLERS.items() if set(k) & set(shop_bands.MED_KINDS)
         and t not in MEDICS}, shop_bands.ONLY),
-      ({}, {207: "gold", 5217: "afro", 81: "afro", 155: "afro",
-            714: "gold", 716: "afro", 5239: "afro", 5240: "gold"}))
+      ({}, {207: "gold", 5217: "afro", 81: "afro", 155: "afro"}))
 STALLS = {(p, t): items.stock_for(t, p) for p, types in AT.items() for t in types}
 wrong = {}
 where = {}
@@ -384,7 +383,7 @@ check("  ..where they stand", where,
       {5211: [185], 5224: [186], 5217: [181], 5225: [26], 202: [62], 81: [35, 104],
        1206: [102], 1207: [102], 2180: [176], 1167: [187], 1168: [187], 207: [76, 195, 196],
        155: [50, 197], 1214: [103], 1215: [103], 2181: [159], 1221: [126], 1222: [126],
-       880: [177], 714: [609], 716: [609], 5239: [958], 5240: [958]})
+       880: [177]})
 BTR, ROSA, VILKA, TUR, MAKS, SUPER = range(6073, 6079)
 # The rounds of the wiki's article «Снабженец» (data/trader_stock_wiki.json, unbound: no
 # type was tied to it), every calibre's columns as the wiki's links resolve them: the own
@@ -515,19 +514,18 @@ check("no medicine of the two lines on any stall of a city's place out of its ci
 check("  ..none on the stall of a trader of a city's place that is no medicine seller: Марат's"
       " and Шрам's at Абу-Хамед's station, whose lists the wiki's shifted links gave Киплер's"
       " and Курт's medicine, and Серхио's machine guns at Донгола's black market among them",
-      sorted((p, t) for (p, t), s in STALLS.items() if t not in MEDICS
+      sorted((p, t) for (p, t), s in STALLS.items() if t not in MEDICS and (p, t) not in ((609, 1013), (1443, 1013))
              and any(line_med(x) for x in s)), [])
 check("  ..nor the May «Перевязочный Пакет» (26590) the name of Киплер's article tied to Марат"
       " (1219): his own list his pouches alone (2026-10-14, server/test_abuhamed_trade.py), his"
       " stall the town's sets and those",
       (npcs.stock(1219), [x for x in STALLS[(126, 1219)] if cat[x][0] == items.HEAL]),
-      ([3577, 3580, 5613, 3578, 3579, 3735, 3736, 3738, 5615,
+      ([3577, 3580, 5613, 3578, 3579, 3735, 3736, 3737, 3738, 3739, 3740, 5615,
         3722, 3723, 3724, 3725, 3726], []))
 check("  ..the currencies of only: Джут's stalls gold alone, the grocers' afro alone",
       sorted({(t, gold_only(x)) for (p, t), s in STALLS.items() if shop_bands.only(t)
               for x in s if line_med(x)}),
-      [(81, False), (155, False), (207, True), (714, True), (716, False),
-       (5217, False), (5239, False), (5240, True)])
+      [(81, False), (155, False), (207, True), (5217, False)])
 check("no list of data/npcs.json of a seller of a city's band carries a medicine of the lines,"
       " the band gives it -- but Киплер's and Курт's, their articles', which they sell in Мероэ,"
       " no city's (decision 21)",
@@ -735,8 +733,7 @@ async def main():
           buy(sess, stall.index(6056), inventory.UPD_BUY), ([0], [6056], 34, 0))
     check("  ..«Р.О.С.А. (G)» (6074) for its 0.02 ounces in gold, no afro",
           buy(sess, stall.index(ROSA), inventory.UPD_BUY_GOLD), ([0], [ROSA], 0, 2))
-    check("  ..INTUX I (G) for its original 0.28 ounces, no afro",
-          buy(sess, stall.index(3112), inventory.UPD_BUY_GOLD), ([0], [3112], 0, 28))
+    check("  ..INTUX is sold by Doctor Gofus, not the bandage merchant", 3112 in stall, False)
     check("  ..«20 доз В.И.Л.К.А. (G)» (7102) for 0.60 ounces",
           buy(sess, stall.index(7102), inventory.UPD_BUY_GOLD), ([0], [7102], 0, 60))
     check("  ..the wrong currency refused, nothing taken, nothing given: the bandage for gold, the"
@@ -763,8 +760,8 @@ async def main():
           {76: (True, ([0], [6905], 0, 6), ([inventory.RES_REFUSED], [], 0, 0)),
            195: (True, ([0], [6906], 0, 11), ([inventory.RES_REFUSED], [], 0, 0))})
 
-    for place, trader, type_id, price in ((187, 1167, 3113, 105), (103, 1214, 3114, 210),
-                                        (126, 1221, 3561, 630)):
+    for place, trader, type_id, price in ((188, 1013, 3113, 105), (197, 1013, 3114, 210),
+                                        (127, 1013, 3561, 630)):
         npc = goto(sess, place)[trader]
         stall = window(sess, npc)
         check("INTUX %d: medicine trader opens" % type_id,

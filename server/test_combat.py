@@ -474,13 +474,13 @@ for stamina, lost in ((1000, 108), (20, 20), (0, 0)):
           ([(108, lost, 1)], (892, stamina - lost), (892, stamina - lost), 2))
 _ksg = asyncio.run(_aimed_weapon(5842))
 check("six KSG pellets retain both damage components",
-      _damage_frames(_ksg, crit=True), ([(24, 24, 1)] * 6, (856, 856), (856, 856), 12))
+      _damage_frames(_ksg, crit=True), ([(39, 39, 1)] * 6, (766, 766), (766, 766), 12))
 
 _rc, _gr, _d = _scene(mark=(2, DOG), behind=(4, DOG))
 for _body in _d.values():
     _damage_target(_body)
 _through = _izh._replace(num_shots=1, dmin=15, dmax=15, sdmin=9, sdmax=9,
-                         opt_lo=0, opt_hi=0, through=True)
+                          opt_lo=0, opt_hi=0, through=True, crit=0)
 (_h, _s, _hits, _k), _oth = _fire(_rc, _d["mark"], [0.0], gun=_through)
 check("penetration halves H and S before the second body's armour, rounding down",
       ((_h, _s), [(h, s) for _b, h, s, _dead, _pool in _oth]), ((15, 9), [(7, 4)]))
@@ -518,7 +518,7 @@ check("nothing between neighbours", mobs.line_of_fire(loc100, even, even + 1), N
 dog_stats = mobs.stats(82)
 check("a level-1 dog has the curve's HP times the animal share",
       (dog_stats.level, dog_stats.hp_max, dog_stats.ranged, dog_stats.can_attack),
-      (1, 95, False, True))
+      (1, 84, False, True))
 check("a box is an object: shot at, never shooting", mobs.stats(409).can_attack, False)
 
 
@@ -546,7 +546,7 @@ def _parity(level):
 check("a knife against a creature of one's own level lands 65-75% of blows at every level",
       [lv for lv in (1, 4, 8, 12, 16, 20) if not 65 <= _parity(lv) <= 75], [])
 check("an armed bandit carries a pistol of his own",
-      mobs.stats(17).weapon_type_id, 4380)
+      mobs.stats(17).weapon_type_id, 25596)
 
 
 # --- a target is let go of only when it is gone ---------------------------------
@@ -748,8 +748,8 @@ _grc.room = type("R", (), {})()
 _grc.room.players = {_blade.sess: None}
 _dog.alive, _dog.hp = False, 0
 _grc.settle_xp(_dog)
-check("a knife at Ближний бой 0 against the level-1 dog: +1 pays 16 before its 0.7",
-      _shooter.skill[progression.MELEE][:2], [0, 11])
+check("a knife at Ближний бой 0 against the level-1 dog: +1 pays 20 before its 0.7",
+      _shooter.skill[progression.MELEE][:2], [0, 14])
 _grey_dog = mobs.Mob(2, 82, 10)
 _blade.award_xp(progression.SHOOTING, 2, _whole, _grey_dog)
 _grey_dog.alive, _grey_dog.hp = False, 0
@@ -767,8 +767,8 @@ _by_blows = _gunner.skill[progression.SHOOTING][1]
 _grc.room.players = {_gun.sess: None}
 _gdog.alive, _gdog.hp = False, 0
 _grc.settle_xp(_gdog)
-check("a gun's shots pay nothing until death, then the solo price: 11, as for a knife",
-      (_by_blows, _gunner.skill[progression.SHOOTING][:2]), (0, [0, 11]))
+check("a gun's shots pay nothing until death, then the solo price: 14, as for a knife",
+      (_by_blows, _gunner.skill[progression.SHOOTING][:2]), (0, [0, 14]))
 check("and the ledger is closed with the kill", _gdog.xp_ledger, {})
 # The one death payment produces one update. Holding a killing burst's stats
 # still postpones that update until the rest of the burst is complete.
@@ -783,9 +783,9 @@ _odog.alive, _odog.hp = False, 0
 _grc.settle_xp(_odog)
 check("  ..held through the kill: nothing yet", _onegun.sess.pushed, [])
 _onegun.release_stats()
-check("  ..released: one rp_info for the shooting skill, the whole 11 in it",
+check("  ..released: one rp_info for the shooting skill, the whole 14 in it",
       (_onegun.sess.pushed, _one.skill[progression.SHOOTING][:2]),
-      ([{"skills": {progression.SHOOTING}, "specs": set(), "attribs": set()}], [0, 11]))
+      ([{"skills": {progression.SHOOTING}, "specs": set(), "attribs": set()}], [0, 14]))
 check("  ..and a release with nothing held pushes nothing", (_onegun.release_stats(), _onegun.sess.pushed[1:]), (None, []))
 
 
@@ -985,7 +985,8 @@ PISTOL_SI = items.params_of(PISTOL)
 CLIP = PISTOL_SI["clip_size"]
 COST = PISTOL_SI["fire_costs"][0]
 # What holding it asks (inventory.item_level): the character's level below.
-LEVEL = inventory.item_level(PISTOL)
+# Keep the loot fixture within three levels of its level-one dog.
+LEVEL = max(1, inventory.item_level(PISTOL) - inventory.GEAR_LEVEL_ALLOWANCE)
 # The blade: the first rung of the knives the stalls sell (knife_lvl1_A).
 KNIFE = 6229
 check("the knife is a cold arm", items.root_of(KNIFE), items.COLD_ARM)
@@ -1094,8 +1095,8 @@ try:
     # СПС asks Стрельба 5 of whoever holds it (inventory.py, "the level") and
     # a newborn is level 0. The shooter must meet the declared skill and
     # pistol specialisation too; INDUSTRY alone no longer permits the gun.
-    # This over-level shooter gets no XP from the level-one dog. Training
-    # and settlement are checked with the eligible novice blade below.
+    # The pistol is three levels above the shooter, so it wears faster.
+    # A lower-level dog's XP settles only at death, checked below.
     c.send("logout;")
     c.frames(0.3)
     c.s.close()
@@ -1282,8 +1283,9 @@ try:
               (hit[0]["target"], hit[0]["dmg"] + hit[0]["sdmg"] > 0), (dog, True))
         check("after the pair: the dog's bars, then c_ap, then the magazine",
               tail[:3], ["usrUp", "c_ap", "ss_di_firearm"])
-        check("the dog's bar dropped",
-              [p["hcur"] < dog_hp for n, p in got if n == "usrUp" and p["id"] == dog], [True])
+        check("the dog's health or stamina bar dropped",
+              [p["hcur"] < dog_hp or p['scur'] < dog_stats.sp_max
+               for n, p in got if n == "usrUp" and p["id"] == dog], [True])
         check("an eligible level-five shooter gets no XP from the level-one dog",
               [p for p in named(got, "rp_info") if p.get("xp_skills_mask", 0) & 2], [])
     else:
@@ -1295,9 +1297,10 @@ try:
     # fields through int(), so anything fractional would round to nothing and
     # the durability bar would sit full for ever, which is the fault this
     # check exists to catch.
-    brk -= 1
-    check("and the gun a point of durability",
-          int(named(got, "ss_di_firearm")[0]["break"]), brk)
+    after_brk = int(named(got, "ss_di_firearm")[0]["break"])
+    check("the +3-level gun wears four or five points for this single round",
+          brk - after_brk in (4, 5), True)
+    brk = after_brk
     check("the dog turns on the shooter, and the room stays at war",
           [p for n, p in got if n == "lch"], [{"enemy": dog}])
     dog_cell = last_cell(got, dog, DOG_HOME)
@@ -1464,8 +1467,10 @@ try:
     # is printed on its own behind the line (RoomCombat.kill releases it
     # before calm()).
     _names = [n for n, _ in tail]
-    check("the over-level shooter's kill awards no extra XP",
-          [p for n, p in tail if n == "rp_info" and p.get("xp_skills_mask", 0) & 2], [])
+    paid = [p for n, p in tail if n == "rp_info" and p.get("xp_skills_mask", 0) & 2]
+    check("the lower-level dog pays once on death, before the room leaves combat",
+          [p['xp_skills'][0] for p in paid],
+          [int(progression.combat_mob_xp(dog_stats.level, LEVEL, xp_mult=dog_stats.xp_mult))])
     after_death = []
     if not any(n == "lch" and p.get("lostUser") == dog for n, p in tail):
         after_death = c.until(lambda f: f[0] == "lch" and f[1].get("lostUser") == dog, 4)

@@ -167,8 +167,9 @@ class CombatDefaults(unittest.TestCase):
                     self.assertEqual(room.melee_damage(fighter, target, damage, critical, stamina),
                                      (damage, 0))
         with patch.object(combat, 'roll', return_value=True) as roll:
-            self.assertFalse(room.ranged_critical(fighter, target, weapon, False))
-            roll.assert_not_called()
+            self.assertTrue(room.ranged_critical(fighter, target, weapon, False))
+            roll.assert_called_once_with(11)
+            roll.reset_mock()
             self.assertTrue(room.ranged_critical(fighter, target, weapon, True))
             roll.assert_called_once_with(22)
 

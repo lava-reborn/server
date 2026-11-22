@@ -369,6 +369,8 @@ def __gcBuy(item, count):
         this.applyTransfer(False)
         return
     total = Math.ceil(price * n * pan.trader.pmod)
+    if item.rootID != 3 and pan.trader.pmod > 0 and pan.trader.pmod < 1 and price * n > 1:
+        total = Math.max(1, Math.min(total, Math.ceil(price * n) - 1))
     if not total or total <= 0 or isNaN(total):
         this.applyTransfer(False)
         return

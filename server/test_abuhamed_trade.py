@@ -159,7 +159,7 @@ DECIDED = {
 OWN = {
     NUR: [TICKET_TO_ABRI, TICKET_FROM_DONGOLA, TICKET_TO_DONGOLA],
     VELASQUEZ: [TICKET_TO_DONGOLA],
-    MARAT: POUCHES + [3735, 3736, 3738, 5615, 3722, 3723, 3724, 3725, 3726],
+    MARAT: POUCHES + [3735, 3736, 3737, 3738, 3739, 3740, 5615, 3722, 3723, 3724, 3725, 3726],
     LOTTERY: list(KEYS),
     GOLD_LOTTERY: list(GOLD_KEYS),
     ANWAR: list(GIFTS),
@@ -366,11 +366,11 @@ check("  ..named as the ladder names them, the quest pieces without their «(Q)�
        [(own_items.load()[t]["like"], items.own(t)) for t in DARK_G]),
       (["Шлем Тёмного Эха", "Шлем Тёмного Эха (G)"], [11125], [60005], [],
        [(a, True) for a in DARK_A]))
-check("Симона: only level-16/17 sets; Марат: ten base pouches, four cross MOD A1, four A0 and plain A1",
+check("Симона: only level-16/17 sets; Марат: ten base pouches, seven cross MOD A1, four A0 and plain A1",
       (STALLS[(STATION, SIMONA)] == shop_bands.goods(("sets",), LO, 17),
        STALLS[(STATION, MARAT)], len(STALLS[(STATION, MARAT)])),
       (True, [3577, 3599, 3580, 3602, 5613, 5614, 3578, 3600, 3579, 3601,
-              3735, 3736, 3738, 5615, 3722, 3723, 3724, 3725, 3726], 19))
+              3735, 3736, 3737, 3738, 3739, 3740, 5615, 3722, 3723, 3724, 3725, 3726], 22))
 check("  ..the pouches at their articles' prices: автоматчика 50 000 / 10 G, пулемётчика"
       " 100 000 / 20 G, рукопашника 40 000 / 8 G, снайпера 20 000 / 4 G, спецназовца 40 000 / 8 G",
       [(price(t), price(items.GOLD_POUCHES[t])) for t in POUCHES],

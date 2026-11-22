@@ -34,7 +34,7 @@ class ReleaseSets(unittest.TestCase):
         # complete A/G pairs; higher sets remain in the catalogue only.
         pieces = set(sets.ITEMS)
         marat = items.stock_for(1219, 126)
-        self.assertEqual(len(marat), 19)
+        self.assertEqual(len(marat), 22)
         self.assertEqual(set(marat) & {3735, 3736, 3738, 5615, 3722, 3723, 3724, 3725, 3726},
                          {3735, 3736, 3738, 5615, 3722, 3723, 3724, 3725, 3726})
         self.assertFalse(pieces.intersection(marat))

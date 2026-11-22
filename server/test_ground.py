@@ -608,7 +608,7 @@ try:
     H, V, S, W = (char_id(n) for n in ("hunter", "victim", "stranger", "walker"))
     s = store()
     ch = progression.Character.load(s, H)
-    ch.skill[progression.MELEE] = [20, 0, progression.skill_xp_max(20)]
+    ch.skill[progression.MELEE] = [3, 0, progression.skill_xp_max(3)]
     ch.recalc()
     ch.hp = ch.sp = None
     ch.save(s)

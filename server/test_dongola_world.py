@@ -143,7 +143,7 @@ try:
           sorted((i, c) for c, i in world.settlements().items()
                  if BOX[0] <= c[0] <= BOX[1] and BOX[2] <= c[1] <= BOX[3] and c in walked
                  and i not in PLACES and not (i >= world.FIRST_NEW_ID and i in world.overlay_ids())),
-          [(382, (5955, 2032))])
+          [])
     check("each place's way out of its file is open: the dump's and the arena's one side is the west,"
           " the works' three, the others' four",
           {i: sorted({s for s in travel.exit_sides(world.location(i)).values() if s in travel.SIDES})

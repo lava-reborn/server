@@ -151,8 +151,7 @@ except Exception:
 # --- 2. no way in --------------------------------------------------------------------------
 print("no way in")
 try:
-    files = sorted(int(os.path.basename(p)[:-4])
-                   for p in glob.glob(os.path.join(world.RES, "locations", "static", "*.xml")))
+    files = sorted(world.static_ids())
     followed, any_door = [], []
     for lid in files:
         for side in "ab":
@@ -564,8 +563,7 @@ try:
           [(5863, 1946), None, None, None, None, None])
 
     # no way in, and none out through them
-    fsc_files = sorted(int(os.path.basename(p)[:-4])
-                       for p in glob.glob(os.path.join(world.RES, "locations", "static", "*.xml")))
+    fsc_files = sorted(world.static_ids())
     doors_in = []
     for lid in fsc_files:
         for side in "ab":

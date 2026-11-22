@@ -98,13 +98,13 @@ ALL_RETIRED = {int(k) for k in RETIRED["places"]}
 CUT_WHY = "The owner's cut of Донгола, 2026-10-13"
 CELLS = {455: (5876, 2013), 460: (5878, 2014), 518: (5878, 2015), 469: (5878, 2013),
          530: (5879, 2011)}
-# Only the blockpost, yard and bunker were restored on 2026-11-22.
-DELTA = (381, 385, 386, 387, 388, 959, 960, 1196)
+# Delta Force stays retired; the restored base uses separate overlays.
+DELTA = (380, 381, 382, 385, 386, 387, 388, 958, 959, 960, 1196)
 HWS = (534, 535, 536, 537, 593, 594, 991, 992, 993, 1207)
 VBG = (337, 338, 339, 342, 346, 350, 354, 358, 362, 366, 955, 956, 957, 1195)
 OFF_CELL = (448,) + DELTA + HWS + VBG + (1171,)
 AMBUSH, AMBUSH_FILE = 389, "Q_IV_Interception"
-CUT = tuple(CELLS) + OFF_CELL + (AMBUSH,)
+CUT = tuple(dict.fromkeys(tuple(CELLS) + OFF_CELL + (AMBUSH,)))
 # The 33 cells the map names «Засада» (L235-L267), 389's until the cut.
 AMBUSH_CELLS = [(5911, 2001), (5912, 2001), (5913, 2001), (5908, 2002), (5909, 2002), (5910, 2002),
                 (5911, 2002), (5912, 2002), (5913, 2002), (5907, 2003), (5908, 2003), (5909, 2003),
@@ -152,7 +152,7 @@ try:
     check("  ..and lists the six cells they stood on, the town's ground still for the encounters; the"
           " cells «Засада» are not among them",
           ({i: c for c, i in world.retired_cells().items() if i in CUT}, AMBUSH in world.retired_cells().values()),
-          (CELLS, False))
+          ({**CELLS, 382: (5955, 2032)}, False))
     table = world.settlements()
     check("none of them on any cell", [c for c, i in table.items() if i in CUT], [])
     check("  ..the six old cells nulled with their why in data/settlements_verified.json",
@@ -170,9 +170,9 @@ try:
     check("  ..the files stay, so a character saved inside still loads",
           [world.location(i).fn for i in CUT],
           ["Dn_district1", "Dn_district4", "Dn_district7", "Sets_Market_Dn", "air_point_Dn_map",
-           "Dangola_master_01",
-           "KB_Backdoor_Delta_Force", "KB_Delta_Force_Arena", "KB_Delta_Force_Arena2",
-           "KB_Delta_Force_Arena3", "KB_Delta_Force_point_01",
+           "Dangola_master_01", "KB_DeltaForce_Enter",
+           "KB_Backdoor_Delta_Force", "KB_Delta_Force_Block_Post", "KB_Delta_Force_Arena", "KB_Delta_Force_Arena2",
+           "KB_Delta_Force_Arena3", "KB_Delta_Force_point_01", "KB_Delta_Force_lvl2_01",
            "KB_Delta_Force_Lvl2_Transport", "KB_Delta_Force_Sorting",
            "KB_Delta_Force_Bunker_glavaria_klana", "HWS_KB_Enter", "HWS_KB_Block_Post",
            "HWS_KB_Backdoor", "HWS_KB_point_01", "HWS_KB_point_03", "HWS_KB_point_02", "HWS_KB_lvl2_01",
@@ -198,7 +198,7 @@ try:
                                                                                        "KB_DeltaForce",
                                                                                        "KB_Backdoor_Delta")))
     check("  ..only the approved blockpost, yard and bunker of the clan bases are restored",
-          [i for i in hws_fns if i not in ALL_RETIRED], [380, 382, 958])
+          [i for i in hws_fns if i not in ALL_RETIRED], [])
 except Exception:
     import traceback
     fails.append("the places broke:\n" + traceback.format_exc())
@@ -207,8 +207,7 @@ except Exception:
 # --- 2. no way in --------------------------------------------------------------------------
 print("no way in")
 try:
-    files = sorted(int(os.path.basename(p)[:-4])
-                   for p in glob.glob(os.path.join(world.RES, "locations", "static", "*.xml")))
+    files = sorted(world.static_ids())
     followed = []
     for lid in files:
         for side in "ab":
@@ -365,7 +364,7 @@ try:
     OTHERS = {(5883, 2035), (5882, 2036), (5921, 2011), (5920, 2010), (5921, 1982)}
     warehouses = {(5913, 1976): 12, (5931, 2031): 16, (5883, 2060): 16}
     check("  ..the other retexts over Донгола are camps, factory, prison hours and warehouse minimums: no other",
-          sorted(set(retexts) - set(TEXTS)), sorted(OTHERS | {(5903, 1996), (5955, 2032)} | set(warehouses)))
+          sorted(set(retexts) - set(TEXTS)), sorted(OTHERS | {(5903, 1996)} | set(warehouses)))
     for cell, minimum in warehouses.items():
         was = next(e['was'] for e in LABELS if (e['x'], e['y']) == cell and 'text' in e)
         check("warehouse %s changes only its minimum-level wording" % (cell,),
@@ -413,7 +412,7 @@ try:
     check("Донгола's band of shops keeps the clothing market among its places, as Абри's keeps 378:"
           " nobody opens its room; no other place of the cut is in it",
           (dongola["places"], sorted(set(dongola["places"]) & set(CUT))),
-          ([49, 50, 79, 103, 159, 195, 197, 445, 469, 958], [469]))
+          ([49, 50, 79, 103, 159, 195, 197, 445, 469, 1443], [469]))
     check("shop_bands reads the same: the airfield and the clan bases are no town's",
           [shop_bands.city(i) for i in (530, 448)], [None, None])
     HELD = {197: [5106], 50: [232], 103: [5, 5113], 445: [6560], 77: [4047, 6896], 618: [2176],
@@ -473,7 +472,7 @@ class Lines(logging.Handler):
 
 try:
     check("the run_once's places are the cut's, the station 49 its target on its cell, its name new",
-          (sorted(accounts.DONGOLA_CUT_PLACES), accounts.DONGOLA_CUT_TO,
+          (sorted(set(accounts.DONGOLA_CUT_PLACES) | {380, 382, 958}), accounts.DONGOLA_CUT_TO,
            accounts.DONGOLA_CUT_FIX not in (accounts.RETIRED_PLACES_FIX, accounts.HALFA_CUT_FIX,
                                             accounts.HALFA_FSC_FIX, accounts.ABRI_CUT_FIX,
                                             accounts.RIVER_CAMPS_FIX, accounts.ABRI_CLOTHES_FIX,
@@ -516,9 +515,15 @@ try:
           " no cell of the old file",
           {n: (chars[n]["loc"], chars[n]["gx"], chars[n]["gy"], chars[n]["on_map"], chars[n]["pos"])
            for n in moved}, {n: (STATION, 5877, 2010, 0, None) for n in moved})
-    check("the restored base and bunker are untouched by the old retirement migration",
+    check("the former Delta rooms wait for the new retirement migration",
           [(chars[n]["loc"], chars[n]["pos"]) for n in ("in382", "in958")],
           [(382, 77), (958, 77)])
+    check("the new migration removes occupants of former Delta rooms without touching the new base",
+          accounts.relocate_delta_base(st.db), dict(moved=2, homes=0))
+    check("the new migration is idempotent", accounts.relocate_delta_base(st.db), dict(moved=0, homes=0))
+    check("former Delta occupants reach the station",
+          [(st.character(ids[n])["loc"], st.character(ids[n])["pos"]) for n in ("in382", "in958")],
+          [(STATION, None), (STATION, None)])
     check("  ..a home in 469, 530 or 389 is the station now, the character left where he was",
           [(chars[n]["home_loc"], chars[n]["home_gx"], chars[n]["home_gy"], chars[n]["loc"])
            for n in ("home469", "home530", "home389")],

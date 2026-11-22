@@ -1008,7 +1008,10 @@ def buy_price(si, root, n, gold=False, pmod=PMOD):
         unit = js_round(per / sell) if gold else js_round(per * 1000 / sell) / 1000
     else:
         unit = per / float(si.get("sell_num", 1) or 1)
-    return int(math.ceil(unit * n * as_sent(pmod)))
+    price = int(math.ceil(unit * n * as_sent(pmod)))
+    if gold and root != items.AMMO and 0 < as_sent(pmod) < 1 and unit * n > 1:
+        price = max(1, min(price, math.ceil(unit * n) - 1))
+    return price
 
 
 class TradeSession:
