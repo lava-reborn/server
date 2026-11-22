@@ -129,17 +129,8 @@ HAND = {184: [(1135, [56, 88], False)],
        (2312, [52, 64], False),
        (2312, [12, 105], False),
        (2312, [52, 105], False)],
- 382: [(7451, [39, 37], False),
-       (4428, [41, 38], False),
-       (4828, [30, 37], False),
-       (4828, [46, 31], False),
-       (4828, [46, 43], False),
-       (918, [12, 23], False),
-       (918, [52, 23], False),
-       (918, [12, 64], False),
-       (918, [52, 64], False),
-       (918, [12, 105], False),
-       (918, [52, 105], False)],
+ 185: [(1013, [26, 49], False)],
+ 609: [(989, [39, 48], False)],
  111: [(1040, [26, 47], False), (1040, [40, 54], False)],
  110: [(1040, [22, 43], False), (1040, [36, 53], False)],
  109: [(4828, [27, 47], False), (4828, [41, 56], False)],
@@ -322,7 +313,7 @@ try:
     OURS = set(world.overlay_ids())
     check("the hand rows of 184, 31 and 102 are as they were, and Абри's of 187, 88, 92 and 289,"
           " Донгола's of 103 and 93, Абу-Хамед's of 132, 168 and 263, Eden's restored 264..267"
-          " and the approved clan bases 118/382"
+          " and the approved Abu base, its repairer and Abri doctor"
           " are the only others (the places"
           " of ours aside)",
           {lid: [(r["type"], r["cell"], bool(r.get("escort"))) for r in recs if "patrol" not in r]

@@ -175,8 +175,8 @@ try:
     bases = sorted(i for i in world.static_ids()
                    if world.location(i).fn.startswith(("VES_KB", "KB_ZEON", "Backdoor_ZEON", "KB_Smersh",
                                                        "Backdoor_Smersh", "Clan_Base_A", "Clan_Base01")))
-    check("  ..only the approved abandoned base and its bunker are restored",
-          ([i for i in bases if i not in ALL_RETIRED], len(bases)), ([118, 609], 29))
+    check("  ..only the two approved bases and their bunkers are restored",
+          ([i for i in bases if i not in ALL_RETIRED], len(bases)), ([118, 609, 1442, 1443], 31))
 except Exception:
     import traceback
     fails.append("the places broke:\n" + traceback.format_exc())
@@ -365,10 +365,10 @@ try:
           ("%d,%d" % OUTPOST_CHIEF in CELLS_DOC["cells"], "%d,%d" % OUTPOST_CHIEF in CELLS_DOC["bare"],
            OUTPOST_CHIEF in painted.cells, world.location_at(*OUTPOST_CHIEF) == world.pack(*OUTPOST_CHIEF)),
           (False, False, False, True))
-    check("  ..with the retired bases' letters: «База Смерш», «База ВЭС», «База Zeon»,"
-          " «База Доктора \"Д\"»",
+    check("  ..with the retired bases' letters and the relocated abandoned bunker's old caption",
           sorted(c["was"] for c in CELLS_DOC["captions"] if CUT_WHY in c["why"]),
-          sorted(["База Смерш", "База ВЭС", "База Zeon", "База Доктора \"Д\""]))
+          sorted(["База Смерш", "База ВЭС", "База Zeon", "База Доктора \"Д\"",
+                  "Заброшенная база - бункер"]))
 except Exception:
     import traceback
     fails.append("the names broke:\n" + traceback.format_exc())

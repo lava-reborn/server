@@ -24,7 +24,7 @@ Passable: **229088 of 241703 cells, 94.78%**. The rectangle is 473 by 511 cells,
 
 Of the 29 cells forced open, 23 read as rock and 6 as water. The wet ones are shore: 5863,1946, 5879,2011, 5970,1727, 6017,2086, 6032,1951, 6185,1977 -- a place standing on the bank of the lake covers a cell whose 8x8 block is mostly water.
 
-**Connectivity.** From the start cell 6268,1819 (the black market of Wadi Halfa) 228892 cells are reachable on foot, 99.9% of the passable ground, and 226 of the 229 settlements. The world falls into 43 separate pieces of walkable ground; the main one holds everything but the pockets listed here.
+**Connectivity.** From the start cell 6268,1819 (the black market of Wadi Halfa) 228892 cells are reachable on foot, 99.9% of the passable ground, and 225 of the 228 settlements. The world falls into 43 separate pieces of walkable ground; the main one holds everything but the pockets listed here.
 
 | settlement | cell | location | pocket |
 | --- | --- | ---: | ---: |
@@ -225,3 +225,5 @@ The same blocks again: `o` is a block that holds ground cut off from the start -
 * The 3 settlements listed above sit in pockets the walker cannot reach. Some of that is real -- the valley is meant to be sealed -- and some is the picture being harsher than the game was.
 * Roughness is a proxy for relief. A field of dark boulders reads as a mountain; a smooth dune field reads as a road. The threshold (22) was chosen as the loosest one that still closes the valley.
 * Water is only Lake Nasser and the Nile: 0.65% of the map. Narrow stretches of the river are drawn thinner than a cell, so the river does not cut the map in two the way the real one does.
+
+Release relocation: Abu clan base is at 6083,1957; Dongola base at 5926,2068. The new Dongola overlay is counted separately from the original-location connectivity total above; both base approaches are passable. Old 6032,1957 and 6033,1957 are open desert.

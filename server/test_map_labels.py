@@ -476,7 +476,7 @@ def rows_bytes(doc, cell):
 check("other timed names are the retained original places plus the two restored weekly bases",
       sorted({(x, y) for x, y, t in rows_of(out, EVERYWHERE) if TIMED.search(t)}
              - set(CLOCK_CELLS) - set(WAREHOUSES)),
-      sorted(set(ORIGINAL) | set(PRISONS) | {(6033, 1957), (6083, 1957)}))
+      sorted(set(ORIGINAL) | set(PRISONS) | {(5926, 2068), (6083, 1957)}))
 check("  ..warehouse bytes change only the agreed minimum-level wording",
       [rows_bytes(out, c) for c in WAREHOUSES],
       [[warehouse_wording(r.decode('utf-8'), c).encode('utf-8')

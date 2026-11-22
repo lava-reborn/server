@@ -164,8 +164,9 @@ try:
           travel.exit_sides(world.location(NEW)), {int(c): s for c, s in cells.items()})
     after = set(read(es_copy).decode("utf-8").split("\n"))
     removed = [ln for ln in before.decode("utf-8").split("\n") if ln not in after]
-    check("  ..every line of the table is still there, but the row before it, which gains its comma",
-          [(ln + ",") in after for ln in removed], [True])
+    check("  ..existing lines stay; only an append after the last id adds its comma",
+          [(ln + ",") in after for ln in removed],
+          [True] if NEW > max(map(int, ES['locations'])) else [])
     keep = {k: v for k, v in es["locations"].items() if k != str(NEW)}
     with io.open(os.path.join(ROOT, "data", "exits_sides.json"), encoding="utf-8") as fh:
         check("  ..every other row as it was", keep == {k: v for k, v in json.load(fh)["locations"].items()

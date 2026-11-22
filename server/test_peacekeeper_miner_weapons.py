@@ -30,9 +30,9 @@ for t, level, ap, weapon in ((840, 16, 110, 25303), (841, 17, 115, 25319)):
     check('%d: simulator modes retain aim time and spread' % t,
           (st.attack_time, st.balanced_modes[0]['cone']),
           (profile['attack_time'], profile['modes'][0]['cone']))
-    check('%d: damage follows the reviewed simulator profile' % t,
+    check('%d: damage follows the common ordinary-mob release ladder' % t,
           (st.dmg_min, st.dmg_max),
-          (198, 301) if t == 840 else (223, 343))
+          (81, 123) if t == 840 else (81, 124))
     check('%d: virtual weapon loaded with compatible ammo' % t,
           mobs.virtual_di(mobs.VIRTUAL_BASE + 1, weapon, items.FIRE_ARM)[1]['ammo_type'],
           si['comp_array'][0])

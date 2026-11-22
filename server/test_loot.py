@@ -480,8 +480,9 @@ try:
           only(got, "cmdAck", "ss_loot"),
           [("cmdAck", {"res": 0}), ("ss_loot", {"s_status": 0, "hex": [where]})])
     c.send("ss_get;slot=8;")
+    bag = oids(named(c.frames(), "ss_ack")[0])
     check("everything he left is in the player's bag",
-          all(o in oids(named(c.frames(), "ss_ack")[0]) for o in loot), True)
+          all(o in bag for o in loot), True)
     c.send("ss_upd;s_status=0;obj=x0;param=1;")
     c.frames(0.3)
     c.send("logout;")

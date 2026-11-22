@@ -1,11 +1,9 @@
-"""Temporary camp boss HP x1.5 and regional gold rewards for existing carriers only.
+"""Historical boss pool floors and regional gold rewards survive the release.
 
-Owner decision, 2026-10-26. One deterministic loot check per carrier,
-no sockets, simulations or farm measurements. Existing exchange prices,
-SP, damage and XP must not change with the health hotfix.
+The combat release reduces reviewed HP/SP/damage by 1.5, with original HP/SP
+as a floor. Gold carriers, exchange prices and XP multipliers stay unchanged.
 """
 import os
-import json
 import random
 import sys
 from types import SimpleNamespace as NS
@@ -13,6 +11,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, os.path.dirname(__file__))
 import bosses
+import battle_balance
 import combat
 import holdings
 import items
@@ -24,8 +23,7 @@ from testkit import check, fails
 CARRIERS = {2103, 269, 270, 283, 284, 299, 300, 313, 314,
             327, 328, 360, 361, 374, 375, 407, 408,
             777, 778, 8620, 1037, 1038}
-with open(os.path.join(os.path.dirname(__file__), '..', 'data', 'training_simulator_formulas.json'), encoding='utf-8') as source:
-    PROFILE = json.load(source)
+PROFILE = battle_balance.data()
 
 
 def reviewed(type_id):
@@ -37,33 +35,29 @@ for t, info in mobs.TYPES.items():
     if info.get('role') != 'boss':
         continue
     st = mobs.stats(int(t))
-    row = mobs.LEVELS[str(max(0, min(mobs.MAX_LEVEL, st.level)))]
     role = mobs.ROLES['boss']
-    before = max(1, round(row['hp'] * role['hp_mult']))
-    expected = round(before * 1.5) if int(t) in bosses.CAMP_BOSS_TYPES else before
+    original = mobs.MobStats(int(t), balanced=False)
     accepted = reviewed(t)
-    if accepted:
-        expected = accepted['hp_max']
+    adjustment = battle_balance.boss_adjustments().get(int(t), {})
+    expected = max(original.hp_max, round((accepted['hp_max'] if accepted else original.hp_max)
+                                         * adjustment.get('hp_scale', 1) / 1.5))
     if st.hp_max != expected:
         health_errors.append(int(t))
-    weapon = mobs.WEAPONS.get(st.weapon_class, mobs.WEAPONS['fist'])
-    if (st.sp_max != (accepted['sp_max'] if accepted else max(0, round(row['sp'] * role['hp_mult'])))
-            or st.dmg_min != (accepted['dmg_min'] if accepted else round(row['dmg_min'] * weapon['dmg_mult'] * role['dmg_mult']))
+    if (st.sp_max != max(original.sp_max, round((accepted['sp_max'] if accepted else original.sp_max) / 1.5))
+            or st.dmg_min != round((accepted['dmg_min'] if accepted else original.dmg_min)
+                                   * adjustment.get('damage_scale', 1) / 1.5)
             or st.xp_mult != role['xp_mult']):
         other_errors.append(int(t))
-check('reviewed bosses follow the pinned profile; remaining bosses retain the HP hotfix',
+check('reviewed bosses follow the final reduction with the historical HP floor',
       health_errors, [])
-check('boss SP/damage follow the profile and XP multipliers retain existing rules', other_errors, [])
+check('boss SP/damage follow the final reduction and XP multipliers retain existing rules', other_errors, [])
 
 ordinary_errors = []
 for t in (12, 14, 836, 930, 931):
     st = mobs.stats(t)
-    row = mobs.LEVELS[str(max(0, min(mobs.MAX_LEVEL, st.level)))]
-    role = mobs.ROLES.get(st.role, mobs.ROLES['mob'])
-    accepted = reviewed(t)
-    if st.hp_max != (accepted['hp_max'] if accepted else max(1, round(row['hp'] * role['hp_mult']))):
+    if st.hp_max < mobs.MobStats(t, balanced=False).hp_max:
         ordinary_errors.append(t)
-check('ordinary mobs and miners keep their HP', ordinary_errors, [])
+check('ordinary mobs and miners never fall below their original HP', ordinary_errors, [])
 
 # Warehouse capture is a separate rule: each clan's harm is capped at the
 # actual boss pool. Increased HP must not turn its tie fixture into a loss.

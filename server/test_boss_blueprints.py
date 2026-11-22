@@ -226,8 +226,7 @@ class BossBlueprints(unittest.TestCase):
             blocked = mobs.loot_for(st, FixedRandom(0.10), wanted, loc_id=82,
                                     killer_level=5)  # blueprint level 1, difference +4
             self.assertNotIn((encrypted, 1), blocked)
-            self.assertEqual(blocked, [])  # No loot at all from a victim four levels below.
-            self.assertIn((3742, 1), blocked)
+            self.assertEqual(blocked, [])  # Tradeable loot is blocked at four levels below.
             # Wrong locations cannot fall back to legacy quest sources.
             self.assertEqual(mobs.loot_for(st, FixedRandom(0), wanted,
                                           loc_id=999, killer_level=st.level).count((encrypted, 1)), 0)
@@ -318,7 +317,7 @@ class BossBlueprints(unittest.TestCase):
                 self.assertTrue(all(store.item(r['uniq']) is not None for r in rows))
                 mob.blueprint_killer_level = 5  # level-1 blueprint +4
                 combat.RNG.value = 0.10
-                self.assertEqual([r['type_id'] for r in combat.RoomCombat.drop_loot(rc, mob)], [4796])
+                self.assertEqual(combat.RoomCombat.drop_loot(rc, mob), [])
         finally:
             store.close()
 
