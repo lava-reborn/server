@@ -379,7 +379,7 @@ check("  ..the pouches at their articles' prices: автоматчика 50 000 
 check("Шрам: released knives remain, level-18/20 blueprints are hidden",
       STALLS[(STATION, SCAR)], shop_bands.goods(("knives",), LO, 17))
 check("the oasis's «Торговец патронами» (1232): every СТ and ОТ of his list, nothing cut",
-      STALLS[(OASIS, AMMO_OASIS)], OASIS_ROUNDS + list(range(6152, 6176)))
+      STALLS[(OASIS, AMMO_OASIS)], ORDERED_OASIS_ROUNDS)
 check("the lottery men at the port: Муамар the tickets [16], [18], [19], the gold lottery"
       " their [G]",
       (STALLS[(PORT, LOTTERY)], STALLS[(PORT, GOLD_LOTTERY)]), (list(KEYS), list(GOLD_KEYS)))
@@ -828,7 +828,7 @@ async def main():
     stall, opened = open_stall(sess, OASIS, AMMO_OASIS)
     check("the oasis's «Торговец патронами»: 7.62x54R СТ for 160 afro a pack of 20",
           (stall, opened, buy(sess, stall, 6111, BUY, 20)),
-          (OASIS_ROUNDS + list(range(6152, 6176)), [0], ([0], [6111], 160, 0)))
+          (ORDERED_OASIS_ROUNDS, [0], ([0], [6111], 160, 0)))
     close_stall(sess)
 
     stall, opened = open_stall(sess, QUARTER, ANWAR)
