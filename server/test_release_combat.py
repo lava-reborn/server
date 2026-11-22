@@ -7,6 +7,7 @@ from unittest.mock import patch
 import battle_medicine
 import combat
 import effects
+import holdings
 import inventory
 import items
 import mobs
@@ -137,6 +138,73 @@ class TimedItems(unittest.IsolatedAsyncioTestCase):
         manager.load()
         self.assertFalse(manager.active)
         self.assertIsNone(manager.timer)
+
+    async def test_syringe_twenty_attempts_hit_or_miss_then_disappears(self):
+        self.manager()
+        f, rc = self.s.combat, self.s.room.combat
+        self.addCleanup(combat.Fighter.cancel_timers, f)
+        row = self.s.inv.create(items.POISON_SYRINGE, slot=inventory.PRIMARY)
+        target = NS(is_player=True, eid=999, cell=self.s.pos + 1, present=lambda _rc: True,
+                    dodge_melee=lambda: 0, crit_evade_melee=lambda: 0,
+                    sp_now=lambda: 7000, apply_damage=lambda _h, _s: False)
+        self.enterContext(patch.object(combat.Fighter, 'allied', return_value=False))
+        self.enterContext(patch.object(combat.Fighter, 'same_clan', return_value=False))
+        self.enterContext(patch.object(combat.mobs, 'adjacent', return_value=True))
+        self.enterContext(patch.object(rc, 'melee_critical', return_value=False))
+        damage = self.enterContext(patch.object(rc, 'melee_damage', return_value=(7000, 7000)))
+        self.enterContext(patch.object(rc, 'after_hostile'))
+        self.enterContext(patch.object(rc, 'hit_landed'))
+        self.enterContext(patch.object(rc, 'push_vitals'))
+        self.enterContext(patch.object(holdings, 'defender_friendly', return_value=False))
+        for attempt in range(20):
+            with patch.object(combat, 'roll', return_value=bool(attempt % 2)):
+                f.strike_now(target, None, (7000, 7000), combat.SPEC_BLADE, 0, row['uniq'])
+            current = self.store.item(row['uniq'])
+            if attempt < 19:
+                self.assertEqual((current['brk'], current['max_break_cur']), (19 - attempt, 20))
+            else:
+                self.assertIsNone(current)
+        self.assertEqual(damage.call_count, 10)
+        f.strike_now(target, None, (7000, 7000), combat.SPEC_BLADE, 0, row['uniq'])
+        self.assertEqual(damage.call_count, 10)
+        self.assertFalse(any(r['type_id'] == items.POISON_SYRINGE for r in self.s.inv.rows()))
+
+    async def test_syringe_rejects_mobs_and_ground_without_spending_a_dose(self):
+        self.manager()
+        f, rc = self.s.combat, self.s.room.combat
+        row = self.s.inv.create(items.POISON_SYRINGE, slot=inventory.PRIMARY)
+        self.enterContext(patch.object(self.s.loc, 'war', True))
+        self.enterContext(patch.object(rc, 'actor', return_value=NS(is_player=False, cell=self.s.pos + 1)))
+        self.enterContext(patch.object(f, 'preparing', return_value=False))
+        start = self.enterContext(patch.object(f, 'strike_with'))
+        for target in ('000000001', '000000000'):
+            f.use_fire(dict(obj=inventory.oid_of(row), target=target))
+        self.assertFalse(start.called)
+        f.strike_now(NS(is_player=False, cell=1), None, (7000, 7000), combat.SPEC_BLADE, 0, row['uniq'])
+        self.assertEqual(self.store.item(row['uniq'])['brk'], 20)
+
+    async def test_syringe_cannot_be_repaired_or_restored_with_either_currency(self):
+        self.manager()
+        self.s.char.afro, self.s.char.gold = 1_000_000, 10_000
+        self.s.char.save(self.store)
+        self.s.inv.trade = inventory.TradeSession(1, 1200)
+        row = self.s.inv.create(items.POISON_SYRINGE)
+        self.store.update_item(row['uniq'], brk=7, max_break_cur=20)
+        before = dict(self.store.item(row['uniq']))
+        money = self.store.money(self.s.char_id)
+        for code in (inventory.UPD_REPAIR, inventory.UPD_REPAIR_GOLD, inventory.UPD_RESTORE):
+            self.s.inv.repair(dict(obj=inventory.oid_of(row)), code)
+            self.assertEqual(dict(self.store.item(row['uniq'])), before)
+            self.assertEqual(self.store.money(self.s.char_id), money)
+        self.s.inv.restore(dict(obj=inventory.oid_of(row)))
+        self.assertEqual(dict(self.store.item(row['uniq'])), before)
+
+    async def test_requirement_check_reuses_one_frame_without_changing_masks(self):
+        row = self.s.inv.create(26062)
+        expected = inventory.weapon_requirement_error(row, self.s.char)
+        with patch.object(items, 'params_of', wraps=items.params_of) as params:
+            self.assertEqual(inventory.weapon_requirement_error(row, self.s.char), expected)
+        self.assertEqual(params.call_count, 1)
 
     async def test_experience_boosters_apply_gain_keep_skill_cap_and_downward_effect(self):
         manager = self.manager()

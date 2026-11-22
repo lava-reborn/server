@@ -66,6 +66,7 @@ LINK_CONFIDENCE = 0.5
 
 # Item.as:39-45. The root type decides which ss_si_* frame describes the item.
 FIRE_ARM, WEAR, HEAL, AMMO, TRASH, COLD_ARM, TROPHY = range(7)
+POISON_SYRINGE = 3552
 
 SI_COMMAND = {
     FIRE_ARM: "ss_si_firearm",
@@ -1293,6 +1294,8 @@ def static_info(type_id):
             costs = list(info[1]["fire_costs"])
             costs[2] = KS12_FIRE_COSTS[type_id]
             info[1]["fire_costs"] = costs
+        if catalogue()[type_id][1].startswith('lamantin_shotgun_'):
+            info[1]['fire_mods'] = [min(value, 10) for value in info[1]['fire_mods']]
         import battle_balance
         for field, value in battle_balance.equipment_changes().get(type_id, {}).items():
             info[1][field] = list(value) if isinstance(value, list) else value
@@ -1333,6 +1336,8 @@ def static_info(type_id):
         repair_cost = repair_policy.valuation(type_id, info[1])
         if repair_cost is not None:
             info[1]['repair_cost'] = repair_cost
+        if type_id == POISON_SYRINGE:
+            info[1].update(max_break_abs=20, desc=DESC_ID_OFFSET + type_id)
     if info and info[1].get('max_count') == 50:
         info[1]['max_count'] = 100
     return info

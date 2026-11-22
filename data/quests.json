@@ -6856,8 +6856,8 @@
       "start": "- Ступай к столу немедленно вместе со склянкой, которую я тебе дала! Там ты найдёшь достаточно яда чтобы погубить очень много людей...<Br>Но я позволю тебе взять только несколько капель. Одна капля переведёт Вивека на ту сторону, и его земные страдания наконец закончатся.<Br>Но если ты веришь, что у него есть ещё незаконченные дела, возьми две капли яда для себя, и помоги юноше.<Br>Когда ты окажешься на кладбище, ты поймёшь как снять с него проклятие смерти.",
       "notfinish": "",
       "finish": "Вам предстоит сделать решающий выбор. Обратной дороги уже не будет. Либо налейте одну каплю в склянку для Вивека, либо две, для себя.",
-      "give": [],
-      "take": [],
+      "give": [1685],
+      "take": [1692],
       "obj": 3957,
       "rew_obj": [3959],
       "num_rew_obj": [1],
@@ -6870,7 +6870,7 @@
       "excludes": [212],
       "loc": 48883391,
       "finish_loc": 48883391,
-      "why": "SWITCHED OFF (no giver, no taker) until «Кладбище по ту сторону» (688) can be reached: restore give [1685] and take [1692] once data/passages.json has 'quest' ways 216: 70 -> 688 and 217: 688 -> 70. RECOVERED texts as 212, thing 3959 «Склянка с двумя каплями яда, для себя», DESIGNED choice by branch. The two-drop branch: it and the one-drop row (212) shut each other (excludes). Its way on, 216-218, needs the other side of the graveyard, where the four ghosts stand (688 has no map cell and no door)."
+      "why": "RECOVERED two-drop branch and NPCs. Quest passages 216: 70 -> 688 and 217: 688 -> 70 restore the existing cemetery maps and four ghost guardians."
     },
     {
       "type": 214,
@@ -6892,7 +6892,8 @@
       "need_quest": 212,
       "loc": 48924353,
       "finish_loc": 48924353,
-      "why": "RECOVERED texts (47505 name, 47506 start at Вивек 'Вы готовы?', 47507 finish). The one-drop vial (3958) goes to Вивек. A one-off; after 212."
+      "why": "RECOVERED texts (47505 name, 47506 start at Вивек 'Вы готовы?', 47507 finish). The one-drop vial (3958) goes to Вивек. A one-off; after 212.",
+      "excludes": [213]
     },
     {
       "type": 215,
@@ -6900,7 +6901,7 @@
       "name": "Индийское кино ч.3 - Дар",
       "start": "Посланник Смерти уже знает, что вы выполнили её поручение. Она смеётся, и вас пробирает дрожь.<Br>- Пора тебя наградить. Желаешь ли получить моё благословение?<Br>- Да!<Br>- Тогда целуй мою старую руку.",
       "notfinish": "",
-      "finish": "Вы поцеловали руку старушке. Она улыбается.<Br>- Пожалуй, ты досто%sex?ен:йна% моего особого средства в борьбе с неизбежным. Учти, что его хватит лишь на 5 раз.<Br>И если в дальнейшем ты когда-нибудь захочешь снова помочь свершить правосудие, ищи меня в Донголе. Правда выглядеть я буду уже иначе...<Br>*Она передаёт вам странный шприц с чем-то напоминающим ртуть*",
+      "finish": "Вы поцеловали руку старушке. Она улыбается.<Br>- Пожалуй, ты досто%sex?ен:йна% моего особого средства в борьбе с неизбежным. Учти, что его хватит на 20 применений только против других игроков. Его нельзя отремонтировать или восстановить.<Br>И если в дальнейшем ты когда-нибудь захочешь снова помочь свершить правосудие, ищи меня в Донголе. Правда выглядеть я буду уже иначе...<Br>*Она передаёт вам странный шприц с чем-то напоминающим ртуть*",
       "give": [1685],
       "take": [1685],
       "obj": 0,
@@ -6914,7 +6915,9 @@
       "need_quest": 214,
       "loc": 48883391,
       "finish_loc": 48883391,
-      "why": "RECOVERED texts (47508 name, 47509 start, 47510 finish 'Учти, что его хватит лишь на 5 раз ... странный шприц') and reward (3552 «Шприц с зельем», poison_syringe, not premium). A one-off; after 214. The syringe is the wiki's own frame, and a strong one: a cold arm of 7000 damage that costs no action point a swing, wear 20 and repairable, 25 000 afro (a stall pays 17 500), no skill needed, while the chain 208-215 asks no level. OWNER'S DECISION: keep it as the original had it, or cap it (no sale, no repair) through the item tables."
+      "why": "RECOVERED one-off syringe reward. Owner rule: twenty attempts, players only, no repair/restoration; shared final-reward history prevents receiving both branch rewards.",
+      "excludes": [213],
+      "own_texts": ["finish"]
     },
     {
       "type": 216,
@@ -6930,13 +6933,14 @@
       "num_rew_obj": [],
       "rew_afro": 0,
       "rew_gold": 0,
-      "repeatable": 0,
+      "repeatable": 1,
       "level": 0,
       "q_type": 0,
       "need_quest": 213,
       "loc": 48924353,
       "finish_loc": 48924353,
-      "why": "RECOVERED texts (47515 name, 47516 start 'Испей сок смерти и пади', 47517 finish 'Теперь вы тоже застряли между мирами'). The two-drop vial (3959) drunk at Вивек's side: in the original the hand-in carries the player to «Кладбище по ту сторону» (688), a way still to be drawn (data/passages.json 'quest' 216: 70 -> 688). Only after 213, which is switched off."
+      "why": "RECOVERED texts and two-drop vial 3959. Restored quest passage from cemetery 70 to its existing other-side map 688; does not change the home city.",
+      "excludes": [212]
     },
     {
       "type": 217,
@@ -6959,7 +6963,8 @@
       "need_quest": 216,
       "loc": 48924353,
       "finish_loc": 48924353,
-      "why": "RECOVERED texts (47518-47521: 'Убить всех четверых призраков!'). The four [5] Призраки-стражи (1694) of «Кладбище по ту сторону» (688), where Вивек (1691) stands too; the way back is to be drawn (data/passages.json 'quest' 217: 688 -> 70). Only after 216."
+      "why": "RECOVERED four ghost guardians 1694 in cemetery 688. Restored quest passage back to cemetery 70 after all four kills.",
+      "excludes": [212]
     },
     {
       "type": 218,
@@ -6967,7 +6972,7 @@
       "name": "Индийское кино ч.3 - Награда",
       "start": "Вивек просто счастлив, лицо его стало даже ещё моложе.<Br>Хотя вы и не просите награды у него, он, словно предвосхитив возможный вопрос, говорит, что сейчас у него ничего нет. Но однажды, как человек чести, он найдёт способ отблагодарить вас... Чтож, будем ждать. А покамест стоит навестить ангела смерти.<Br><Br><Br><b>Задача:</b> Отправиться к старушке и осторожно поинтересоваться насчёт награды.",
       "notfinish": "",
-      "finish": "Вы вернулись к ангелу смерти. Она улыбается вам.<Br>- Воистину, ты настоящий воин и досто%sex?ен:йна% моего особого средства в борьбе с неизбежным. Учти, что его хватит лишь на 5 раз.<Br>Кстати, если в дальнейшем ты когда-нибудь захочешь снова помочь свершить правосудие, ищи меня в Донголе. Правда выглядеть я буду уже иначе... Но думаю что ты меня всегда узнаешь.<Br>*Она передаёт вам странный шприц с чем-то напоминающим ртуть*",
+      "finish": "Вы вернулись к ангелу смерти. Она улыбается вам.<Br>- Воистину, ты настоящий воин и досто%sex?ен:йна% моего особого средства в борьбе с неизбежным. Учти, что его хватит на 20 применений только против других игроков. Его нельзя отремонтировать или восстановить.<Br>Кстати, если в дальнейшем ты когда-нибудь захочешь снова помочь свершить правосудие, ищи меня в Донголе. Правда выглядеть я буду уже иначе... Но думаю что ты меня всегда узнаешь.<Br>*Она передаёт вам странный шприц с чем-то напоминающим ртуть*",
       "give": [1691],
       "take": [1685],
       "obj": 0,
@@ -6981,7 +6986,9 @@
       "need_quest": 217,
       "loc": 48883391,
       "finish_loc": 48883391,
-      "why": "RECOVERED texts (47522 name, 47523 start 'Отправиться к старушке', 47524 finish) and reward (3552 «Шприц с зельем», as 215: the owner's decision there holds here). A one-off; after 217."
+      "why": "RECOVERED one-off syringe reward. Owner rule: twenty attempts, players only, no repair/restoration; shared final-reward history prevents receiving both branch rewards.",
+      "excludes": [212],
+      "own_texts": ["finish"]
     },
     {
       "type": 219,

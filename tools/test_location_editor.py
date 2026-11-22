@@ -490,6 +490,7 @@ def publish_mode():
         answer_back()
     res = pub.get("result") or {}
     c5 = origin_head()
+    index5 = json.loads(at(c5, 'data/locations/index.json'))['locations']
     check("the push's answer lost and origin out of reach: failed, «мог уйти», the commit named",
           (code, pub.get("state"), pub.get("code"), res.get("maybe"), res.get("commit"), c5 != before,
            "Черновик: %s, правка %s" % (uuid5, rev5) in git(bare, "log", "-1", "--format=%B", c5)),
@@ -501,7 +502,8 @@ def publish_mode():
     check("  ..published again: found in main by the draft's trailer, done, no second commit",
           (code, pub.get("state"), res.get("landed"), res.get("commit"), res.get("id"), res.get("renumbered"),
            origin_head(), (index_row(real5 + 1) or {}).get("title")),
-          (202, "done", True, c5, real5, {"new:" + uuid5: real5}, c5, None))
+          (202, "done", True, c5, real5, {"new:" + uuid5: real5}, c5,
+           (index5.get(str(real5 + 1)) or {}).get('title')))
     check("  ..and the editor restarts on it", restarted(), [PB.RESTART_CODE])
     check("  ..a third time: 409, already published", call("/api/publish", {"uuid": uuid5})[0], 409)
 

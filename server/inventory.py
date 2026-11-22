@@ -640,11 +640,13 @@ def weapon_requirement_error(row, character):
     """
     if row["root"] not in GEAR_ROOTS:
         return None
-    required = item_level(row["type_id"])
+    # Reuse this frame for the tier and masks; rebuilding it for item_level
+    # on every shot repeats all catalogue/craft/set overlays.
+    si = items.params_of(row["type_id"]) or {}
+    required = max(unpacked(si.get("need_skills_m"), si.get("need_skills"), progression.SKILLS))
     if not item_templates.contains(row['type_id']) and required > character.level + GEAR_LEVEL_ALLOWANCE:
         return '«%s»: нужен уровень персонажа %d, у вас %d' % (
             item_title(row["type_id"]), required - GEAR_LEVEL_ALLOWANCE, character.level)
-    si = items.params_of(row["type_id"]) or {}
     for field, size, value, titles in (
             ("skills", progression.SKILLS, character.skill_level, progression.SKILL_TITLES),
             ("specs", progression.SPECS, character.spec_level, progression.SPEC_TITLES)):
@@ -1359,7 +1361,8 @@ class Inventory:
             # it came: it does not wear (combat's per-round wear says why).
             return row
         points = int(points)
-        if row["root"] in GEAR_ROOTS:
+        if (row["root"] in GEAR_ROOTS
+                and item_templates.source_type(row['type_id']) != items.POISON_SYRINGE):
             exact = points * wear_multiplier(row, self.sess.character())
             points = math.floor(exact)
             # Same expected wear as the fractional formula; item fields stay
@@ -1370,6 +1373,11 @@ class Inventory:
         self.store.update_item(row["uniq"], brk=max(0, row["brk"] - points))
         row = self.store.item(row["uniq"])
         if row is not None:
+            if item_templates.source_type(row['type_id']) == items.POISON_SYRINGE and row['brk'] <= 0:
+                self.store.delete_item(row['uniq'])
+                self.push_status(row, 0)
+                self.refresh_gear()
+                return None
             self.push_di(row)
             # A piece of a set that has just broken no longer counts towards
             # it. The ss_di_wear above has told the client its break is 0,
@@ -2264,6 +2272,10 @@ class Inventory:
         if not row or row["root"] not in items.BREAKABLE_ROOTS:
             self.ack(RES_NOT_FOUND)
             return None
+        if item_templates.source_type(row['type_id']) == items.POISON_SYRINGE:
+            self.ack(RES_REFUSED)
+            self.sess.answer('Шприц с зельем не ремонтируется и не восстанавливается.')
+            return None
         trader = getattr(self.trade, "trader_type", None)
         import eden
         import eden_shop
@@ -2302,6 +2314,9 @@ class Inventory:
                     row = self.find(p.get("obj"))
                 if not row or row["root"] not in items.BREAKABLE_ROOTS:
                     self.ack(RES_NOT_FOUND)
+                    return
+                if item_templates.source_type(row['type_id']) == items.POISON_SYRINGE:
+                    self.ack(RES_REFUSED)
                     return
                 si = items.params_of(row["type_id"]) or {}
                 if not restore_policy.base_price(row["type_id"], si):

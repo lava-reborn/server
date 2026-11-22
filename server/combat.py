@@ -51,6 +51,7 @@ import effects
 import events
 import holdings
 import inventory
+import item_templates
 import items
 import mobs
 import movement
@@ -944,6 +945,7 @@ class Fighter:
         self.interception = None
         self.dead = False
         self.aim = None         # TimerHandle: a burst waiting for fire_times
+        self.aim_request = None  # Repeated clicks must not postpone this shot.
         self.strike = None      # TimerHandle: a swing waiting for strike_time
         self.healing = None     # TimerHandle: a heal waiting for heal_time
         self.reloading = None   # TimerHandle: ammunition is applied on completion
@@ -1268,6 +1270,7 @@ class Fighter:
                 had = True
         if had_reload:
             self.sess.inv.cancel_reloads()
+        self.aim_request = None
         self.action_revision = getattr(self, "action_revision", 0) + 1
         self.hostile_action = False
         if had and notify:
@@ -1653,8 +1656,8 @@ class Fighter:
     def use_fire(self, p):
         """type=16: a shot with the primary firearm, or a strike with a blade
         or the bare fist (obj=x0, ItemActivator.strike)."""
-        if Fighter.refuse_recovery(self):
-            return
+        # A committed shot's cosmetic sequence must not delay the next aim.
+        # Movement/healing/swaps keep their own committed-action checks.
         sess = self.sess
         rc = self.rc
         if rc is None or sess.on_map or self.dead:
@@ -1721,6 +1724,15 @@ class Fighter:
                 self.ack(inventory.RES_NOT_FOUND)
                 return
             hexcell = tid
+        if (row is not None and item_templates.source_type(row['type_id']) == items.POISON_SYRINGE
+                and (target is None or not target.is_player)):
+            self.ack(inventory.RES_REFUSED)
+            sess.answer('Шприц с зельем можно применять только к другим игрокам.')
+            return
+        if (row is not None and row['root'] == items.FIRE_ARM and self.aim is not None
+                and getattr(self, 'aim_request', None) == (row['uniq'], ttype, tid, row['cur_mode'])):
+            self.ack(inventory.RES_OK)
+            return
         if eden_harvest.try_attack(self, row, target, hexcell):
             return
         if row is None or row["root"] == items.COLD_ARM:
@@ -1792,6 +1804,7 @@ class Fighter:
         palm_cycle = eden_harvest.attack_cycle(rc, target)
         if palm_cycle is not None:
             args += (palm_cycle,)
+        self.aim_request = (row['uniq'], ttype, tid, row['cur_mode'])
         Fighter.schedule_action(self, revision, "aim",
             pace.paced(si.get("fire_times", [700])[mode] / 1000.0),
             self.fire_now, *args)
@@ -1803,6 +1816,7 @@ class Fighter:
         num_shots for a burst); what the magazine lost meanwhile leaves its
         share of the pairs empty."""
         self.aim = None
+        self.aim_request = None
         rc = self.rc
         if rc is None or self.dead:
             return
@@ -1986,6 +2000,7 @@ class Fighter:
         sess = self.sess
         ch = self.character()
         loc = sess.loc
+        syringe = False
         if uniq is not None:
             row = self.store.item(uniq)
             if (row is None or row["char_id"] != sess.char_id
@@ -1993,6 +2008,14 @@ class Fighter:
                     or inventory.weapon_requirement_error(row, ch)):
                 rc.room.broadcast(("caMiss", dict(id=self.eid, hex=hexcell if target is None else target.cell)))
                 return
+            syringe = item_templates.source_type(row['type_id']) == items.POISON_SYRINGE
+            if syringe:
+                if target is None or not target.is_player:
+                    Fighter.action_cancelled(self, stop_aim=True)
+                    return
+                # Commit the finite dose before damage/notifications. A failed
+                # reply or damage handler must not leave a reusable last dose.
+                sess.inv.wear(row, 1)
         # Melee keeps its strike timing; only firearm release locks actions.
         recovery_ms = 0
         aim_cell = target.cell if target is not None else hexcell
@@ -2025,7 +2048,7 @@ class Fighter:
         # The swing costs the blade a point whether or not it landed: the
         # edge meets something either way, and a miss that cost nothing would
         # make flailing free.
-        if uniq is not None:
+        if uniq is not None and not syringe:
             self.sess.inv.wear_uniq(uniq, 1)
         # The blow's pay and the kill's settlement in one rp_info
         # (hold_stats), as for a burst.

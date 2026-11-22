@@ -215,6 +215,12 @@ for _type in items.catalogue():
         _did = items.DESC_ID_OFFSET + _type
         ALL[_did] = (ALL[_did] + "<br>" if ALL.get(_did) else "") + _note
 
+# The quest reward has a finite supply; the description follows its rules.
+ALL[items.DESC_ID_OFFSET + items.POISON_SYRINGE] = (
+    'Только против других игроков. Хватает на 20 попыток применения, '
+    'включая промахи. После последней попытки исчезает. '
+    'Нельзя отремонтировать или восстановить.')
+
 # The table as the game's own sources leave it, before anybody had a say.
 # tools/npc_editor.py compares against this to tell a name that was chosen
 # from one that was merely sitting in the field when Save was pressed.

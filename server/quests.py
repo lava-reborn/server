@@ -355,6 +355,61 @@ def quests_path():
     return os.environ.get("LAVA_QUESTS") or PATH
 
 
+def recover_cinema(store, char_id, at_loc=None):
+    """Repair lost, worthless intermediates without reopening a paid reward.
+
+    Called before the selected character's journal/inventory is sent. All
+    slots count, including the bank; history and existing items are retained.
+    The character lock also serializes this with quest hand-ins on Postgres.
+    """
+    import inventory
+    import storage
+    with storage.atomic(store.db):
+        if not store.lock_quest_character(char_id):
+            return []
+        state = {r['type'] for r in store.db.execute(
+            'SELECT type FROM char_quests_done WHERE char_id=? AND type BETWEEN 208 AND 218',
+            (char_id,)).fetchall()}
+        active = [r for r in store.quests(char_id) if 208 <= r['type'] <= 218]
+        if not state and not active:
+            return []
+        for row in active:
+            if row['type'] in state:
+                store.drop_quest(row['q_id'], char_id)
+        if state & {215, 218}:
+            return []  # A used, sold or lost final syringe is never replaced.
+        chosen = store.first_done(char_id, (212, 213))
+        if chosen is None:
+            branches = [r for r in active if r['type'] in (212, 213)]
+            if branches:
+                chosen = min(branches, key=lambda r: (r['taken_at'], r['q_id']))['type']
+        other = {212: {213, 216, 217, 218}, 213: {212, 214, 215}}.get(chosen, set())
+        for row in active:
+            if row['type'] in other:
+                store.drop_quest(row['q_id'], char_id)
+        carried = {r['type'] for r in store.quests(char_id)}
+        owned = {r['type_id'] for r in store.items_of(char_id)}
+        restored = []
+        steps = [(211, (212, 213), 3957), (212, (214,), 3958), (213, (216,), 3959)]
+        if at_loc is None:
+            at_loc = store.character(char_id)['loc']
+        if at_loc != 688:
+            # A death may send the player home before all four ghosts died.
+            # The existing quest passage must remain usable on that branch.
+            steps.append((216, (217,), 3959))
+        for producer, consumers, item in steps:
+            if not (producer in state or carried.intersection(consumers)) or state.intersection(consumers):
+                continue
+            if item in owned or set(consumers) <= other:
+                continue
+            fields = inventory.new_fields(item)
+            root = fields.pop('root')
+            store.create_item(char_id, item, root, **fields)
+            restored.append(item)
+            owned.add(item)
+        return restored
+
+
 def companion_paths(path):
     """The tables that come with data/quests.json: every data/questgen_*.json
     beside it, in name order, each {"quests": [...]} like the main one (not

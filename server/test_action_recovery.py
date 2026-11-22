@@ -71,7 +71,7 @@ class ActionRecovery(unittest.IsolatedAsyncioTestCase):
             self.assertTrue(any(n=='actionCancel' and p.get('stop_aim')
                                 for n,p in seat.writer.frames))
 
-    async def test_committed_shot_blocks_actions_until_end_of_firing_sequence(self):
+    async def test_committed_shot_allows_next_aim_while_move_and_heal_keep_their_locks(self):
         callback,args,when=self.complete_shot()
         expected=action_animation.duration_ms(self.a,items.params_of(25566),1)
         self.assertEqual(self.case.store.item(self.gun['uniq'])['ammo_count'],7)
@@ -84,14 +84,14 @@ class ActionRecovery(unittest.IsolatedAsyncioTestCase):
             self.assertIsNone(self.a.walk)
             self.a.combat.use_fire(dict(obj=inventory.oid_of(self.gun),target='1%08x'%self.b.pid))
             self.a.combat.use_heal(dict(obj=inventory.oid_of(medicine)),inventory.USE_IDLE)
-            self.assertIsNone(self.a.combat.aim)
+            self.assertIsNotNone(self.a.combat.aim)
             self.assertIsNone(self.a.combat.healing)
             self.assertEqual(self.a.writer.frames[0][0],'breakMv')
             retry=self.a.writer.frames[0][1]['recovery_ms']
             self.assertGreater(retry,0)
             self.assertLessEqual(retry,expected)
             acknowledgements=[p for n,p in self.a.writer.frames if n=='cmdAck']
-            self.assertEqual([p['res'] for p in acknowledgements],[inventory.RES_NOT_READY]*2)
+            self.assertEqual([p['res'] for p in acknowledgements], [inventory.RES_OK, inventory.RES_NOT_READY])
             callback(*args)  # Replayed completion is inert, including its recovery.
             self.assertEqual(self.a.combat.recovery_until,ends)
         self.assertEqual(self.case.store.item(self.gun['uniq'])['ammo_count'],7)
@@ -100,17 +100,47 @@ class ActionRecovery(unittest.IsolatedAsyncioTestCase):
             self.a.move_in_location(dict(path=[0,1]))
         self.assertIsNotNone(self.a.walk)
 
-    async def test_next_aim_is_available_at_animation_threshold_and_not_before(self):
+    async def test_next_aim_starts_immediately_without_waiting_for_previous_animation(self):
         _,_,when=self.complete_shot()
         self.assertEqual(self.case.store.item(self.gun['uniq'])['ammo_count'],7)
-        delay=action_animation.duration_ms(self.a,items.params_of(25566),1)/1000
-        with self.case.at(when+delay-.001):
+        with self.case.at(when):
             self.a.combat.use_fire(dict(obj=inventory.oid_of(self.gun),target='1%08x'%self.b.pid))
-            self.assertIsNone(self.a.combat.aim)
-        with self.case.at(when+delay):
+            timer = self.a.combat.aim
+            self.assertIsNotNone(timer)
+        with self.case.at(when+.001):
             self.a.combat.use_fire(dict(obj=inventory.oid_of(self.gun),target='1%08x'%self.b.pid))
-            self.assertIsNotNone(self.a.combat.aim)
+            self.assertIs(self.a.combat.aim, timer)
         self.assertEqual(self.case.store.item(self.gun['uniq'])['ammo_count'],7)
+
+    async def test_smg_single_shots_follow_aim_time_without_added_animation_pause(self):
+        self.case.store.update_item(self.gun['uniq'], slot=inventory.BAG)
+        gun = self.a.inv.create(25485, slot=inventory.PRIMARY)
+        params = items.params_of(25485)
+        self.case.store.update_item(gun['uniq'], ammo_count=10, ammo_type=params['comp_array'][0])
+        for spec in self.a.char.spec:
+            spec[0] = 5
+        request = dict(obj=inventory.oid_of(gun), target='1%08x' % self.b.pid)
+        clock = 100.0
+        for count in range(3):
+            with self.case.at(clock):
+                self.a.combat.use_fire(request)
+                timer = self.a.combat.aim
+                self.assertIsNotNone(timer)
+                deadline = timer.when()
+                self.assertAlmostEqual(deadline - clock, params['fire_times'][0] / 1000)
+                for _ in range(50):
+                    self.a.combat.use_fire(request)
+                    self.assertIs(self.a.combat.aim, timer)
+            callback, args = timer._callback, timer._args
+            timer.cancel()
+            with self.case.at(deadline):
+                callback(*args)
+                callback(*args)
+                self.assertEqual(self.case.store.item(gun['uniq'])['ammo_count'], 9 - count)
+            clock = deadline
+        for viewer in (self.a, self.b):
+            shots = [p for name, p in viewer.writer.frames if name == 'faShot']
+            self.assertEqual([p['status'] for p in shots], [1, 0] * 3)
 
     async def test_melee_completion_does_not_add_firearm_recovery(self):
         self.b.pos=1

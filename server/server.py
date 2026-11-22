@@ -951,6 +951,7 @@ class Session:
             "SELECT * FROM items WHERE char_id=? AND type_id=? AND ammo_count>?",
             (char_id, magazine_migration.BIZON_DAMAGE_CLIP_A, magazine_migration.CAPACITY)).fetchall()]
         magazine_migration.normalize(STORE, char_id, legacy_guns)
+        quests.recover_cinema(STORE, char_id)
         # Anything worn in a slot it does not fit (a row from before the
         # slot_type fix) goes back to the bag before the gear is counted,
         # and so does anything above the character's level (the level rule).
@@ -3253,6 +3254,10 @@ class Session:
         carried = bool(self.char_id) and (quest.type in state.active if state is not None
                                         else STORE.has_quest(self.char_id, quest.type))
         done = state.done if state is not None else lambda t: STORE.quest_done(self.char_id, t)
+        if quest.type in (215, 218) and self.char_id and any(done(t) for t in (215, 218)):
+            return False
+        if quest.type == 216 and self.char_id and any(done(t) for t in (215, 217, 218)):
+            return False
         # A previously repeatable quest may have become one-off while its
         # next instance was still in the journal. History wins over it;
         # cancellation remains available and does not consume its inputs.
@@ -3349,6 +3354,8 @@ class Session:
         requested = set()
         if quest_type is not None:
             requested.add(quest_type)
+            if quest_type in (215, 216, 218):
+                requested.update((215, 217, 218))
             q = quests.get(quest_type)
             if q is not None:
                 requested.update(q.need_all + q.need_any + q.branch + q.excludes)
@@ -3662,6 +3669,12 @@ class Session:
             self.send("cmdAck", res=RES_NO_SUCH)
             return
         quest = quests.get(offered[idx])
+        if quest.type == 216:
+            restored = quests.recover_cinema(STORE, self.char_id, at_loc=self.loc.id)
+            for row in self.inv.rows():
+                if row['type_id'] in restored:
+                    self.inv.push_status(row, 1)
+                    self.inv.push_di(row)
         if STORE.has_quest(self.char_id, quest.type):
             self.send("cmdAck", res=RES_NOT_AVAILABLE)
             return

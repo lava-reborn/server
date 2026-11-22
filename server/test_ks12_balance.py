@@ -63,7 +63,20 @@ class Ks12Numbers(unittest.TestCase):
                                  {k: v for k, v in after.items() if k != 'fire_costs'})
                 # Pellets do not become cartridges after changing AP.
                 self.assertEqual(combat.pull(after, 2, after['clip_size']),
-                                 (6 if level == 14 else 12, 1))
+                                 (6 if level == 14 else 10, 1))
+
+    def test_burst_limit_covers_named_and_clan_copies_without_changing_damage(self):
+        for t, (root, name) in items.catalogue().items():
+            if root != items.FIRE_ARM or not name.startswith('lamantin_shotgun_'):
+                continue
+            with self.subTest(type=t):
+                params = items.params_of(t)
+                original = items.wiki()[t]
+                self.assertEqual(params['fire_mods'], [min(v, 10) for v in original['fire_mods']])
+                self.assertEqual(combat.pull(params, 2, params['clip_size']),
+                                 (6 if '_14' in name else 10, 1))
+                for field in ('h_damage_min', 'h_damage_max', 'st_damage_min', 'st_damage_max'):
+                    self.assertEqual(params[field], original[field])
 
     def test_original_two_shot_budget_is_not_rebalanced_by_new_medicine_cost(self):
         slots = dict(helm=inventory.HEAD, shirt=inventory.CAMO,

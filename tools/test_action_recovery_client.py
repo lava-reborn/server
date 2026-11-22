@@ -193,7 +193,7 @@ class ActionRecoveryClient(unittest.TestCase):
         self.assertEqual(self.executed,['stop-auto','swap'])
         self.assertEqual(self.timers,[])
 
-    def test_weapon_switch_during_committed_shot_waits_and_replaces_queued_fire(self):
+    def test_weapon_switch_waits_without_replaying_the_already_sent_next_shot(self):
         self.global_['__bfRecoveryUntil']=500
         fire=dict(__bfRequestFireOrig=lambda a,b:self.executed.append('fire'))
         swap=dict(__bfRequestSwapOrig=lambda:self.executed.append('swap'))
@@ -202,7 +202,7 @@ class ActionRecoveryClient(unittest.TestCase):
         self.assertNotIn('swap',self.executed)
         self.now=500
         self.call('__bfDrainInput',None)
-        self.assertNotIn('fire',self.executed)
+        self.assertEqual(self.executed.count('fire'), 1)
         self.assertEqual(self.executed.count('swap'),1)
 
     def test_last_move_runs_on_final_firing_frame_without_waiting_for_fire_out(self):
@@ -304,15 +304,29 @@ class ActionRecoveryClient(unittest.TestCase):
         self.assertEqual(self.executed[-1],(11,50,True))
         self.assertEqual(len(self.timers),1)
 
-    def test_recovery_is_seen_before_native_auto_fire_listener(self):
+    def test_auto_fire_does_not_wait_for_previous_cosmetic_sequence(self):
         activator=dict(__bfRequestFireOrig=lambda a,b:self.executed.append('fire'))
         connection=dict(__bfRecoveryNotifyOrig=lambda cmd:self.call('__bfRequest1',activator,1,42))
         self.call('__bfRecoveryNotify',connection,dict(messID='faShot',params=dict(id=0,status=0,recovery_ms=440)))
-        self.assertNotIn('fire',self.executed)
+        self.assertEqual(self.executed, ['fire'])
         self.assertEqual(self.global_['__bfRecoveryUntil'],540)
         self.now=540
         self.call('__bfDrainInput',None)
         self.assertEqual(self.executed,['fire'])
+
+    def test_repeated_space_keeps_native_ack_latch_without_queue_or_timer(self):
+        self.global_['__bfRecoveryUntil'] = 500
+        activator = dict(coolDownBlock=True, useType=16,
+                         __bfRequestFireOrig=lambda *args: self.executed.append('fire'))
+        for _ in range(1000):
+            self.call('__bfRequest1', activator, 1, 42)
+        self.assertFalse(self.executed)
+        self.assertFalse(self.timers)
+        self.assertIsNone(self.global_.get('__bfPendingInput'))
+        activator['coolDownBlock'] = False
+        self.call('__bfRequest1', activator, 1, 42)
+        self.assertEqual(self.executed, ['fire'])
+        self.assertFalse(self.timers)
 
     def test_enemy_recovery_does_not_block_own_commands(self):
         connection=dict(__bfRecoveryNotifyOrig=lambda cmd:None)
@@ -388,9 +402,8 @@ class ActionRecoveryClient(unittest.TestCase):
         figure['animationEnabled']=False
         self.assertFalse(self.call('__bfWaiting',None))
 
-    def test_fire_heal_and_swap_run_once_on_firing_completion_without_reclick(self):
+    def test_heal_and_swap_run_once_on_firing_completion_without_reclick(self):
         for wrapper,method,args,label in (
-            ('__bfRequest1','__bfRequestFireOrig',(1,42),'fire-next'),
             ('__bfRequest4','__bfRequestHealOrig',('med',),'heal'),
             ('__bfRequest8','__bfRequestSwapOrig',(),'swap')):
             with self.subTest(action=label):
