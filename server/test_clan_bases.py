@@ -140,9 +140,91 @@ class ClanBases(unittest.TestCase):
                              if s.kind != "base" and s.boss == base.boss)
                 normal = mobs.Mob(1, base.boss, 0)
                 holdings.prepare_room(NS(room=NS(loc=NS(id=other.loc)), mobs={1: normal}))
-                self.assertIs(normal.stats, original)
-                self.assertEqual(normal.vitals(), dict(hcur=original.hp_max, hmax=original.hp_max,
-                                                      scur=original.sp_max, smax=original.sp_max))
+                self.assertIsNot(normal.stats, original)
+                self.assertEqual(normal.vitals(), dict(
+                    hcur=original.hp_max * other.health_scale,
+                    hmax=original.hp_max * other.health_scale,
+                    scur=original.sp_max * other.health_scale,
+                    smax=original.sp_max * other.health_scale))
+                outside = mobs.Mob(2, base.boss, 0)
+                holdings.prepare_room(NS(room=NS(loc=NS(id=0)), mobs={2: outside}))
+                self.assertIs(outside.stats, original)
+                self.assertEqual(vars(original), before)
+
+    def test_warehouse_masters_and_two_guards_use_only_their_local_scales(self):
+        expected = {111: (8100, 2200), 110: (8100, 2200), 109: (8100, 3000),
+                    113: (13500, 3000), 114: (13500, 3000), 112: (13500, 3000),
+                    128: (16200, 3600)}
+        for site in holdings.sites().values():
+            if site.kind != 'warehouse':
+                continue
+            with self.subTest(site=site.key):
+                room = rooms.Room(world.location(site.loc), rooms.IdAllocator(), world.mob_types())
+                rc = combat.RoomCombat(room, self.store)
+                master = next(m for m in rc.mobs.values() if m.type_id == site.boss)
+                guards = [m for m in rc.mobs.values() if m.type_id in site.guards]
+                hp, guard_hp = expected[site.loc]
+                self.assertEqual((master.hp, master.sp), (hp, hp))
+                self.assertEqual(len(guards), 2)
+                for guard in guards:
+                    self.assertEqual((guard.hp, guard.sp), (guard_hp, guard_hp))
+                    self.assertEqual((guard.stats.dmg_min, guard.stats.dmg_max),
+                                     (mobs.stats(guard.type_id).dmg_min, mobs.stats(guard.type_id).dmg_max))
+                    self.assertIsNot(guard.stats, mobs.stats(guard.type_id))
+                self.assertEqual((master.stats.dmg_min, master.stats.dmg_max),
+                                 (mobs.stats(site.boss).dmg_min, mobs.stats(site.boss).dmg_max))
+                master.hp = 1
+                holdings.prepare_room(rc)
+                self.assertEqual(master.hp, 1)
+                self.assertEqual(mobs.stats(site.boss).hp_max * 15, hp)
+
+    def test_six_outer_soldiers_have_quarter_bodyguard_health_and_normal_damage(self):
+        for base in (self.base, holdings.site('base_dn')):
+            with self.subTest(base=base.key):
+                room = rooms.Room(world.location(base.loc), rooms.IdAllocator(), world.mob_types())
+                rc = combat.RoomCombat(room, self.store)
+                soldiers = [m for m in rc.mobs.values() if m.type_id in base.troops]
+                bodyguard = next(m for m in rc.mobs.values() if m.type_id in base.guards)
+                self.assertEqual(len(soldiers), 6)
+                for soldier in soldiers:
+                    original = mobs.stats(soldier.type_id)
+                    self.assertEqual((soldier.hp * 4, soldier.sp * 4),
+                                     (bodyguard.hp, bodyguard.sp))
+                    self.assertEqual((soldier.stats.dmg_min, soldier.stats.dmg_max),
+                                     (original.dmg_min, original.dmg_max))
+                    self.assertIsNot(soldier.stats, original)
+                    self.assertTrue(bosses.keeps_hours(soldier.type_id, base.loc))
+                    self.assertFalse(bosses.keeps_hours(soldier.type_id, 0))
+
+    def test_daily_warehouse_guards_checkpoint_restart_and_next_day(self):
+        async def check(site):
+            self.now = SLOT
+            room = rooms.Room(world.location(site.loc), rooms.IdAllocator(), world.mob_types())
+            rc = combat.RoomCombat(room, self.store)
+            rc.keep_hours()
+            master = next(m for m in rc.mobs.values() if m.type_id == site.boss)
+            guards = [m for m in rc.mobs.values() if m.type_id in site.guards]
+            self.assertTrue(master.alive and not master.away)
+            self.assertTrue(all(m.alive and not m.away and m.slot == SLOT for m in guards))
+            rc.kill(guards[0], None)
+            restored = combat.RoomCombat(
+                rooms.Room(world.location(site.loc), rooms.IdAllocator(), world.mob_types()), self.store)
+            restored.keep_hours()
+            killed = next(m for m in restored.mobs.values() if m.home == guards[0].home)
+            self.assertTrue(killed.away)
+            self.assertFalse(killed.alive)
+            self.assertEqual(sum(m.alive and not m.away for m in restored.mobs.values()
+                                 if m.type_id in site.guards), 1)
+            self.now = SLOT + 86400
+            restored.keep_hours()
+            self.assertEqual(sum(m.alive and not m.away for m in restored.mobs.values()
+                                 if m.type_id in site.guards), 2)
+            self.assertTrue(all(m.slot == self.now for m in restored.mobs.values()
+                                if m.type_id in site.guards))
+        for site in holdings.sites().values():
+            if site.kind == 'warehouse':
+                with self.subTest(site=site.key):
+                    asyncio.run(check(site))
 
     def test_definitions_and_location_specific_weekly_hours(self):
         self.assertEqual(holdings.problems(), [])
@@ -162,7 +244,8 @@ class ClanBases(unittest.TestCase):
     def test_scoped_health_configuration_rejects_nonfinite_or_excessive_values(self):
         rec = dict(loc=118, boss=7454, flag=4427, min_level=16, title="base")
         self.assertEqual(holdings.Site("default", rec).health_scale, 1)
-        for field in ('health_scale', 'guard_health_scale', 'damage_scale', 'guard_damage_scale'):
+        for field in ('health_scale', 'guard_health_scale', 'damage_scale', 'guard_damage_scale',
+                      'troop_health_scale'):
             for value in (0, -1, 101, float("nan"), float("inf"), -float("inf")):
                 with self.subTest(field=field, value=value), self.assertRaises(ValueError):
                     holdings.Site("invalid", dict(rec, **{field: value}))
@@ -224,6 +307,7 @@ class ClanBases(unittest.TestCase):
         self.assertFalse(self.store.base_reserved(self.clan, holdings.base_keys(), SLOT + 7 * 86400))
 
     def test_defenders_spare_the_paid_clan_until_1955_and_never_spare_outsiders(self):
+        self.assertFalse(holdings.defender_friendly(NS(), NS(), NS(is_player=False)))
         member = self.supporters()[0]['char']
         for base in (self.base, holdings.site('base_dn')):
             with self.subTest(base=base.key):
@@ -238,7 +322,7 @@ class ClanBases(unittest.TestCase):
                 rc = NS(store=self.store, room=NS(loc=world.location(base.loc), broadcast=Mock()),
                         fighters=lambda: [outsider, owner], burst=Mock(), set_ws=Mock())
                 self.now = SLOT - 301
-                for type_id in (base.boss,) + base.guards:
+                for type_id in (base.boss,) + base.guards + base.troops:
                     mob = NS(type_id=type_id, target=None, alive=True, aim=None, ap=100,
                              next_attack=0, eid=1)
                     self.assertTrue(holdings.defender_friendly(rc, mob, owner))
@@ -296,15 +380,15 @@ class ClanBases(unittest.TestCase):
                 self.assertEqual(self.store.holding(base.key)['slot'], SLOT)
                 self.store.holding_clear(base.key, 'admin')
 
-    def test_three_guards_unlock_boss_persist_on_restart_and_return_next_week(self):
+    def test_nine_defenders_unlock_boss_persist_on_restart_and_return_next_week(self):
         async def check(base):
             self.now = SLOT
             room = rooms.Room(world.location(base.loc), rooms.IdAllocator(), world.mob_types())
             rc = combat.RoomCombat(room, self.store)
             rc.keep_hours()
-            guards = [m for m in rc.mobs.values() if m.type_id in base.guards]
+            guards = [m for m in rc.mobs.values() if m.type_id in base.guards + base.troops]
             target = next(m for m in rc.mobs.values() if m.type_id == base.boss)
-            self.assertEqual(len(guards), 3)
+            self.assertEqual(len(guards), 9)
             self.assertTrue(all(m.alive and not m.away and m.slot == SLOT for m in guards))
             self.assertTrue(target.away)
             self.assertNotIn(target.eid, room.npcs)
@@ -313,7 +397,7 @@ class ClanBases(unittest.TestCase):
             for index, guard in enumerate(guards):
                 rc.kill(guard, None)
                 rc.keep_hours()
-                self.assertEqual(target.eid in room.npcs, index == 2)
+                self.assertEqual(target.eid in room.npcs, index == 8)
                 self.assertEqual(self.store.boss_kills([rc.boss_spot(guard)]),
                                  {rc.boss_spot(guard): SLOT})
             restored_room = rooms.Room(world.location(base.loc), rooms.IdAllocator(), world.mob_types())
@@ -326,7 +410,7 @@ class ClanBases(unittest.TestCase):
             restored.keep_hours()
             self.assertFalse(holdings.guards_cleared(restored, base, self.now))
             self.assertEqual(sum(m.alive and not m.away for m in restored.mobs.values()
-                                 if m.type_id in base.guards), 3)
+                                 if m.type_id in base.guards + base.troops), 9)
             self.assertTrue(next(m for m in restored.mobs.values() if m.type_id == base.boss).away)
 
         for base in (self.base, holdings.site('base_dn')):

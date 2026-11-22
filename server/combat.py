@@ -3471,7 +3471,7 @@ class RoomCombat:
         # capture and a line in the log, never the kill.
         try:
             if mob.slot is not None and holdings.guard_site(self.room.loc.id, mob.type_id) is not None:
-                # Reuse the weekly boss checkpoint before the corpse timer:
+                # Reuse the site's boss checkpoint before the corpse timer:
                 # a reconnect or restart must not resurrect cleared guards.
                 self.store.boss_killed(self.boss_spot(mob), mob.slot)
             mob.capture = holdings.snapshot(self, mob, killer)

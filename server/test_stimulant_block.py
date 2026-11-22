@@ -19,7 +19,9 @@ for t in (4918, 4938, 3206, 3116, 3210, 3561):
     check("ordinary stimulant %d is enabled" % t, items.stimulant_unavailable(t), False)
 for t in (6055, 6043, 6061, items.STARTER_ROUNDS):
     check("ordinary healing/ammo %d is not blocked" % t, items.stimulant_unavailable(t), False)
-check("purchase remains available at Gofus", 3114 in items.stock_for(1013, 188), True)
+check("Abri Gofus sells city-rank Alpha II", 3116 in items.stock_for(1013, 188), True)
+check("Abri Gofus does not retain the archived off-rank Alpha I", 3114 in items.stock_for(1013, 188), False)
+check("Halfa Gofus sells city-rank Alpha I", 4181 in items.stock_for(1013, 36), True)
 check("INTUX IV is not sold by the archived Halfa assistant", 3561 in items.stock_for(2015, 36), False)
 
 blocked = [t for t, (root, _name) in items.catalogue().items()

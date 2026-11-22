@@ -8,6 +8,7 @@ import unittest
 import xml.etree.ElementTree as ET
 
 import names
+import holdings
 import map_labels
 import progression
 import quests
@@ -111,10 +112,37 @@ class ClanBaseWorldTests(unittest.TestCase):
             with self.subTest(lid=lid):
                 self.assertEqual(Counter(t for _cell, t in world.location(lid).spawns), expected)
         placed = {lid: Counter(r['type'] for r in world.placed_in(lid)) for lid in STAFF}
-        self.assertEqual(placed, {118: Counter({7454: 1, 4829: 3}),
-                                  382: Counter({7451: 1, 4428: 1, 4828: 3}),
+        self.assertEqual(placed, {118: Counter({7454: 1, 4829: 3, 2312: 6}),
+                                  382: Counter({7451: 1, 4428: 1, 4828: 3, 918: 6}),
                                   609: Counter(), 380: Counter(), 958: Counter()})
         self.assertIsNone(rooms.check_placements(world.mob_types()))
+
+    def test_site_defenders_have_reachable_spread_out_spawn_cells(self):
+        for site in holdings.sites().values():
+            with self.subTest(site=site.key):
+                loc = world.location(site.loc)
+                cells = [r['cell'][1] * loc.width + r['cell'][0]
+                         for r in world.placed_in(site.loc)
+                         if r['type'] in site.guards + site.troops]
+                self.assertEqual(len(cells), 9 if site.kind == 'base' else 2)
+                exits = travel.exit_sides(loc)
+                self.assertTrue(exits)
+                accessible = set()
+                for edge in exits:
+                    if edge not in accessible and edge not in loc.obstacles:
+                        accessible.update(reachable(loc, edge))
+                for cell in cells:
+                    self.assertNotIn(cell, loc.obstacles)
+                    self.assertNotIn(cell, exits)
+                    self.assertTrue(accessible.intersection(
+                        progression.hex_neighbours(cell, loc.width, loc.height)))
+                if site.kind == 'base':
+                    soldiers = [r['cell'] for r in world.placed_in(site.loc)
+                                if r['type'] in site.troops]
+                    self.assertEqual(len(soldiers), 6)
+                    self.assertEqual(sum(x < loc.width / 2 for x, _y in soldiers), 3)
+                    self.assertGreater(max(y for _x, y in soldiers) - min(y for _x, y in soldiers),
+                                       loc.height / 2)
 
     def test_lifts_are_quest_only_and_do_not_expose_trade_or_repair(self):
         for lid in (118, 609):

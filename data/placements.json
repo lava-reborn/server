@@ -15941,7 +15941,7 @@
      24,
      25
     ],
-    "why": "DESIGNED owner-approved weekly clan-base guard. Original clan_guardian sprite/type; level from existing mob curves. Scheduled with the weekly boss, persistent deaths, hostile to every clan. Not claimed as recovered original placement or stats."
+    "why": "DESIGNED weekly base bodyguard. Original guardian art; locally tuned stats, persistent weekly deaths, friendly to the paid owner until 19:55."
    },
    {
     "type": 4829,
@@ -15949,7 +15949,7 @@
      40,
      21
     ],
-    "why": "DESIGNED owner-approved weekly clan-base guard. Original clan_guardian sprite/type; level from existing mob curves. Scheduled with the weekly boss, persistent deaths, hostile to every clan. Not claimed as recovered original placement or stats."
+    "why": "DESIGNED weekly base bodyguard. Original guardian art; locally tuned stats, persistent weekly deaths, friendly to the paid owner until 19:55."
    },
    {
     "type": 4829,
@@ -15957,7 +15957,55 @@
      39,
      32
     ],
-    "why": "DESIGNED owner-approved weekly clan-base guard. Original clan_guardian sprite/type; level from existing mob curves. Scheduled with the weekly boss, persistent deaths, hostile to every clan. Not claimed as recovered original placement or stats."
+    "why": "DESIGNED weekly base bodyguard. Original guardian art; locally tuned stats, persistent weekly deaths, friendly to the paid owner until 19:55."
+   },
+   {
+    "type": 2312,
+    "cell": [
+     12,
+     21
+    ],
+    "why": "DESIGNED approved six outer base soldiers, 2026-11-22. Native mob type; HP/SP one quarter of the bodyguards, normal damage. Weekly death checkpoints and owner friendliness reuse the base defender rules; no repeatable farm."
+   },
+   {
+    "type": 2312,
+    "cell": [
+     52,
+     23
+    ],
+    "why": "DESIGNED approved six outer base soldiers, 2026-11-22. Native mob type; HP/SP one quarter of the bodyguards, normal damage. Weekly death checkpoints and owner friendliness reuse the base defender rules; no repeatable farm."
+   },
+   {
+    "type": 2312,
+    "cell": [
+     12,
+     64
+    ],
+    "why": "DESIGNED approved six outer base soldiers, 2026-11-22. Native mob type; HP/SP one quarter of the bodyguards, normal damage. Weekly death checkpoints and owner friendliness reuse the base defender rules; no repeatable farm."
+   },
+   {
+    "type": 2312,
+    "cell": [
+     52,
+     64
+    ],
+    "why": "DESIGNED approved six outer base soldiers, 2026-11-22. Native mob type; HP/SP one quarter of the bodyguards, normal damage. Weekly death checkpoints and owner friendliness reuse the base defender rules; no repeatable farm."
+   },
+   {
+    "type": 2312,
+    "cell": [
+     12,
+     105
+    ],
+    "why": "DESIGNED approved six outer base soldiers, 2026-11-22. Native mob type; HP/SP one quarter of the bodyguards, normal damage. Weekly death checkpoints and owner friendliness reuse the base defender rules; no repeatable farm."
+   },
+   {
+    "type": 2312,
+    "cell": [
+     52,
+     105
+    ],
+    "why": "DESIGNED approved six outer base soldiers, 2026-11-22. Native mob type; HP/SP one quarter of the bodyguards, normal damage. Weekly death checkpoints and owner friendliness reuse the base defender rules; no repeatable farm."
    }
   ],
   "382": [
@@ -15983,7 +16031,7 @@
      30,
      37
     ],
-    "why": "DESIGNED owner-approved weekly clan-base guard. Original clan_guardian sprite/type; level from existing mob curves. Scheduled with the weekly boss, persistent deaths, hostile to every clan. Not claimed as recovered original placement or stats."
+    "why": "DESIGNED weekly base bodyguard. Original guardian art; locally tuned stats, persistent weekly deaths, friendly to the paid owner until 19:55."
    },
    {
     "type": 4828,
@@ -15991,7 +16039,7 @@
      46,
      31
     ],
-    "why": "DESIGNED owner-approved weekly clan-base guard. Original clan_guardian sprite/type; level from existing mob curves. Scheduled with the weekly boss, persistent deaths, hostile to every clan. Not claimed as recovered original placement or stats."
+    "why": "DESIGNED weekly base bodyguard. Original guardian art; locally tuned stats, persistent weekly deaths, friendly to the paid owner until 19:55."
    },
    {
     "type": 4828,
@@ -15999,7 +16047,181 @@
      46,
      43
     ],
-    "why": "DESIGNED owner-approved weekly clan-base guard. Original clan_guardian sprite/type; level from existing mob curves. Scheduled with the weekly boss, persistent deaths, hostile to every clan. Not claimed as recovered original placement or stats."
+    "why": "DESIGNED weekly base bodyguard. Original guardian art; locally tuned stats, persistent weekly deaths, friendly to the paid owner until 19:55."
+   },
+   {
+    "type": 918,
+    "cell": [
+     12,
+     23
+    ],
+    "why": "DESIGNED approved six outer base soldiers, 2026-11-22. Native mob type; HP/SP one quarter of the bodyguards, normal damage. Weekly death checkpoints and owner friendliness reuse the base defender rules; no repeatable farm."
+   },
+   {
+    "type": 918,
+    "cell": [
+     52,
+     23
+    ],
+    "why": "DESIGNED approved six outer base soldiers, 2026-11-22. Native mob type; HP/SP one quarter of the bodyguards, normal damage. Weekly death checkpoints and owner friendliness reuse the base defender rules; no repeatable farm."
+   },
+   {
+    "type": 918,
+    "cell": [
+     12,
+     64
+    ],
+    "why": "DESIGNED approved six outer base soldiers, 2026-11-22. Native mob type; HP/SP one quarter of the bodyguards, normal damage. Weekly death checkpoints and owner friendliness reuse the base defender rules; no repeatable farm."
+   },
+   {
+    "type": 918,
+    "cell": [
+     52,
+     64
+    ],
+    "why": "DESIGNED approved six outer base soldiers, 2026-11-22. Native mob type; HP/SP one quarter of the bodyguards, normal damage. Weekly death checkpoints and owner friendliness reuse the base defender rules; no repeatable farm."
+   },
+   {
+    "type": 918,
+    "cell": [
+     12,
+     105
+    ],
+    "why": "DESIGNED approved six outer base soldiers, 2026-11-22. Native mob type; HP/SP one quarter of the bodyguards, normal damage. Weekly death checkpoints and owner friendliness reuse the base defender rules; no repeatable farm."
+   },
+   {
+    "type": 918,
+    "cell": [
+     52,
+     105
+    ],
+    "why": "DESIGNED approved six outer base soldiers, 2026-11-22. Native mob type; HP/SP one quarter of the bodyguards, normal damage. Weekly death checkpoints and owner friendliness reuse the base defender rules; no repeatable farm."
+   }
+  ],
+  "111": [
+   {
+    "type": 1040,
+    "cell": [
+     26,
+     47
+    ],
+    "why": "DESIGNED approved warehouse guard, 2026-11-22. Half the corresponding base bodyguard HP/SP and damage; lower Wadi-Halfa tier. Daily master schedule and persistent death checkpoints, not normal respawn farming."
+   },
+   {
+    "type": 1040,
+    "cell": [
+     40,
+     54
+    ],
+    "why": "DESIGNED approved warehouse guard, 2026-11-22. Half the corresponding base bodyguard HP/SP and damage; lower Wadi-Halfa tier. Daily master schedule and persistent death checkpoints, not normal respawn farming."
+   }
+  ],
+  "110": [
+   {
+    "type": 1040,
+    "cell": [
+     22,
+     43
+    ],
+    "why": "DESIGNED approved warehouse guard, 2026-11-22. Half the corresponding base bodyguard HP/SP and damage; lower Wadi-Halfa tier. Daily master schedule and persistent death checkpoints, not normal respawn farming."
+   },
+   {
+    "type": 1040,
+    "cell": [
+     36,
+     53
+    ],
+    "why": "DESIGNED approved warehouse guard, 2026-11-22. Half the corresponding base bodyguard HP/SP and damage; lower Wadi-Halfa tier. Daily master schedule and persistent death checkpoints, not normal respawn farming."
+   }
+  ],
+  "109": [
+   {
+    "type": 4828,
+    "cell": [
+     27,
+     47
+    ],
+    "why": "DESIGNED approved warehouse guard, 2026-11-22. Half the corresponding base bodyguard HP/SP and damage; lower Wadi-Halfa tier. Daily master schedule and persistent death checkpoints, not normal respawn farming."
+   },
+   {
+    "type": 4828,
+    "cell": [
+     41,
+     56
+    ],
+    "why": "DESIGNED approved warehouse guard, 2026-11-22. Half the corresponding base bodyguard HP/SP and damage; lower Wadi-Halfa tier. Daily master schedule and persistent death checkpoints, not normal respawn farming."
+   }
+  ],
+  "113": [
+   {
+    "type": 4828,
+    "cell": [
+     23,
+     43
+    ],
+    "why": "DESIGNED approved warehouse guard, 2026-11-22. Half the corresponding base bodyguard HP/SP and damage; lower Wadi-Halfa tier. Daily master schedule and persistent death checkpoints, not normal respawn farming."
+   },
+   {
+    "type": 4828,
+    "cell": [
+     37,
+     53
+    ],
+    "why": "DESIGNED approved warehouse guard, 2026-11-22. Half the corresponding base bodyguard HP/SP and damage; lower Wadi-Halfa tier. Daily master schedule and persistent death checkpoints, not normal respawn farming."
+   }
+  ],
+  "114": [
+   {
+    "type": 4828,
+    "cell": [
+     23,
+     42
+    ],
+    "why": "DESIGNED approved warehouse guard, 2026-11-22. Half the corresponding base bodyguard HP/SP and damage; lower Wadi-Halfa tier. Daily master schedule and persistent death checkpoints, not normal respawn farming."
+   },
+   {
+    "type": 4828,
+    "cell": [
+     37,
+     52
+    ],
+    "why": "DESIGNED approved warehouse guard, 2026-11-22. Half the corresponding base bodyguard HP/SP and damage; lower Wadi-Halfa tier. Daily master schedule and persistent death checkpoints, not normal respawn farming."
+   }
+  ],
+  "112": [
+   {
+    "type": 4828,
+    "cell": [
+     27,
+     47
+    ],
+    "why": "DESIGNED approved warehouse guard, 2026-11-22. Half the corresponding base bodyguard HP/SP and damage; lower Wadi-Halfa tier. Daily master schedule and persistent death checkpoints, not normal respawn farming."
+   },
+   {
+    "type": 4828,
+    "cell": [
+     41,
+     57
+    ],
+    "why": "DESIGNED approved warehouse guard, 2026-11-22. Half the corresponding base bodyguard HP/SP and damage; lower Wadi-Halfa tier. Daily master schedule and persistent death checkpoints, not normal respawn farming."
+   }
+  ],
+  "128": [
+   {
+    "type": 4829,
+    "cell": [
+     25,
+     72
+    ],
+    "why": "DESIGNED approved warehouse guard, 2026-11-22. Half the corresponding base bodyguard HP/SP and damage; lower Wadi-Halfa tier. Daily master schedule and persistent death checkpoints, not normal respawn farming."
+   },
+   {
+    "type": 4829,
+    "cell": [
+     37,
+     82
+    ],
+    "why": "DESIGNED approved warehouse guard, 2026-11-22. Half the corresponding base bodyguard HP/SP and damage; lower Wadi-Halfa tier. Daily master schedule and persistent death checkpoints, not normal respawn farming."
    }
   ]
  }

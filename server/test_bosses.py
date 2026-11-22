@@ -601,9 +601,9 @@ async def _master():
         NOW[0] = at(13)
         room = rooms.Room(loc, rooms.IdAllocator(), world.mob_types())
         rc = combat.RoomCombat(room, store)
-        check("Донгола's Северный склад has one boss keeping hours, its «Хозяин склада»",
-              [m.type_id for m in rc.bosses], [MASTER])
-        master = rc.bosses[0]
+        check("Донгола's Северный склад keeps its master and two guards on daily hours",
+              sorted(m.type_id for m in rc.bosses), [4828, 4828, MASTER])
+        master = next(m for m in rc.bosses if m.type_id == MASTER)
         eid = master.eid
         seat = _Seat()
         room.players[seat] = True

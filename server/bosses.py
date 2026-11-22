@@ -252,9 +252,11 @@ def keeps_hours(type_id, loc_id=None):
     respawn timer: a boss, while the rule is on, but for ALL_DAY."""
     if loc_id is not None:
         import holdings                 # late: its schedule imports bosses
-        if (holdings.base_for(loc_id, type_id) is not None
-                or holdings.guard_site(loc_id, type_id) is not None):
+        if holdings.base_for(loc_id, type_id) is not None:
             return True
+        s = holdings.guard_site(loc_id, type_id)
+        if s is not None:
+            return s.kind == 'base' or bool(HOURS)
     return (bool(HOURS) and type_id not in ALL_DAY
             and world.creature_role(type_id) == "boss")
 
@@ -360,7 +362,8 @@ def slot_of(type_id, t, loc_id=None):
         import holdings                 # late: only the configured surface boss
         s = holdings.base_for(loc_id, type_id) or holdings.guard_site(loc_id, type_id)
         if s is not None:
-            return holdings.battle_slot(s, t)
+            return (holdings.battle_slot(s, t) if s.kind == 'base'
+                    else slot(t, hours_of(s.boss)))
     return slot(t, hours_of(type_id))
 
 

@@ -5,7 +5,8 @@ second ownership system. Their original surfaces/interiors share one site.
 The Saturday 20:00–21:00 Moscow kill grants a payment reservation; the
 winning clan pays 1,500,000 afro from its treasury by 21:15, then owns the
 benefits until next Saturday 19:55, five minutes before the battle. Each week needs a new capture
-and payment. One clan may reserve/lease one base; warehouses do not count.
+and payment. Three bodyguards and six outer soldiers must die before the
+master appears. One clan may reserve/lease one base; warehouses do not count.
 At least three living clan members of the site's minimum level must be in
 the boss's room at the kill; only one of them needs to hurt him. Capture and weekly
 boss-death record commit at the kill, before the corpse timer. Everything
@@ -120,7 +121,7 @@ class Site(object):
     __slots__ = ("key", "loc", "boss", "flag", "box", "quest", "min_level", "title",
                  "kind", "rooms", "traders", "rent_quest", "rent", "battle", "payment",
                  "gold_quest", "health_scale", "guards", "guard_health_scale",
-                 "damage_scale", "guard_damage_scale")
+                 "damage_scale", "guard_damage_scale", "troops", "troop_health_scale")
 
     def __init__(self, key, rec):
         self.key = str(key)
@@ -140,11 +141,14 @@ class Site(object):
         self.payment = str(rec.get("payment", ""))
         self.gold_quest = int(rec.get("gold_quest", 0))
         self.guards = tuple(int(x) for x in rec.get("guards", []))
+        self.troops = tuple(int(x) for x in rec.get("troops", []))
         self.health_scale = float(rec.get("health_scale", 1))
         self.guard_health_scale = float(rec.get("guard_health_scale", 1))
+        self.troop_health_scale = float(rec.get("troop_health_scale", 1))
         self.damage_scale = float(rec.get("damage_scale", 1))
         self.guard_damage_scale = float(rec.get("guard_damage_scale", 1))
-        for field in ('health_scale', 'guard_health_scale', 'damage_scale', 'guard_damage_scale'):
+        for field in ('health_scale', 'guard_health_scale', 'damage_scale', 'guard_damage_scale',
+                      'troop_health_scale'):
             if not math.isfinite(getattr(self, field)) or not 1 <= getattr(self, field) <= 100:
                 raise ValueError("data/holdings.json: %s %s must be finite, 1..100" % (self.key, field))
 
@@ -214,20 +218,24 @@ def base_for(loc_id, boss_type=None):
 
 
 def prepare_room(rc):
-    """Base defenders use local stat copies, never a shared type edit."""
+    """Site defenders use local stat copies, never a shared type edit."""
     for target in rc.mobs.values():
-        s = base_for(rc.room.loc.id, target.type_id) or guard_site(rc.room.loc.id, target.type_id)
-        if s is None or getattr(target, "_base_prepared", False):
+        s = site_for(rc.room.loc.id, target.type_id) or guard_site(rc.room.loc.id, target.type_id)
+        if s is None or getattr(target, "_holding_prepared", False):
             continue
         target.stats = copy.copy(target.stats)
-        scale = s.health_scale if target.type_id == s.boss else s.guard_health_scale
-        damage = s.damage_scale if target.type_id == s.boss else s.guard_damage_scale
+        if target.type_id == s.boss:
+            scale, damage = s.health_scale, s.damage_scale
+        elif target.type_id in s.guards:
+            scale, damage = s.guard_health_scale, s.guard_damage_scale
+        else:
+            scale, damage = s.troop_health_scale, 1
         target.stats.hp_max = max(1, int(round(target.stats.hp_max * scale)))
         target.stats.sp_max = max(0, int(round(target.stats.sp_max * scale)))
         target.stats.dmg_min = max(0, int(round(target.stats.dmg_min * damage)))
         target.stats.dmg_max = max(target.stats.dmg_min, int(round(target.stats.dmg_max * damage)))
         target.hp, target.sp = target.stats.hp_max, target.stats.sp_max
-        target._base_prepared = True
+        target._holding_prepared = True
 
 
 def rent_site(quest_type):
@@ -240,13 +248,14 @@ def base_keys():
 
 
 def guard_site(loc_id, type_id):
-    s = base_for(loc_id)
-    return s if s is not None and int(type_id) in s.guards else None
+    s = site_at(loc_id)
+    return s if (s is not None and s.loc == int(loc_id)
+                 and int(type_id) in s.guards + s.troops) else None
 
 
 def guards_cleared(rc, s, slot):
-    """Scheduled guards must have died in this weekly window, not earlier."""
-    guards = [m for m in rc.mobs.values() if m.type_id in s.guards]
+    """All scheduled defenders must have died in this window, not earlier."""
+    guards = [m for m in rc.mobs.values() if m.type_id in s.guards + s.troops]
     return bool(guards) and all(not m.alive and m.slot == slot for m in guards)
 
 
@@ -312,8 +321,10 @@ def paid_base_for(store, loc_id, char_id, now=None):
 
 def defender_friendly(rc, mob, fighter):
     """Only a paid base's own defenders spare its current clan members."""
+    if not getattr(fighter, 'is_player', False):
+        return False
     s = base_for(rc.room.loc.id, mob.type_id) or guard_site(rc.room.loc.id, mob.type_id)
-    if s is None or not getattr(fighter, 'is_player', False):
+    if s is None or s.kind != 'base':
         return False
     return member_of(rc.store, paid_holder(rc.store, s), fighter.sess.char_id)
 
@@ -379,6 +390,10 @@ def problems():
             continue
         files = {ty for _c, ty in loc.spawns}
         files.update(int(r["type"]) for r in world.placements().get(s.loc, ()))
+        if any(g not in files or world.creature_role(g) != 'mob' for g in s.guards + s.troops):
+            out.append("%s: guards and troops must be ordinary fighters in its room" % key)
+        if set(s.guards) & set(s.troops) or s.boss in s.guards + s.troops:
+            out.append("%s: defender roles must use distinct types" % key)
         if s.kind == "base":
             for what, ty in (("boss", s.boss), ("flag", s.flag)):
                 if ty not in files:
