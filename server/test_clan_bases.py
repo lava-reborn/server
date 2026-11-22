@@ -105,14 +105,26 @@ class ClanBases(unittest.TestCase):
                 self.assertEqual(target.vitals(), dict(hcur=target.hp, hmax=target.hp,
                                                       scur=target.sp, smax=target.sp))
                 for field, value in before.items():
-                    if field not in ("hp_max", "sp_max"):
+                    if field in ("dmg_min", "dmg_max"):
+                        self.assertEqual(getattr(target.stats, field), round(value * base.damage_scale))
+                    elif field not in ("hp_max", "sp_max"):
                         self.assertEqual(getattr(target.stats, field), value)
                 target.hp = target.sp = 1
                 holdings.prepare_room(rc)
                 self.assertEqual((target.hp, target.sp), (1, 1))
                 target.reset()
                 self.assertEqual((target.hp, target.sp), (original.hp_max * 30, original.sp_max * 30))
+                self.assertEqual(target.stats.dmg_min, round(original.dmg_min * base.damage_scale))
                 self.assertEqual(vars(original), before)
+                for guard in (m for m in rc.mobs.values() if m.type_id in base.guards):
+                    plain = mobs.stats(guard.type_id)
+                    self.assertIsNot(guard.stats, plain)
+                    self.assertEqual((guard.stats.hp_max, guard.stats.sp_max),
+                                     (round(plain.hp_max * base.guard_health_scale),
+                                      round(plain.sp_max * base.guard_health_scale)))
+                    self.assertEqual((guard.stats.dmg_min, guard.stats.dmg_max),
+                                     (round(plain.dmg_min * base.guard_damage_scale),
+                                      round(plain.dmg_max * base.guard_damage_scale)))
                 other = next(s for s in holdings.sites().values()
                              if s.kind != "base" and s.boss == base.boss)
                 normal = mobs.Mob(1, base.boss, 0)
@@ -139,7 +151,7 @@ class ClanBases(unittest.TestCase):
     def test_scoped_health_configuration_rejects_nonfinite_or_excessive_values(self):
         rec = dict(loc=118, boss=7454, flag=4427, min_level=16, title="base")
         self.assertEqual(holdings.Site("default", rec).health_scale, 1)
-        for field in ('health_scale', 'guard_health_scale'):
+        for field in ('health_scale', 'guard_health_scale', 'damage_scale', 'guard_damage_scale'):
             for value in (0, -1, 101, float("nan"), float("inf"), -float("inf")):
                 with self.subTest(field=field, value=value), self.assertRaises(ValueError):
                     holdings.Site("invalid", dict(rec, **{field: value}))

@@ -116,7 +116,8 @@ class Site(object):
     """One capturable place of data/holdings.json."""
     __slots__ = ("key", "loc", "boss", "flag", "box", "quest", "min_level", "title",
                  "kind", "rooms", "traders", "rent_quest", "rent", "battle", "payment",
-                 "gold_quest", "health_scale", "guards", "guard_health_scale")
+                 "gold_quest", "health_scale", "guards", "guard_health_scale",
+                 "damage_scale", "guard_damage_scale")
 
     def __init__(self, key, rec):
         self.key = str(key)
@@ -138,7 +139,9 @@ class Site(object):
         self.guards = tuple(int(x) for x in rec.get("guards", []))
         self.health_scale = float(rec.get("health_scale", 1))
         self.guard_health_scale = float(rec.get("guard_health_scale", 1))
-        for field in ('health_scale', 'guard_health_scale'):
+        self.damage_scale = float(rec.get("damage_scale", 1))
+        self.guard_damage_scale = float(rec.get("guard_damage_scale", 1))
+        for field in ('health_scale', 'guard_health_scale', 'damage_scale', 'guard_damage_scale'):
             if not math.isfinite(getattr(self, field)) or not 1 <= getattr(self, field) <= 100:
                 raise ValueError("data/holdings.json: %s %s must be finite, 1..100" % (self.key, field))
 
@@ -208,15 +211,18 @@ def base_for(loc_id, boss_type=None):
 
 
 def prepare_room(rc):
-    """Base defenders have their own health, never a shared type edit."""
+    """Base defenders use local stat copies, never a shared type edit."""
     for target in rc.mobs.values():
         s = base_for(rc.room.loc.id, target.type_id) or guard_site(rc.room.loc.id, target.type_id)
         if s is None or getattr(target, "_base_prepared", False):
             continue
         target.stats = copy.copy(target.stats)
         scale = s.health_scale if target.type_id == s.boss else s.guard_health_scale
+        damage = s.damage_scale if target.type_id == s.boss else s.guard_damage_scale
         target.stats.hp_max = max(1, int(round(target.stats.hp_max * scale)))
         target.stats.sp_max = max(0, int(round(target.stats.sp_max * scale)))
+        target.stats.dmg_min = max(0, int(round(target.stats.dmg_min * damage)))
+        target.stats.dmg_max = max(target.stats.dmg_min, int(round(target.stats.dmg_max * damage)))
         target.hp, target.sp = target.stats.hp_max, target.stats.sp_max
         target._base_prepared = True
 

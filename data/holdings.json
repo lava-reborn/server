@@ -28,7 +28,7 @@
                "title": "Южный склад Донголы"},
   "wh_ah_center": {"loc": 128, "boss": 7454, "flag": 1011, "box": 6830, "quest": 771, "gold_quest": 18226, "min_level": 17,
                    "title": "Центр Абу-Хамеда"},
-  "base_ah": {"kind": "base", "guards": [4829], "guard_health_scale": 4, "health_scale": 30, "loc": 118, "boss": 7454, "flag": 4427, "min_level": 16, "title": "Клановая база Абу-Хамеда", "rooms": [118, 609], "traders": [716, 714], "rent_quest": 18210, "rent": 1500000, "battle": "clan_base_battle", "payment": "clan_base_payment"},
-  "base_dn": {"kind": "base", "guards": [4828], "guard_health_scale": 4, "health_scale": 30, "loc": 382, "boss": 7451, "flag": 4428, "min_level": 12, "title": "Клановая база Донголы", "rooms": [382, 380, 958], "traders": [5239, 5240], "rent_quest": 18211, "rent": 1500000, "battle": "clan_base_battle", "payment": "clan_base_payment"}
+  "base_ah": {"kind": "base", "guards": [4829], "guard_health_scale": 20, "guard_damage_scale": 2, "health_scale": 30, "damage_scale": 2, "loc": 118, "boss": 7454, "flag": 4427, "min_level": 16, "title": "Клановая база Абу-Хамеда", "rooms": [118, 609], "traders": [716, 714], "rent_quest": 18210, "rent": 1500000, "battle": "clan_base_battle", "payment": "clan_base_payment"},
+  "base_dn": {"kind": "base", "guards": [4828], "guard_health_scale": 20, "guard_damage_scale": 2, "health_scale": 30, "damage_scale": 2, "loc": 382, "boss": 7451, "flag": 4428, "min_level": 12, "title": "Клановая база Донголы", "rooms": [382, 380, 958], "traders": [5239, 5240], "rent_quest": 18211, "rent": 1500000, "battle": "clan_base_battle", "payment": "clan_base_payment"}
  }
 }
