@@ -334,7 +334,10 @@ def stock_for(trader_type, loc_id=None):
     """
     chosen = _shop_stock(trader_type, loc_id)
     owners = shop_bands.stock_owners(loc_id) if loc_id in shop_bands.CITY_OF else {}
-    return [t for t in chosen if owners.get(t, trader_type) == trader_type]
+    chosen = [t for t in chosen if owners.get(t, trader_type) == trader_type]
+    # Compatible rounds are an intentional exception to location-wide ownership:
+    # a gun must not require buying its ammunition from a different seller.
+    return shop_bands.with_weapon_ammunition(chosen)
 
 
 # Existing coupons still redeem, but selling an unlimited discounted supply

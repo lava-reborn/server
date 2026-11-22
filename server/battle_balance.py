@@ -28,6 +28,7 @@ LEVEL_SPREAD = .6
 LEVEL_DAMAGE = .12
 MIN_LEVEL_DAMAGE = .1
 GAP_MAX = 3
+ORDINARY_LEVEL_ACCURACY = .05
 
 
 @lru_cache(maxsize=1)
@@ -103,6 +104,20 @@ def ordinary_plus_two():
     return MappingProxyType(factors)
 
 
+@lru_cache(maxsize=1)
+def ordinary_plus_three():
+    """Reviewed ordinary +3 encounter curve, separate from bosses and the range."""
+    raw = json.loads(PATH.with_name('combat_balance.json').read_text(encoding='utf-8'))
+    if raw['source_commit'] != data()['source_commit']:
+        raise ValueError('Combat catalogue and equations have different sources')
+    factors = raw['ordinary_plus_three']
+    if (set(factors) != {'player_damage_ratio', 'mob_damage_ratio'}
+            or any(isinstance(value, bool) or not isinstance(value, (int, float))
+                   or not math.isfinite(value) or not 0 < value <= 1 for value in factors.values())):
+        raise ValueError('Invalid ordinary +3 damage coefficients')
+    return MappingProxyType(factors)
+
+
 def split(shooter, target, damage, piercing, critical, stamina_left, stamina_damage=0, melee=False, rifle=False, ordinary=False):
     if shooter.is_player and not target.is_player and getattr(target.stats, 'role', None) != 'object':
         player_level = level(shooter)
@@ -113,6 +128,14 @@ def split(shooter, target, damage, piercing, critical, stamina_left, stamina_dam
         factor = factors.get(min(gap, GAP_MAX), 1) if gap >= 1 else 1
         if ordinary and gap == 2:
             factor = ordinary_plus_two().get(player_level, factor)
+        elif ordinary and gap == 3 and getattr(target.stats, 'role', None) in ('mob', 'animal', 'turret'):
+            factor = ordinary_plus_two().get(player_level, factors.get(2, 1)) * ordinary_plus_three()['player_damage_ratio']
+        damage = max(1, int(damage * factor)) if damage > 0 else 0
+        stamina_damage = int(stamina_damage * factor)
+    elif (ordinary and not shooter.is_player and target.is_player
+            and getattr(shooter.stats, 'role', None) in ('mob', 'animal', 'turret')
+            and level(shooter) - level(target) == 3):
+        factor = ordinary_plus_three()['mob_damage_ratio']
         damage = max(1, int(damage * factor)) if damage > 0 else 0
         stamina_damage = int(stamina_damage * factor)
     left = max(0, stamina_left)
@@ -155,19 +178,17 @@ def weapon(weapon, character, row, ammo):
     """Ordinary equipment already holds the reviewed base damage and ranges."""
     import inventory
     missing = max(0, inventory.item_level(row['type_id']) - character.level) if row else 0
-    power = (1 + DAMAGE_PER_INTELLECT * intellect(character)) * max(MIN_LEVEL_DAMAGE, 1 - LEVEL_DAMAGE * missing)
+    power = 1 + DAMAGE_PER_INTELLECT * intellect(character)
     damage, stamina, reach = (ammo.get(key, 1) for key in ('dam_mod', 'st_mod', 'range_mod'))
     return weapon._replace(dmin=max(1, round(weapon.dmin * power * damage)),
         dmax=max(1, round(weapon.dmax * power * damage)),
         sdmin=round(weapon.sdmin * power * stamina), sdmax=round(weapon.sdmax * power * stamina),
         max_range=math.floor(weapon.max_range * reach + 1e-9),
-        cone=weapon.cone * (1 + LEVEL_SPREAD * missing))
+        cone=weapon.cone / (1 - ORDINARY_LEVEL_ACCURACY * min(inventory.GEAR_LEVEL_ALLOWANCE, missing)))
 
 
 def melee(bounds, character, row):
-    import inventory
-    missing = max(0, inventory.item_level(row['type_id']) - character.level) if row else 0
-    power = (1 + DAMAGE_PER_INTELLECT * intellect(character)) * max(MIN_LEVEL_DAMAGE, 1 - LEVEL_DAMAGE * missing)
+    power = 1 + DAMAGE_PER_INTELLECT * intellect(character)
     return tuple(max(1, round(value * power)) for value in bounds)
 
 

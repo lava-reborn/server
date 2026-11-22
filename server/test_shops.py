@@ -467,11 +467,22 @@ for trader, who in sorted(LISTS.items()):
     wire = items.stock_for(trader, PLACE[trader])
     kinds = shop_bands.kinds(trader)
     band = shop_bands.goods(kinds, 0, 4, shop_bands.only(trader)) if kinds else []
+    expected = (band + goods if trader != ERIKESAM else band + goods[:-2] + [4917, 4937] + goods[-2:])
+    if trader in (BORIS, SCHULZ):
+        expected = band + [6188, 6094, 6106, 6118, 6142, 6166, 6154,
+                           6092, 6104, 6116, 6140, 6164, 6152,
+                           6093, 6105, 6117, 6141, 6165, 6153,
+                           6103, 6115, 6127, 6175, 6163]
+    elif trader == SETH:
+        expected = [25636, 6092, 6104, 6116, 6140, 6164, 6152] + goods[3:]
+    elif trader in (BOMANI, RO_A_KIM):
+        expected = [6188, 6092, 6104, 6116, 6140, 6164, 6152, 6189,
+                    6093, 6105, 6117, 6141, 6165, 6153,
+                    6094, 6106, 6118, 6142, 6166, 6154,
+                    6103, 6115, 6127, 6151, 6175, 6163]
     check("%s (%d): %d types, on the wire as written (a seller's band first)" % (
         who, trader, len(wire)), wire,
-        (band + goods if trader != ERIKESAM else band + goods[:-2] + [4917, 4937] + goods[-2:]) + ([6152, 6153, 6154, 6163, 6164, 6165, 6166, 6175]
-                        if trader in (BORIS, SCHULZ) else
-                       []))
+        expected)
     check("  ..none twice", len(set(wire)), len(wire))
     check("  ..none premium", [t for t in wire if items.premium(t)], [])
     check("  ..every one servable",

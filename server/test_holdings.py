@@ -26,19 +26,17 @@ and a real database:
     mending for anybody (Донгола's three are sites since 2026-10-13, the
     owner's «и потом сделай донголу тоже», and Абу-Хамед's Центр 128 since
     2026-10-14, «сделай потом абу хамед в таком же формате»);
-  * the box: «Патроны и афро владельцам склада» (765) between 19:00 and
-    20:00 to a member of the holding clan of a day's standing at the site's
-    level, once a day, one character of an account; refused at the hand-in
-    to one who left the clan or whose clan lost the site, the quest in his
-    journal; the day turning at 03:00 Moscow time; the box shown under a new
+  * the old personal box rows765-771 stay closed, including carried
+    journal instances. Shared ingots keep live ownership and a daily claim;
+    the day turns at03:00 Moscow time; the box is shown under a new
     id when its window opens and shuts, and when the holder changes;
   * the admin's hold and release (clan_admin.py) through the queue, and
     tools/admin_account.py's holdings, clan-hold and clan-release;
   * Абу-Хамед's Центр (128), the one site whose box keeps its own window
     (wh_box_ah, 19:00-19:15): taken at 20:00 by two members of level 19 who
     kill its master (7454), the flag naming them; its box (6830, row 771)
-    paying 48 000 afro and 50 rounds at 19:05, once a day, and shut at 19:20
-    while the Северный склад's still pays.
+    refusing the old personal payout and granting shared ingots only once;
+    shut at19:20 while the Северный склад's window remains open.
 
     LAVA_RES=.../lava/res python3 server/test_holdings.py
 
@@ -660,95 +658,47 @@ async def main():
           (True, [{"lostUser": shut_id}, {"newUser": open_id, "pos": room.npcs[open_id].cell,
                                           "rtype": room.npcs[open_id].root}]))
     NOW[0] = at(19, 30, day=40)
-    check("19:30: the row is on offer to a holder of a day's standing at level 8",
-          alice.quest_available(BOX_ROW), True)
-    check("  ..not to carl, in no clan, nor to bob of another clan, nor to anna, a level"
-          " short", [s.quest_available(BOX_ROW) for s in (carl, bob, anna)],
-          [False, False, False])
-    joined(arno, 23)
-    check("  ..nor to arno, in the clan for 23 hours", arno.quest_available(BOX_ROW), False)
-    joined(arno, 24)
-    check("  ..who has it at 24", arno.quest_available(BOX_ROW), True)
-    afro0 = alice.character().afro
-    take(alice)
-    run(alice, "q_st;mob=%d;q_idx=0;" % open_id)
-    got = take(alice)
-    q_id = named(got, "q_di_del_obj")[0]["q_id"] if named(got, "q_di_del_obj") else None
-    check("alice takes it at the box: 0, and in the journal complete",
-          (acks(got), named(got, "q_di_del_obj")[0]["obj"] if q_id else None), ([0], 1))
-    rounds0 = sum(r["count"] for r in STORE.items_of(alice.char_id) if r["type_id"] == 6092)
-    run(alice, "q_co;q_id=%d;mob=%d;obj_idx=0;" % (q_id, open_id))
-    got = take(alice)
-    check("  ..and hands it in: 0, 8000 afro and 50 rounds of 9мм НАТО КС",
-          (acks(got)[-1:], alice.character().afro - afro0,
-           sum(r["count"] for r in STORE.items_of(alice.char_id) if r["type_id"] == 6092)
-           - rounds0), ([0], 8000, 50))
-    check("  ..the hand-in written in the history, which per_day reads",
-          STORE.quests_done_since(alice.char_id, server.Session.day_start(), [765]), 1)
-    check("  ..so not on offer a second time that day", alice.quest_available(BOX_ROW), False)
-    check("  ..and not counted against the day's tasks: a service",
-          (BOX_ROW.service, server.Session.counts_daily(BOX_ROW)), (True, False))
+    check("retired personal payout is hidden even from the current holder",
+          [s.quest_available(BOX_ROW) for s in (alice, bob, carl)], [False] * 3)
+    before = (STORE.money(alice.char_id), alice.inv.rows())
+    run(alice, "q_st;mob=%d;q_idx=0;" % box())
+    check("forged old quest index cannot take a retired personal payout",
+          acks(take(alice)), [server.RES_NOT_AVAILABLE])
+    legacy_qid = STORE.take_quest(alice.char_id, BOX_ROW.type, {}, True)
+    run(alice, "q_co;q_id=%d;mob=%d;obj_idx=0;" % (legacy_qid, box()))
+    check("an existing personal journal row pays neither afro nor rounds",
+          (acks(take(alice)), STORE.money(alice.char_id), alice.inv.rows(),
+           STORE.quest(legacy_qid) is not None),
+          ([server.RES_NOT_AVAILABLE], *before, True))
     alice.close()
     alice2 = login("alice", "Alice2")
     admit(wolves, alice2, days=3)
     level(alice2, 8)
     into(alice2, SEVER)
-    check("alice's other character, of the Волки for days: refused the same box that day,"
-          " one character of an account a day",
-          (alice2.quest_available(BOX_ROW),
-           holdings.box_refusal(STORE, BOX_ROW, alice2.char_id, alice2.account["id"],
-                                server.Session.day_start())),
-          (False, "a character of account %d has collected wh_sever today"
-           % alice2.account["id"]))
-    check("  ..a box of another site is no concern of this one's",
-          holdings.box_refusal(STORE, quests.get(766), alice2.char_id, alice2.account["id"],
-                               server.Session.day_start()), "nobody holds wh_vostok")
-    take(andy)
-    run(andy, "q_st;mob=%d;q_idx=0;" % box())
-    andy_q = named(take(andy), "q_di_del_obj")[0]["q_id"]
-    STORE.clan_member_remove(andy.char_id, wolves)
-    check("andy takes it, then is put out of the clan: no longer on offer, carried or not",
-          andy.quest_available(BOX_ROW), False)
-    run(andy, "q_co;q_id=%d;mob=%d;obj_idx=0;" % (andy_q, box()))
-    check("  ..and the hand-in refused, the quest still in his journal",
-          (acks(take(andy)), STORE.has_quest(andy.char_id, 765)),
-          ([server.RES_NOT_AVAILABLE], True))
-    admit(wolves, andy, days=3)
-    run(arno, "q_st;mob=%d;q_idx=0;" % box())
-    arno_q = named(take(arno), "q_di_del_obj")[0]["q_id"]
+    check("a second character of the same account cannot restore old rewards",
+          alice2.quest_available(BOX_ROW), False)
     order("release", clan=wolves, site="wh_sever")
-    run(arno, "q_co;q_id=%d;mob=%d;obj_idx=0;" % (arno_q, box()))
-    check("arno takes it, then the Волки lose the site: the hand-in refused",
-          (acks(take(arno)), STORE.has_quest(arno.char_id, 765)),
-          ([server.RES_NOT_AVAILABLE], True))
     order("hold", clan=wolves, site="wh_sever")
-    before = box()
+    before_id = box()
     for s in everybody[1:] + [alice2]:
         take(s)
     order("hold", clan=jackals, site="wh_sever")
     rc.keep_hours()
-    check("the holder changes: on the room's next tick the box is shown under a new id"
-          " (events.touch)", (box() != before,
-                              [p for n, p in take(bob) if n == "lch" and "newUser" in p]
-                              == [{"newUser": box(), "pos": room.npcs[box()].cell,
-                                   "rtype": room.npcs[box()].root}]), (True, True))
-    check("  ..and now the row is the Шакалы's, of a day's standing",
-          (bob.quest_available(BOX_ROW), andy.quest_available(BOX_ROW)), (True, False))
+    check("a holder change still refreshes the money box for live quest offers",
+          (box() != before_id, any(n == "lch" and "newUser" in p for n, p in take(bob))),
+          (True, True))
+    check("recapture does not reopen retired personal rewards",
+          bob.quest_available(BOX_ROW), False)
     order("hold", clan=wolves, site="wh_sever")
     NOW[0] = at(20, 0, day=40)
-    before = box()
+    before_id = box()
     rc.keep_hours()
-    check("20:00: shut again -- refused, and the box shown under a new id once more",
-          (andy.quest_available(BOX_ROW), box() != before), (False, True))
+    check("20:00 still refreshes the box at the end of its reward window",
+          box() != before_id, True)
     check("the day turns at 00:00 UTC, three in the morning in Moscow",
           (server.Session.day_start(at(2, 59, day=41)), server.Session.day_start(at(3, day=41)),
            datetime.fromtimestamp(at(3, day=41), timezone.utc).hour),
           (at(3, day=40), at(3, day=41), 0))
-    STORE.finish_quest(0, andy.char_id, 765, when=at(2, 59, day=41))
-    check("  ..a box collected at 02:59 is yesterday's from 03:00",
-          [STORE.account_quests_done_since(andy.account["id"], server.Session.day_start(t),
-                                           [765]) for t in (at(2, 59, day=41), at(3, day=41))],
-          [1, 0])
 
     # --- the admin's orders -------------------------------------------------------------------
     for s in [alice2] + everybody[1:]:
@@ -877,22 +827,15 @@ async def main():
     check("18:59 the next day: the box's row is nobody's", dora.quest_available(AH_ROW), False)
     NOW[0] = at(19, 5, day=51)
     ah_rc.keep_hours()
-    check("19:05: the row is on offer to both holders", [s.quest_available(AH_ROW)
-                                                         for s in (dora, dick)], [True, True])
-    afro0 = dora.character().afro
-    rounds0 = sum(r["count"] for r in STORE.items_of(dora.char_id) if r["type_id"] == 6099)
+    check("Abu's retired personal reward is hidden from both holders",
+          [s.quest_available(AH_ROW) for s in (dora, dick)], [False, False])
+    before_personal = (STORE.money(dora.char_id), dora.inv.rows())
+    legacy_qid = STORE.take_quest(dora.char_id, AH_ROW.type, {}, True)
     take(dora)
-    run(dora, "q_st;mob=%d;q_idx=0;" % ah_box())
-    got = take(dora)
-    q_id = named(got, "q_di_del_obj")[0]["q_id"] if named(got, "q_di_del_obj") else 0
-    run(dora, "q_co;q_id=%d;mob=%d;obj_idx=0;" % (q_id, ah_box()))
-    done = take(dora)
-    check("  ..dora takes it at the box and hands it in: 48 000 afro and 50 rounds of 7.62x54R",
-          (acks(got), acks(done)[-1:], dora.character().afro - afro0,
-           sum(r["count"] for r in STORE.items_of(dora.char_id) if r["type_id"] == 6099)
-           - rounds0), ([0], [0], 48000, 50))
-    check("  ..and not on offer to her a second time that day", dora.quest_available(AH_ROW),
-          False)
+    run(dora, "q_co;q_id=%d;mob=%d;obj_idx=0;" % (legacy_qid, ah_box()))
+    check("Abu's old journal cannot add a personal payout beside the shared ingots",
+          (acks(take(dora)), STORE.money(dora.char_id), dora.inv.rows()),
+          ([server.RES_NOT_AVAILABLE], *before_personal))
     NOW[0] = at(19, 20, day=51)
     check("19:20: shut for dick, who has not collected -- while the Северный склад's box of"
           " 19:00-20:00 still pays", (dick.quest_available(AH_ROW),
@@ -985,6 +928,7 @@ async def main():
     # isolated SQLite race/unit cases of test_laborant.
     lab_now = [time.time()]
     with patch.object(time, "time", lambda: lab_now[0]):
+        STORE.holding_set("wh_ah_center", wolves, "admin")
         into(payer, quests.LABORANT_LOC)
         lab_room = payer.room
         lab_rc = combat.room_combat(lab_room, STORE)

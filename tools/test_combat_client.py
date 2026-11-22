@@ -13,6 +13,128 @@ from testkit import run_cases
 
 
 class CombatClient(unittest.TestCase):
+    def annotation(self):
+        rows = []
+        panel = dict(__bfAnnotationRowOrig=lambda title, value:
+                     rows.append((title, value)) if value is not None else None,
+                     readArray=lambda arr, titles: 'array bonus' if any(arr or ()) else None,
+                     attribsTitle=[], skillsTitle=[], specTitle=[])
+        panel['addItem'] = lambda *args: self.call('__bfAnnotationRow', panel, *args)
+        self.env['lol']['gpui'] = dict(Annotation=dict(getTextDuration=lambda ms: str(ms)))
+        return panel, rows
+
+    def effect(self, **changes):
+        return dict(dict(work_time=1800000, update_delta=0, bonusAttribs=[],
+                         bonusSkills=[], bonusSpecs=[], max_hp=0, max_sp=0, max_od=0,
+                         critical_probability=0, critical_evade=0, armor=0,
+                         mob_exp=1, player_exp=1, mob_drop=1, player_drop=1), **changes)
+
+    def test_scanner_displays_direct_loot_bonus_and_no_empty_statistics(self):
+        panel, rows = self.annotation()
+        effect = self.effect(mob_drop=3)
+        before = dict(effect)
+        self.call('__bfEffectAnnotation', panel, effect)
+        self.assertEqual(rows, [('Время действия', '1800000'),
+                                ('Бонус\rк луту с мобов', '+200%')])
+        self.assertEqual(effect, before)
+
+    def test_experience_bonus_and_penalty_have_correct_sign_in_active_card(self):
+        for factor, label, percent in ((1.7, 'Бонус', '+70%'), (1.5, 'Бонус', '+50%'),
+                                       (0.5, 'Штраф', '-50%'), (0, 'Штраф', '-100%')):
+            panel, rows = self.annotation()
+            self.call('__bfEffectAnnotation', panel,
+                      self.effect(mob_exp=factor, player_exp=factor))
+            self.assertEqual(rows[1:], [(label + '\rк опыту с мобов', percent),
+                                        (label + '\rк опыту с игроков', percent)])
+
+    def test_ap_hp_and_other_nonzero_bonuses_match_protocol_without_doubling(self):
+        panel, rows = self.annotation()
+        self.call('__bfEffectRows', None, panel,
+                  self.effect(max_od=40, max_hp=120, max_sp=90, critical_probability=7,
+                              critical_evade=4, armor=6, bonusAttribs=[0, 3, 0]))
+        self.assertEqual(rows[1:], [('Бонусы\rк аттрибутам', 'array bonus'),
+                                   ('Бонус к здоровью', 120), ('Бонус к выносливости', 90),
+                                   ('Бонус\rк очкам действия', 40),
+                                   ('Бонус\rк критическому попаданию', 7),
+                                   ('Бонус\rк избеганию крита', 4), ('Бонус к броне', 6)])
+
+    def test_zero_fighter_requirement_is_hidden_and_real_item_rows_remain(self):
+        panel, rows = self.annotation()
+        for title, value in [('Необходимый навык бойца', 0), ('Бонус к здоровью', 0),
+                             ('Необходимый навык бойца', 5), ('Вес', '0 г'),
+                             ('Базовая цена', '0 G'), ('Урон здоровью', '0-0')]:
+            self.call('__bfAnnotationRow', panel, title, value)
+        self.assertEqual(rows, [('Необходимый навык бойца', 5), ('Вес', '0 г'),
+                                ('Базовая цена', '0 G'), ('Урон здоровью', '0-0')])
+
+    def test_missing_and_neutral_modifiers_are_hidden_and_protection_keeps_native_meaning(self):
+        for empty in (None, 1, float('nan')):
+            panel, rows = self.annotation()
+            self.call('__bfEffectRows', None, panel,
+                      self.effect(mob_drop=empty, mob_exp=empty, player_exp=empty,
+                                  max_od=float('nan'), player_drop=0.75))
+            self.assertEqual(rows[1:], [('Защита вашего дропа', '25%')])
+
+    def test_all_server_buffs_show_their_actual_modifiers_and_action_points(self):
+        import effects
+        for source, value in effects.definitions().items():
+            with self.subTest(source=source):
+                bonus = value['bonuses']
+                modifiers = value.get('modifiers', {})
+                panel, rows = self.annotation()
+                effect = self.effect(max_od=bonus['od'], mob_drop=modifiers.get('mob_drop', 1),
+                                     mob_exp=modifiers.get('mob_exp', 1),
+                                     player_exp=modifiers.get('pl_exp', 1))
+                self.call('__bfEffectRows', None, panel, effect)
+                for key, title in [('mob_drop', 'к луту с мобов'),
+                                   ('mob_exp', 'к опыту с мобов'), ('pl_exp', 'к опыту с игроков')]:
+                    factor = modifiers.get(key, 1)
+                    percent = round((factor - 1) * 100)
+                    expected = ('Бонус' if percent > 0 else 'Штраф') + '\r' + title
+                    actual = [(name, text) for name, text in rows if name.endswith(title)]
+                    self.assertEqual(actual, [(expected, format(percent, '+d') + '%')] if percent else [])
+                self.assertEqual([text for title, text in rows if title == 'Бонус\rк очкам действия'],
+                                 [bonus['od']] if bonus['od'] else [])
+
+    def test_item_effect_list_uses_same_rows_and_preserves_native_titles_icons_and_alignment(self):
+        panel, rows = self.annotation()
+        titles, lines, icons, calls = [], [], [], []
+        def attach(kind, name, depth):
+            if kind == 'effect_title':
+                title = dict(effect_name=dict(_y=2, _height=10), effect_prob={})
+                titles.append(title)
+                return title
+            line = {}
+            lines.append(line)
+            return line
+        def clip():
+            return dict(attachMovie=attach, getNextHighestDepth=lambda: 1)
+        panel.update(cont_mc=dict(removeMovieClip=lambda: calls.append('remove')),
+                     createEmptyMovieClip=lambda *args: clip(), getNextHighestDepth=lambda: 1,
+                     name_txt=dict(setTextFormat=lambda style: calls.append('style')),
+                     back=dict(my_mc={}), showFullAnnotation='full',
+                     doLater=lambda method: calls.append(method))
+        self.env['TextFormat'] = lambda: {}
+        self.env['lol']['services'] = dict(
+            HotKeyEvent=dict(CTRL='ctrl'), SSEmulator=dict(getEffectIcon=lambda res: res))
+        self.env['lol']['core']['SceneShifter']['hotKeyManager'] = dict(
+            removeEventListener=lambda *args: calls.append('unlisten'))
+        self.env['lol']['display'] = dict(DisplaySprite=dict(create=lambda *args:
+            dict(display=lambda *args: icons.append(args))))
+        scanner = self.effect(mob_drop=3, name='Сканер', res_icon=1)
+        xp = self.effect(mob_exp=1.7, player_exp=1.7, name='INTUX IV', res_icon=2)
+        self.call('__bfEffectsInfo', panel, Arr([scanner, None, xp]), Arr([100, 0, 75]), True, True)
+        self.assertEqual([t['effect_name']['htmlText'] for t in titles], ['Сканер', 'INTUX IV'])
+        self.assertEqual([t['effect_prob']['htmlText'] for t in titles],
+                         ['Вероятность срабатывания: 100', 'Вероятность срабатывания: 75'])
+        self.assertEqual(rows, [('Время действия', '1800000'), ('Бонус\rк луту с мобов', '+200%'),
+                                ('Время действия', '1800000'), ('Бонус\rк опыту с мобов', '+70%'),
+                                ('Бонус\rк опыту с игроков', '+70%')])
+        self.assertEqual((panel['arrItem'], panel['arrLine']), (titles, lines))
+        self.assertEqual(icons, [('0_effect_icon', 1), ('2_effect_icon', 2)])
+        self.assertEqual(calls, ['unlisten', 'remove', 'style', 'align'])
+        self.assertEqual(panel['back']['my_mc']['_alpha'], 100)
+
     def test_base_caption_uses_real_clan_name_as_plain_text_and_tracks_revocation(self):
         clan = dict(clanName='<Clan & friends>')
         member = dict(clanReg=123, clanInfo=clan)
@@ -88,7 +210,7 @@ class CombatClient(unittest.TestCase):
     def setUp(self):
         self.sent, self.calls, self.applied = [], [], []
         self.reported = []
-        self.env = dict(_global={}, Number=float, isNaN=math.isnan,
+        self.env = dict(_global={}, Number=float, isNaN=math.isnan, TextFormat=lambda: {},
                         String=lambda value: format(value, 'g'),
                         parseFloat=lambda value: float(re.match(r'[-+]?\d+(?:\.\d+)?', str(value))[0])
                         if re.match(r'[-+]?\d+(?:\.\d+)?', str(value)) else float('nan'),

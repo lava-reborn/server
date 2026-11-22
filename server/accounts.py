@@ -2517,7 +2517,7 @@ class Store:
                  CLAN_HEAD | 0x400, when - float(tenure))).rowcount
             return hit == 1
 
-    def holding_clear(self, site, how, clan_id=None, when=None):
+    def holding_clear(self, site, how, clan_id=None, when=None, before_slot=None):
         """Nobody holds the site from now -- only if clan_id holds it, when
         given, so a stale or repeated order clears nothing -- in one
         transaction with its row in the log. Returns the clan that held it,
@@ -2525,6 +2525,10 @@ class Store:
         when = float(when or time.time())
         cond, args = ("", (str(site),)) if clan_id is None else \
             (" AND clan_id = ?", (str(site), int(clan_id)))
+        if before_slot is not None:
+            # A weekly reset must not erase a concurrent new capture.
+            cond += " AND (slot IS NULL OR slot < ?)"
+            args += (float(before_slot),)
         with self.db:
             rows = self.db.execute("DELETE FROM clan_holdings WHERE site = ?" + cond
                                    + " RETURNING clan_id", args).fetchall()

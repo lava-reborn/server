@@ -8609,8 +8609,8 @@
   "4828": {
    "body": "man",
    "hex_ms": 200,
-   "level": 1,
-   "level_source": "default",
+   "level": 14,
+   "level_source": "designed",
    "name": "clan_guardian1_VBG",
    "resource": "m118_coevoet",
    "role": "mob",
@@ -8621,8 +8621,8 @@
   "4829": {
    "body": "man",
    "hex_ms": 200,
-   "level": 1,
-   "level_source": "default",
+   "level": 18,
+   "level_source": "designed",
    "name": "clan_guardian2_VBG",
    "resource": "m118_coevoet",
    "role": "mob",

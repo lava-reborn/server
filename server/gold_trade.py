@@ -6,6 +6,7 @@ import re
 import items
 import mortimer
 import progression
+import quests
 import repair_policy
 import restore_policy
 
@@ -128,7 +129,18 @@ def sale_unit(type_id, params, share=NPC_SALE_SHARE):
     """
     if protected(type_id, params) or not gold_priced(type_id, params):
         return 0
-    unit = (Fraction(str(params['g_cost'])) * progression.GOLD_TO_AFRO_RATE
+    nominal = Fraction(str(params['g_cost']))
+    # Buying a finished lab pouch skips five personal daily parts. That
+    # convenience premium must not become cash when crafting it instead.
+    # Keep ordinary/base buyback tied to the two wearable ingredients;
+    # their worst condition is already carried into the crafted item.
+    for base, output in quests.LABORANT_RECIPES.values():
+        if type_id == output:
+            ingredients = sum(Fraction(str(items.params_of(t).get('g_cost', 0)))
+                              for t in (quests.LABORANT_MOD, base))
+            nominal = min(nominal, ingredients)
+            break
+    unit = (nominal * progression.GOLD_TO_AFRO_RATE
             * share / progression.GOLD_OUNCE)
     # Preserve every existing purchase route. If a G-labelled type has an
     # afro purchase price too, cap resale against that cheaper source.

@@ -453,10 +453,11 @@ check("the premium КС keep their 2 G a pack, out of the game; the 9мм дар
       ([(rounds[t]["cost"], rounds[t]["g_cost"], rounds[t]["premium"]) for t in (6128, 6188)],
        [(rounds[t]["cost"], rounds[t]["g_cost"]) for t in (4780, 3819, 6201)]),
       ([(0, 200, 1), (20, 0, 0)], [(20, 20), (2000, 2000), (20000, 300)]))
-check("«Пистолеты и патроны» sells gold rounds at a hundredth a round",
+check("«Пистолеты и патроны»: selected gold rounds cost0.01G, BB/EK0.02G",
       [(t, inventory.buy_price(rounds[t], items.AMMO, 1, True))
        for t in items.stock_for(PISTOLS) if t in rounds and items.gold_round(rounds[t])],
-      [(t, 1) for t in items.stock_for(PISTOLS) if t in rounds and items.gold_round(rounds[t])])
+      [(t, 2 if items.catalogue()[t][1].endswith(('_BB_G', '_EK_G')) else 1)
+       for t in items.stock_for(PISTOLS) if t in rounds and items.gold_round(rounds[t])])
 
 
 # --- over the socket ---------------------------------------------------------------------------

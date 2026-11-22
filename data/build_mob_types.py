@@ -269,6 +269,10 @@ DESIGNED_LEVELS = {
 # 130 and its family), not eight bosses of 20 with a boss's pistol; Гвала
 # himself is inst_db_boss_2_3 (1708).
 DESIGNED_KINDS = {
+    # Original clan guardian artwork, unknown archived combat stats.
+    # New weekly-base defence: two levels above each entry tier.
+    "clan_guardian1_VBG": {"level": 14, "level_source": "designed"},
+    "clan_guardian2_VBG": {"level": 18, "level_source": "designed"},
     "pc_shturmovik_lvl16": {"loot_ammo_type": 6110},
     # Owner: Peacekeeper miners hold afro L85/AS Val, with smaller AP pools.
     "pc_miner_lvl16": {"weapon_class": "assault_rifle", "weapon_type_id": 25265, "ap_max": 110, "loot_ammo_type": 6121, "loot_ammo_count": [2, 6]},

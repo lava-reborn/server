@@ -89,6 +89,23 @@ class CarryWeight(unittest.TestCase):
                 self.assertEqual(self.inv.total_weight(),limit)
                 self.assertEqual(self.buy(),[inventory.RES_OVERLOAD])
 
+    def test_research_kit_needs_exactly_two_and_half_kilograms_and_never_charges_overload(self):
+        for free, result in ((2499, inventory.RES_OVERLOAD), (2500, inventory.RES_OK)):
+            with self.subTest(free=free):
+                for row in self.inv.rows():
+                    self.store.delete_item(row['uniq'])
+                self.ch.afro = 500000
+                self.store.set_money(self.s.char_id, 500000, 0)
+                self.fill_to(self.inv.carry_limit() - free)
+                before = self.inv.total_weight()
+                self.frames.clear()
+                with patch.object(items, 'stock_for', return_value=[1573]):
+                    self.inv.buy(dict(obj='0', param=1), inventory.UPD_BUY)
+                self.assertEqual([p['res'] for name, p in self.frames if name == 'cmdAck'], [result])
+                bought = result == inventory.RES_OK
+                self.assertEqual(self.inv.total_weight(), before + (2500 if bought else 0))
+                self.assertEqual(self.store.money(self.s.char_id)[0], 250000 if bought else 500000)
+
     def test_pouch_and_strength_stack_refresh_and_removal_preserves_items(self):
         self.ch.attrib[progression.STRENGTH] = 12
         self.ch.spec[6][0] = 0

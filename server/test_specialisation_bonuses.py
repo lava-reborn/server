@@ -4,6 +4,7 @@ Use real attack/healing entry points with deterministic rolls. Client visual
 updates still need the Flash check; these assertions cover server outcomes.
 """
 import os
+import random
 import unittest
 from types import SimpleNamespace as NS
 from unittest.mock import patch
@@ -21,6 +22,37 @@ from training.arena import TrainingFighter
 
 
 class SpecialisationBonuses(unittest.IsolatedAsyncioTestCase):
+    async def test_galil_at_level_thirteen_uses_fourth_spec_and_actual_ammo_in_every_fire_mode(self):
+        params = items.params_of(25201)
+        self.assertEqual(params['h_damage_min'], [62, 42, 111])
+        self.assertEqual(params['h_damage_max'], [137, 61, 192])
+        for mode in range(3):
+            cones = []
+            for ammo_type in (6107, 6119, 6143):
+                f, ch, _, _, _, row = attack_fixture(25201)
+                for skill in ch.skill:
+                    skill[0] = 13
+                ch.spec[combat.SPEC_OF_WEAPON[items.ASSAULT]][0] = 4
+                row.update(ammo_type=ammo_type, cur_mode=mode, ammo_count=25)
+                combat.Fighter.use_fire(f, dict(obj='weapon', target='000000005'))
+                try:
+                    self.assertIsNotNone(f.aim)
+                    shot = f.aim._args[-1][3]
+                    expected = combat.cone_of(combat.spread_factor(13, 4), params['target_size'][mode],
+                                              items.params_of(ammo_type)['acc_mod'], params['max_range'][mode])
+                    self.assertAlmostEqual(shot.cone, expected)
+                    cones.append(shot.cone)
+                    rng = random.Random(25201 + mode)
+                    for distance in (2, 5, params['end_opt_range'][mode], shot.max_range):
+                        hits = sum(combat.on_target(combat.bullet_offset(shot.cone, distance, rng))
+                                   for _ in range(10000))
+                        self.assertAlmostEqual(hits / 10000, combat.hit_probability(shot.cone, distance), delta=.02)
+                finally:
+                    if f.aim:
+                        f.aim.cancel()
+            self.assertGreater(cones[0], cones[1])
+            self.assertGreater(cones[1], cones[2])
+
     def test_reset_above_attribute_cap_keeps_the_remaining_specialisation_bonus(self):
         ch = p.Character()
         for index in (1, 4, 7, 9):

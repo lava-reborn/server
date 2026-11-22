@@ -357,6 +357,14 @@ check("the medicine sellers of data/shop_bands.json sell medicine alone, and one
 STALLS = {(p, t): items.stock_for(t, p) for p, types in AT.items() for t in types}
 wrong = {}
 where = {}
+def non_ammo(stock):
+    return [x for x in stock if items.root_of(x) != items.AMMO]
+
+
+def ammo(stock):
+    return sorted(x for x in stock if items.root_of(x) == items.AMMO)
+
+
 for (p, t), stall in STALLS.items():
     if t not in MEDICS:
         continue
@@ -364,7 +372,10 @@ for (p, t), stall in STALLS.items():
     _name, lo, hi = PLACE_CITY[p]
     want = expect(MEDICS[t], lo, hi, shop_bands.only(t)) + buffs(t, hi)
     own = [x for x in items.stock_for(t) if not line_med(x)]
-    if stall != want + own:
+    # Medicine keeps its exact rank/currency order. Ammunition is now grouped
+    # separately by calibre, which the release's ammunition regressions pin.
+    expected = want + own
+    if non_ammo(stall) != non_ammo(expected) or ammo(stall) != ammo(expected):
         wrong[(p, t)] = (stall, want + own)
 check("every medicine seller at every place of its city: its city's tiers of its kinds, the band's"
       " and the one under it, tier by tier, afro before (G), in its one currency where the file"
@@ -421,7 +432,8 @@ check("the stalls pinned (DESIGN.md 2.2): Морис, Хасани, Люций, 
       " truck's Йонас and the prisons'"
       " supply men, «Патроны и лекарства», the battle line of their town (the supply men their"
       " article's rounds after)",
-      {k: STALLS.get(k) for k in PINNED}, PINNED)
+      {k: (non_ammo(STALLS[k]), ammo(STALLS[k])) for k in PINNED},
+      {k: (non_ammo(stock), ammo(stock)) for k, stock in PINNED.items()})
 check("  ..the supply men's rounds: their own list (data/npcs.json), the same at the three"
       " prison yards, every calibre of the article, 49 types, each with a price",
       ([npcs.stock(t) == ROUNDS for t in (2180, 2181, 880)], len(ROUNDS),
@@ -545,7 +557,8 @@ check("«Пулеметы и патроны» (1208) stands at Донгола's 
       " link had given Серхио; Серхио sells no gun",
       (1208 in AT[103], STALLS[(103, 1208)],
        [x for x in STALLS[(103, 1214)] if items.root_of(x) != items.HEAL]),
-      (True, [24989, 24990, 25006, 25007, 6097, 6109, 6121, 6145, 6098, 6110, 6122, 6146, 6157, 6158, 6169, 6170], []))
+      (True, [24989, 24990, 25006, 25007, 6098, 6110, 6122, 6146, 6170, 6158,
+              6097, 6109, 6121, 6145, 6169, 6157], []))
 check("the four medics of Донгола and Абу-Хамед and the machine-gun trader by the original's rows"
       " (data/orig_names_manual.json: 62161, 62162, 62165, 62166, 50655)",
       {t: names.ALL.get(t) for t in (1214, 1215, 1221, 1222, 1208)},

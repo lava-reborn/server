@@ -15,8 +15,8 @@ Warehouse gold is a separate native box service: existing 1/5 G ingots,
 membership and box windows apply, plus treasury-withdrawal permission.
 A persistent site/day claim belongs to the whole warehouse and is not
 reset by capture or disband. Claim, item grant and quest history commit
-together; personal ammo/afro rewards and the disabled gold treasury stay
-unchanged. Unlike ordinary quest rewards, this service requires carry room.
+together. The old personal ammo/afro rows are closed; the gold treasury
+remains disabled. Unlike ordinary quest rewards, this service needs carry room.
 
 The owner's «сделай так чтобы склады можно было захватывать убивая босса»
 (2026-10-09). The sites are data/holdings.json's -- Вади-Хальфа's three
@@ -109,14 +109,14 @@ HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PATH = os.path.join(HERE, "data", "holdings.json")
 
 # What a row of clan_holding_log says happened (accounts.SCHEMA).
-HOW = ("capture", "defend", "none", "admin", "disband", "rent")
+HOW = ("capture", "defend", "none", "admin", "disband", "rent", "expire")
 
 
 class Site(object):
     """One capturable place of data/holdings.json."""
     __slots__ = ("key", "loc", "boss", "flag", "box", "quest", "min_level", "title",
                  "kind", "rooms", "traders", "rent_quest", "rent", "battle", "payment",
-                 "gold_quest", "health_scale")
+                 "gold_quest", "health_scale", "guards", "guard_health_scale")
 
     def __init__(self, key, rec):
         self.key = str(key)
@@ -135,9 +135,12 @@ class Site(object):
         self.battle = str(rec.get("battle", ""))
         self.payment = str(rec.get("payment", ""))
         self.gold_quest = int(rec.get("gold_quest", 0))
+        self.guards = tuple(int(x) for x in rec.get("guards", []))
         self.health_scale = float(rec.get("health_scale", 1))
-        if not math.isfinite(self.health_scale) or not 1 <= self.health_scale <= 100:
-            raise ValueError("data/holdings.json: %s health_scale must be finite, 1..100" % self.key)
+        self.guard_health_scale = float(rec.get("guard_health_scale", 1))
+        for field in ('health_scale', 'guard_health_scale'):
+            if not math.isfinite(getattr(self, field)) or not 1 <= getattr(self, field) <= 100:
+                raise ValueError("data/holdings.json: %s %s must be finite, 1..100" % (self.key, field))
 
 
 class Table(object):
@@ -205,14 +208,15 @@ def base_for(loc_id, boss_type=None):
 
 
 def prepare_room(rc):
-    """The base's capture boss has its own health, never a shared type edit."""
+    """Base defenders have their own health, never a shared type edit."""
     for target in rc.mobs.values():
-        s = base_for(rc.room.loc.id, target.type_id)
+        s = base_for(rc.room.loc.id, target.type_id) or guard_site(rc.room.loc.id, target.type_id)
         if s is None or getattr(target, "_base_prepared", False):
             continue
         target.stats = copy.copy(target.stats)
-        target.stats.hp_max = max(1, int(round(target.stats.hp_max * s.health_scale)))
-        target.stats.sp_max = max(0, int(round(target.stats.sp_max * s.health_scale)))
+        scale = s.health_scale if target.type_id == s.boss else s.guard_health_scale
+        target.stats.hp_max = max(1, int(round(target.stats.hp_max * scale)))
+        target.stats.sp_max = max(0, int(round(target.stats.sp_max * scale)))
         target.hp, target.sp = target.stats.hp_max, target.stats.sp_max
         target._base_prepared = True
 
@@ -224,6 +228,36 @@ def rent_site(quest_type):
 
 def base_keys():
     return tuple(s.key for s in sites().values() if s.kind == "base")
+
+
+def guard_site(loc_id, type_id):
+    s = base_for(loc_id)
+    return s if s is not None and int(type_id) in s.guards else None
+
+
+def guards_cleared(rc, s, slot):
+    """Scheduled guards must have died in this weekly window, not earlier."""
+    guards = [m for m in rc.mobs.values() if m.type_id in s.guards]
+    return bool(guards) and all(not m.alive and m.slot == slot for m in guards)
+
+
+def reset_base(rc):
+    """Opening a weekly battle clears the previous owner before arrivals.
+
+    The conditional delete preserves a concurrent current-week capture.
+    Empty rooms reconcile on entry through the existing schedule tick.
+    """
+    s = base_for(rc.room.loc.id)
+    if s is None:
+        return
+    now = bosses.clock()
+    slot = battle_slot(s, now)
+    if slot is None:
+        return
+    held = holder(rc.store, s)
+    if held is not None and (held['slot'] is None or float(held['slot']) < slot):
+        if rc.store.holding_clear(s.key, 'expire', when=now, before_slot=slot) is not None:
+            refresh(rc.room, s)
 
 
 def gold_site(quest_type):
@@ -331,6 +365,8 @@ def problems():
                     out.append("%s: no %s %d in its surface" % (key, what, ty))
             if world.creature_role(s.boss) != "boss":
                 out.append("%s: its capture creature is not a boss" % key)
+            if not s.guards or any(g not in files or world.creature_role(g) != 'mob' for g in s.guards):
+                out.append("%s: base guards must be ordinary fighters on its surface" % key)
             if s.loc not in s.rooms or s.rent <= 0 or not s.traders:
                 out.append("%s: a base needs its surface, traders and a positive rent" % key)
             for loc_id in s.rooms:
@@ -468,6 +504,12 @@ def box_refusal(store, quest, char_id, account_id, since, now=None):
     m = store.clan_member(char_id) if char_id else None
     if m is None or int(m["clan_id"]) != int(held["clan_id"]):
         return "not a member of clan %d, which holds %s" % (int(held["clan_id"]), key)
+    # The lab reuses live site ownership, not the warehouse box's account
+    # quota or membership tenure. Its personal parts and global crafting
+    # slot have separate committed daily limits.
+    import quests
+    if quest.type in quests.LABORANT_QUESTS:
+        return None
     now = time.time() if now is None else now
     t = table()
     if now - int(m["joined_at"]) < t.tenure:
@@ -491,7 +533,8 @@ def snapshot(rc, mob, killer):
     if s is None:
         return None
     now = bosses.clock()
-    if s.kind == "base" and (mob.slot is None or battle_slot(s, now) != mob.slot):
+    if s.kind == "base" and (mob.slot is None or battle_slot(s, now) != mob.slot
+                             or not guards_cleared(rc, s, mob.slot)):
         return None
     here = {}
     for sess in list(rc.room.players):

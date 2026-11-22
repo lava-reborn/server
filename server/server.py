@@ -3832,6 +3832,9 @@ class Session:
                 self.answer("Учебные занятия на получение опыта отключены. Задание можно отменить в журнале.")
             elif quest.type in quests.TEMPORARILY_DISABLED_QUESTS:
                 self.answer("Задания на получение компонентов и сборку Паладина временно отключены.")
+            elif quest.type in quests.REPLACED_WAREHOUSE_REWARDS:
+                self.answer("Личные награды склада заменены общей выдачей слитков для клана."
+                            " Старое задание можно отменить в журнале.")
             return
         if quest.type in quests.LABORANT_QUESTS:
             npc = self.room.npc(int(p.get("mob", 0))) if self.room else None

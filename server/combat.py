@@ -3457,6 +3457,10 @@ class RoomCombat:
         # fades (corpse_gone). A database that cannot be read costs the
         # capture and a line in the log, never the kill.
         try:
+            if mob.slot is not None and holdings.guard_site(self.room.loc.id, mob.type_id) is not None:
+                # Reuse the weekly boss checkpoint before the corpse timer:
+                # a reconnect or restart must not resurrect cleared guards.
+                self.store.boss_killed(self.boss_spot(mob), mob.slot)
             mob.capture = holdings.snapshot(self, mob, killer)
             if mob.capture is not None and holdings.base_for(self.room.loc.id, mob.type_id):
                 holdings.settle(self, mob)
@@ -3857,12 +3861,18 @@ class RoomCombat:
         Each boss keeps its own hours (bosses.slot_of): a warehouse's
         «Хозяин склада» comes once a day, the rest at the bosses' hours.
         """
+        holdings.reset_base(self)
         events.keep(self)
         if not self.bosses:
             return
         now = bosses.clock()
         for mob in self.bosses:
             due = bosses.slot_of(mob.type_id, now, self.room.loc.id)
+            base = holdings.base_for(self.room.loc.id, mob.type_id)
+            if base is not None and due is not None and not holdings.guards_cleared(self, base, due):
+                if mob.alive:
+                    self.boss_leaves(mob)
+                continue
             if mob.away:
                 if due is not None and due != mob.slot:
                     self.boss_arrives(mob, due)

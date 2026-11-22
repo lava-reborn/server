@@ -280,7 +280,7 @@ class ReleaseCatalogue(unittest.TestCase):
                 self.assertEqual(battle_balance.split(shooter, boss, 100, 1, critical, 500, ordinary=True),
                                  battle_balance.split(shooter, mob, 100, 1, critical, 500, ordinary=True))
 
-    def test_plus_two_adjustment_leaves_other_mobs_and_private_profile_unchanged(self):
+    def test_plus_two_and_three_adjustments_leave_other_mobs_and_private_profile_unchanged(self):
         import battle_balance
         for level in range(1, 21):
             shooter = NS(is_player=True, character=lambda: NS(level=level))
@@ -288,10 +288,31 @@ class ReleaseCatalogue(unittest.TestCase):
                 target = NS(is_player=False, stats=NS(level=level + gap, role='mob'), armor=lambda: 0)
                 before = battle_balance.split(shooter, target, 10000, 1, False, 0)
                 after = battle_balance.split(shooter, target, 10000, 1, False, 0, ordinary=True)
-                if gap == 2:
+                if gap in (2, 3):
                     self.assertGreaterEqual(after[0], before[0])
                 else:
                     self.assertEqual(after, before, (level, gap))
+
+    def test_plus_three_curve_affects_only_ordinary_encounter_and_not_bosses_or_pvp(self):
+        import battle_balance
+        for level in range(1, 18):
+            player = NS(is_player=True, character=lambda: NS(level=level), armor=lambda: 0)
+            for role in ('mob', 'animal', 'turret', 'boss', 'object'):
+                mob = NS(is_player=False, stats=NS(level=level + 3, role=role), armor=lambda: 0)
+                native = battle_balance.split(mob, player, 1000, 1, False, 10000, 200)
+                ordinary = battle_balance.split(mob, player, 1000, 1, False, 10000, 200, ordinary=True)
+                if role in ('mob', 'animal', 'turret'):
+                    self.assertEqual(ordinary, (875, 175))
+                else:
+                    self.assertEqual(ordinary, native)
+                # +4 and own-level encounters retain their previous incoming damage.
+                for gap in (0, 2, 4):
+                    mob.stats.level = level + gap
+                    self.assertEqual(battle_balance.split(mob, player, 1000, 1, False, 10000, 200, ordinary=True),
+                                     battle_balance.split(mob, player, 1000, 1, False, 10000, 200))
+            other = NS(is_player=True, character=lambda: NS(level=level + 3), armor=lambda: 0)
+            self.assertEqual(battle_balance.split(other, player, 1000, 1, False, 10000, 200, ordinary=True),
+                             battle_balance.split(other, player, 1000, 1, False, 10000, 200))
 
     def test_boss_gap_equivalence_preserves_armour_and_ranged_melee_critical_rules(self):
         import battle_balance
@@ -367,6 +388,50 @@ class ReleaseCatalogue(unittest.TestCase):
         for t in added:
             self.assertTrue(items.catalogue()[t][1].endswith(('_BB_G', '_EK_G')))
             self.assertEqual(inventory.buy_price(items.params_of(t), items.AMMO, 100, True), 200)
+
+    def test_every_present_city_gun_seller_keeps_compatible_rounds_in_calibre_groups(self):
+        import shop_bands
+        import world
+        checked = 0
+        for loc in shop_bands.CITY_OF:
+            traders = {t for _, t in world.location(loc).spawns if t in shop_bands.SELLERS}
+            traders.update(int(row['type']) for row in world.placed_in(loc)
+                           if int(row['type']) in shop_bands.SELLERS)
+            for trader in traders:
+                stock = items.stock_for(trader, loc)
+                guns = [t for t in stock if items.root_of(t) == items.FIRE_ARM]
+                if not guns:
+                    continue
+                checked += 1
+                self.assertEqual(len(stock), len(set(stock)), (loc, trader))
+                self.assertLess(len(stock), 256, (loc, trader))
+                rounds = [t for t in stock if items.root_of(t) == items.AMMO]
+                self.assertLess(max(stock.index(t) for t in guns), min(stock.index(t) for t in rounds))
+                groups = []
+                for type_id in rounds:
+                    calibre, rank = shop_bands.ammunition_order(type_id)
+                    if not groups or groups[-1][0] != calibre:
+                        self.assertNotIn(calibre, [c for c, _ in groups])
+                        groups.append((calibre, []))
+                    groups[-1][1].append(rank)
+                for _, ranks in groups:
+                    self.assertEqual(ranks, sorted(ranks))
+                for gun in guns:
+                    compatible = set(items.params_of(gun)['comp_array'])
+                    self.assertTrue(compatible.intersection(rounds), (loc, trader, gun))
+                    standard = {t for t in compatible if items.params_of(t).get('cost')
+                                and not items.params_of(t).get('g_cost')
+                                and not items.out_of_game(t) and not items.acquisition_blocked(t)}
+                    self.assertTrue(standard.issubset(stock), (loc, trader, gun, standard - set(stock)))
+        self.assertGreater(checked, 20)
+
+    def test_round_order_has_gold_selected_then_ap_then_expansive_and_keeps_sp5_alias(self):
+        import shop_bands
+        stock = shop_bands.with_weapon_ammunition([25636])
+        self.assertEqual(stock[:7], [25636, 6092, 6104, 6116, 6140, 6164, 6152])
+        self.assertNotIn(6128, stock)  # Premium handcrafted rounds were not requested.
+        self.assertEqual(shop_bands.ammunition_order(6124), ('SP_5_6', 2))
+        self.assertEqual(shop_bands.ammunition_order(6160), ('SP_5_6', 5))
 
     def test_gear_boundary_all_existing_armour_and_weapons(self):
         for t, (root, _) in items.catalogue().items():

@@ -4,6 +4,7 @@ Real stores cover capture/payment persistence, reservations, stale rights,
 idempotence, rollback and SQLite connections racing for two different bases.
 Native quest handlers cover the live flag and post-commit notification order.
 """
+import asyncio
 import logging
 import os
 import tempfile
@@ -198,6 +199,67 @@ class ClanBases(unittest.TestCase):
         self.assertFalse(self.store.base_reserved(self.clan, holdings.base_keys(), SLOT + 4500))
         self.assertFalse(self.store.base_reserved(self.clan, holdings.base_keys(), SLOT + 7 * 86400))
 
+    def test_new_week_clears_old_owner_but_never_current_reservation(self):
+        for base in (self.base, holdings.site('base_dn')):
+            with self.subTest(base=base.key):
+                previous = SLOT - 7 * 86400
+                self.now = previous + 300
+                self.store.holding_capture(base.key, self.clan, previous, self.cid, self.now)
+                self.assertIsNotNone(holdings.pay_rent(self.store, base, self.cid, self.now))
+                room = rooms.Room(world.location(base.loc), rooms.IdAllocator(), world.mob_types())
+                rc = combat.RoomCombat(room, self.store)
+                self.now = SLOT - 1
+                rc.keep_hours()
+                self.assertIsNotNone(holdings.paid_holder(self.store, base))
+                self.now = SLOT
+                rc.keep_hours()
+                self.assertIsNone(self.store.holding(base.key))
+                self.assertEqual(self.store.holding_log(base.key)[0]['how'], 'expire')
+                rc.keep_hours()
+                self.assertEqual(sum(r['how'] == 'expire' for r in self.store.holding_log(base.key)), 1)
+                self.store.holding_capture(base.key, self.clan, SLOT, self.cid, self.now)
+                self.assertIsNone(self.store.holding_clear(base.key, 'expire', before_slot=SLOT))
+                rc.keep_hours()
+                self.assertEqual(self.store.holding(base.key)['slot'], SLOT)
+                self.store.holding_clear(base.key, 'admin')
+
+    def test_three_guards_unlock_boss_persist_on_restart_and_return_next_week(self):
+        async def check(base):
+            self.now = SLOT
+            room = rooms.Room(world.location(base.loc), rooms.IdAllocator(), world.mob_types())
+            rc = combat.RoomCombat(room, self.store)
+            rc.keep_hours()
+            guards = [m for m in rc.mobs.values() if m.type_id in base.guards]
+            target = next(m for m in rc.mobs.values() if m.type_id == base.boss)
+            self.assertEqual(len(guards), 3)
+            self.assertTrue(all(m.alive and not m.away and m.slot == SLOT for m in guards))
+            self.assertTrue(target.away)
+            self.assertNotIn(target.eid, room.npcs)
+            target.capture_harm = {self.cid: 100}
+            self.assertIsNone(holdings.snapshot(rc, target, None))
+            for index, guard in enumerate(guards):
+                rc.kill(guard, None)
+                rc.keep_hours()
+                self.assertEqual(target.eid in room.npcs, index == 2)
+                self.assertEqual(self.store.boss_kills([rc.boss_spot(guard)]),
+                                 {rc.boss_spot(guard): SLOT})
+            restored_room = rooms.Room(world.location(base.loc), rooms.IdAllocator(), world.mob_types())
+            restored = combat.RoomCombat(restored_room, self.store)
+            restored.keep_hours()
+            self.assertTrue(holdings.guards_cleared(restored, base, SLOT))
+            self.assertTrue(any(m.type_id == base.boss and m.alive and not m.away
+                                for m in restored.mobs.values()))
+            self.now = SLOT + 7 * 86400
+            restored.keep_hours()
+            self.assertFalse(holdings.guards_cleared(restored, base, self.now))
+            self.assertEqual(sum(m.alive and not m.away for m in restored.mobs.values()
+                                 if m.type_id in base.guards), 3)
+            self.assertTrue(next(m for m in restored.mobs.values() if m.type_id == base.boss).away)
+
+        for base in (self.base, holdings.site('base_dn')):
+            with self.subTest(base=base.key):
+                asyncio.run(check(base))
+
     def test_member_rights_funds_and_disband_rechecked(self):
         self.capture()
         self.store.clan_member_update(self.cid, self.clan, perm=1)
@@ -308,20 +370,31 @@ class ClanBases(unittest.TestCase):
             self.assertEqual(self.store.clan_treasury(self.clan), 4_500_000)
 
     def test_live_capture_one_member_and_death_checkpoint_are_persistent(self):
-        answers = []
-        sess = NS(char_id=self.cid, combat=NS(dead=False, level=self.base.min_level), answer=answers.append)
-        room = NS(loc=world.location(118), players=[sess], npcs={})
-        rc = NS(store=self.store, room=room, place=(118, None, None))
-        rc.boss_spot = lambda mob: combat.RoomCombat.boss_spot(rc, mob)
-        mob = NS(type_id=self.base.boss, slot=SLOT, hp_max=100, sp_max=0,
-                 home=100, capture_harm={self.cid: 100})
-        mob.capture = holdings.snapshot(rc, mob, None)
-        self.assertEqual(holdings.settle(rc, mob), "capture")
-        self.assertEqual(self.store.boss_kills([rc.boss_spot(mob)]), {rc.boss_spot(mob): SLOT})
-        self.assertIsNone(holdings.settle(rc, mob))
-        self.assertEqual(len(self.store.holding_log(self.base.key)), 1)
-        self.now = SLOT + 3600
-        self.assertIsNone(holdings.snapshot(rc, mob, None))
+        for base in (self.base, holdings.site('base_dn')):
+            with self.subTest(base=base.key):
+                self.now = SLOT + 300
+                sess = NS(char_id=self.cid, combat=NS(dead=False, level=base.min_level - 1),
+                          answer=lambda text: None)
+                room = NS(loc=world.location(base.loc), players=[sess], npcs={})
+                rc = NS(store=self.store, room=room, place=(base.loc, None, None))
+                rc.mobs = {1: NS(type_id=base.guards[0], alive=False, slot=SLOT)}
+                rc.boss_spot = lambda mob: combat.RoomCombat.boss_spot(rc, mob)
+                mob = NS(type_id=base.boss, slot=SLOT, hp_max=100, sp_max=0,
+                         home=100, capture_harm={self.cid: 100})
+                snap = holdings.snapshot(rc, mob, None)
+                self.assertIsNone(holdings.winner(snap, 1, base.min_level))
+                sess.combat.level += 1
+                mob.capture = holdings.snapshot(rc, mob, None)
+                self.assertEqual(holdings.settle(rc, mob), 'capture')
+                self.assertEqual(self.store.holding(base.key)['clan_id'], self.clan)
+                self.assertEqual(self.store.boss_kills([rc.boss_spot(mob)]), {rc.boss_spot(mob): SLOT})
+                self.assertIsNone(holdings.settle(rc, mob))
+                self.assertEqual(len(self.store.holding_log(base.key)), 1)
+                self.now = SLOT + 3600
+                self.assertIsNone(holdings.snapshot(rc, mob, None))
+                # A second independent case must not reuse this clan's
+                # still-open reservation for the other base.
+                self.store.holding_clear(base.key, 'admin')
 
     def test_capture_and_boss_death_roll_back_together(self):
         snap = dict(site=self.base.key, slot=SLOT, at=self.now, pool=100,
@@ -496,7 +569,7 @@ class WarehouseGold(unittest.TestCase):
     def claims(self):
         return [dict(r) for r in self.store.db.execute("SELECT * FROM clan_holding_claims")]
 
-    def test_seven_native_services_use_only_original_ingots_and_keep_personal_rewards(self):
+    def test_seven_native_services_use_only_original_ingots_and_replace_personal_rewards(self):
         self.assertEqual(holdings.problems(), [])
         for i, key in enumerate(("wh_sever", "wh_vostok", "wh_ug", "wh_dn_sever",
                                   "wh_dn_vostok", "wh_dn_ug", "wh_ah_center")):
@@ -507,8 +580,8 @@ class WarehouseGold(unittest.TestCase):
             self.assertEqual((q.rew_gold, q.rew_afro, q.service, q.repeatable), (0, 0, True, 1))
             self.assertEqual((q.give, q.take, q.holders), ([site.box], [site.box], key))
             personal = quests.get(site.quest)
-            self.assertGreater(personal.rew_afro, 0)
-            self.assertTrue(personal.rew_obj or personal.rew_also)
+            self.assertTrue(quests.acquisition_blocked(personal))
+            self.assertFalse(quests.acquisition_blocked(q))
             self.assertEqual(events.table().gates[q.type], events.table().gates[personal.type])
 
     def test_all_seven_real_hand_ins_grant_the_exact_city_totals(self):
@@ -539,13 +612,18 @@ class WarehouseGold(unittest.TestCase):
         self.assertIsNotNone(self.store.quest(second))
         self.assertFalse(self.s.quest_available(quests.get(self.site.gold_quest)))
 
-    def test_personal_box_claim_does_not_consume_clan_gold_and_ordinary_member_keeps_personal(self):
+    def test_legacy_personal_reward_cannot_pay_even_from_an_existing_journal(self):
         qid = self.store.take_quest(self.cid, self.site.quest, {}, True)
-        self.store.finish_quest(qid, self.cid, self.site.quest)
+        before = (self.store.money(self.cid), self.s.inv.rows())
+        self.claim(qid)
+        self.assertEqual([p['res'] for n, p in self.frames if n == 'cmdAck'],
+                         [server.RES_NOT_AVAILABLE])
+        self.assertEqual((self.store.money(self.cid), self.s.inv.rows()), before)
+        self.assertIsNotNone(self.store.quest(qid))
         self.assertTrue(self.s.quest_available(quests.get(self.site.gold_quest)))
         self.store.clan_member_update(self.officer, self.clan, perm=1)
         member, _ = self.native(self.officer)
-        self.assertTrue(member.quest_available(quests.get(self.site.quest)))
+        self.assertFalse(member.quest_available(quests.get(self.site.quest)))
         self.assertFalse(member.quest_available(quests.get(self.site.gold_quest)))
         self.claim(self.ready())
         self.assertEqual(self.s.inv.bag_pieces(), {7620: 3})

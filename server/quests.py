@@ -912,6 +912,9 @@ TEMPORARILY_DISABLED_QUESTS = frozenset(range(943, 948)) | frozenset(range(960, 
 # Preserve lesson definitions and journal ids, but close all paid academy XP.
 # Quest 967 (knives for the unarmed teacher) and entry/exit 965/966 stay open.
 DISABLED_ACADEMY_LESSONS = frozenset(range(12000, 12075))
+# Replaced by one shared ingot payout per warehouse/day. Keep the old
+# definitions and journal ids so cancellation and NPC indices stay valid.
+REPLACED_WAREHOUSE_REWARDS = frozenset(range(765, 772))
 
 
 
@@ -921,7 +924,8 @@ def acquisition_blocked(quest):
     Keep rows and journal instances intact so cancelling stays possible.
     Block the whole mixed reward rather than silently deleting a prize.
     """
-    if quest.type in TEMPORARILY_DISABLED_QUESTS or quest.type in DISABLED_ACADEMY_LESSONS:
+    if (quest.type in TEMPORARILY_DISABLED_QUESTS or quest.type in DISABLED_ACADEMY_LESSONS
+            or quest.type in REPLACED_WAREHOUSE_REWARDS):
         return True
     import items
     import craft

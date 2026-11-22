@@ -111,7 +111,8 @@ class ClanBaseWorldTests(unittest.TestCase):
             with self.subTest(lid=lid):
                 self.assertEqual(Counter(t for _cell, t in world.location(lid).spawns), expected)
         placed = {lid: Counter(r['type'] for r in world.placed_in(lid)) for lid in STAFF}
-        self.assertEqual(placed, {118: Counter({7454: 1}), 382: Counter({7451: 1, 4428: 1}),
+        self.assertEqual(placed, {118: Counter({7454: 1, 4829: 3}),
+                                  382: Counter({7451: 1, 4428: 1, 4828: 3}),
                                   609: Counter(), 380: Counter(), 958: Counter()})
         self.assertIsNone(rooms.check_placements(world.mob_types()))
 
@@ -178,7 +179,9 @@ class ClanBaseWorldTests(unittest.TestCase):
                 else:
                     return_cells = set(travel.exit_sides(loc))
                 self.assertTrue(accessible & return_cells)
-                for cell, _type in loc.spawns:
+                inhabitants = [cell for cell, _type in loc.spawns]
+                inhabitants += [r['cell'][1] * loc.width + r['cell'][0] for r in world.placed_in(loc.id)]
+                for cell in inhabitants:
                     self.assertTrue(any(c in accessible for c in
                                         progression.hex_neighbours(cell, loc.width, loc.height)))
 

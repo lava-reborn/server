@@ -15934,6 +15934,30 @@
      26
     ],
     "why": "DESIGNED approved capturable clan base, 2026-11-22. Existing native boss/flag artwork; capture strength and ownership are location-scoped in holdings, preserving warehouse behaviour."
+   },
+   {
+    "type": 4829,
+    "cell": [
+     24,
+     25
+    ],
+    "why": "DESIGNED owner-approved weekly clan-base guard. Original clan_guardian sprite/type; level from existing mob curves. Scheduled with the weekly boss, persistent deaths, hostile to every clan. Not claimed as recovered original placement or stats."
+   },
+   {
+    "type": 4829,
+    "cell": [
+     40,
+     21
+    ],
+    "why": "DESIGNED owner-approved weekly clan-base guard. Original clan_guardian sprite/type; level from existing mob curves. Scheduled with the weekly boss, persistent deaths, hostile to every clan. Not claimed as recovered original placement or stats."
+   },
+   {
+    "type": 4829,
+    "cell": [
+     39,
+     32
+    ],
+    "why": "DESIGNED owner-approved weekly clan-base guard. Original clan_guardian sprite/type; level from existing mob curves. Scheduled with the weekly boss, persistent deaths, hostile to every clan. Not claimed as recovered original placement or stats."
    }
   ],
   "382": [
@@ -15952,6 +15976,30 @@
      38
     ],
     "why": "DESIGNED approved clan-base flag, 2026-11-22. Existing native flag artwork, dedicated type4428 prevents rent-window refreshes from replacing ordinary warehouse flag entities."
+   },
+   {
+    "type": 4828,
+    "cell": [
+     30,
+     37
+    ],
+    "why": "DESIGNED owner-approved weekly clan-base guard. Original clan_guardian sprite/type; level from existing mob curves. Scheduled with the weekly boss, persistent deaths, hostile to every clan. Not claimed as recovered original placement or stats."
+   },
+   {
+    "type": 4828,
+    "cell": [
+     46,
+     31
+    ],
+    "why": "DESIGNED owner-approved weekly clan-base guard. Original clan_guardian sprite/type; level from existing mob curves. Scheduled with the weekly boss, persistent deaths, hostile to every clan. Not claimed as recovered original placement or stats."
+   },
+   {
+    "type": 4828,
+    "cell": [
+     46,
+     43
+    ],
+    "why": "DESIGNED owner-approved weekly clan-base guard. Original clan_guardian sprite/type; level from existing mob curves. Scheduled with the weekly boss, persistent deaths, hostile to every clan. Not claimed as recovered original placement or stats."
    }
   ]
  }

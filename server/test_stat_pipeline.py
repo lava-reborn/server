@@ -13,6 +13,7 @@ import inventory
 import items
 import progression
 import sets
+from testkit import attack_fixture
 from protocol import decode
 import test_training_ground as fixtures
 
@@ -20,6 +21,61 @@ import test_training_ground as fixtures
 class StatPipeline(unittest.IsolatedAsyncioTestCase):
     asyncSetUp = fixtures.TrainingGround.asyncSetUp
     asyncTearDown = fixtures.TrainingGround.asyncTearDown
+
+    async def test_every_retail_ammo_calibre_reaches_actual_aim_with_all_its_bonuses(self):
+        import shop_bands
+        combinations = {}
+        for gun in shop_bands.wares():
+            if items.root_of(gun) != items.FIRE_ARM or items.acquisition_blocked(gun):
+                continue
+            for ammo in items.params_of(gun)['comp_array']:
+                if shop_bands.ammunition_order(ammo)[1] < 6:
+                    combinations.setdefault(ammo, gun)
+        self.assertGreaterEqual(len(combinations), 60)
+        for ammo_id, gun in combinations.items():
+            with self.subTest(ammo=ammo_id, gun=gun):
+                f, ch, _, _, _, row = attack_fixture(gun)
+                for spec in ch.spec:
+                    spec[0] = 5
+                row.update(ammo_type=ammo_id, ammo_count=100)
+                si, ammo = items.params_of(gun), items.params_of(ammo_id)
+                row['cur_mode'] = mode = items.first_mode(si['fire_mods'])
+                combat.Fighter.use_fire(f, dict(obj='weapon', target='000000005'))
+                try:
+                    self.assertIsNotNone(f.aim)
+                    shot = f.aim._args[-1][3]
+                    spec = combat.SPEC_OF_WEAPON[si['weapon_type']]
+                    self.assertAlmostEqual(shot.cone, combat.cone_of(
+                        combat.spread_factor(ch.skill_level(progression.SHOOTING), ch.spec_level(spec)),
+                        si['target_size'][mode], ammo['acc_mod'], si['max_range'][mode]))
+                    power = 1 + .03 * max(0, ch.attr(progression.INTELLECT) - 5)
+                    self.assertEqual(shot.dmin, max(1, round(si['h_damage_min'][mode] * power * ammo['dam_mod'])))
+                    self.assertEqual(shot.sdmin, round(si.get('st_damage_min', [0] * 3)[mode] * power * ammo['st_mod']))
+                    self.assertEqual(shot.max_range, int(si['max_range'][mode] * ammo['range_mod'] + 1e-9))
+                    self.assertEqual(shot.piercing, ammo['piercing'])
+                finally:
+                    if f.aim:
+                        f.aim.cancel()
+
+    def test_overlevel_gun_keeps_damage_and_loses_no_more_than_fifteen_percent_accuracy(self):
+        weapon = combat.Weapon(1, 1000, 2000, 2, 5, 20, 1, .1, 0, None, None,
+                               sdmin=500, sdmax=1000)
+        ch = self.s.char
+        ch.attrib[progression.INTELLECT] = 5
+        for skill in ch.skill:
+            skill[0] = 13
+        ammo = dict(acc_mod=.8, dam_mod=1.1, st_mod=1.1, range_mod=1)
+        for missing, ratio in ((0, 1), (1, .95), (2, .9), (3, .85)):
+            with patch.object(inventory, 'item_level', return_value=13 + missing):
+                shot = self.s.combat.prepare_weapon(weapon, ammo, dict(type_id=25201))
+                self.assertEqual((shot.dmin, shot.dmax, shot.sdmin, shot.sdmax), (1100, 2200, 550, 1100))
+                self.assertEqual(self.s.combat.prepare_melee((100, 200), dict(type_id=6240)), (100, 200))
+                for distance in (1, 5, 10, 20):
+                    base = combat.hit_probability(weapon.cone, distance)
+                    actual = combat.hit_probability(shot.cone, distance)
+                    self.assertGreaterEqual(actual + 1e-9, base * ratio)
+                self.assertAlmostEqual(shot.cone, weapon.cone / ratio)
+        self.assertEqual((weapon.dmin, weapon.dmax, weapon.cone), (1000, 2000, .1))
 
     def manager(self):
         self.s.on_map = False

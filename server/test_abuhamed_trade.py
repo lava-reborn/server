@@ -120,6 +120,9 @@ DARK_A = tuple(range(36056, 36061))             # Тёмное Эхо[17]: the q
 DARK_G = tuple(range(60005, 60010))             # ..and its G, types of our own
 OASIS_ROUNDS = [6104, 6105, 6106, 6108, 6107, 6110, 6111, 6115, 6116, 6117, 6118, 6120, 6119,
                 6122, 6123, 6127, 6113, 6125, 6109, 6121, 6114, 6126, 6112, 6124]
+
+# Calibre order on the wire; archive owner list above stays intact.
+ORDERED_OASIS_ROUNDS = [6104, 6116, 6164, 6152, 6105, 6117, 6165, 6153, 6106, 6118, 6166, 6154, 6108, 6120, 6168, 6156, 6107, 6119, 6167, 6155, 6110, 6122, 6170, 6158, 6111, 6123, 6171, 6159, 6115, 6127, 6175, 6163, 6113, 6125, 6173, 6161, 6109, 6121, 6169, 6157, 6114, 6126, 6174, 6162, 6112, 6124, 6172, 6160]
 UNLISTED = (749, 753, 4583, 4584, 7344, 7339, 7341, 7342)   # masters with no stall of their own
 # The package WORLD holds the trader 7247, with no row and no role, out of the station
 # (data/schedule.json held_out) and stands the lottery men all year (world.SEASON_KEPT):

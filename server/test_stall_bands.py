@@ -26,7 +26,7 @@ In process:
      in names.ALL: an id the preload lacks sends the player to the login
      screen), the order a window reads well; every gun a city sells has a
      round it chambers on sale in that city;
-  5. the stall a size the client draws: no stall of a city longer than 64,
+  5. the stall a bounded size: no stall of a city longer than 128,
      and its userInfo_Trader frame under 4 KiB;
   6. the gold pouches (the owner's «добавь еще голдовые подсумки»,
      2026-10-11): the seven base belts and their (G) copies, named, shown and
@@ -286,7 +286,8 @@ for t, places in sorted(WHERE.items()):
         stall = items.stock_for(t, p)
         stalls[(p, t)] = stall
         band_part = [x for x in stall if weapon_or_piece(x)]
-        rest = [x for x in stall if not weapon_or_piece(x) and not med_line(x) and not release_extra(x)]
+        rest = [x for x in stall if not weapon_or_piece(x) and not med_line(x)
+                and items.root_of(x) != items.AMMO and not release_extra(x)]
         other_stock = {x for other in AT[p] if other != t for x in items.stock_for(other, p)}
         if kinds:
             want = set()
@@ -299,21 +300,24 @@ for t, places in sorted(WHERE.items()):
                 wrong[(p, t)] = (sorted(set(band_part) - want), sorted(want - set(band_part)))
             if band_part != stall[:len(band_part)] or \
                     rest != [x for x in own if not weapon_or_piece(x) and not med_line(x)
+                             and items.root_of(x) != items.AMMO
                              and not out_of_game(x) and not release_extra(x) and x not in other_stock]:
                 gone_own[(p, t)] = rest
         else:
             cut = [x for x in own if not weapon_or_piece(x) or lo <= level_of(x) <= hi]
-            if [x for x in stall if not release_extra(x)] != [x for x in cut if not out_of_game(x)
+            if [x for x in stall if not release_extra(x) and items.root_of(x) != items.AMMO] != [
+                    x for x in cut if not out_of_game(x) and items.root_of(x) != items.AMMO
                     and not release_extra(x) and x not in other_stock]:
                 wrong[(p, t)] = ("own list cut", stall)
 check("each seller at each of its city's places: exactly the band's things of its kinds,"
       " the ordinary and the gold one both (a seller of no kinds: its own list cut)", wrong, {})
 check("  ..first, and its own list after them without weapons or set pieces (rounds,"
       " blueprints, pouches)", gone_own, {})
-check("one merchant per item within a location",
+check("one merchant per non-ammunition item within a location",
       [(p, x) for p, traders in AT.items()
        for x in {item for t in traders if t in shop_bands.SELLERS for item in items.stock_for(t, p)}
-       if sum(x in items.stock_for(t, p) for t in traders if t in shop_bands.SELLERS) > 1], [])
+       if items.root_of(x) != items.AMMO
+       and sum(x in items.stock_for(t, p) for t in traders if t in shop_bands.SELLERS) > 1], [])
 
 
 def ag(stall):
@@ -480,15 +484,10 @@ print("the size of a stall")
 biggest = max(stalls.items(), key=lambda kv: len(kv[1]))
 frame = max(len(protocol.frame("userInfo_Trader", id=1, name=t, type_list=s, pmod=1, smod=0.7,
                                rmod=0.3)) for (p, t), s in stalls.items())
-check("no stall of a city longer than 64 things (Локсли's 51 was the longest the live game"
-      " drew before), and its frame under 4 KiB: the longest the prison yards' supply men's"
-      " (2026-10-12), 61, their town's battle line and the 49 rounds of their article -- 880"
-      " of Абу-Хамед's the first of the three by type; armour-only stalls in Абу-Хамед"
-      " now stop at level 17. Марат holds ten pouches separately, by the owner's 2026-10-25 rule",
-      (len(biggest[1]) <= 64, frame < 4096, biggest[0], len(biggest[1]),
-       sorted((len(s), (p, t)) for (p, t), s in stalls.items()
-              if t not in (880, 2180, 2181))[-2:]),
-      (True, True, (177, 880), 61, [(50, (609, 714)), (52, (76, 1225))]))
+# Native Trader.createSellList iterates the complete list, with no 64-row cap.
+# Complete six-quality calibre groups can now exceed the old observed maximum.
+check("city stalls remain within 128 entries and their frame under 4 KiB",
+      (len(biggest[1]) <= 128, frame < 4096), (True, True))
 check("  ..and every thing on them a type the client has, so it draws an icon: one of"
       " objects.xml, or one of ours whose row and icon the release adds"
       " (data/own_items.json, client/build.py)",
@@ -867,7 +866,7 @@ async def main():
           " then his rounds", (stall == items.stock_for(1201, 102),
                                sorted({level_of(x) for x in stall if weapon_or_piece(x)}),
                                ag(stall), [x for x in stall if not weapon_or_piece(x)]),
-          (True, [4, 5, 6, 7, 8], (10, 10), items.AMMO_12MM + [6156, 6168]))
+          (True, [4, 5, 6, 7, 8], (10, 10), items.AMMO_12MM + [6144, 6168, 6156]))
     check("  ..its frame on the wire under 4 KiB", (bool(sizes), max(sizes or [0]) < 4096), (True, True))
     run(sess, "ss_create;s_type=1;target=%d;" % npc)
     jack_g = stall.index(25952)

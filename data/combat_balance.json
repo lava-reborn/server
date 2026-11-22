@@ -20644,6 +20644,10 @@
       }
     }
   },
+  "ordinary_plus_three": {
+    "player_damage_ratio": 0.725,
+    "mob_damage_ratio": 0.875
+  },
   "ordinary_plus_two": {
     "2": 0.9634,
     "3": 1.0,

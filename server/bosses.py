@@ -252,7 +252,8 @@ def keeps_hours(type_id, loc_id=None):
     respawn timer: a boss, while the rule is on, but for ALL_DAY."""
     if loc_id is not None:
         import holdings                 # late: its schedule imports bosses
-        if holdings.base_for(loc_id, type_id) is not None:
+        if (holdings.base_for(loc_id, type_id) is not None
+                or holdings.guard_site(loc_id, type_id) is not None):
             return True
     return (bool(HOURS) and type_id not in ALL_DAY
             and world.creature_role(type_id) == "boss")
@@ -357,7 +358,7 @@ def slot_of(type_id, t, loc_id=None):
     warehouse master's window, or the bosses' one."""
     if loc_id is not None:
         import holdings                 # late: only the configured surface boss
-        s = holdings.base_for(loc_id, type_id)
+        s = holdings.base_for(loc_id, type_id) or holdings.guard_site(loc_id, type_id)
         if s is not None:
             return holdings.battle_slot(s, t)
     return slot(t, hours_of(type_id))

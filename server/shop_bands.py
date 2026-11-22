@@ -174,6 +174,54 @@ def gold_ammunition(stock):
                   and items.params_of(t).get('g_cost'))
 
 
+_AMMO_LINE = re.compile(r'^Ammo_(.+)_(KS|ST|OT|OT_PS|BB_G|EK_G)$')
+_AMMO_ORDER = {'KS': 0, 'ST': 1, 'OT': 2, 'OT_PS': 3, 'BB_G': 4, 'EK_G': 5}
+
+
+@lru_cache(maxsize=256)
+def ammunition_order(type_id):
+    """Calibre and quality of ordinary retail rounds, including the SP-5 alias."""
+    import items
+    match = _AMMO_LINE.fullmatch(items.catalogue()[type_id][1])
+    if match:
+        calibre, quality = match.groups()
+        return ('SP_5_6' if calibre == 'SP_5' else calibre), _AMMO_ORDER[quality]
+    if items.catalogue()[type_id][1] == 'Ammo_9mmNato_shock':
+        return '9mmNato', 6  # Retain this existing G round beside its calibre.
+    return type_id, 6
+
+
+def with_weapon_ammunition(stock):
+    """Keep compatible retail rounds at each gun seller, grouped after weapons."""
+    import items
+    guns = [t for t in stock if items.root_of(t) in (items.FIRE_ARM, items.COLD_ARM)]
+    if not any(items.root_of(t) in (items.FIRE_ARM, items.AMMO) for t in stock):
+        return stock
+    chosen = dict.fromkeys(stock)
+    calibres = {}
+    for gun in guns:
+        if items.root_of(gun) != items.FIRE_ARM:
+            continue
+        for round_id in items.params_of(gun).get('comp_array', ()):
+            if items.root_of(round_id) != items.AMMO:
+                continue
+            calibre, _ = ammunition_order(round_id)
+            calibres.setdefault(calibre, len(calibres))
+            name = items.catalogue()[round_id][1]
+            si = items.params_of(round_id)
+            if ((_AMMO_LINE.fullmatch(name) or round_id == items.STARTER_ROUNDS)
+                    and (si.get('cost') or si.get('g_cost'))
+                    and not items.out_of_game(round_id) and not items.acquisition_blocked(round_id)):
+                chosen[round_id] = None
+    rounds = [t for t in chosen if items.root_of(t) == items.AMMO]
+    for type_id in rounds:
+        calibre, _ = ammunition_order(type_id)
+        calibres.setdefault(calibre, len(calibres))
+    rounds.sort(key=lambda t: (calibres[ammunition_order(t)[0]], ammunition_order(t)[1]))
+    other = [t for t in chosen if t not in guns and items.root_of(t) != items.AMMO]
+    return guns + rounds + other if guns else other + rounds
+
+
 @lru_cache(maxsize=256)
 def stock_owners(loc_id):
     """One seller per item within a location; cached with the static catalogue."""

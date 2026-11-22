@@ -2,6 +2,96 @@
 from avm_codegen import Compiler
 
 SOURCE = '''
+def __bfAnnotationRow(title, value):
+    # Native item cards emit fighter requirement 0 and empty effect bonuses.
+    if value == 0:
+        if title == "Необходимый навык бойца" or title.indexOf("Бонус") == 0:
+            return
+    return this.__bfAnnotationRowOrig(title, value)
+
+def __bfEffectRows(panel, effect):
+    panel.addItem("Время действия", lol.gpui.Annotation.getTextDuration(effect.work_time))
+    if effect.update_delta and not isNaN(effect.update_delta):
+        panel.addItem("Интервал активации", lol.gpui.Annotation.getTextDuration(effect.update_delta))
+    arrays = [["Бонусы\\rк аттрибутам", effect.bonusAttribs, panel.attribsTitle], ["Бонусы\\rк навыкам", effect.bonusSkills, panel.skillsTitle], ["Бонусы\\rк специализациям", effect.bonusSpecs, panel.specTitle]]
+    i = 0
+    while i < len(arrays):
+        row = arrays[i]
+        panel.addItem(row[0], panel.readArray(row[1], row[2]))
+        i = i + 1
+    scalars = [["Бонус к здоровью", effect.max_hp], ["Бонус к выносливости", effect.max_sp], ["Бонус\\rк очкам действия", effect.max_od], ["Бонус\\rк критическому попаданию", effect.critical_probability], ["Бонус\\rк избеганию крита", effect.critical_evade], ["Бонус к броне", effect.armor]]
+    i = 0
+    while i < len(scalars):
+        row = scalars[i]
+        if row[1] and not isNaN(row[1]):
+            panel.addItem(row[0], row[1])
+        i = i + 1
+    # Protocol factors are direct multipliers, shared with server effects.
+    modifiers = [["к опыту с мобов", effect.mob_exp], ["к опыту с игроков", effect.player_exp], ["к луту с мобов", effect.mob_drop]]
+    i = 0
+    while i < len(modifiers):
+        row = modifiers[i]
+        if row[1] != None and not isNaN(row[1]) and row[1] != 1:
+            percent = Math.round((row[1] - 1) * 100)
+            if percent > 0:
+                panel.addItem("Бонус\\r" + row[0], "+" + String(percent) + "%")
+            elif percent < 0:
+                panel.addItem("Штраф\\r" + row[0], String(percent) + "%")
+        i = i + 1
+    # Player-drop protection has separate semantics; keep its native formula.
+    if effect.player_drop != None and not isNaN(effect.player_drop) and effect.player_drop != 1:
+        panel.addItem("Защита вашего дропа", String(Math.round((1 - effect.player_drop) * 100)) + "%")
+
+def __bfEffectAnnotation(effect):
+    if this._fullAnnotation:
+        rows = []
+        this.addDesc(rows)
+        i = 0
+        while i < len(rows):
+            this.addItem(rows[i][0], rows[i][1])
+            i = i + 1
+    _global.__bfEffectRows(this, effect)
+
+def __bfEffectsInfo(effects, effects_prob, full, mine):
+    # Retain native title/icon/layout lifecycle for the list of item effects.
+    this._fullAnnotation = full
+    if mine:
+        this.back.my_mc._alpha = 100
+        this.myFlag = True
+    if full:
+        lol.core.SceneShifter.hotKeyManager.removeEventListener(lol.services.HotKeyEvent.CTRL, this, this.showFullAnnotation)
+    this.cont_mc.removeMovieClip()
+    this.cont_mc = this.createEmptyMovieClip("cont_mc", this.getNextHighestDepth())
+    this.cont_mc._x = 13
+    style = new(TextFormat)
+    style.bold = True
+    this.name_txt.htmlText = "ЭФФЕКТЫ"
+    this.name_txt.setTextFormat(style)
+    this.arrItem = []
+    this.arrLine = []
+    i = 0
+    while i < len(effects):
+        effect = effects[i]
+        if effect:
+            title = this.cont_mc.attachMovie("effect_title", "effect_title", this.cont_mc.getNextHighestDepth())
+            line = this.cont_mc.attachMovie("annotation_line", "annotation_line", this.cont_mc.getNextHighestDepth())
+            title.effect_name.autoSize = True
+            title.effect_name.html = True
+            title.effect_name.htmlText = effect.name
+            title.effect_prob.autoSize = True
+            title.effect_prob.html = True
+            title.effect_prob.htmlText = "Вероятность срабатывания: " + String(effects_prob[i])
+            title.effect_prob._y = title.effect_name._y + title.effect_name._height + 1
+            icon = lol.services.SSEmulator.getEffectIcon(effect.res_icon)
+            title.effect_icon = lol.display.DisplaySprite.create(title, String(i) + "_effect_icon", 0)
+            title.effect_icon.autoSize = False
+            title.effect_icon.display(String(i) + "_effect_icon", icon)
+            this.arrItem.push(title)
+            this.arrLine.push(line)
+            _global.__bfEffectRows(this, effect)
+        i = i + 1
+    this.doLater("align")
+
 def __bfNPCInfo(obj):
     # These two native flag types belong only to restored clan bases.
     this.__bfBaseFlag = obj.param.res == 4427 or obj.param.res == 4428
@@ -397,6 +487,9 @@ def patches(Asm, undef, *, training=False):
     bodies = {name: (params, body) for name, params, body in functions}
     wraps = []
     for path, method, keep, helper in (
+        (('gpui','Annotation'), 'addItem', '__bfAnnotationRowOrig', '__bfAnnotationRow'),
+        (('gpui','Annotation'), 'effectAnnotation', '__bfEffectAnnotationOrig', '__bfEffectAnnotation'),
+        (('gpui','Annotation'), 'showEffectsInfo', '__bfEffectsInfoOrig', '__bfEffectsInfo'),
         (('core','player','NPC'), 'userInfo', '__bfNPCInfoOrig', '__bfNPCInfo'),
         (('core','location','CharInfo'), 'userInfoUpdate', '__bfInfoUpdateOrig', '__bfInfoUpdate'),
         (('core','location','CharInfo'), 'clanNameUpdate', '__bfClanCaptionOrig', '__bfClanCaption'),

@@ -380,8 +380,8 @@ check("every gun on a stall of Абри has a round it chambers on sale in the t
 check("  ..the P90's 5.7x28 among them: the oasis's «Торговец патронами» (1228) sells its СТ and"
       " ОТ beside Вади-Хальфа's oasis list", [x for x in STALLS[(OASIS, AMMO_OASIS)]
                                               if x in (6101, 6113, 6125)], [6113, 6125])
-check("the stalls' sizes: none longer than 64, the knife trader's band and his own list",
-      (max(len(s) for s in STALLS.values()) <= 64, STALLS[(PORT, ONE_EAR)]),
+check("the stalls stay below128 rows; knife trader keeps his band and own list",
+      (max(len(s) for s in STALLS.values()) <= 128, STALLS[(PORT, ONE_EAR)]),
       (True, [6245, 6246, 6250, 6251, 6255, 6256] + OWN[ONE_EAR]))
 check("Алима: the town's sets, then her pouches, each with its (G) right after it",
       STALLS[(PORT, ALIMA)][-10:], [3577, 3599, 3581, 3603, 5613, 5614, 3578, 3600, 3579, 3601])

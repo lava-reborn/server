@@ -116,6 +116,9 @@ POUCHES = [3577, 3580, 5613, 3578, 3579]        # автоматчика, пул
 LOVELACE = tuple(range(11721, 11726)) + tuple(range(60000, 60005))
 OASIS_ROUNDS = [6104, 6105, 6106, 6108, 6107, 6110, 6111, 6115, 6116, 6117, 6118, 6120, 6119,
                 6122, 6123, 6127, 6113, 6125, 6109, 6121, 6114, 6126, 6112, 6124] + list(range(6152, 6176))
+
+# Calibre order on the wire; archive owner list above stays intact.
+ORDERED_OASIS_ROUNDS = [6104, 6116, 6164, 6152, 6105, 6117, 6165, 6153, 6106, 6118, 6166, 6154, 6108, 6120, 6168, 6156, 6107, 6119, 6167, 6155, 6110, 6122, 6170, 6158, 6111, 6123, 6171, 6159, 6115, 6127, 6175, 6163, 6113, 6125, 6173, 6161, 6109, 6121, 6169, 6157, 6114, 6126, 6174, 6162, 6112, 6124, 6172, 6160]
 # The package WORLD holds the test trader 5113 out of the black market (data/
 # schedule.json held_out) and stands the lottery men all year (world.SEASON_KEPT):
 # 663 in both markets, 712 in the black market. Until it is merged 5113 stands there
@@ -347,7 +350,7 @@ check("Дари: the town's sets; Галия: pouches, each with its (G) right a
 check("Одноногий: the town's knives and his whetstone's six blueprints after them",
       STALLS[(BLACK, ONE_LEG)], shop_bands.goods(("knives",), LO, HI) + list(KNIFE_PRINTS))
 check("the oasis's «Торговец патронами» (1230): every СТ and ОТ of his list, nothing cut",
-      STALLS[(OASIS, AMMO_OASIS)], OASIS_ROUNDS)
+      STALLS[(OASIS, AMMO_OASIS)], ORDERED_OASIS_ROUNDS)
 CRAFT_PRINTS = {r["craft"]["blueprint"] for r in CRAFT_DOC["quests"]
                 if r["craft"]["family"] == "upgrade"}
 check("nothing premium on a stall of Донгола, nothing a quest lends, each thing priced in one"
@@ -367,8 +370,8 @@ ROUNDS = {x for s in STALLS.values() for x in s if items.root_of(x) == items.AMM
 check("every gun on a stall of Донгола has a round it chambers on sale in the town",
       sorted({x for s in STALLS.values() for x in s if items.root_of(x) == items.FIRE_ARM
               and not set(items.params_of(x)["comp_array"]) & ROUNDS}), [])
-check("the stalls' sizes: none longer than 64 (the prison's supply man's 61 the longest)",
-      max(len(s) for s in STALLS.values()) <= 64, True)
+check("the stalls stay below128 rows with all compatible ammunition",
+      max(len(s) for s in STALLS.values()) <= 128, True)
 check("the healers' fees: Грегори (138) and the oasis's Лекарь (1268) 500, the prison's"
       " Андрей Евгеньевич (2109) 600 (server/test_healer_fees.py)",
       {t: npcs.healer_price(t, 10) for t in (138, 1268, 2109)}, {138: 500, 1268: 500, 2109: 600})
@@ -795,7 +798,7 @@ async def main():
     stall, opened = open_stall(sess, OASIS, AMMO_OASIS)
     check("the oasis's «Торговец патронами»: 5.56x45 СТ for 160 afro a pack of 20",
           (stall, opened, buy(sess, stall, 6109, BUY, 20)),
-          (OASIS_ROUNDS, [0], ([0], [6109], 160, 0)))
+          (ORDERED_OASIS_ROUNDS, [0], ([0], [6109], 160, 0)))
     close_stall(sess)
 
     stall, opened = open_stall(sess, PIER, ELIZABETH)

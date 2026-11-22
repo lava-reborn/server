@@ -44,6 +44,9 @@ class Laborant(unittest.TestCase):
         account, _ = self.store.register("lab-test", "local-password")
         self.cid, _ = self.store.create_character(account, "LabOwner", 0, "1")
         self.other, _ = self.store.create_character(account, "LabOther", 0, "1")
+        self.clan = self.store.clan_create(self.cid, "Lab clan", "lab-clan", "", None)
+        self.store.clan_member_add(self.other, self.clan, 0, "", self.cid)
+        self.store.holding_capture("wh_ah_center", self.clan, self.now, self.cid, self.now)
         self.room = rooms.Room(server.world.location(128), rooms.IdAllocator(),
                                server.world.mob_types())
         self.rc = combat.room_combat(self.room, self.store)
@@ -58,6 +61,7 @@ class Laborant(unittest.TestCase):
         s.char.recalc()
         s.char.save(self.store)
         s.active = self.store.character(cid)
+        s.account = {'id': s.active['account_id']}
         s.loc, s.room = self.room.loc, self.room
         s.pos = next(c for c, t in s.loc.spawns if t == quests.LABORANT_NPC)
         s.frames = []
@@ -126,12 +130,43 @@ class Laborant(unittest.TestCase):
             self.assertEqual(dict(q.wants()), {3726: 1, base: 1, 3741: 5, 1573: 1})
             self.assertEqual((q.rew_obj, q.num_rew_obj, q.level, q.service), ([output], [1], 16, True))
             self.assertEqual(q.start_obj, [])
+            self.assertEqual(q.holders, "wh_ah_center")
         si = items.params_of(3726)
         self.assertEqual((si["g_cost"], si["cost"], si["armor_class"], si["max_break_abs"],
                           si["weight"], si["bonus_ce"], si["bonus_skills"], si["bonus_specs"]),
                          (3600, 0, 5, 5000, 100, 20, [3], [3, 3]))
         self.assertIn("спецназовца", names.ALL[items.STRING_ID_OFFSET + 3737])
         self.assertEqual(items.params_of(3737)["bonus_specs_m"], 131)
+
+    def test_research_kit_buy_at_both_markets_and_carry_to_saved_laboratory(self):
+        for loc in (35, 104):
+            with self.subTest(location=loc):
+                self.store.set_money(self.cid, 500000, 0)
+                self.s.char.afro, self.s.char.gold = self.store.money(self.cid)
+                before = self.s.inv.total_weight()
+                self.visit(loc, 81)
+                self.buy(1573, False)
+                self.assertEqual(self.store.money(self.cid), (250000, 0))
+                self.assertEqual(self.s.inv.total_weight() - before, 2500)
+                self.assertLessEqual(self.s.inv.total_weight(), self.s.inv.carry_limit())
+                rows = self.s.inv.rows()
+                self.store.save_position(self.cid, 128, self.room.loc.entry_cell(), 0, 0, False)
+                reloaded = self.native(self.cid)
+                self.assertEqual(reloaded.inv.rows(), rows)
+                self.assertEqual(reloaded.inv.total_weight(), self.s.inv.total_weight())
+                self.assertEqual(self.store.character(self.cid)['loc'], 128)
+
+    def test_large_weapon_stall_can_purchase_last_calibre_row_after_index_sixty_four(self):
+        self.store.set_money(self.cid, 1000000, 100000)
+        self.s.char.afro, self.s.char.gold = self.store.money(self.cid)
+        self.visit(195, 1229)
+        stock = items.stock_for(1229, 195)
+        self.assertGreater(len(stock), 64)
+        type_id = stock[-1]
+        self.assertEqual(items.root_of(type_id), items.AMMO)
+        before = self.s.inv.bag_pieces().get(type_id, 0)
+        self.buy(type_id, bool(items.params_of(type_id).get('g_cost')))
+        self.assertEqual(self.s.inv.bag_pieces()[type_id], before + 1)
 
     def test_all_A1_items_share_tier_sixteen_and_cannot_transfer_to_low_levels(self):
         types = [3726] + [output for _base, output in quests.LABORANT_RECIPES.values()]
@@ -148,8 +183,76 @@ class Laborant(unittest.TestCase):
         for type_id in (3722, 3723, 3724, 3725, 3726):
             self.assertEqual(stock.count(type_id), 1)
         self.assertEqual([items.params_of(t)["g_cost"] for t in (3735, 3736, 3738, 5615)],
-                         [5000, 4000, 5500, 4500])
+                         [6000, 5500, 7000, 6000])
         self.assertFalse({3737, 3739, 3740}.intersection(stock))
+
+    def test_crafting_each_retail_pouch_saves_money_without_resale_arbitrage(self):
+        mod = items.params_of(quests.LABORANT_MOD)
+        kit = items.params_of(1573)
+        self.assertEqual((mod['g_cost'], kit['cost']), (3600, 250000))
+        retail = set(items.stock_for(1219, 126))
+        rate = progression.GOLD_TO_AFRO_RATE // progression.GOLD_OUNCE
+        compared = []
+        for base, output in quests.LABORANT_RECIPES.values():
+            if output not in retail:
+                continue
+            with self.subTest(output=output):
+                source = items.params_of(base)
+                made = items.params_of(output)
+                inputs = mod['g_cost'] + source['g_cost']
+                self.assertGreaterEqual(made['g_cost'] * rate
+                                        - inputs * rate - kit['cost'], 250000)
+                for share in (gold_trade.NPC_SALE_SHARE, gold_trade.BASE_SALE_SHARE):
+                    self.assertLessEqual(gold_trade.sale_unit(output, made, share),
+                                         gold_trade.sale_unit(quests.LABORANT_MOD, mod, share)
+                                         + gold_trade.sale_unit(base, source, share))
+                compared.append(output)
+        self.assertCountEqual(compared, [3735, 3736, 3738, 5615])
+
+    def test_original_inputs_and_ready_pouch_combat_stats_stay_unchanged(self):
+        for type_id, price, attr in ((3722, 3000, [3]), (3723, 3000, [3]),
+                                     (3724, 3000, [3]), (3725, 3000, [4])):
+            si = items.params_of(type_id)
+            self.assertEqual((si['g_cost'], si['bonus_attribs'], si['max_break_abs'], si['weight']),
+                             (price, attr, 5000, 100))
+        for type_id, price, mask in ((3599, 1000, 2), (3600, 400, 8),
+                                    (3602, 2000, 1), (5614, 800, 2)):
+            si = items.params_of(type_id)
+            self.assertEqual((si['g_cost'], si['bonus_attribs'], si['bonus_attribs_m'],
+                              si['armor_class'], si['max_break_abs'], si['weight']),
+                             (price, [1], mask, 5, 600, 700))
+        for type_id in (3735, 3736, 3738, 5615):
+            si = items.params_of(type_id)
+            self.assertEqual((si['armor_class'], si['bonus_ce'], si['max_break_abs'],
+                              si['weight'], si['need_attribs']), (5, 20, 5600, 700, [5]))
+
+    def test_detail_and_craft_need_live_central_warehouse_owner(self):
+        detail = quests.get(quests.LABORANT_DETAIL)
+        craft = quests.get(18306)
+        self.assertEqual(detail.holders, 'wh_ah_center')
+        other = self.native(self.other)
+        # The lab's own daily counters stay personal: no box tenure or
+        # shared-account quota is silently added to these quests.
+        qid = self.ready(quests.LABORANT_DETAIL)
+        self.assertEqual(self.finish(qid), [0])
+        qid = self.ready(quests.LABORANT_DETAIL, other)
+        self.assertEqual(self.finish(qid, other), [0])
+        self.assertTrue(self.s.quest_available(craft))
+        craft_id = self.ready()
+        before = self.s.inv.rows()
+        outsider_id, _ = self.store.create_character(self.s.active['account_id'], 'LabOutsider', 0, '1')
+        outsider = self.native(outsider_id)
+        self.assertFalse(outsider.quest_available(detail))
+        self.assertFalse(outsider.quest_available(craft))
+        rival = self.store.clan_create(outsider_id, 'Rival lab', 'rival-lab', '', None)
+        self.store.holding_capture('wh_ah_center', rival, self.now + 1, outsider_id, self.now + 1)
+        self.assertFalse(self.s.quest_available(craft))
+        self.assertTrue(outsider.quest_available(detail))
+        self.assertEqual(self.finish(craft_id), [server.RES_NOT_AVAILABLE])
+        self.assertEqual(self.s.inv.rows(), before)
+        self.assertEqual(self.store.boss_kills([quests.LABORANT_SPOT]), {})
+        self.store.holding_capture('wh_ah_center', self.clan, self.now + 2, self.cid, self.now + 2)
+        self.assertEqual(self.finish(craft_id), [0])
 
     def test_personal_part_daily_take_cancel_and_relog_cannot_duplicate(self):
         qid = self.ready(quests.LABORANT_DETAIL)
@@ -367,7 +470,7 @@ class Laborant(unittest.TestCase):
                 self.advance_day()
 
     def test_real_shop_buy_craft_and_paid_base_resale_never_make_profit(self):
-        clan = self.store.clan_create(self.cid, "Lab clan", "lab-clan", "", None)
+        clan = self.clan
         slot = self.now - 3600
         base = holdings.site("base_ah")
         self.store.clan_treasury_adjust(clan, 3_000_000, "admin")
