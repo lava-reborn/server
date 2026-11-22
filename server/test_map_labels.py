@@ -473,11 +473,10 @@ def rows_bytes(doc, cell):
     return out_
 
 
-check("every other name on the map that tells an hour or offers blueprints is one left as the"
-      " original's: the warehouses (above), the prisons, the МКС helicopter and the black market",
+check("other timed names are the retained original places plus the two restored weekly bases",
       sorted({(x, y) for x, y, t in rows_of(out, EVERYWHERE) if TIMED.search(t)}
              - set(CLOCK_CELLS) - set(WAREHOUSES)),
-      sorted(set(ORIGINAL) | set(PRISONS)))
+      sorted(set(ORIGINAL) | set(PRISONS) | {(5955, 2032), (6154, 1963)}))
 check("  ..warehouse bytes change only the agreed minimum-level wording",
       [rows_bytes(out, c) for c in WAREHOUSES],
       [[warehouse_wording(r.decode('utf-8'), c).encode('utf-8')

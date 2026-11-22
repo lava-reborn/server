@@ -1250,7 +1250,7 @@
    "y": 2032,
    "was": "Собственность клана Delta Force:<br>ПОСТОРОННИМ СМЕРТЬ! ",
    "why": "DESIGNED restored capturable clan base, approved 2026-11-22. Generic city title replaces a historical clan owner; ownership and paid benefits are managed by the existing holdings system.",
-   "text": "Клановая база Донголы<br>Захват: от 12 уровня, не менее двух участников клана."
+   "text": "Клановая база Донголы<br>Захват: суббота, 20:00–21:00 МСК.<br>При убийстве хозяина нужны минимум 3 живых соклановца 12+.<br>Сброс владения в 19:55; до сброса охрана не атакует клан-владелец.<br>Аренда: 1 500 000 афро из казны, оплата до 21:15."
   },
   {
    "x": 5955,
@@ -1425,7 +1425,7 @@
    "y": 1963,
    "was": "База Клана: <BR>Заброшенный бункер, который может стать домом для клана <BR>Если удастся выбить засевших в нем противников.<br>Хозяин присутствует с 21:00 до 22:00 <BR>Захват возможен игроками 18 уровня при поддержке клана.",
    "why": "DESIGNED restored capturable clan base, approved 2026-11-22. Generic city title replaces a historical clan owner; ownership and paid benefits are managed by the existing holdings system.",
-   "text": "Клановая база Абу-Хамеда<br>Захват: от 16 уровня, не менее двух участников клана."
+   "text": "Клановая база Абу-Хамеда<br>Захват: суббота, 20:00–21:00 МСК.<br>При убийстве хозяина нужны минимум 3 живых соклановца 16+.<br>Сброс владения в 19:55; до сброса охрана не атакует клан-владелец.<br>Аренда: 1 500 000 афро из казны, оплата до 21:15."
   },
   {
    "x": 6154,
@@ -1522,14 +1522,14 @@
    "x": 5955,
    "y": 2032,
    "add": true,
-   "text": "Клановая база Донголы<br>Захват: от 12 уровня, не менее двух участников клана.",
+   "text": "Клановая база Донголы<br>Захват: суббота, 20:00–21:00 МСК.<br>При убийстве хозяина нужны минимум 3 живых соклановца 12+.<br>Сброс владения в 19:55; до сброса охрана не атакует клан-владелец.<br>Аренда: 1 500 000 афро из казны, оплата до 21:15.",
    "why": "DESIGNED recovery of a restored clan-base tooltip, approved 2026-11-22. An earlier release removed its original row; add the same canonical text only if the retext did not already restore it. Existing map_labels.apply deduplicates exact cell/text pairs."
   },
   {
    "x": 6154,
    "y": 1963,
    "add": true,
-   "text": "Клановая база Абу-Хамеда<br>Захват: от 16 уровня, не менее двух участников клана.",
+   "text": "Клановая база Абу-Хамеда<br>Захват: суббота, 20:00–21:00 МСК.<br>При убийстве хозяина нужны минимум 3 живых соклановца 16+.<br>Сброс владения в 19:55; до сброса охрана не атакует клан-владелец.<br>Аренда: 1 500 000 афро из казны, оплата до 21:15.",
    "why": "DESIGNED recovery of a restored clan-base tooltip, approved 2026-11-22. An earlier release removed its original row; add the same canonical text only if the retext did not already restore it. Existing map_labels.apply deduplicates exact cell/text pairs."
   }
  ]

@@ -220,6 +220,10 @@ class ClanBaseWorldTests(unittest.TestCase):
                              % (x, y, map_labels.escape(was).encode())
                              for x, y, was, _new in edits if was is not None)
         expected = {(x, y, new) for x, y, _was, new in edits if new is not None}
+        for x, y, text in expected:
+            self.assertIn('минимум 3 живых соклановца ' + ('12+' if x == 5955 else '16+'), text)
+            for value in ('20:00–21:00', '19:55', '1 500 000', '21:15'):
+                self.assertIn(value, text)
         for raw in (b'<data>' + originals + b'</data>', b'<data></data>'):
             with self.subTest(original=bool(originals in raw)):
                 shown, _changed = map_labels.apply(raw, edits)
