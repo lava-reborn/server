@@ -78,7 +78,7 @@ MAX_REMAINDER = 12
 TOWN = [41, 52, 37, 104, 35, 94, 36, 95, 102, 100, 70, 164, 60,
         176, 107, 59, 78]
 QUEST_PLACES = [43, 48, 65, 119, 120, 140, 62, 61, 47, 64, 63, 117, 137, 138, 139, 141, 142,
-                122, 108, 45, 46, 44, 116, 121, 250]
+                122, 108, 45, 46, 44, 116, 121, 250, 688]
 CAMPS = list(range(80, 88))
 # The warehouses, the building site, the factory and the recycling plant, the
 # mountain paths with their masters. (The paths' inner ends 162 and 53 are
