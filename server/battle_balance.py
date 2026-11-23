@@ -126,7 +126,7 @@ def ordinary_mob_pressure():
     row = raw['ordinary_mob_pressure']
     fields = {'damage_scale', 'high_gap_damage_scale', 'stamina_ratio', 'senior_stamina_ratio', 'hard_gap_stamina_scale',
               'stamina_levels', 'crit_bounds', 'crit_bonus_by_gap', 'player_damage_ratios',
-              'camp_hard_gap_damage_ratios'}
+              'camp_hard_gap_damage_ratios', 'player_crit_ratios'}
     bounds = row.get('crit_bounds', ())
     if (raw['source_commit'] != data()['source_commit'] or set(row) != fields
             or len(row['stamina_levels']) != 2
@@ -143,6 +143,11 @@ def ordinary_mob_pressure():
             or len(row['camp_hard_gap_damage_ratios']) != 3
             or any(isinstance(v, bool) or not isinstance(v, (int, float))
                    or not math.isfinite(v) or not 0 < v <= 1 for v in row['camp_hard_gap_damage_ratios'])
+            or len(row['player_crit_ratios']) != 9
+            or any(isinstance(v, bool) or not isinstance(v, (int, float))
+                   or not math.isfinite(v) or not 0 <= v <= 2 for v in row['player_crit_ratios'])
+            or row['player_crit_ratios'][4] != 1 or row['player_crit_ratios'][-1] != 0
+            or list(row['player_crit_ratios']) != sorted(row['player_crit_ratios'], reverse=True)
             or len(bounds) != 6
             or any(len(pair) != 2 or any(type(v) is not int for v in pair)
                    or not 0 <= pair[0] <= pair[1] <= 100 for pair in bounds)
@@ -154,6 +159,7 @@ def ordinary_mob_pressure():
         raise ValueError('Invalid ordinary mob pressure')
     return MappingProxyType(dict(row, crit_bounds=tuple(tuple(pair) for pair in bounds),
                                  crit_bonus_by_gap=tuple(row['crit_bonus_by_gap']),
+                                 player_crit_ratios=tuple(row['player_crit_ratios']),
                                  camp_hard_gap_damage_ratios=tuple(row['camp_hard_gap_damage_ratios']),
                                  stamina_levels=tuple(row['stamina_levels']),
                                  player_damage_ratios=tuple(row['player_damage_ratios'])))
@@ -234,6 +240,15 @@ def split(shooter, target, damage, piercing, critical, stamina_left, stamina_dam
 def critical_chance(shooter, target, chance, optimal=True, *, ordinary=False):
     if shooter.is_player and not optimal and not ordinary:
         return 0
+    if (ordinary and shooter.is_player and not target.is_player
+            and getattr(target.stats, 'role', None) in ('mob', 'animal', 'turret', 'boss')
+            and not getattr(target, '_holding_prepared', False)):
+        gap = level(target) - level(shooter)
+        # Keep the agreed boss +4 / ordinary mob +2 equivalence.
+        if target.stats.role == 'boss':
+            gap -= 2
+        ratio = ordinary_mob_pressure()['player_crit_ratios'][max(-4, min(4, gap)) + 4]
+        chance = max(0, chance) * ratio
     if not shooter.is_player and target.is_player:
         if ordinary_attacker(shooter, target, ordinary):
             gap = max(0, min(5, level(shooter) - level(target)))
@@ -449,6 +464,22 @@ def equip_mob(stats, damage_scale, *, site=False):
     return True
 
 
+@lru_cache(maxsize=20)
+def ordinary_mob_ap(mob_level):
+    """Native player AP with the full, unmodified A set of this level."""
+    import inventory
+    import items
+    import sets
+    outfit = max((s for s in sets.SETS.values() if s['variant'] == 'A' and s['level'] <= mob_level),
+                 key=lambda s: s['level'], default=None)
+    rows = [dict(type_id=outfit['members'][name], root=items.WEAR, slot=slot, brk=1)
+            for name, slot in zip(sets.SLOTS, inventory.SET_SLOTS)] if outfit else []
+    character = progression.Character()
+    character.skill[progression.SHOOTING][0] = mob_level
+    character.set_gear(inventory.gear_bonus(rows))
+    return character.ap_ceiling
+
+
 def configure_mob(stats, *, health_scale=1, damage_scale=1, site=False):
     """Only existing combat creatures; harvest objects keep their own rules."""
     if stats.role not in ('mob', 'boss', 'animal', 'turret'):
@@ -481,7 +512,10 @@ def configure_mob(stats, *, health_scale=1, damage_scale=1, site=False):
     # Even creatures absent from the simulator retain the original pool floor.
     stats.hp_max = max(original_hp, round(stats.hp_max * health_scale / MOB_BALANCE_DIVISOR))
     stats.sp_max = max(original_sp, round(stats.sp_max * health_scale / MOB_BALANCE_DIVISOR))
-    if equip_mob(stats, damage_scale, site=site):
+    equipped = equip_mob(stats, damage_scale, site=site)
+    if not site:
+        stats.ap_max = ordinary_mob_ap(stats.level)
+    if equipped:
         return
     factor = damage_scale / MOB_BALANCE_DIVISOR
     if reference is not None and stats.shots > 0 and stats.attack_ap > 0:
@@ -520,7 +554,7 @@ def mob_mode(stats, distance):
     import combat
     choices = []
     for row in getattr(stats, 'balanced_modes', ()):
-        if distance > row['reach']:
+        if distance > row['reach'] or row['ap'] > stats.ap_max:
             continue
         weapon = combat.Weapon(row['shots'], row['dmin'], row['dmax'], row.get('opt_lo', 1),
             row.get('opt_hi', row['reach']), row['reach'], row.get('piercing', 1),

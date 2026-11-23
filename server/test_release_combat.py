@@ -716,6 +716,53 @@ class ReleaseCatalogue(unittest.TestCase):
             battle_balance.critical(mob, player, 20, ordinary=True)
             roll.assert_called_with(20)
 
+    def test_camp_mob_ap_matches_native_own_level_afro_set(self):
+        import battle_balance
+        import sets
+        for level in range(0, 21):
+            outfit = max((s for s in sets.SETS.values() if s['variant'] == 'A' and s['level'] <= level),
+                         key=lambda s: s['level'], default=None)
+            rows = [dict(type_id=outfit['members'][name], root=items.WEAR, slot=slot, brk=1)
+                    for name, slot in zip(sets.SLOTS, inventory.SET_SLOTS)] if outfit else []
+            character = progression.Character()
+            character.skill[progression.MELEE][0] = level
+            character.set_gear(inventory.gear_bonus(rows))
+            with self.subTest(level=level):
+                self.assertEqual(battle_balance.ordinary_mob_ap(level), character.ap_ceiling)
+        target = mobs.MobStats(279)
+        self.assertEqual(target.ap_max, battle_balance.ordinary_mob_ap(target.level))
+        affordable = dict(shots=1, dmin=10, dmax=10, reach=5, crit=0, ap=50, time=1)
+        unaffordable = dict(affordable, shots=100, ap=1000)
+        target = NS(ap_max=100, balanced_modes=(affordable, unaffordable))
+        self.assertEqual(battle_balance.mob_mode(target, 2)[1], 50)
+
+    def test_player_mob_critical_ladder_preserves_antikrit_distance_and_boss_equivalence(self):
+        import battle_balance
+        player = NS(is_player=True, character=lambda: NS(level=10))
+        mob = NS(is_player=False, stats=NS(level=10, role='mob'))
+        ratios = (1.2, 1.15, 1.1, 1.05, 1, .85, .65, .35, 0)
+        for gap in range(-5, 6):
+            mob.stats.level = 10 + gap
+            ratio = ratios[max(-4, min(4, gap)) + 4]
+            with self.subTest(gap=gap):
+                for raw in (-20, 0, 20, 30, 200):
+                    expected = min(100, max(0, raw) * ratio)
+                    self.assertAlmostEqual(battle_balance.critical_chance(player, mob, raw,
+                        ordinary=True), expected)
+                    self.assertAlmostEqual(battle_balance.critical_chance(player, mob, raw,
+                        False, ordinary=True), expected / 2)
+                mob.stats.role, mob.stats.level = 'boss', 12 + gap
+                self.assertAlmostEqual(battle_balance.critical_chance(player, mob, 20,
+                    ordinary=True), 20 * ratio)
+                mob.stats.role = 'mob'
+        mob.stats.level = 14
+        for role, prepared in (('object', False), ('mob', True), ('boss', True)):
+            mob.stats.role, mob._holding_prepared = role, prepared
+            self.assertEqual(battle_balance.critical_chance(player, mob, 20, ordinary=True), 20)
+        self.assertEqual(battle_balance.critical_chance(player, player, 20, ordinary=True), 20)
+        self.assertEqual(battle_balance.critical_chance(player, mob, 20), 20)
+        self.assertEqual(battle_balance.critical_chance(player, mob, 20, False), 0)
+
     def test_high_gap_critical_bonus_retains_antikrit_and_distance_reduction(self):
         import battle_balance
         player = NS(is_player=True, character=lambda: NS(level=12))
