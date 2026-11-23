@@ -22,8 +22,9 @@ registry = json.loads(registry_before)
 ordinary_before = dict(items.catalogue())
 local_before = {t: copy.deepcopy(items.static_info(t)) for t in eden.LOCAL_ITEMS}
 assert eden.BASKET in catalog.obtainable_sources()[1], 'Regression requires the actual craft reward'
-assert set(map(int, content.data()['excluded_sources'])) == eden.LOCAL_ITEMS
-assert eden.LOCAL_ITEMS.isdisjoint(catalog.item_catalogue())
+excluded = eden.LOCAL_ITEMS | set(range(60022, 60027))
+assert set(map(int, content.data()['excluded_sources'])) == excluded
+assert excluded.isdisjoint(catalog.item_catalogue())
 
 # Exercise the failing packaging entry point, not a manually prepared registry.
 import export_texts
@@ -34,7 +35,7 @@ api.preload()
 content.validate()
 assert copies.COPIES and copies.SIMULATOR_COPIES
 for namespace, mapping in (('baseline', copies.COPIES), ('simulator', copies.SIMULATOR_COPIES)):
-    assert eden.LOCAL_ITEMS.isdisjoint(mapping), namespace
+    assert excluded.isdisjoint(mapping), namespace
     for source, target in mapping.items():
         if source in copies.PROTOTYPES:
             continue
