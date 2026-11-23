@@ -39,14 +39,16 @@ class ReleasePouches(unittest.TestCase):
         self.assertFalse(set(items.stock_for(1219, 126)) & gifts)
         self.assertFalse(set(items.stock_for(1965, 445)) & gifts)
 
-    def test_level_allowance_uses_base_level_despite_bonus_skills(self):
+    def test_strict_sixteen_gate_uses_base_level_despite_bonus_skills(self):
         for tid in self.PRICES:
             ch = p.Character()
             ch.set_skill(p.SHOOTING, 12)
             ch.bonus_skills = [100] * p.SKILLS
             self.assertFalse(inventory.wearable(self.row(tid), ch.level, ch))
             ch.set_skill(p.SHOOTING, 13)
-            self.assertTrue(inventory.wearable(self.row(tid), ch.level, ch))
+            self.assertFalse(inventory.wearable(self.row(tid), ch.level, ch))
+            ch.set_skill(p.SHOOTING, 15)
+            self.assertFalse(inventory.wearable(self.row(tid), ch.level, ch))
             ch.set_skill(p.SHOOTING, 16)
             self.assertTrue(inventory.wearable(self.row(tid), ch.level, ch))
 
