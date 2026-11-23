@@ -555,7 +555,7 @@ def owned(cid, slot=inventory.BAG):
     out = {}
     for r in st.items_of(cid):
         if r["slot"] == slot:
-            n = r["count"] if r["root"] in items.HEAPABLE_ROOTS else 1
+            n = r["count"] if items.heapable(r["type_id"]) else 1
             out[r["type_id"]] = out.get(r["type_id"], 0) + n
     st.close()
     return out

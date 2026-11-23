@@ -131,6 +131,9 @@ for t in sample:
     # type in test_healing_completion and test_ks12_balance. All other
     # source fields remain compared below, including retired P medicine.
     internal = cat[t][1]
+    if root == items.HEAL:
+        ours['max_count'] = (10 if internal.startswith(('Med_Battle_', 'Med_Pacific_'))
+                             and p.get('use_count') == 1 else 1)
     if root == items.HEAL and internal.startswith('Med_Battle_') and (internal.endswith('_A') or '_G' in internal):
         ours['heal_cost'] = p['heal_cost']
     if t in items.KS12_FIRE_COSTS:
@@ -247,6 +250,9 @@ def deliberate(t):
         p['heal_cost'] = int(p['heal_cost'] * 2.5 + 0.5)
     if p.get("max_count") == 50:
         p["max_count"] = 100
+    if root == items.HEAL:
+        p['max_count'] = (10 if cat[t][1].startswith(('Med_Battle_', 'Med_Pacific_'))
+                         and p.get('use_count') == 1 else 1)
     if root == items.FIRE_ARM:
         p['comp_array'] = with_shock(p['comp_array'])
     p.update(release_changes.get(str(t), {}))
@@ -307,6 +313,11 @@ for t in linked + sorted(manual) + pieces + sorted(set(cold) - set(linked)) + so
     if missing:
         why.append("keys lost %s" % sorted(missing))
     extra = set(p) - set(d) - set(items.NEED_BONUS_KEYS) - {"repair_cost"}
+    if root == items.HEAL and 'max_count' in extra:
+        expected = (10 if cat[t][1].startswith(('Med_Battle_', 'Med_Pacific_'))
+                    and p.get('use_count') == 1 else 1)
+        if p['max_count'] == expected:
+            extra.remove('max_count')
     if "repair_cost" in p and (root not in (items.FIRE_ARM, items.COLD_ARM, items.WEAR)
                                or not p.get("g_cost") or p["repair_cost"] <= 0):
         why.append("invalid repair-only valuation")

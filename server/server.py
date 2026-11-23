@@ -1925,10 +1925,16 @@ class Session:
         # not the compose file, not the deployment.
         if CHEATS and text.split(" ")[0] in ("/goto", "/give", "/money",
                                              "/skill", "/spec", "/base-respawn", "/boss-now",
-                                             "/base-now", "/test-bot", "/test-bot-stop", "/test-time-reset"):
+                                             "/base-now", "/test-bot", "/test-bot-stop", "/test-time-reset",
+                                             "/test-allies", "/test-allies-stop"):
             args = text.split()[1:]
             try:
-                if text.split()[0] in ('/boss-now', '/base-now', '/test-bot', '/test-bot-stop', '/test-time-reset'):
+                if text.split()[0] in ('/test-allies', '/test-allies-stop'):
+                    count = int(args[0]) if len(args) == 1 else 4
+                    out = ('Используйте /test-allies [1–9] или /test-allies-stop.' if len(args) > 1
+                           or (text.split()[0] == '/test-allies-stop' and args) else
+                           self.admin_test_allies(count, stop=text.split()[0] == '/test-allies-stop'))
+                elif text.split()[0] in ('/boss-now', '/base-now', '/test-bot', '/test-bot-stop', '/test-time-reset'):
                     command = text.split()[0]
                     if args:
                         out = 'Используйте %s без аргументов.' % command
@@ -2158,7 +2164,7 @@ class Session:
         refused = refused_gift(type_id)
         if refused:
             return refused
-        if items.root_of(type_id) not in items.HEAPABLE_ROOTS:
+        if not items.heapable(type_id):
             count = 1
         count = max(1, min(count, 999))
         row = self.inv.create(type_id, count)
@@ -2289,6 +2295,34 @@ class Session:
             return 'На локации уже десять тестовых противников.'
         training_ground.local_bot(self)
         return 'Рядом появился противник с твоими навыками, надетым снаряжением и патронами на 5 минут, без наград.'
+
+    def admin_test_allies(self, count=4, stop=False):
+        if not CHEATS:
+            return 'Команда доступна только в локальном тестовом комплекте.'
+        if not stop and not 1 <= count <= 9:
+            return 'Количество союзников: от 1 до 9.'
+        if not stop and (self.on_map or self.room is None or self.combat.dead
+                         or self.inv.store.clan_member(self.char_id) is None):
+            return 'Войдите живым персонажем своего клана на нужную локацию.'
+        previous = getattr(self, 'local_test_allies', [])
+        if not stop:
+            total = sum(actor.peer == 'local-test-bot' for actor in self.room.players)
+            if total - len(previous) + count > 10:
+                return 'На локации допускается не больше десяти тестовых ботов.'
+        for ally in tuple(previous):
+            ally.exit()
+        self.local_test_allies = []
+        if stop:
+            return 'Тестовые союзники удалены.'
+        try:
+            for index in range(count):
+                training_ground.local_bot(self, ally=True, index=index)
+        except Exception:
+            for ally in tuple(self.local_test_allies):
+                ally.exit()
+            raise
+        return ('Рядом появились союзники твоего клана: %d. Снаряжение и навыки скопированы; '
+                'у каждого 20 доз боевой G-медицины. Срок — 30 минут или до выхода с локации.' % count)
 
     def admin_goto(self, loc_id=None, gx=None, gy=None):
         """Open a location, or the one standing on a map cell.
@@ -2729,6 +2763,10 @@ class Session:
             if candidate is not None and candidate.peer == 'local-test-bot':
                 self.send('userInfo_Player', **rooms.player_info(candidate))
                 self.send('usrUp', **rooms.player_health(candidate))
+                if candidate.ground.ally:
+                    member = candidate.ground.owner.inv.store.clan_member(candidate.ground.owner.char_id)
+                    if member is not None:
+                        self.send('fellow', id=pid, reg=int(member['clan_id']), soc=Str(member['clan_name']))
                 return
         if other is None or other.active is None:
             log.info("  ..    getInfo about %d, who is not online", pid)
@@ -5286,7 +5324,7 @@ def apply_admin_action(row):
         if refused:
             return refused
         count = int(args.get("count", 1))
-        if items.root_of(type_id) not in items.HEAPABLE_ROOTS:
+        if not items.heapable(type_id):
             count = 1
         # Factory-fresh, as Session.admin_give's Inventory.create makes it:
         # the bare row this was gave a gun 0 of 0, past any repair window

@@ -438,7 +438,7 @@ try:
                for n in encounters.nests(loc))
     longest = max(mobs.stats(t).range for b, _r in encounters.bands() for t in b.types)
     check("  ..and the arrival, over any edge of any of them, out of every band's reach",
-          (len(ring_locs), near > longest, longest), (4, True, 55))
+          (len(ring_locs), near > longest, longest), (4, True, 66))
     legs = encounters.crossings(5950.0, 1710.0, 5953.5, 1710.0, 0.35)
     check("the cells a leg enters, in order, with the seconds to each",
           [(c, round(s, 1)) for s, c in legs],
@@ -749,7 +749,7 @@ def owned(name):
     out = {}
     for r in st.items_of(char_id(name)):
         out[r["type_id"]] = out.get(r["type_id"], 0) + (
-            r["count"] if r["root"] in items.HEAPABLE_ROOTS else 1)
+            r["count"] if items.heapable(r["type_id"]) else 1)
     st.close()
     return out
 

@@ -158,7 +158,7 @@ class Inventory(inventory.Inventory):
     def issue(self, type_id, count):
         si = items.params_of(type_id)
         root = items.root_of(type_id)
-        heapable = root in items.HEAPABLE_ROOTS
+        heapable = items.heapable(type_id)
         maximum = si.get('max_count', 1) if heapable else MAX_PURCHASE
         if not 1 <= count <= maximum:
             raise ValueError('Недопустимое количество или предел предметов')

@@ -271,7 +271,7 @@ def variants(ground, params):
 
 def maximum(source):
     target = copies.copy_type(source)
-    return min(5000, items.params_of(target).get('max_count', 1)) if items.root_of(target) in items.HEAPABLE_ROOTS else (
+    return min(5000, items.params_of(target).get('max_count', 1)) if items.heapable(target) else (
         50 if items.root_of(target) == items.HEAL else 1)
 
 
@@ -285,7 +285,7 @@ def bag(ground, params):
                       ids=[Str(inventory.oid_of(row)) for row in selected],
                       labels=[Str(index()[copies.profile_source(row['type_id'])].name) for row in selected],
                       types=[row['type_id'] for row in selected],
-                      maximum=[row['count'] if row['root'] in items.HEAPABLE_ROOTS else 1 for row in selected])
+                      maximum=[row['count'] if items.heapable(row['type_id']) else 1 for row in selected])
 
 
 def change(ground, params, returning=False):
@@ -301,7 +301,7 @@ def change(ground, params, returning=False):
         row = inv.find(params.get('source'))
         if row is None or row['slot'] != inventory.BAG or not copies.is_copy(row['type_id']):
             raise ValueError('Можно сдать только тестовый предмет из своего рюкзака')
-        heapable = row['root'] in items.HEAPABLE_ROOTS
+        heapable = items.heapable(row['type_id'])
         if count > (row['count'] if heapable else 1):
             raise ValueError('Неверное количество')
         left = row['count'] - count if heapable else 0

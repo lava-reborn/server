@@ -474,7 +474,7 @@ def owned(cid, slot=inventory.BAG):
     out = {}
     for r in st.items_of(cid):
         if r["slot"] == slot:
-            n = r["count"] if r["root"] in items.HEAPABLE_ROOTS else 1
+            n = r["count"] if items.heapable(r["type_id"]) else 1
             out[r["type_id"]] = out.get(r["type_id"], 0) + n
     st.close()
     return out
@@ -801,7 +801,7 @@ try:
     check("  ..handed in to Гарард on the market: three rags, the experience, the ack",
           (new_things(got), no_level(upto_ack(got))[-2:], acks(got),
            owned(CID).get(RAG), skill_seen(c, MEDICINE) - med0),
-          ([RAG] * 3, ["rp_info", "cmdAck"], [0], 3, 20))
+          ([RAG], ["rp_info", "cmdAck"], [0], 3, 20))
 
     # --- to Норман, and his parts ------------------------------------------------------
     here = inhabitants(goto(c, VILLAGE))

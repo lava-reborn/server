@@ -33,6 +33,152 @@ class TimedItems(unittest.IsolatedAsyncioTestCase):
         self.s.on_map = False
         return self.s.room.combat
 
+    async def test_single_dose_stacks_split_merge_consume_and_keep_per_piece_losses(self):
+        import random
+        rc = self.location(98)
+        inv = self.s.inv
+        first, second = inv.create(6055, 4), inv.create(6055, 6)
+        self.assertEqual(first['use_count'], 1)
+        self.assertEqual(inventory.weight_of(first), items.params_of(6055)['weight'] * 4)
+        self.assertEqual(inventory.di_params(first)['size'], 4)
+        self.assertEqual(inventory.di_params(first)['use_count'], 1)
+        inv.ss_move(dict(obj=inventory.oid_of(first), **{'from':inventory.BAG, 'to':inventory.PRIMARY}))
+        self.assertEqual(self.store.item(first['uniq'])['slot'], inventory.BAG)
+        inv.ss_heap_c(dict(obj=inventory.oid_of(first), trg=inventory.oid_of(second), num=6))
+        first = self.store.item(first['uniq'])
+        self.assertEqual(first['count'], 10)
+        self.assertIsNone(self.store.item(second['uniq']))
+        before = [dict(row) for row in inv.rows()]
+        inv.ss_heap_c(dict(obj=inventory.oid_of(first), trg=inventory.oid_of(first), num=-3))
+        self.assertEqual(inv.rows(), before)
+        inv.ss_heap_c(dict(obj=inventory.oid_of(first), num=3))
+        stacks = [row for row in inv.rows() if row['type_id'] == 6055]
+        self.assertEqual(sorted(row['count'] for row in stacks), [3, 7])
+        self.assertTrue(all(row['use_count'] == 1 for row in stacks))
+        self.assertFalse(items.heapable(7100))
+        self.assertFalse(items.heapable(6898))
+        charged = inv.create(7100, 10)
+        self.assertEqual((charged['count'], charged['use_count']), (1, 20))
+        first = self.store.item(first['uniq'])
+        self.s.char.hp = 1
+        fighter = self.s.combat
+        fighter.ap = fighter.ap_max
+        rc.room.ws = True
+        with patch.object(combat, 'now', return_value=100):
+            fighter.use_heal(dict(obj=inventory.oid_of(first)), inventory.USE_IDLE)
+            args = fighter.healing._args[-1]
+            fighter.healing.cancel()
+            fighter.heal_now(*args)
+        self.assertEqual(self.store.item(first['uniq'])['count'], 6)
+        self.assertEqual(self.store.item(first['uniq'])['use_count'], 1)
+        self.assertEqual(battle_medicine.remaining_ms(self.store, self.s.char_id, 100), 3000)
+        for seed in range(100):
+            rng = random.Random(seed)
+            split = sum(combat.bag_share(dict(first, count=n), rng) for n in (3, 7))
+            whole = combat.bag_share(dict(first, count=10), random.Random(seed))
+            self.assertEqual(split, whole)
+        # Multi-use packs ending at one dose must not acquire heap behaviour.
+        self.store.update_item(charged['uniq'], use_count=1)
+        self.assertEqual(combat.pieces_of(self.store.item(charged['uniq'])), 1)
+
+    async def test_single_dose_purchase_limit_and_exact_payment(self):
+        self.location(185)
+        inv = self.s.inv
+        trader = 202
+        inv.trade = inventory.TradeSession(1, trader, 185)
+        stock = items.stock_for(trader, 185)
+        self.store.set_money(self.s.char_id, 100000, 10000)
+        self.s.char.afro, self.s.char.gold = 100000, 10000
+        before = self.s.char.afro
+        with patch.object(inv, 'current_trade_rates', return_value={'pmod': 1, 'smod': .7, 'rmod': 1}):
+            inv.buy(dict(obj=format(stock.index(6055), 'x'), param=10), inventory.UPD_BUY)
+            self.assertEqual(self.store.character(self.s.char_id)['afro'], before - items.params_of(6055)['cost'] * 10)
+            row = next(r for r in inv.rows() if r['type_id'] == 6055)
+            self.assertEqual((row['count'], row['use_count']), (10, 1))
+            frozen = list(self.store.db._db.iterdump())
+            for n in (11, -1):
+                inv.buy(dict(obj=format(stock.index(6055), 'x'), param=n), inventory.UPD_BUY)
+                self.assertEqual(list(self.store.db._db.iterdump()), frozen)
+
+    async def test_clan_test_allies_target_escorts_heal_and_count_for_capture(self):
+        import asyncio
+        import bosses
+        import server
+        from training import bot
+        rc = self.location(1442)
+        clan = self.store.clan_create(self.s.char_id, 'Test allies', 'allies-test', '', None)
+        for skill in self.s.char.skill:
+            skill[0] = 12
+        self.s.char.recalc()
+        self.s.inv.create(inventory.STARTER_PISTOL, slot=inventory.PRIMARY)
+        with patch.object(server, 'CHEATS', True):
+            self.assertIn('союзники', self.s.admin_test_allies(2))
+        allies = tuple(self.s.local_test_allies)
+        self.addCleanup(lambda: [ally.exit() for ally in allies])
+        self.assertEqual(len({ally.enemy.pid for ally in allies}), 2)
+        self.assertTrue(all(self.s.combat.same_clan(ally.enemy.combat) for ally in allies))
+        base = holdings.base_for(1442)
+        master = next(m for m in rc.bosses if m.type_id == base.boss)
+        guards = [m for m in rc.bosses if m.type_id in base.guards + base.troops]
+        for guard in guards:
+            guard.alive, guard.away = True, False
+        self.assertIn(allies[0].target(), guards)
+        for guard in guards:
+            guard.alive = False
+        master.alive, master.away = True, False
+        self.assertIs(allies[0].target(), master)
+        moment = datetime(2026, 11, 21, 20, tzinfo=bosses.ZONE).timestamp()
+        master.capture_harm = {self.s.char_id: 10}
+        master.slot = moment
+        for guard in guards:
+            guard.slot = moment
+        for ally in allies:
+            ally.enemy.combat.award_xp(progression.SHOOTING, None, 10, master)
+        with patch.object(bosses, 'clock', return_value=moment):
+            snap = holdings.snapshot(rc, master, allies[0].enemy.combat)
+        self.assertEqual(holdings.winner(snap, 3, 12)[0], clan)
+        self.assertEqual(holdings.winner(snap, 3, 12)[3], self.s.char_id)
+        allies[0].enemy.char.hp = 1
+        allies[0].enemy.combat.ap = allies[0].enemy.combat.ap_max
+        rc.room.ws = True
+        self.assertTrue(bot.heal(allies[0]))
+        f = allies[0].enemy.combat
+        args = f.healing._args[-1]
+        f.healing.cancel()
+        with patch.object(combat, 'now', return_value=100):
+            f.heal_now(*args)
+        self.assertEqual(allies[0].enemy_heals_left, 19)
+        self.assertEqual(battle_medicine.remaining_ms(allies[0].store, f.sess.char_id, 100), 6000)
+        with patch.object(server, 'CHEATS', True):
+            self.assertIn('удалены', self.s.admin_test_allies(stop=True))
+        await asyncio.sleep(0)
+        self.assertFalse(self.s.local_test_allies)
+        self.assertTrue(all(ally.closed and ally.timer is None for ally in allies))
+
+    async def test_repeated_allied_groups_reuse_ids_and_release_timers_and_stores(self):
+        import asyncio
+        import server
+        self.location(98)
+        self.store.clan_create(self.s.char_id, 'Churn test', 'churn-test', '', None)
+        before = list(self.store.db._db.iterdump())
+        ids, timers = [], []
+        with patch.object(server, 'CHEATS', True):
+            for cycle in range(12):
+                self.s.admin_test_allies(3)
+                group = tuple(self.s.local_test_allies)
+                current = tuple(ally.enemy.pid for ally in group)
+                if ids:
+                    self.assertEqual(current, ids[0])
+                ids.append(current)
+                timers += [ally.timer for ally in group]
+                self.s.admin_test_allies(stop=True)
+                self.assertTrue(all(ally.closed and ally.timer is None for ally in group))
+                self.assertEqual(list(self.s.room.players), [self.s])
+            await asyncio.sleep(0)
+        self.assertEqual(len(self.store._local_bot_ids), 3)
+        self.assertTrue(all(timer.cancelled() for timer in timers))
+        self.assertEqual(list(self.store.db._db.iterdump()), before)
+
     async def test_local_bot_copies_worn_items_and_cleans_private_state_without_rewards(self):
         import asyncio
         import trophies
@@ -495,7 +641,10 @@ class ReleaseCatalogue(unittest.TestCase):
             mob = NS(is_player=False, stats=NS(level=12 + gap, role='mob'), armor=lambda: 148)
             health, stamina = room.bullet_damage(shooter, mob, rifle, 10000, 0, False, 10000)
             self.assertGreater(health, 0, gap)
-            self.assertGreater(stamina, 0, gap)
+            if gap < 5:
+                self.assertGreater(stamina, 0, gap)
+            else:
+                self.assertGreaterEqual(stamina, 0, gap)
             self.assertLessEqual(health + stamina, 10000, gap)
 
     def test_unsafe_ambush_is_discarded_without_moving_or_charging_the_player(self):
@@ -549,13 +698,13 @@ class ReleaseCatalogue(unittest.TestCase):
         mob = NS(is_player=False, stats=NS(level=13, role='mob'))
         with patch.object(combat, 'roll', return_value=False) as roll:
             for gap, floor, ceiling in ((-1, 1, 3), (0, 1, 3), (1, 1, 3),
-                                        (2, 3, 8), (3, 5, 12), (4, 7, 16), (5, 9, 20), (6, 9, 20)):
+                                        (2, 3, 8), (3, 50, 75), (4, 100, 100), (5, 100, 100), (6, 100, 100)):
                 mob.stats.level = 12 + gap
-                battle_balance.critical(mob, player, 20, ordinary=True)
+                battle_balance.critical(mob, player, 200, ordinary=True)
                 roll.assert_called_with(ceiling)
-                battle_balance.critical(mob, player, 0, ordinary=True)
+                battle_balance.critical(mob, player, -200, ordinary=True)
                 roll.assert_called_with(floor)
-                battle_balance.critical(mob, player, 20, optimal=False, ordinary=True)
+                battle_balance.critical(mob, player, 200, optimal=False, ordinary=True)
                 roll.assert_called_with(ceiling / 2)
             battle_balance.critical(mob, player, 20)
             roll.assert_called_with(20)
@@ -566,6 +715,34 @@ class ReleaseCatalogue(unittest.TestCase):
             mob.stats.role = 'boss'
             battle_balance.critical(mob, player, 20, ordinary=True)
             roll.assert_called_with(20)
+
+    def test_high_gap_critical_bonus_retains_antikrit_and_distance_reduction(self):
+        import battle_balance
+        player = NS(is_player=True, character=lambda: NS(level=12))
+        mob = NS(is_player=False, stats=NS(level=15, role='mob'))
+        for gap, raw in ((3, -15),):
+            mob.stats.level = 12 + gap
+            base = battle_balance.critical_chance(mob, player, raw, ordinary=True)
+            protected = battle_balance.critical_chance(mob, player, raw - 10, ordinary=True)
+            self.assertEqual(base - protected, 10)
+            self.assertEqual(battle_balance.critical_chance(mob, player, raw, False,
+                ordinary=True), base / 2)
+        for gap in (4, 5):
+            mob.stats.level = 12 + gap
+            self.assertEqual(battle_balance.critical_chance(mob, player, -200, ordinary=True), 100)
+            self.assertEqual(battle_balance.critical_chance(mob, player, -200, False, ordinary=True), 50)
+
+    def test_plus_five_resistance_does_not_create_guaranteed_pellet_damage(self):
+        import battle_balance
+        shooter = NS(is_player=True, character=lambda: NS(level=12))
+        mob = NS(is_player=False, stats=NS(level=17, role='mob'), armor=lambda: 0)
+        for critical in (False, True):
+            self.assertEqual(battle_balance.split(shooter, mob, 100, 1, critical, 100,
+                ordinary=True), (0, 0))
+            mob.stats.level = 16
+            self.assertGreater(sum(battle_balance.split(shooter, mob, 100, 1, critical,
+                100, ordinary=True)), 0)
+            mob.stats.level = 17
 
     def test_extra_mob_stamina_pressure_cannot_overflow_to_health(self):
         import battle_balance
@@ -602,16 +779,19 @@ class ReleaseCatalogue(unittest.TestCase):
         mob.stats.level, armour = 13, 0
         self.assertEqual(battle_balance.split(mob, player, 100, 1, False, 0, 20, ordinary=True), (180, 0))
 
-    def test_mob_equipment_uses_existing_plain_afro_items_and_standard_ammunition(self):
+    def test_mob_equipment_uses_existing_plain_afro_items_and_makeshift_ammunition(self):
         import battle_balance
         tested = 0
         for key in mobs.TYPES:
             st = mobs.stats(int(key))
-            if not st.can_attack or st.role not in ('mob', 'boss', 'turret'):
-                continue
-            if st.role == 'boss' and st.weapon_class == 'pistol':
+            if not st.can_attack or st.role not in ('mob', 'boss', 'turret', 'animal'):
                 continue
             tested += 1
+            if st.role == 'animal':
+                self.assertIsNone(st.weapon_type_id, key)
+                self.assertFalse(st.ranged, key)
+                self.assertTrue(st.plain_weapon, key)
+                continue
             p = items.params_of(st.weapon_type_id)
             self.assertGreater(p['cost'], 0, key)
             self.assertFalse(p['g_cost'], key)
@@ -620,14 +800,18 @@ class ReleaseCatalogue(unittest.TestCase):
                                     max(m['ap'] for m in st.balanced_modes), key)
             if st.ranged:
                 self.assertIn(st.loot_ammo_type, p['comp_array'], key)
-                self.assertTrue(items.catalogue()[st.loot_ammo_type][1].endswith('_ST'), key)
+                self.assertTrue(items.catalogue()[st.loot_ammo_type][1].endswith('_KS'), key)
                 self.assertEqual([m['shots'] for m in st.balanced_modes], [n for n in p['fire_mods'] if n], key)
+                ammo = items.params_of(st.loot_ammo_type)
+                for row, mode in zip(st.balanced_modes, (i for i, n in enumerate(p['fire_mods']) if n)):
+                    self.assertLessEqual(row['dmax'], max(1, round(p['h_damage_max'][mode] * ammo['dam_mod'])), key)
+                    self.assertLessEqual(row['sdmax'], round(p['st_damage_max'][mode] * ammo['st_mod']), key)
             else:
                 self.assertEqual(items.root_of(st.weapon_type_id), items.COLD_ARM, key)
                 self.assertFalse(hasattr(st, 'balanced_modes'), key)
         self.assertGreater(tested, 500)
 
-    def test_mob_class_fallbacks_and_boss_pistol_exception(self):
+    def test_mob_class_fallbacks_and_only_site_boss_pistol_exception(self):
         import battle_balance
         for level, original, expected in ((2, 'rifle', 'pistol'), (3, 'shotgun', 'pistol'),
                                            (8, 'machine_gun', 'smg'), (13, 'pistol', 'smg'),
@@ -639,9 +823,11 @@ class ReleaseCatalogue(unittest.TestCase):
             self.assertEqual(st.weapon_class, expected)
             self.assertEqual(inventory.item_level(st.weapon_type_id), level)
         boss = copy.copy(mobs.stats(328))
+        boss.weapon_class = 'pistol'
         before = copy.deepcopy(vars(boss))
-        self.assertFalse(battle_balance.equip_mob(boss, 1))
+        self.assertFalse(battle_balance.equip_mob(boss, 1, site=True))
         self.assertEqual(vars(boss), before)
+        self.assertTrue(battle_balance.equip_mob(boss, 1))
 
     def test_outside_optimal_critical_chance_is_half_for_ordinary_fire(self):
         import battle_balance
@@ -765,13 +951,11 @@ class ReleaseCatalogue(unittest.TestCase):
                             if mobs.stats(int(key)).role == 'mob' and mobs.stats(int(key)).level == current.level]
                 if ordinary:
                     self.assertGreater(current.hp_max, max(ordinary))
-            if source['weapon_class'] == 'pistol':
-                for mode, before in zip(current.balanced_modes, source['modes']):
-                    self.assertEqual(mode['dmax'], max(1, round(before['dmax'] * adjustment['damage_scale'] / 1.5)))
-            else:
-                p = items.params_of(current.weapon_type_id)
-                for mode, base in zip(current.balanced_modes, p['h_damage_max']):
-                    self.assertEqual(mode['dmax'], max(1, round(base * adjustment['damage_scale'] / 1.5)))
+            p = items.params_of(current.weapon_type_id)
+            ammo = items.params_of(current.loot_ammo_type)
+            for mode, index in zip(current.balanced_modes, (i for i, n in enumerate(p['fire_mods']) if n)):
+                base = p['h_damage_max'][index]
+                self.assertEqual(mode['dmax'], max(1, round(base * min(1, adjustment['damage_scale'] / 1.5) * ammo['dam_mod'])))
         self.assertEqual(battle_balance.data()['mob_records'], frozen)
 
     def test_camp_boss_attacks_never_increase_or_exceed_the_youngest_local_mob(self):
@@ -804,7 +988,7 @@ class ReleaseCatalogue(unittest.TestCase):
                 original, current = mobs.MobStats(tid, balanced=False), mobs.stats(tid)
                 self.assertLessEqual(maximum(current), cap)
                 with patch.object(battle_balance, 'boss_adjustments',
-                                  return_value={tid: dict(damage_scale=previous[tid], hp_scale=1)}):
+                                  return_value={tid: dict(adjustment, damage_scale=previous[tid])}):
                     before = mobs.MobStats(tid)
                 for after_mode, before_mode in zip(current.balanced_modes, before.balanced_modes):
                     for field in ('dmin', 'dmax', 'sdmin', 'sdmax'):
@@ -913,13 +1097,22 @@ class ReleaseCatalogue(unittest.TestCase):
     def test_difficulty_steps_add_reviewed_resistance_after_plus_one(self):
         import battle_balance
         shooter = NS(is_player=True, character=lambda: NS(level=16))
-        for gap, expected in ((0, 10000), (1, 10000), (2, 3951), (3, 3516), (4, 1870), (5, 200), (6, 200)):
+        for gap, expected in ((0, 10000), (1, 10000), (2, 3951), (3, 897), (4, 523), (5, 2), (6, 2)):
             target = NS(is_player=False, stats=NS(level=16 + gap, role='mob'), armor=lambda: 0)
             self.assertEqual(battle_balance.split(shooter, target, 10000, 1, False, 0, ordinary=True),
                              (expected, 0))
         player = NS(is_player=True, character=lambda: NS(level=21), armor=lambda: 0)
         self.assertEqual(battle_balance.split(shooter, player, 10000, 1, False, 0, ordinary=True),
                          battle_balance.split(shooter, player, 10000, 1, False, 0))
+
+    def test_camp_hard_gap_retuning_preserves_site_resistance(self):
+        import battle_balance
+        shooter = NS(is_player=True, character=lambda: NS(level=16))
+        for gap, expected in ((3, 3516), (4, 1870), (5, 200)):
+            guard = NS(is_player=False, stats=NS(level=16 + gap, role='mob'),
+                       armor=lambda: 0, _holding_prepared=True)
+            self.assertEqual(battle_balance.split(shooter, guard, 10000, 1, False, 0,
+                ordinary=True), (expected, 0))
 
     def test_ordinary_resistance_grows_without_changing_private_profile(self):
         import battle_balance

@@ -248,6 +248,7 @@ AMMO_STACK = 5000
 # goes there by the client's own hand (PersEquip.as:339-349).
 HAND_ROOTS = (FIRE_ARM, COLD_ARM, HEAL)
 HEAPABLE_ROOTS = (AMMO, TRASH)
+MEDICINE_STACK = 10
 BREAKABLE_ROOTS = (FIRE_ARM, WEAR, COLD_ARM)
 
 SLOT_HEAD, SLOT_CAMO, SLOT_ARMOR, SLOT_BELT, SLOT_LEGS, SLOT_BOOTS = range(6)
@@ -559,6 +560,13 @@ def battle_medicine(type_id):
     """All battle health/stamina medicines, including G dose packs."""
     root, name = catalogue().get(item_templates.source_type(type_id), (None, ""))
     return root == HEAL and name.startswith("Med_Battle_")
+
+
+def heapable(type_id):
+    """Native heaps, plus single-use health/stamina medicine of one type."""
+    root = root_of(type_id)
+    return root in HEAPABLE_ROOTS or (root == HEAL
+        and (params_of(type_id) or {}).get('max_count', 1) > 1)
 
 
 def no_combat(type_id):
@@ -1351,6 +1359,11 @@ def static_info(type_id):
             info[1].update(max_break_abs=20, desc=DESC_ID_OFFSET + type_id)
     if info and info[1].get('max_count') == 50:
         info[1]['max_count'] = 100
+    if info and root_of(type_id) == HEAL:
+        name = catalogue()[type_id][1]
+        single = (name.startswith(('Med_Battle_', 'Med_Pacific_'))
+                  and info[1].get('use_count') == 1)
+        info[1]['max_count'] = MEDICINE_STACK if single else 1
     return info
 
 

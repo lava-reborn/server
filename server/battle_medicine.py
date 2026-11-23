@@ -7,7 +7,15 @@ import asyncio
 import math
 
 COOLDOWN_SECONDS = 6.0
+AFRO_COOLDOWN_SECONDS = 3.0
 DESCRIPTION = 'Усталость после использования боевой медицины'
+
+
+def duration(type_id):
+    """The committed dose sets one shared deadline, regardless of next item."""
+    import items
+    _root, name = items.catalogue().get(type_id, (None, ''))
+    return AFRO_COOLDOWN_SECONDS if name.startswith('Med_Battle_') and name.endswith('_A') else COOLDOWN_SECONDS
 
 
 def remaining_ms(store, char_id, now):

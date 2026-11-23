@@ -748,7 +748,7 @@ def held(cid):
     st = accounts.Store(DB)
     out = collections.Counter()
     for r in st.items_of(cid):
-        out[r["type_id"]] += r["count"] if r["root"] in items.HEAPABLE_ROOTS else 1
+        out[r["type_id"]] += r["count"] if items.heapable(r["type_id"]) else 1
     st.close()
     return out
 

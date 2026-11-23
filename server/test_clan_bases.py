@@ -42,7 +42,7 @@ def site_damage(type_id, scale):
     """Issued A weapon damage, with the local scale applied exactly once."""
     source = mobs.MobStats(type_id, balanced=False)
     current = mobs.stats(type_id)
-    if not (current.role == 'boss' and current.weapon_class == 'pistol'):
+    if not (source.role == 'boss' and source.weapon_class == 'pistol'):
         p = items.params_of(current.weapon_type_id)
         if items.root_of(current.weapon_type_id) == items.FIRE_ARM:
             mode = max((i for i, shots in enumerate(p['fire_mods']) if shots), key=lambda i: p['max_range'][i])

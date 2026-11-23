@@ -361,7 +361,7 @@ def __gcBuy(item, count):
         this.applyTransfer(False)
         return
     n = 1
-    if item.rootID == 3:
+    if item.rootID == 3 or (item.rootID == 2 and (item.getProp("max_count") or 1) > 1):
         n = count
         if n == None:
             n = item.getProp("size")

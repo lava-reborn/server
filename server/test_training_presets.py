@@ -115,7 +115,7 @@ class TrainingPresets(unittest.IsolatedAsyncioTestCase):
         for row in g.clone.inv.rows():
             self.assertTrue(copies.is_copy(row['type_id']))
             source = copies.profile_source(row['type_id'])
-            actual[source] = actual.get(source, 0) + (row['count'] if row['root'] in items.HEAPABLE_ROOTS else 1)
+            actual[source] = actual.get(source, 0) + (row['count'] if items.heapable(row['type_id']) else 1)
         self.assertEqual(actual, expected['gear'])
         self.assertEqual(range_character.validate_profile(self.store.training_profile(self.s.char_id)['player'], g.rules), expected)
         self.assertEqual(g.clone.char.hp, g.clone.char.hp_max)

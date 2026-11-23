@@ -676,7 +676,7 @@ def owned():
     out = {}
     for r in st.items_of(char_id()):
         out[r["type_id"]] = out.get(r["type_id"], 0) + (
-            r["count"] if r["root"] in items.HEAPABLE_ROOTS else 1)
+            r["count"] if items.heapable(r["type_id"]) else 1)
     st.close()
     return out
 

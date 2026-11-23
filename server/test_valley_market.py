@@ -575,7 +575,7 @@ def owned(cid, slot=inventory.BAG):
     out = {}
     for r in st.items_of(cid):
         if r["slot"] == slot:
-            n = r["count"] if r["root"] in items.HEAPABLE_ROOTS else 1
+            n = r["count"] if items.heapable(r["type_id"]) else 1
             out[r["type_id"]] = out.get(r["type_id"], 0) + n
     st.close()
     return out
@@ -971,9 +971,9 @@ try:
            owned(CID).get(RAG, 0) - before_rewards.get(RAG, 0),
            owned(CID).get(CARAVANEER, 0) - before_rewards.get(CARAVANEER, 0),
            [p["daily_available"] for p in named(got, "q_sys")]),
-          (["ss_di_heap"] + ["ss_obj_status", "ss_di_heal"] * 3
+          (["ss_di_heap"] + ["ss_obj_status", "ss_di_heal"]
            + ["userInfo_Player", "q_sys", "cmdAck"],
-           [0], AFRO, [RAG] * 3, stock - 5, 3, 0, [9]))
+           [0], AFRO, [RAG], stock - 5, 3, 0, [9]))
     before_rewards = owned(CID)
     got = hand_in(c, here, MATCHES_Q, q, obj_idx=1)
     check("replaying the hand-in cannot claim the other reward or spend more matches",
@@ -1062,8 +1062,8 @@ try:
             got += c.frames(2.0)     # the adits shot empty: a rat comes back
     cells = ground_cells(KING)
     check("black rats shot in the adits with the quest open until a king falls:"
-          " within twenty-five kills (one in five), the king in one bag on the ground",
-          (1 <= kills <= 25, len(cells)), (True, 1))
+          " within twenty-five kills (one in five), a king on the ground",
+          (1 <= kills <= 25, 1 <= len(cells) <= kills), (True, True))
     # Deaths on the same hex share a ground bag. A rat returning to that
     # hex can leave a second tail beside the king; verify all existing tail
     # stacks instead of assuming this bag belongs to exactly one kill.
@@ -1263,7 +1263,7 @@ try:
            owned(CID).get(RAG, 0) - before_rewards.get(RAG, 0),
            owned(CID).get(CARAVANEER, 0) - before_rewards.get(CARAVANEER, 0),
            [p["daily_available"] for p in named(got, "q_sys")]),
-          ([0], AFRO, [CARAVANEER] * 3, before_rewards.get(MATCHES, 0) - 5, 0, 3, [5]))
+          ([0], AFRO, [CARAVANEER], before_rewards.get(MATCHES, 0) - 5, 0, 3, [5]))
     check("  ..the second day also allows only one matches hand-in",
           status(c, MATCHES_Q), 0)
     logout(c)

@@ -337,6 +337,9 @@ def defender_friendly(rc, mob, fighter):
     s = base_for(loc_id)
     if s is None:
         return False
+    ground = getattr(getattr(fighter, 'sess', None), 'ground', None)
+    if getattr(ground, 'ally', False):
+        fighter = ground.owner.combat
     if getattr(fighter, 'store', rc.store) is not rc.store:
         return False
     type_id = getattr(mob, 'type_id', None)
@@ -604,23 +607,33 @@ def snapshot(rc, mob, killer):
     if s.kind == "base" and (mob.slot is None or battle_slot(s, now) != mob.slot
                              or not guards_cleared(rc, s, mob.slot)):
         return None
-    here = {}
+    here, local_owners = {}, {}
     for sess in list(rc.room.players):
         if getattr(sess, "char_id", None) and getattr(sess.combat, 'store', rc.store) is rc.store:
             here[int(sess.char_id)] = sess.combat
+        elif getattr(getattr(sess, 'ground', None), 'ally', False):
+            ground = sess.ground
+            if ground.owner.inv.store is rc.store and ground.owner.room is rc.room:
+                here[ground.capture_char] = sess.combat
+                local_owners[ground.capture_char] = ground.owner.char_id
     store = rc.store
     fighters = []
     harm_by_char = dict(getattr(mob, "capture_harm", {}))
     for char_id, harm in sorted(harm_by_char.items()):
         f = here.get(char_id)
-        m = store.clan_member(char_id)
+        credited = local_owners.get(char_id, char_id)
+        m = store.clan_member(credited)
         fighters.append({"char": int(char_id), "harm": float(harm),
+                         "credited": int(credited),
                          "here": f is not None,
                          "alive": f is not None and not f.dead,
                          "level": int(f.level) if f is not None else 0,
                          "clan": int(m["clan_id"]) if m is not None else None,
                          "clan_name": m["clan_name"] if m is not None else None})
     killer_char = killer_clan = None
+    ground = getattr(getattr(killer, 'sess', None), 'ground', None)
+    if getattr(ground, 'ally', False):
+        killer = ground.owner.combat
     if (killer is not None and killer.is_player and getattr(killer.sess, "char_id", None)
             and getattr(killer, 'store', store) is store):
         killer_char = int(killer.sess.char_id)
@@ -658,7 +671,8 @@ def winner(snap, squad, min_level, excluded=(), require_harm=True):
     most = max(counted.values())
     tied = sorted(c for c, h in counted.items() if h == most)
     clan = snap["killer_clan"] if snap["killer_clan"] in tied else tied[0]
-    credited = snap["killer"] if snap["killer_clan"] == clan else best_of[clan]["char"]
+    best = best_of[clan]
+    credited = snap["killer"] if snap["killer_clan"] == clan else best.get('credited', best["char"])
     return clan, names[clan], counted[clan], credited
 
 

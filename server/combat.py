@@ -475,7 +475,7 @@ def drops_on_death(type_id):
 
 def pieces_of(row):
     """How many of a thing a row is: a stack's size, one of anything else."""
-    return row["count"] if row["root"] in items.HEAPABLE_ROOTS else 1
+    return row["count"] if items.heapable(row["type_id"]) else 1
 
 
 def bag_share(row, rng=None):
@@ -497,6 +497,9 @@ def bag_share(row, rng=None):
     no tie to break.
     """
     n = pieces_of(row)
+    if row['root'] == items.HEAL and items.heapable(row['type_id']):
+        # Stacking must keep the old independent 30% loss per single dose.
+        return sum(roll(BAG_DROP_CHANCE, rng) for _ in range(n))
     if n >= 3:
         return int(round(n / 3.0))
     return n if roll(BAG_DROP_CHANCE, rng) else 0
@@ -553,7 +556,7 @@ def lost_line(plan):
     for row, part in plan:
         name = names.text(items.STRING_ID_OFFSET + row["type_id"]).split("$")[0].strip()
         n = pieces_of(row) if part is None else part
-        said.append("%s (%d шт.)" % (name, n) if row["root"] in items.HEAPABLE_ROOTS
+        said.append("%s (%d шт.)" % (name, n) if items.heapable(row["type_id"])
                     else name)
     text = ", ".join(said[:LOST_NAMED])
     if len(said) > LOST_NAMED:
@@ -1502,6 +1505,15 @@ class Fighter:
         return bool(self.sess.loc.pvp) and not self.newbie_ground()
 
     def same_clan(self, other):
+        if not other.is_player:
+            return False
+        for fighter in (self, other):
+            ground = getattr(getattr(fighter, 'sess', None), 'ground', None)
+            if getattr(ground, 'ally', False):
+                if fighter is self:
+                    self = ground.owner.combat
+                else:
+                    other = ground.owner.combat
         same_clan = getattr(self.store, 'same_clan', None)
         return bool(other.is_player and getattr(other, 'store', self.store) is self.store and same_clan
                     and same_clan(self.sess.char_id, other.sess.char_id))
@@ -2215,6 +2227,8 @@ class Fighter:
         in_combat = ap_cost > 0 or (self.rc is not None and self.rc.room.ws)
         cooldown = (battle_medicine.validate_duration(self.medicine_cooldown_seconds())
                     if items.battle_medicine(row["type_id"]) and in_combat else None)
+        if cooldown is not None:
+            cooldown = min(cooldown, battle_medicine.duration(row['type_id']))
         mult = (1 + 0.2 * spec_or_zero(ch, spec)) * multiplier
         healed = min(v["hmax"] - v["hcur"], int(RNG.uniform(lo, hi) * mult))
         slo, shi = si.get("min_st_rest", 0), si.get("max_st_rest", 0)
@@ -2231,7 +2245,10 @@ class Fighter:
         else:
             self.sess.send(frame[0], **frame[1])
         left = row["use_count"] - 1
-        if left <= 0:
+        if left <= 0 and items.heapable(row['type_id']) and row.get('count', 1) > 1:
+            self.store.update_item(uniq, count=row['count'] - 1)
+            self.sess.inv.push_di(self.store.item(uniq))
+        elif left <= 0:
             self.store.delete_item(uniq)
             self.sess.inv.push_status(row, 0)
         else:

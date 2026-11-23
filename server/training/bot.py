@@ -5,6 +5,7 @@ from types import SimpleNamespace
 import accounts
 import battle_medicine
 import combat
+import holdings
 import inventory
 import items
 import mobs
@@ -25,16 +26,19 @@ def local_equipment(viewer, actor, params):
 
 class LocalOpponent:
     """A disposable native player; only the local cheat command creates one."""
-    def __init__(self, owner):
+    def __init__(self, owner, ally=False, index=0):
         from training.avatar import clone_class
         from training.runtime import PLAYER_IDS, SERIALS
         import rooms
         self.owner = self.clone = owner
+        self.ally = ally
         self.room = owner.room
         self.closed = False
         self.timer = None
-        self.deadline = combat.now() + 300
-        self.enemy_healing = False
+        self.deadline = combat.now() + (1800 if ally else 300)
+        self.enemy_healing = True
+        self.enemy_heals_left = 20
+        self.heal_below = 60
         self.rules = SimpleNamespace(ammo_modifiers=True)
         self.store = accounts.Store.temporary()
         try:
@@ -43,16 +47,19 @@ class LocalOpponent:
             identities = getattr(owner.inv.store, '_local_bot_ids', None)
             if identities is None:
                 identities = owner.inv.store._local_bot_ids = {}
-            if owner.char_id not in identities:
+            key = (owner.char_id, index) if ally else owner.char_id
+            if key not in identities:
                 if len(identities) >= 1024:
                     raise ValueError('Лимит тестовых персонажей: перезапустите локальный сервер.')
-                identities[owner.char_id] = rooms.player_id(next(PLAYER_IDS)), next(SERIALS)
-            pid, serial_base = identities[owner.char_id]
+                identities[key] = rooms.player_id(next(PLAYER_IDS)), next(SERIALS)
+            pid, serial_base = identities[key]
+            self.capture_char = -pid if ally else None
             self.store.db.execute("INSERT INTO sqlite_sequence(name,seq) VALUES('items',?)", (serial_base,))
             aid = self.store.db.execute("INSERT INTO accounts(login, hash, created) VALUES(?, ?, ?)",
                                         ('local-bot', '', 0)).lastrowid
             self.store.db.commit()
-            cid, _ = self.store.create_character(aid, 'Тестовый противник', owner.active['sex'], owner.active['res'])
+            name = 'Тестовый союзник %d' % (index + 1) if ally else 'Тестовый противник'
+            cid, _ = self.store.create_character(aid, name, owner.active['sex'], owner.active['res'])
             enemy = self.enemy = clone_class(type(owner))(None, 'local-test-bot')
             enemy.ground = self
             enemy.training_pid = pid
@@ -69,6 +76,9 @@ class LocalOpponent:
                     continue
                 fields = {key: row[key] for key in accounts.ITEM_FIELDS if key != 'char_id'}
                 self.store.create_item(cid, row['type_id'], row['root'], **fields)
+            # One finite G pack of the character's tier, in the private store.
+            medicine = (7100, 7101, 7102, 7103, 7104, 7105)[min(5, enemy.char.level // 4)]
+            enemy.inv.create(medicine)
             enemy.char.set_gear(inventory.gear_bonus(enemy.inv.rows(), enemy.char),
                                inventory.card_repeat(enemy.inv.rows()))
             enemy.char.hp, enemy.char.sp = enemy.char.hp_max, enemy.char.sp_max
@@ -78,7 +88,10 @@ class LocalOpponent:
             enemy.pos = movement.get(self.room).free_cell(owner.live_cell())
             enemy.combat.ap = enemy.combat.amax_sent = enemy.char.ap_ceiling
             self.room.enter(enemy)
-            owner.local_test_bot = self
+            if ally:
+                owner.local_test_allies.append(self)
+            else:
+                owner.local_test_bot = self
             self.timer = asyncio.get_running_loop().call_later(combat.AI_TICK, self.step)
         except Exception:
             self.exit()
@@ -100,6 +113,22 @@ class LocalOpponent:
             raise
         self.timer = asyncio.get_running_loop().call_later(combat.AI_TICK, self.step)
 
+    def target(self):
+        if not self.ally:
+            return self.clone.combat
+        rc = self.room.combat
+        candidates = [mob for mob in rc.mobs.values()
+                      if mob.alive and not mob.away and mob.stats.can_attack
+                      and not holdings.defender_friendly(rc, mob, self.enemy.combat)]
+        # Clear escorts first. A hidden master is not a target until the
+        # native schedule exposes him; no timer/clearance is bypassed here.
+        masters = {site.boss for site in holdings.table().sites.values()
+                   if site.loc == self.enemy.loc.id}
+        masters.update(mob.type_id for mob in candidates if mob.stats.role == 'boss'
+                       and holdings.guard_site(self.enemy.loc.id, mob.type_id) is None)
+        return min(candidates, key=lambda mob: (mob.type_id in masters,
+                   mobs.hex_distance(self.enemy.pos, mob.cell, self.enemy.loc.width), mob.eid), default=None)
+
     def exit(self, notify=False):
         if self.closed:
             return
@@ -119,6 +148,9 @@ class LocalOpponent:
         self.room.combat.calm()
         if getattr(self.owner, 'local_test_bot', None) is self:
             self.owner.local_test_bot = None
+        allies = getattr(self.owner, 'local_test_allies', [])
+        if self in allies:
+            allies.remove(self)
 
 
 class LocalFighter(combat.Fighter):
@@ -126,8 +158,19 @@ class LocalFighter(combat.Fighter):
     def prepare_weapon(self, weapon, ammo, row=None, mode=None):
         return super().prepare_weapon(weapon, ammo, row)
 
-    def award_xp(self, *args, **kwargs):
-        pass
+    def award_xp(self, skill, spec, dealt, target):
+        ground = self.sess.ground
+        harm = getattr(target, 'capture_harm', None)
+        if ground.ally and harm is not None and dealt > 0:
+            key = ground.capture_char
+            harm[key] = harm.get(key, 0) + dealt
+
+    def heal_now(self, uniq, target, peace_damage=None, ap_cost=0):
+        before = self.store.item(uniq)
+        super().heal_now(uniq, target, peace_damage, ap_cost)
+        after = self.store.item(uniq)
+        if before and (after is None or after['use_count'] < before['use_count']):
+            self.sess.ground.enemy_heals_left -= 1
 
     def credit_xp(self, *args, **kwargs):
         pass
@@ -219,7 +262,9 @@ def turn(ground):
         if stack:
             enemy.inv.use_load(dict(obj=inventory.oid_of(gun), target=inventory.oid_of(stack)))
         return
-    target = ground.clone.combat
+    target = ground.target() if isinstance(ground, LocalOpponent) else ground.clone.combat
+    if target is None:
+        return
     loc = enemy.loc
     distance = mobs.hex_distance(enemy.pos, target.cell, loc.width)
     firearm = gun and gun['root'] == items.FIRE_ARM

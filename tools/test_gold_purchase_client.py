@@ -58,6 +58,17 @@ class GoldPurchaseClient(unittest.TestCase):
         return dict(rootID=root, typeID=type_id, tradeID=index,
                     getProp=lambda name: props.get(name), props=props)
 
+    def test_single_dose_medicine_confirms_exact_stack_quantity_and_price(self):
+        item = self.item(root=2, gold=20)
+        item['props']['max_count'] = 10
+        self.methods['buy'].invoke(self.trade, [item, 7])
+        dialog = self.trade['__gcBuyDialog']
+        self.assertIn('1.4 G', dialog['label'])
+        self.assertIn('Количество: 7.', dialog['label'])
+        self.assertFalse(self.bought)
+        self.answer()
+        self.assertEqual(self.bought, [(item['typeID'], 7)])
+
     def buy(self, item=None):
         self.methods['buy'].invoke(self.trade, [item if item is not None else self.item(), 99])
 

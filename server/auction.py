@@ -390,7 +390,7 @@ class Auction:
     @staticmethod
     def count_of(lot):
         snap = json.loads(lot["item_json"])
-        return snap["count"] if snap["root"] in items.HEAPABLE_ROOTS else 1
+        return snap["count"] if items.heapable(snap["type_id"]) else 1
 
     @staticmethod
     def matches(lot, p, cat):
@@ -489,7 +489,7 @@ class Auction:
             return self.refuse("Начальная ставка должна быть больше нуля")
         if buyout and buyout < start:
             return self.refuse("Цена выкупа не может быть ниже начальной ставки")
-        size = row["count"] if row["root"] in items.HEAPABLE_ROOTS else 1
+        size = row["count"] if items.heapable(row["type_id"]) else 1
         fee = afro_fee(cost, size, hours) if currency == AFRO else 0
         now = time.time()
         try:

@@ -1,4 +1,4 @@
-"""Peacekeeper miners use native A rifles and standard rounds with their scoped AP pools."""
+"""Peacekeeper miners use native A rifles and KS rounds with their scoped AP pools."""
 import ast
 import os
 import random
@@ -20,7 +20,7 @@ for t, level, ap, weapon in ((840, 16, 110, 25287), (841, 17, 115, 25319)):
     check('%d: level retained and automatic weapon profile applied' % t,
           (st.level, st.weapon_class, st.weapon_type_id, st.ranged,
            st.ap_max, st.attack_ap, st.shots, st.range),
-          (level, 'assault_rifle', weapon, True, ap, 22 if t == 840 else 23, 1, 33))
+          (level, 'assault_rifle', weapon, True, ap, 22 if t == 840 else 23, 1, 39))
     expected = designed['pc_miner_lvl%d' % level]
     check('%d: generated data matches generator overrides' % t,
           {k: mobs.TYPES[str(t)][k] for k in expected}, expected)
@@ -30,34 +30,34 @@ for t, level, ap, weapon in ((840, 16, 110, 25287), (841, 17, 115, 25319)):
           all(0 < m['cone'] < 1 and m['ap'] <= st.ap_max for m in st.balanced_modes), True)
     check('%d: damage follows the common ordinary-mob release ladder' % t,
           (st.dmg_min, st.dmg_max),
-          (53, 113) if t == 840 else (54, 99))
+          (48, 102) if t == 840 else (49, 89))
     check('%d: virtual weapon loaded with compatible ammo' % t,
           mobs.virtual_di(mobs.VIRTUAL_BASE + 1, weapon, items.FIRE_ARM, st.loot_ammo_type)[1]['ammo_type'],
-          6109)
-# Native weapon ammunition is standard; quantities and original source data stay intact.
+          6097)
+# Native KS modifiers apply; quantities and original source data stay intact.
 for t in (840, 841):
     st = mobs.stats(t)
-    bullet = items.params_of(6109)
-    check('%d: standard ammo compatible with held rifle' % t,
-          6109 in items.params_of(st.weapon_type_id)['comp_array'], True)
-    check('%d: standard rounds have neutral modifiers' % t,
-          [bullet[k] for k in ('acc_mod', 'dam_mod', 'st_mod', 'range_mod', 'piercing')], [1]*5)
+    bullet = items.params_of(6097)
+    check('%d: KS ammo compatible with held rifle' % t,
+          6097 in items.params_of(st.weapon_type_id)['comp_array'], True)
+    check('%d: KS rounds retain native modifiers' % t,
+          [bullet[k] for k in ('acc_mod', 'dam_mod', 'st_mod', 'range_mod', 'piercing')], [1.1,.9,.9,1.2,.9])
     for seed in range(30):
         drops = mobs.carried(st, random.Random(seed))
-        check('%d: actual drop keeps 2-6 standard rounds' % t,
-              (drops[0][0], 2 <= drops[0][1] <= 6), (6109, True))
+        check('%d: actual drop keeps 2-6 KS rounds' % t,
+              (drops[0][0], 2 <= drops[0][1] <= 6), (6097, True))
 elite = mobs.stats(406)
-standard = items.params_of(6109)
-check('elite ammunition is compatible and neutral',
-      (6109 in items.params_of(elite.weapon_type_id)['comp_array'],
+standard = items.params_of(6097)
+check('elite ammunition is compatible and keeps KS modifiers',
+      (6097 in items.params_of(elite.weapon_type_id)['comp_array'],
        [standard[k] for k in ('acc_mod', 'dam_mod', 'st_mod', 'range_mod', 'piercing')]),
-      (True, [1.0] * 5))
+      (True, [1.1,.9,.9,1.2,.9]))
 check('elite override survives generator rebuild',
       designed['pc_shturmovik_lvl16'], {'loot_ammo_type': 6110})
 for seed in range(30):
     drops = mobs.carried(elite, random.Random(seed))
-    check('elite drops 3-10 standard rounds',
-          (drops[0][0], 3 <= drops[0][1] <= 10), (6109, True))
+    check('elite drops 3-10 KS rounds',
+          (drops[0][0], 3 <= drops[0][1] <= 10), (6097, True))
 
 # --- no changes to Magrib miners or global curves ---
 for t in (838, 839):

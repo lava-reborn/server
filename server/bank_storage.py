@@ -16,7 +16,7 @@ class Refused(ValueError):
 
 
 def key(row):
-    if row['root'] not in items.HEAPABLE_ROOTS:
+    if not items.heapable(row['type_id']):
         return None
     return (row['type_id'], row['root']) + tuple(row[f] for f in STATE)
 

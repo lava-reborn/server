@@ -1,4 +1,4 @@
-"""Six-second battle medicine cooldown: virtual time, no sleeps or load."""
+"""One shared deadline: three seconds for A, six for G, after commitment."""
 import asyncio
 import unittest
 from types import SimpleNamespace as NS
@@ -18,6 +18,25 @@ class BattleMedicineCooldown(unittest.IsolatedAsyncioTestCase):
 
     def use(self, f):
         return HealingCompletion().start(f)
+
+    async def test_afro_dose_sets_three_seconds_and_switching_to_gold_cannot_bypass_it(self):
+        f, ch, room, used = self.fixture(6055)
+        room.ws = True
+        with patch.object(combat, 'now', return_value=100):
+            f.heal_now(*self.use(f))
+        self.assertEqual(used, [1])
+        self.assertEqual(battle_medicine.remaining_ms(f.store, 1, 100), 3000)
+        f.store.item(1)['type_id'] = 7100
+        with patch.object(combat, 'now', return_value=102):
+            self.assertEqual(combat.Fighter.medicine_cooldown_blocked(f, 7100), 1000)
+        self.assertEqual(battle_medicine.remaining_ms(f.store, 1, 103), 0)
+
+    def test_all_live_currency_variants_have_their_expected_duration(self):
+        for type_id, (root, name) in items.catalogue().items():
+            if not items.battle_medicine(type_id):
+                continue
+            with self.subTest(type_id=type_id):
+                self.assertEqual(battle_medicine.duration(type_id), 3 if name.endswith('_A') else 6)
 
     async def test_success_starts_only_after_dose_commits_and_expires_at_six_seconds(self):
         f,ch,room,used=self.fixture()

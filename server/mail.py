@@ -200,7 +200,7 @@ def describe(snap):
     the text: HS is a stack size, HC the charges of a heal item, BS the
     durability of anything breakable."""
     root = snap["root"]
-    if root in items.HEAPABLE_ROOTS or root == items.TROPHY:
+    if items.heapable(snap["type_id"]) or root == items.TROPHY:
         return "=?HS:%d?=" % snap["count"]
     if root == items.HEAL:
         return "=?HC:%d?=" % snap["use_count"]

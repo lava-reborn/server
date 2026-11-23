@@ -355,10 +355,11 @@ def di_params(row, store=None):
     """
     root = row["root"]
     p = {"obj": BigUInt(oid_of(row))}
-    if root in items.HEAPABLE_ROOTS:
-        p["size"] = row["count"]
-    elif root == items.HEAL:
+    if root == items.HEAL:
         p["use_count"] = row["use_count"]
+        p['size'] = row['count']
+    elif items.heapable(row["type_id"]):
+        p["size"] = row["count"]
     elif root == items.TROPHY:
         p["count"] = row["count"]
         if store is not None:
@@ -378,9 +379,9 @@ def new_fields(type_id, count=1):
     root = items.root_of(type_id)
     si = items.params_of(type_id) or {}
     f = {"root": root, "slot": BAG, "count": 1}
-    if root in items.HEAPABLE_ROOTS:
+    if items.heapable(type_id):
         f["count"] = max(1, min(int(count), si.get("max_count", 1)))
-    elif root == items.HEAL:
+    if root == items.HEAL:
         f["use_count"] = si.get("use_count", 1)
     elif root in items.BREAKABLE_ROOTS:
         f["brk"] = f["max_break_cur"] = si.get("max_break_abs", 100)
@@ -466,7 +467,7 @@ def weight_of(row):
     """Grams, the way WeightPan reads it: per piece, times the stack."""
     si = items.params_of(row["type_id"]) or {}
     w = si.get("weight", 0)
-    return w * row["count"] if row["root"] in items.HEAPABLE_ROOTS else w
+    return w * row["count"] if items.heapable(row["type_id"]) else w
 
 
 def fits(row, slot):
@@ -1202,7 +1203,7 @@ class Inventory:
         out = {}
         for r in self.rows():
             if r["slot"] == BAG and r["uniq"] not in self.locked:
-                n = r["count"] if r["root"] in items.HEAPABLE_ROOTS else 1
+                n = r["count"] if items.heapable(r["type_id"]) else 1
                 out[r["type_id"]] = out.get(r["type_id"], 0) + n
         return out
 
@@ -1222,7 +1223,7 @@ class Inventory:
             if row["type_id"] != type_id or row["slot"] not in slots \
                     or row["uniq"] in self.locked:
                 continue
-            have = row["count"] if row["root"] in items.HEAPABLE_ROOTS else 1
+            have = row["count"] if items.heapable(row["type_id"]) else 1
             use = min(have, n - taken)
             if use < have:
                 row["count"] -= use
@@ -1248,7 +1249,7 @@ class Inventory:
         purchase sends it. Returns the rows."""
         si = items.params_of(type_id) or {}
         per = max(1, si.get("max_count", 1)) \
-            if items.root_of(type_id) in items.HEAPABLE_ROOTS else 1
+            if items.heapable(type_id) else 1
         out, left = [], int(n)
         while left > 0:
             count = min(per, left)
@@ -1290,7 +1291,7 @@ class Inventory:
                 break
             if row["type_id"] != type_id:
                 continue
-            have = row["count"] if row["root"] in items.HEAPABLE_ROOTS else 1
+            have = row["count"] if items.heapable(row["type_id"]) else 1
             use = min(have, n - taken)
             if use < have:
                 self.store.update_item(row["uniq"], count=have - use)
@@ -1339,7 +1340,7 @@ class Inventory:
         """Unsolicited dynamic info. This is how a reload, a partial sale or
         a merged stack reaches the client: it changes no number by itself."""
         self.send(DI_COMMAND.get(row["root"], "ss_di_heap"), **di_params(row, self.store))
-        if row["root"] in items.HEAPABLE_ROOTS:
+        if items.heapable(row["type_id"]):
             # A stack's new size: pieces came or went.
             self.bag_changed()
 
@@ -1758,6 +1759,10 @@ class Inventory:
             # moving it anyway would leave a ghost in one of the two places.
             self.ack(RES_NOT_FOUND)
             return
+        if row['root'] == items.HEAL and row['count'] > 1 and dst in (PRIMARY, SECONDARY):
+            self.ack(RES_REFUSED)
+            self.sess.answer('Отделите одну хилку от стопки, чтобы взять её в руку.')
+            return
         if not fits(row, dst):
             self.ack(RES_NO_ITEM)
             return
@@ -2053,8 +2058,11 @@ class Inventory:
         leaves by ss_obj_status;status=0 (items.md 2.2).
         """
         row = self.find(p.get("obj"))
-        if not row or row["root"] not in items.HEAPABLE_ROOTS:
+        if not row or not items.heapable(row["type_id"]):
             self.ack(RES_NOT_FOUND)
+            return
+        if row['root'] == items.HEAL and (row['slot'] != BAG or row['use_count'] != 1):
+            self.ack(RES_REFUSED)
             return
         try:
             num = int(p.get("num", 0) or 0)
@@ -2079,10 +2087,13 @@ class Inventory:
         if donor["type_id"] != row["type_id"]:
             self.ack(RES_NO_ITEM)
             return
+        if row['root'] == items.HEAL and (donor['slot'] != BAG or donor['use_count'] != 1):
+            self.ack(RES_REFUSED)
+            return
         limit = (items.params_of(row["type_id"]) or {}).get("max_count", 1)
-        if not num:
+        if num == 0:
             num = donor["count"]
-        if num > donor["count"] or row["count"] + num > limit:
+        if num < 1 or num > donor["count"] or row["count"] + num > limit:
             self.ack(RES_REFUSED)
             return
         row["count"] += num
@@ -2392,12 +2403,9 @@ class Inventory:
         if si is None:
             self.ack(RES_NOT_FOUND)
             return
-        # Only rounds are bought by the number: Trade.buy sends 1 for
-        # everything else, a stack of junk included, and so does the server.
-        # For rounds the "Сколько штук купить?" window runs from 1 to the
-        # stall's stack, which is the type's max_count (TradeItem.initParams,
-        # TradeInterface.createExchangePan): items.AMMO_STACK, 5000.
-        if root != items.AMMO:
+        # The native quantity dialogue also serves single-dose medicine.
+        # Other goods retain one item per purchase, including charged packs.
+        if root != items.AMMO and not (root == items.HEAL and items.heapable(type_id)):
             n = 1
         if not (1 <= n <= si.get("max_count", 1)):
             self.ack(RES_REFUSED)
@@ -2511,7 +2519,7 @@ class Inventory:
                 or row["root"] == items.TROPHY):
             self.ack(RES_REFUSED)
             return
-        heapable = row["root"] in items.HEAPABLE_ROOTS
+        heapable = items.heapable(row["type_id"])
         try:
             n = int(p.get("param", 0) or 0)
         except (TypeError, ValueError):
@@ -2624,7 +2632,7 @@ class Inventory:
             n = int(p.get("param", 1) or 1)
         except (ValueError, TypeError, OverflowError):
             return None
-        if not 1 <= n <= row["count"] or (row["root"] not in items.HEAPABLE_ROOTS and n != 1):
+        if not 1 <= n <= row["count"] or (not items.heapable(row["type_id"]) and n != 1):
             return None
         quality = gold_trade.sale_quality(row, si)
         if quality <= 0:
@@ -2664,7 +2672,7 @@ class Inventory:
             n = int(p.get('param', 1) or 1)
         except (TypeError, ValueError, OverflowError):
             return None
-        if not 1 <= n <= row['count'] or (row['root'] not in items.HEAPABLE_ROOTS and n != 1):
+        if not 1 <= n <= row['count'] or (not items.heapable(row['type_id']) and n != 1):
             return None
         price, gold = eden_shop.sale_price(row, n)
         if price <= 0:
@@ -3065,7 +3073,7 @@ class Inventory:
                 if self.total_weight() + weight_of(row) > self.carry_limit():
                     self.ack(RES_OVERLOAD)
                     return
-                if row['root'] in items.HEAPABLE_ROOTS and row['count'] > items.params_of(row['type_id'])['max_count']:
+                if items.heapable(row['type_id']) and row['count'] > items.params_of(row['type_id'])['max_count']:
                     self.sess.say('Обновите клиент, чтобы взять часть стопки')
                     self.ack(RES_REFUSED)
                     return

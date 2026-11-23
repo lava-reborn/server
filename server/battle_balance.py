@@ -125,7 +125,8 @@ def ordinary_mob_pressure():
     raw = json.loads(PATH.with_name('combat_balance.json').read_text(encoding='utf-8'))
     row = raw['ordinary_mob_pressure']
     fields = {'damage_scale', 'high_gap_damage_scale', 'stamina_ratio', 'senior_stamina_ratio', 'hard_gap_stamina_scale',
-              'stamina_levels', 'crit_bounds', 'player_damage_ratios'}
+              'stamina_levels', 'crit_bounds', 'crit_bonus_by_gap', 'player_damage_ratios',
+              'camp_hard_gap_damage_ratios'}
     bounds = row.get('crit_bounds', ())
     if (raw['source_commit'] != data()['source_commit'] or set(row) != fields
             or len(row['stamina_levels']) != 2
@@ -139,12 +140,21 @@ def ordinary_mob_pressure():
             or len(row['player_damage_ratios']) != 5
             or any(isinstance(v, bool) or not isinstance(v, (int, float))
                    or not math.isfinite(v) or not 0 < v <= 1 for v in row['player_damage_ratios'])
+            or len(row['camp_hard_gap_damage_ratios']) != 3
+            or any(isinstance(v, bool) or not isinstance(v, (int, float))
+                   or not math.isfinite(v) or not 0 < v <= 1 for v in row['camp_hard_gap_damage_ratios'])
             or len(bounds) != 6
             or any(len(pair) != 2 or any(type(v) is not int for v in pair)
-                   or not 0 <= pair[0] <= pair[1] <= 25 for pair in bounds)
+                   or not 0 <= pair[0] <= pair[1] <= 100 for pair in bounds)
+            or len(row['crit_bonus_by_gap']) != 6
+            or any(type(v) is not int or not 0 <= v <= 100 for v in row['crit_bonus_by_gap'])
+            or row['crit_bonus_by_gap'][:3] != [0, 0, 0]
+            or list(row['crit_bonus_by_gap']) != sorted(row['crit_bonus_by_gap'])
             or any(bounds[i][j] > bounds[i + 1][j] for i in range(5) for j in range(2))):
         raise ValueError('Invalid ordinary mob pressure')
     return MappingProxyType(dict(row, crit_bounds=tuple(tuple(pair) for pair in bounds),
+                                 crit_bonus_by_gap=tuple(row['crit_bonus_by_gap']),
+                                 camp_hard_gap_damage_ratios=tuple(row['camp_hard_gap_damage_ratios']),
                                  stamina_levels=tuple(row['stamina_levels']),
                                  player_damage_ratios=tuple(row['player_damage_ratios'])))
 
@@ -157,7 +167,7 @@ def ordinary_attacker(shooter, target, ordinary):
 
 def split(shooter, target, damage, piercing, critical, stamina_left, stamina_damage=0, melee=False, rifle=False, ordinary=False):
     pressure_stamina = 0
-    if ordinary_attacker(shooter, target, ordinary):
+    if ordinary_attacker(shooter, target, ordinary) and not getattr(shooter.stats, 'plain_weapon', False):
         pressure = ordinary_mob_pressure()
         scale = pressure['damage_scale']
         if level(shooter) - level(target) >= 5:
@@ -173,6 +183,8 @@ def split(shooter, target, damage, piercing, critical, stamina_left, stamina_dam
     if shooter.is_player and not target.is_player and getattr(target.stats, 'role', None) != 'object':
         player_level = level(shooter)
         gap = level(target) - player_level
+        camp = (ordinary and getattr(target.stats, 'role', None) in ('mob', 'animal', 'turret')
+                and not getattr(target, '_holding_prepared', False))
         # Ordinary PvE moves the reviewed difficulty steps up one level:
         # +1 uses the former equal-level factor, +5 the former +4 factor.
         # The private simulator and player-versus-player formulas stay pinned.
@@ -188,8 +200,13 @@ def split(shooter, target, damage, piercing, critical, stamina_left, stamina_dam
             factor = max(factors.get(GAP_MAX, 1), ordinary_plus_two().get(player_level, factors.get(2, 1))
                          * ordinary_plus_three()['player_damage_ratio'])
         if ordinary and gap >= 1:
-            factor *= ordinary_mob_pressure()['player_damage_ratios'][min(gap, 4)]
-        damage = max(1, int(damage * factor)) if damage > 0 else 0
+            pressure = ordinary_mob_pressure()
+            factor *= (pressure['camp_hard_gap_damage_ratios'][min(gap - 2, 2)]
+                       if camp and gap >= 2 else pressure['player_damage_ratios'][min(gap, 4)])
+        # At +5 and above, do not turn an absorbed pellet into guaranteed
+        # one-point damage. Keep fractional penetration until this rounding.
+        floor = 0 if camp and gap >= 4 else 1
+        damage = max(floor, int(damage * factor)) if damage > 0 else 0
         stamina_damage = int(stamina_damage * factor)
     elif (ordinary and not shooter.is_player and target.is_player
             and getattr(shooter.stats, 'role', None) in ('mob', 'animal', 'turret')
@@ -214,21 +231,29 @@ def split(shooter, target, damage, piercing, critical, stamina_left, stamina_dam
             spent + min(pressure_stamina, max(0, left - spent)))
 
 
-def critical(shooter, target, chance, optimal=True, *, ordinary=False):
+def critical_chance(shooter, target, chance, optimal=True, *, ordinary=False):
     if shooter.is_player and not optimal and not ordinary:
-        return False
-    chance = max(0, min(100, chance))
+        return 0
     if not shooter.is_player and target.is_player:
         if ordinary_attacker(shooter, target, ordinary):
             gap = max(0, min(5, level(shooter) - level(target)))
-            low, high = ordinary_mob_pressure()['crit_bounds'][gap]
-            chance = max(low, min(high, chance))
+            pressure = ordinary_mob_pressure()
+            low, high = pressure['crit_bounds'][gap]
+            # Add before clamping: the player's full antikrit still offsets it.
+            chance = max(low, min(high, chance + pressure['crit_bonus_by_gap'][gap]))
         else:
             chance = max(MOB_CRIT_FLOOR, chance)
+    chance = max(0, min(100, chance))
     if ordinary and not optimal:
         chance *= .5
+    return chance
+
+
+def critical(shooter, target, chance, optimal=True, *, ordinary=False):
+    if shooter.is_player and not optimal and not ordinary:
+        return False
     import combat
-    return combat.roll(chance)
+    return combat.roll(critical_chance(shooter, target, chance, optimal, ordinary=ordinary))
 
 
 def ranged_critical(shooter, target, weapon, optimal, *, ordinary=False):
@@ -334,12 +359,12 @@ def mob_weapons():
     return MappingProxyType({kind: tuple(sorted(rows)) for kind, rows in result.items()})
 
 
-def equip_mob(stats, damage_scale):
-    """Native item modes and ST ammunition; resources and animal attacks stay natural."""
-    if not stats.can_attack or stats.role not in ('mob', 'boss', 'turret'):
+def equip_mob(stats, damage_scale, *, site=False):
+    """Plain A item modes; camps use KS, defended sites retain their ST profile."""
+    if not stats.can_attack or stats.role not in ('mob', 'boss', 'turret', 'animal'):
         return False
     kind = {'assault': 'assault_rifle', 'machinegun': 'machine_gun'}.get(stats.weapon_class, stats.weapon_class)
-    if stats.role == 'boss' and kind == 'pistol':
+    if site and stats.role == 'boss' and kind == 'pistol':
         # Named pistol bosses retain their reviewed, stronger NPC attacks.
         return False
     if not stats.ranged:
@@ -370,9 +395,20 @@ def equip_mob(stats, damage_scale):
     import combat
     type_id = max(choices, key=lambda row: (row[0], row[1], -row[2]))[2]
     params = items.params_of(type_id)
+    factor = damage_scale / MOB_BALANCE_DIVISOR
+    if not site:
+        factor = min(1, factor)
+        stats.plain_weapon = True
+    if stats.role == 'animal':
+        # A knife is a damage ceiling, not an item put in an animal's paws.
+        stats.dmg_min = max(1, round(min(stats.dmg_min, params['h_damage_min']) * factor))
+        stats.dmg_max = max(stats.dmg_min, round(min(stats.dmg_max, params['h_damage_max']) * factor))
+        stats.weapon_type_id = stats.loot_ammo_type = None
+        if hasattr(stats, 'balanced_modes'):
+            del stats.balanced_modes
+        return True
     stats.weapon_type_id = type_id
     stats.weapon_class = kind
-    factor = damage_scale / MOB_BALANCE_DIVISOR
     if not stats.ranged:
         stats.dmg_min = max(1, round(params['h_damage_min'] * factor))
         stats.dmg_max = max(stats.dmg_min, round(params['h_damage_max'] * factor))
@@ -384,7 +420,8 @@ def equip_mob(stats, damage_scale):
             del stats.balanced_modes
         stats.ap_max = max(stats.ap_max, stats.attack_ap)
         return True
-    ammo_type = next(t for t in params['comp_array'] if items.catalogue()[t][1].endswith('_ST'))
+    quality = '_ST' if site else '_KS'
+    ammo_type = next(t for t in params['comp_array'] if items.catalogue()[t][1].endswith(quality))
     ammo = items.params_of(ammo_type)
     stats.loot_ammo_type = ammo_type
     modes = []
@@ -444,7 +481,7 @@ def configure_mob(stats, *, health_scale=1, damage_scale=1, site=False):
     # Even creatures absent from the simulator retain the original pool floor.
     stats.hp_max = max(original_hp, round(stats.hp_max * health_scale / MOB_BALANCE_DIVISOR))
     stats.sp_max = max(original_sp, round(stats.sp_max * health_scale / MOB_BALANCE_DIVISOR))
-    if equip_mob(stats, damage_scale):
+    if equip_mob(stats, damage_scale, site=site):
         return
     factor = damage_scale / MOB_BALANCE_DIVISOR
     if reference is not None and stats.shots > 0 and stats.attack_ap > 0:

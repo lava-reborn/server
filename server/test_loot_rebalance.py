@@ -134,7 +134,7 @@ class LootRebalance(unittest.TestCase):
                     self.assertAlmostEqual(a, current_income_target(k, profile['afro'] * factor), delta=1)
                     self.assertAlmostEqual(g, profile['gold'] * factor, delta=.0001)
 
-    def test_changed_calibre_uses_standard_ammo_and_preserves_quantity(self):
+    def test_changed_calibre_uses_makeshift_ammo_and_preserves_quantity(self):
         for kind in (840, 841):
             with self.subTest(kind=kind):
                 original = mobs.MobStats(kind, balanced=False)
@@ -142,7 +142,7 @@ class LootRebalance(unittest.TestCase):
                 compatible = items.params_of(current.weapon_type_id)['comp_array']
                 self.assertIn(current.loot_ammo_type, compatible)
                 current_quality = items.catalogue()[current.loot_ammo_type][1].rsplit('_', 1)[-1]
-                self.assertEqual(current_quality, 'ST')
+                self.assertEqual(current_quality, 'KS')
                 self.assertEqual(current.loot_ammo_count, original.loot_ammo_count)
                 self.assertEqual(current.loot_ammo_count, (2, 6))
 
