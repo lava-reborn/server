@@ -39,17 +39,19 @@ class CombatXpCap(unittest.TestCase):
         level, xp, ceiling = ch.spec[spec]
         return sum(p.spec_xp_max(i) for i in range(level)) + xp
 
-    def test_equal_and_lower_rewards_below_17_retain_the_existing_formula(self):
+    def test_equal_and_lower_rewards_use_the_plus_one_base_and_four_level_cutoff(self):
         for level in range(17):
-            for mob in (max(0, level - 2), level):
+            for mob in range(level + 1):
                 for share in (0, .125, .5, 1):
                     for mult in (.7, 1, 3):
-                        self.assertEqual(p.combat_mob_xp(mob, level, share, mult), p.mob_xp(mob, level, share, mult))
+                        ratio = {0:.8, -1:.7, -2:.6, -3:.5}.get(mob - level, 0)
+                        expected = p.mob_price(level + 1) * ratio * mult * share
+                        self.assertAlmostEqual(p.combat_mob_xp(mob, level, share, mult), expected)
 
     def test_spec_reward_rises_to_level_16_maximum_at_gap_four(self):
         ceiling = 1996 * 1.3
         self.assertAlmostEqual(ceiling, 2594.8)
-        expected = [748.5, 1996, 1996 * 1.1, 1996 * 1.2, 1996 * 1.3]
+        expected = [1996 * .8, 1996, 1996 * 1.1, 1996 * 1.2, 1996 * 1.3]
         for level in (17, 18, 19, 20):
             self.assertEqual([p.combat_mob_xp(17 + gap, level) for gap in range(5)], expected)
             for mob in (17, 18, 21, 30):
@@ -57,8 +59,9 @@ class CombatXpCap(unittest.TestCase):
                     full = min(ceiling, expected[min(mob - 17, 4)] * mult)
                     self.assertEqual(p.combat_mob_xp(mob, level, 1, mult), full)
                     self.assertEqual(p.combat_mob_xp(mob, level, .25, mult), full / 4)
-            self.assertEqual(p.combat_mob_xp(15, level), 0)
-        self.assertEqual(p.combat_mob_xp(16, 17), p.mob_xp(15, 16))
+            self.assertEqual(p.combat_mob_xp(13, level), 0)
+            self.assertEqual(p.combat_mob_xp(15, level), 1996 * .6)
+        self.assertEqual(p.combat_mob_xp(16, 17), 1996 * .7)
         for gap in range(-3, 9):
             self.assertEqual(p.combat_mob_xp(17 + gap, 17),
                              p.combat_mob_xp(16 + gap, 16))

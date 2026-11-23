@@ -10,7 +10,7 @@ class CombatXpRamp(unittest.TestCase):
         for skill in range(17):
             base = p.mob_price(skill + 1)
             values = [p.combat_mob_xp(skill + gap, skill) for gap in range(5)]
-            self.assertEqual(values[0], p.mob_price(skill) * .5)
+            self.assertEqual(values[0], base * .8)
             for gap, factor in enumerate((1, 1.1, 1.2, 1.3), 1):
                 self.assertAlmostEqual(values[gap], base * factor)
                 self.assertGreater(values[gap], values[gap - 1])
@@ -24,13 +24,13 @@ class CombatXpRamp(unittest.TestCase):
                     for share in (0, .125, .5, 1):
                         self.assertAlmostEqual(p.combat_mob_xp(max(0, skill + gap), skill, share, mult), base * mult * share)
 
-    def test_equal_and_lower_targets_unchanged(self):
+    def test_equal_and_lower_targets_follow_the_agreed_ladder(self):
         for skill in range(17):
             for mob in range(skill + 1):
                 for mult in (.7, 1, 3):
-                    old = p.mob_xp(mob, skill, xp_mult=mult)
-                    expected = old
-                    self.assertEqual(p.combat_mob_xp(mob, skill, xp_mult=mult), expected)
+                    ratio = {0:.8, -1:.7, -2:.6, -3:.5}.get(mob - skill, 0)
+                    expected = p.mob_price(skill + 1) * ratio * mult
+                    self.assertAlmostEqual(p.combat_mob_xp(mob, skill, xp_mult=mult), expected)
 
     def test_legacy_noncombat_price_does_not_gain_a_ramp(self):
         self.assertEqual(p.mob_xp(1, 0), 20)
