@@ -118,6 +118,7 @@ BUFF_RANKS = {4: (0, 0), 8: (1, 3), 12: (3, 5), 16: (5, 7), 20: (7, 9)}
 BUFF_ASSISTANTS = frozenset((1196, 2015, 2016, 2017, 2018, 5216))
 BUFF_SELLERS = BUFF_ASSISTANTS | {1013, 5215}
 BASE_AMMO_SELLERS = frozenset((714, 5240))
+PRISON_SUPPLIERS = frozenset((2180, 2181, 880))
 
 
 @lru_cache(maxsize=256)
@@ -222,7 +223,7 @@ def with_weapon_ammunition(stock):
     if not any(items.root_of(t) in (items.FIRE_ARM, items.AMMO) for t in stock):
         return stock
     chosen = dict.fromkeys(stock)
-    chosen.update(dict.fromkeys(gold_ammunition(stock)))
+    chosen.update(dict.fromkeys(t for t in gold_ammunition(stock) if t in items.SHOCK_ROUNDS.values()))
     calibres = {}
     for gun in guns:
         if items.root_of(gun) != items.FIRE_ARM:
@@ -584,6 +585,8 @@ def apply(trader_type, loc_id, own):
     b = band(loc_id) if loc_id is not None else None
     import effects
     import items
+    if trader_type in PRISON_SUPPLIERS:
+        own = [t for t in own if items.root_of(t) != items.AMMO or ammunition_order(t)[1] != 0]
     if trader_type not in BUFF_SELLERS:
         own = [t for t in own if effects.definition(t) is None]
     # The archived assistant's own list carries IV outside the city ladder.

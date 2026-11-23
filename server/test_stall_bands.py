@@ -334,7 +334,8 @@ def ag(stall):
 # among them.
 COUNTS = {
     "Нубийская долина": {5212: (9, 8), 5221: (9, 8), 5222: (4, 2), 5213: (15, 15), 5223: (15, 15),
-                         1187: (6, 0), 5211: (0, 0), 5224: (0, 0), 5217: (0, 0), 5225: (0, 0), 1013: (0, 0)},
+                         1187: (6, 0), 5211: (0, 0), 5224: (0, 0), 5217: (0, 0), 5225: (0, 0),
+                         5215: (0, 0), 5216: (0, 0)},
     "Вади-Хальфа": {1200: (4, 4), 1201: (10, 10), 1202: (3, 3), 1203: (2, 2), 1152: (5, 4),
                     1224: (19, 19), 1205: (15, 15), 1204: (0, 0), 650: (15, 15), 2391: (0, 7),
                     1206: (0, 0), 1207: (0, 0), 202: (0, 0), 81: (0, 0), 2180: (0, 0),
@@ -873,7 +874,7 @@ async def main():
           " then his rounds", (stall == items.stock_for(1201, 102),
                                sorted({level_of(x) for x in stall if weapon_or_piece(x)}),
                                ag(stall), [x for x in stall if not weapon_or_piece(x)]),
-          (True, [4, 5, 6, 7, 8], (10, 10), items.AMMO_12MM + [6144, 6168, 6156]))
+          (True, [4, 5, 6, 7, 8], (10, 10), items.AMMO_12MM + [6144, 6168, 6156, 60014]))
     check("  ..its frame on the wire under 4 KiB", (bool(sizes), max(sizes or [0]) < 4096), (True, True))
     run(sess, "ss_create;s_type=1;target=%d;" % npc)
     jack_g = stall.index(25952)

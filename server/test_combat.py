@@ -52,6 +52,7 @@ os.environ["LAVA_QUESTS"] = QUESTS_FILE
 sys.path.insert(0, HERE)
 import accounts
 import storage
+import battle_balance
 import combat
 import inventory
 import items
@@ -487,6 +488,27 @@ check("penetration halves H and S before the second body's armour, rounding down
 check("a zero health critical hit deals zero to both pools",
       _damage_frames(_izh._replace(dmin=0, dmax=0, sdmin=15, sdmax=15), crit=True),
       ([(0, 0, 1)] * 6, (1000, 1000), (1000, 1000), 12))
+
+# A real rifle's aim payload must select the rifle armour policy all the way
+# through faHit, damage application and the health/stamina bars.
+_rifle = asyncio.run(_aimed_weapon(25756))
+check("the actual rifle payload keeps its rifle specialisation",
+      _rifle.spec, combat.SPEC_OF_WEAPON[items.RIFLE])
+_rifle = _rifle._replace(num_shots=1, dmin=100, dmax=100, sdmin=10, sdmax=10,
+                         opt_lo=0, opt_hi=0, piercing=1, through=False)
+with patch.object(battle_balance, 'reference_armour', return_value=148), \
+        patch.object(mobs.Mob, 'armor', return_value=148):
+    for _sp, _health, _stamina in ((1000, 50, 60), (20, 90, 20), (0, 110, 0)):
+        check("rifle bypass and SP overflow reach both packet and bars at %d SP" % _sp,
+              _damage_frames(_rifle, stamina=_sp),
+              ([(_health, _stamina, 0)], (1000 - _health, _sp - _stamina),
+               (1000 - _health, _sp - _stamina), 2))
+    check("rifle AP rounds increase the HP share before stamina runs out",
+          _damage_frames(_rifle._replace(piercing=2)),
+          ([(67, 43, 0)], (933, 957), (933, 957), 2))
+    check("a rifle crit ignores armour without double-counting its SP component",
+          _damage_frames(_rifle, stamina=20, crit=True),
+          ([(100, 20, 1)], (900, 0), (900, 0), 2))
 _rc, _gr, _d = _scene(mark=(3, DOG), behind=(5, DOG))
 for _body in _d.values():
     _damage_target(_body)

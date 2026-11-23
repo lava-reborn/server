@@ -300,6 +300,34 @@ class TimedItems(unittest.IsolatedAsyncioTestCase):
 
 
 class ReleaseCatalogue(unittest.TestCase):
+    def test_live_rifle_armour_piercing_stamina_overflow_and_critical_damage(self):
+        room = combat.RoomCombat.__new__(combat.RoomCombat)
+        shooter = NS(is_player=True, character=lambda: NS(level=12))
+        target = NS(is_player=True, character=lambda: NS(level=12), armor=lambda: 148)
+        rifle = combat.Weapon(1, 100, 100, 1, 10, 20, 1, .1, 0,
+                              progression.SHOOTING, combat.SPEC_OF_WEAPON[items.RIFLE])
+        for piercing, expected in ((.5, (34, 66)), (1, (50, 50)), (2, (67, 33))):
+            gun = rifle._replace(piercing=piercing)
+            self.assertEqual(room.bullet_damage(shooter, target, gun, 100, 0, False, 200), expected)
+        self.assertEqual(room.bullet_damage(shooter, target, rifle, 100, 10, False, 20), (90, 20))
+        self.assertEqual(room.bullet_damage(shooter, target, rifle, 100, 10, False, 0), (110, 0))
+        target.armor = lambda: 1_000_000
+        self.assertEqual(room.bullet_damage(shooter, target, rifle, 100, 0, False, 200), (10, 90))
+        for stamina in (0, 20, 200):
+            self.assertEqual(room.bullet_damage(shooter, target, rifle, 100, 500, True, stamina),
+                             (100, min(100, stamina)))
+        # NPC rifles use their actual weapon class, not a player's specialisation.
+        npc = NS(is_player=False, stats=NS(level=12, role='boss', weapon_class='rifle'))
+        self.assertEqual(room.bullet_damage(npc, target, rifle._replace(spec=None), 100, 0, False, 200),
+                         (10, 90))
+        target.armor = lambda: 148
+        for gap in range(6):
+            mob = NS(is_player=False, stats=NS(level=12 + gap, role='mob'), armor=lambda: 148)
+            health, stamina = room.bullet_damage(shooter, mob, rifle, 10000, 0, False, 10000)
+            self.assertGreater(health, 0, gap)
+            self.assertGreater(stamina, 0, gap)
+            self.assertLessEqual(health + stamina, 10000, gap)
+
     def test_unsafe_ambush_is_discarded_without_moving_or_charging_the_player(self):
         import encounters
         import rooms
@@ -895,6 +923,7 @@ class ReleaseCatalogue(unittest.TestCase):
         self.assertEqual(len(set(items.SHOCK_ROUNDS.values())), 17)
         for trader, location in ((714, 609), (5240, 1443)):
             self.assertTrue(set(items.SHOCK_ROUNDS.values()) <= set(items.stock_for(trader, location)))
+
         for standard, shock in items.SHOCK_ROUNDS.items():
             with self.subTest(calibre=standard):
                 p = items.params_of(shock)
@@ -915,6 +944,17 @@ class ReleaseCatalogue(unittest.TestCase):
                     self.assertIn(items.SHOCK_ROUNDS[standard], compatible, t)
                     checked += 1
         self.assertGreater(checked, 500)
+
+    def test_prison_suppliers_keep_standard_selected_shock_and_medicine_without_makeshift(self):
+        import shop_bands
+        for trader, location in ((2180, 176), (2181, 159), (880, 177)):
+            stock = items.stock_for(trader, location)
+            rounds = [t for t in stock if items.root_of(t) == items.AMMO]
+            self.assertTrue(any(items.root_of(t) == items.HEAL for t in stock))
+            self.assertTrue(rounds)
+            self.assertFalse(any(shop_bands.ammunition_order(t)[1] == 0 for t in rounds))
+            self.assertTrue(set(range(6104, 6128)) <= set(rounds))
+            self.assertTrue({6189, *range(60011, 60022)} <= set(rounds))
 
     def test_nubian_valley_uses_its_original_doctor_and_assistant(self):
         import rooms
