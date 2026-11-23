@@ -385,8 +385,8 @@ jobs:
           else
             python3 tools/suite.py --affected --list --base origin/main > "$RUNNER_TEMP/pick.txt"
           fi
-          grep -vE '^(server|data|tools)/test_[^/]*\.py$' "$RUNNER_TEMP/pick.txt" || true
-          picked=$(grep -E '^(server|data|tools)/test_[^/]*\.py$' "$RUNNER_TEMP/pick.txt" \
+          grep -vE '^(server|data|tools|client)/test_[^/]*\.py$' "$RUNNER_TEMP/pick.txt" || true
+          picked=$(grep -E '^(server|data|tools|client)/test_[^/]*\.py$' "$RUNNER_TEMP/pick.txt" \
                    | xargs -rn1 basename | sed 's/[.]py$//' | grep -vx test_storage_pg | sort | paste -sd, -)
           echo "picked=$picked" >> "$GITHUB_OUTPUT"
           echo "part=true" >> "$GITHUB_OUTPUT"

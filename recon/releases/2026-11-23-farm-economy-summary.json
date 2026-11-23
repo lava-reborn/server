@@ -689,5 +689,69 @@
       "median_net_afro_per_hour": 46946.97279071578,
       "median_selected_type_kills_per_hour": 46.0
     }
-  ]
+  ],
+  "expanded_range_analysis": {
+    "as_of": "2026-11-24",
+    "levels": [
+      1,
+      17
+    ],
+    "gaps": [
+      -4,
+      4
+    ],
+    "cohorts": [
+      "camp_outskirts",
+      "mine"
+    ],
+    "coverage_cells": 306,
+    "farm_rows": 32238,
+    "actual_encounter_xp_rows": 2865,
+    "formula_xp_and_specialisation_rows": 459,
+    "new_random_battles": 0,
+    "methods": {
+      "finite_mean_nondeath_estimate": 29007,
+      "saved_native_battles_and_exact_loot": 297,
+      "outside_saved_model_resource_budget": 2934
+    },
+    "validation_arithmetic_checks": 705155,
+    "files": {
+      "farm-range-analysis.json": {
+        "sha256": "e7fb83f37351401dc217d8a8c2bb5aa0a21799dfec110a10b7808e0bf11a6ae6",
+        "bytes": 64163883
+      },
+      "Фарм - уровни 1-17 диапазоны минус4 плюс4.csv": {
+        "sha256": "39b5724ff26f1284575edca10f9bef662bf1fcd9ea21f18a1f3a4cca48997ae7",
+        "bytes": 29083446
+      },
+      "Опыт - число убийств до уровня.csv": {
+        "sha256": "53d0cd6bee0127889196551a05ef2ed03d4103094ec8e085bf261756922a5918",
+        "bytes": 397495
+      },
+      "Опыт - общая лестница и специализации.csv": {
+        "sha256": "d2de9e28a02ae2263be9b838bd80383636ff4b4426d1c323fcb3180fff89cd6e",
+        "bytes": 37263
+      },
+      "Покрытие - уровни и диапазоны.csv": {
+        "sha256": "4a3465f3ab02e1a463c881ae67cfc1c57470f607796cc3879ee9b1030d1c00de",
+        "bytes": 11529
+      }
+    },
+    "limitations": [
+      "Analytical unmeasured cells are conditional mean-flow estimates, not forecasts of death-adjusted profit or victory.",
+      "Missing real encounters remain unavailable. Modelled routes do not include competition, network/client time or multi-target aggro."
+    ],
+    "probabilities_for_unmeasured_cells": null,
+    "premium_xp": {
+      "registration": 0.15,
+      "permit": 0.3
+    },
+    "final_boss_controls": {
+      "random_battles": 2,
+      "budget_upper_total": 2500,
+      "authorized": 2500,
+      "scope": "Solo feasibility only: hero3 vs Mwamba, hero4 vs Douglas; not a win-rate measurement."
+    },
+    "proposal_not_applied": "Existing AF-junk quantity +10% at0/+1, up to+15% at+2 outskirts; mines0-5% only where costs justify it. Keep gold, rare gear, XP and item stats unchanged."
+  }
 }

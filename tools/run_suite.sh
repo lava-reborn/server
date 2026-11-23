@@ -155,8 +155,8 @@ cd "$ROOT"
 PICKED=
 if [ "$SELECT" = 1 ]; then
   picked=$(python3 tools/suite.py "${pick_args[@]}") || { echo "$picked" >&2; exit 2; }
-  printf '%s\n' "$picked" | grep -vE '^(server|data|tools)/test_[^/]*\.py$'
-  PICKED=$(printf '%s\n' "$picked" | grep -E '^(server|data|tools)/test_[^/]*\.py$')
+  printf '%s\n' "$picked" | grep -vE '^(server|data|tools|client)/test_[^/]*\.py$'
+  PICKED=$(printf '%s\n' "$picked" | grep -E '^(server|data|tools|client)/test_[^/]*\.py$')
   if [ -z "$PICKED" ]; then
     echo "nothing to run"
     exit 0

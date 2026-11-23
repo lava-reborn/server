@@ -164,7 +164,8 @@
       "code": [
         "server/combat.py",
         "server/progression.py",
-        "server/effects.py"
+        "server/effects.py",
+        "server/residence.py"
       ]
     },
     {
@@ -208,7 +209,9 @@
       "code": [
         "server/effects.py",
         "server/items.py",
-        "server/shop_bands.py"
+        "server/shop_bands.py",
+        "server/npcs.py",
+        "server/names.py"
       ]
     },
     {
@@ -248,7 +251,10 @@
       "rule": "Суббота: сброс19:55МСК, захват20-21. Три живых нужного уровня на месте, каждый наносил хозяину урон; выигрывает подходящий клан с максимальным уроном хозяину, чужое добивание не решает. Хозяин и3 телохранителя появляются по таймеру20:00МСК независимо от часовых. Убийство всей охраны не требуется для захвата. Десять обычных часовых постоянно, респавн5мин вне захвата; телохранители только в окно боя. Название победителя видно до оплаты, услуги после оплаты; отказ сопровождается причиной. Один клан владеет одной базой. Проверяется уровень не ниже 12-го / 16-го, а не равенство конкретному уровню.",
       "code": [
         "server/holdings.py",
-        "server/storage.py"
+        "server/storage.py",
+        "server/accounts.py",
+        "server/bosses.py",
+        "server/events.py"
       ]
     },
     {
@@ -264,7 +270,10 @@
       "rule": "Аренда1500000A из казны до21:15; до следующей субботы19:55. Ремонт-50%, расходники-10%, выкуп85%, без банкира. Отдельные патроны/медицина/ремонт. Минимум скидки0,01G на покупку, без арбитража единичных дешёвых патронов. Золотые ценности выкупает подходящий NPC, не Мортимер. Цена за G в клиенте показывает ту же скидку, что подтверждение покупки и серверное списание: 0,04 → 0,03 G; 100 ББ-патронов — 2 → 1,8 G; 1 ББ-патрон за 0,02 G — без скидки. Прямой запрос ремонта или восстановления несуществующему NPC либо NPC без этой услуги отклоняется; на базе ремонт доступен только у NPC 989.",
       "code": [
         "server/holdings.py",
-        "server/inventory.py"
+        "server/inventory.py",
+        "server/accounts.py",
+        "server/gold_trade.py",
+        "tools/gold_commerce_client.py"
       ]
     },
     {
@@ -281,14 +290,16 @@
       "code": [
         "server/travel.py",
         "server/location_entry.py",
-        "server/map_cells.py"
+        "server/map_cells.py",
+        "server/world.py"
       ]
     },
     {
       "id": "eden",
       "rule": "Эдем: только чат локации/клана, внешние чаты и почта закрыты в обе стороны. Освобождение восстанавливает связь и сохраняет свои вещи.",
       "code": [
-        "server/eden.py"
+        "server/eden.py",
+        "server/mail.py"
       ]
     },
     {
@@ -312,7 +323,48 @@
       "rule": "/boss-now,/base-now,/base-respawn,/test-bot,/test-allies1-9 и удаление/сброс времени только локально. Союзники копируют снаряжение/навыки/клан,20G-лечений по6с, сначала охрана; учитываются в местном захвате. Удаление по TTL/смерти/уходу освобождает таймеры/SQLite, без XP/лута/настоящих аккаунтов.",
       "code": [
         "server/training/bot.py",
-        "server/server.py"
+        "server/server.py",
+        "server/training/ammo.py",
+        "server/training/api.py",
+        "server/training/arena.py",
+        "server/training/avatar.py",
+        "server/training/balance.py",
+        "server/training/catalog.py",
+        "server/training/character.py",
+        "server/training/checkpoints.py",
+        "server/training/commands.py",
+        "server/training/config.py",
+        "server/training/content.py",
+        "server/training/display.py",
+        "server/training/effects.py",
+        "server/training/entry.py",
+        "server/training/events.py",
+        "server/training/formulas.py",
+        "server/training/geometry.py",
+        "server/training/items.py",
+        "server/training/labels.py",
+        "server/training/layout.py",
+        "server/training/legacy.py",
+        "server/training/mobs.py",
+        "server/training/opponents.py",
+        "server/training/party.py",
+        "server/training/presets.py",
+        "server/training/profiles.py",
+        "server/training/restoration.py",
+        "server/training/rules.py",
+        "server/training/runtime.py",
+        "server/training/services.py",
+        "server/training/session.py",
+        "server/training/sets.py",
+        "server/training/settings.py",
+        "server/training/shop.py",
+        "server/training/supply.py",
+        "server/training/type_metadata.py",
+        "server/training/validation.py",
+        "server/training/__init__.py",
+        "server/training/engines/simulator_v1.py",
+        "server/training/engines/__init__.py",
+        "server/trophies.py"
       ]
     },
     {
@@ -321,14 +373,22 @@
       "code": [
         "server/combat.py",
         "tools/client_lifecycle.py",
-        "tools/action_recovery_client.py"
+        "tools/action_recovery_client.py",
+        "tools/widescreen.py"
       ]
     },
     {
       "id": "economy-docs-delivery",
       "rule": "Текущая экономика отдельно для центров, окрестностей, шахт и тюрем. Темп вычисляется по свежим боям, лечению, подходу к трупу, маршрутам, продажам, смертям и респавну; фиксированные100убийств/ч не используются. Отдельно1/2часа,100/200/1000успешныхубийств, с/без смертей и сканерами. Валюты отдельно; для каждого состояния трофея выбирается продажа сразу или выгодный ремонт с вычетом его стоимости. Шахты/тюрьмы не объединены с лагерями; тюрьма30мин с дискретными суточными наградами. Графики старой модели не выдаются за текущий замер. Исходники, исходные выборки и ограничения приложены к отдельному PDF фарма.",
       "code": [
-        "recon/releases/2026-11-23-combat-requirements.json"
+        "recon/releases/2026-11-23-combat-requirements.json",
+        "deploy/ci/pg_suites.sh",
+        "tools/avm_test.py",
+        "server/test_release_integrity.py",
+        "tools/test_ci_suite_selection.py",
+        "tools/run_suite.sh",
+        "deploy/ci/merge_shards.sh",
+        ".github/workflows/ci.yml"
       ]
     },
     {
@@ -365,7 +425,11 @@
         "server/inventory.py",
         "server/combat.py",
         "tools/medicine_cooldown_client.py",
-        "server/test_medicine_stacks.py"
+        "server/test_medicine_stacks.py",
+        "server/accounts.py",
+        "server/auction.py",
+        "server/bank_storage.py",
+        "server/mail.py"
       ]
     },
     {
