@@ -2244,18 +2244,18 @@ class Session:
             return 'Дождитесь конца боя и исчезновения тел.'
         now = bosses.clock()
         held = holdings.holder(STORE, site) if site is not None else None
+        start = max(now, float(held['slot']) + 3600) if held is not None and held['slot'] is not None else now
         def opens(t):
             if site is not None:
                 slot = holdings.battle_slot(site, t)
                 return slot is not None and (held is None or held['slot'] is None or slot > held['slot'])
             return any(bosses.slot_of(m.type_id, t, self.loc.id) is not None for m in rc.bosses)
         when = next((t for minute in range(7 * 24 * 60 + 1)
-                     if opens(t := now if minute == 0 else int(now // 60) * 60 + minute * 60)), None)
+                     if opens(t := start if minute == 0 else int(start // 60) * 60 + minute * 60)), None)
         if when is None:
             return 'В ближайшую неделю нет доступного окна появления.'
         bosses._OFFSET += when - now
         if base:
-            rc.keep_hours()
             return self.admin_base_respawn() + ' Часы тестового сервера переведены к окну захвата.'
         with storage.atomic(STORE.db):
             for mob in rc.bosses:

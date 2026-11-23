@@ -128,6 +128,19 @@ class TimedItems(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(len(guards), 13)
             self.assertTrue(all(m.alive and not m.away for m in guards))
             self.assertTrue(next(m for m in rc.bosses if m.type_id == base.boss).away)
+            # A time reset keeps the captured state; a second test must still
+            # reach a new battle even when that saved owner is in the future.
+            slot = holdings.battle_slot(base)
+            clan = self.store.clan_create(self.s.char_id, 'Local test', 'local-test', '', None)
+            self.store.clan_treasury_adjust(clan, 1_500_000, 'admin')
+            self.store.holding_capture(base.key, clan, slot, self.s.char_id, bosses.clock(),
+                                       base_sites=holdings.base_keys())
+            holdings.pay_rent(self.store, base, self.s.char_id, bosses.clock())
+            self.assertIsNotNone(holdings.paid_holder(self.store, base))
+            bosses._OFFSET = 0
+            self.assertIn('восстановлена', self.s.admin_boss_now(base=True))
+            self.assertGreater(holdings.battle_slot(base), slot)
+            self.assertIsNone(holdings.holder(self.store, base))
 
     async def test_local_bot_replacement_expiry_and_capture_identity_are_bounded(self):
         import bosses
