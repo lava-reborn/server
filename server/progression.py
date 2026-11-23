@@ -920,8 +920,8 @@ KILLS_START = 5
 KILLS_GROWTH = 1.5
 GAP_SHARE = {0: 0.5, -1: 0.25}
 GREY_GAP = 2
-COMBAT_GAP_REWARD = (1.0, 1.1, 1.2, 1.3)
-COMBAT_LOW_GAP_REWARD = (.8, .7, .6, .5)
+COMBAT_GAP_REWARD = (1.0, 1.05, 1.15, 1.25)
+COMBAT_LOW_GAP_REWARD = (.95, .75, .5, .25)
 
 
 def kills_per_level(level):
@@ -956,9 +956,9 @@ def mob_xp(mob_level, player_level, share=1.0, xp_mult=1):
 
 
 def combat_mob_xp(mob_level, skill_level, share=1.0, xp_mult=1):
-    """Full base reward starts at +1; higher gaps pay 110/120/130%.
+    """Full base reward starts at +1; higher gaps pay 105/115/125%.
 
-    Equal/-1/-2/-3 targets pay 80/70/60/50% of that same base; -4 pays zero.
+    Equal/-1/-2/-3 targets pay 95/75/50/25% of that same base; -4 pays zero.
     Gaps above four pay no extra.
     Skill 17 stops advancing; specialisations retain the level-16 curve,
     capped at one +4 reward before hit shares. Mining keeps mob_xp.

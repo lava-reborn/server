@@ -25,6 +25,7 @@ if storage.using_postgres():
     raise RuntimeError('Blueprint tests require SQLite :memory:, not PostgreSQL.')
 
 import bosses
+import camp_loot
 import items
 import mobs
 import quests
@@ -51,6 +52,13 @@ class FixedRandom:
 
 
 class BossBlueprints(unittest.TestCase):
+    def setUp(self):
+        # This suite measures encrypted-blueprint rolls; camp armour has its
+        # own integration coverage and must not add an independent reward.
+        armour = patch.object(camp_loot, 'roll', return_value=[])
+        armour.start()
+        self.addCleanup(armour.stop)
+
     def test_ordinary_mobs_never_drop_encrypted_blueprints_even_with_legacy_rows(self):
         for mob in (258, 305, 1750, 1751):
             self.assertNotEqual(mobs.stats(mob).role, 'boss')

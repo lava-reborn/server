@@ -118,7 +118,8 @@ async def exercise():
                                        (0.099999, [(2408, 1)]),
                                        (0.10, []), (0.100001, [])):
                     for player_level in (corpse.blueprint_killer_level, killer.level):
-                        with patch.object(mobs, 'carried', return_value=[]), \
+                        with patch.object(mobs.camp_loot, 'roll', return_value=[]), \
+                                patch.object(mobs, 'carried', return_value=[]), \
                                 patch.object(mobs, 'roll_table', return_value=[]), \
                                 patch.object(mobs, 'quest_table', return_value=[]):
                             loot = mobs.loot_for(NS(type_id=269, role='boss', level=corpse.stats.level), NS(random=lambda: roll),

@@ -44,14 +44,14 @@ class CombatXpCap(unittest.TestCase):
             for mob in range(level + 1):
                 for share in (0, .125, .5, 1):
                     for mult in (.7, 1, 3):
-                        ratio = {0:.8, -1:.7, -2:.6, -3:.5}.get(mob - level, 0)
+                        ratio = {0:.95, -1:.75, -2:.5, -3:.25}.get(mob - level, 0)
                         expected = p.mob_price(level + 1) * ratio * mult * share
                         self.assertAlmostEqual(p.combat_mob_xp(mob, level, share, mult), expected)
 
     def test_spec_reward_rises_to_level_16_maximum_at_gap_four(self):
-        ceiling = 1996 * 1.3
-        self.assertAlmostEqual(ceiling, 2594.8)
-        expected = [1996 * .8, 1996, 1996 * 1.1, 1996 * 1.2, 1996 * 1.3]
+        ceiling = 1996 * 1.25
+        self.assertAlmostEqual(ceiling, 2495)
+        expected = [1996 * .95, 1996, 1996 * 1.05, 1996 * 1.15, 1996 * 1.25]
         for level in (17, 18, 19, 20):
             self.assertEqual([p.combat_mob_xp(17 + gap, level) for gap in range(5)], expected)
             for mob in (17, 18, 21, 30):
@@ -60,8 +60,8 @@ class CombatXpCap(unittest.TestCase):
                     self.assertEqual(p.combat_mob_xp(mob, level, 1, mult), full)
                     self.assertEqual(p.combat_mob_xp(mob, level, .25, mult), full / 4)
             self.assertEqual(p.combat_mob_xp(13, level), 0)
-            self.assertEqual(p.combat_mob_xp(15, level), 1996 * .6)
-        self.assertEqual(p.combat_mob_xp(16, 17), 1996 * .7)
+            self.assertEqual(p.combat_mob_xp(15, level), 1996 * .5)
+        self.assertEqual(p.combat_mob_xp(16, 17), 1996 * .75)
         for gap in range(-3, 9):
             self.assertEqual(p.combat_mob_xp(17 + gap, 17),
                              p.combat_mob_xp(16 + gap, 16))
@@ -79,7 +79,7 @@ class CombatXpCap(unittest.TestCase):
                     self.settle(mob, f)
                     self.assertEqual(ch.skill[skill], before)
                     self.assertEqual(self.spec_total(ch, spec),
-                                     int(2594.8 * (1 + p.PREMIUM_XP_BONUS[premium]) + 1e-9))
+                                     int(2495 * (1 + p.PREMIUM_XP_BONUS[premium]) + 1e-9))
 
     def test_premium_is_applied_once_before_fractional_combat_carry(self):
         for level in (12, 17):
@@ -178,12 +178,12 @@ class CombatXpCap(unittest.TestCase):
             self.assertEqual(self.spec_total(ch, spec), int(reward))
             self.assertAlmostEqual(ch.xp_carry['spec', spec], reward - int(reward))
         f, ch, spec = self.fighter()
-        for _ in range(10):
-            mob = self.mob(16)
+        for _ in range(3):
+            mob = self.mob(17)
             f.award_xp(p.SHOOTING, spec, 1, mob)
             self.settle(mob, f)
-        self.assertEqual(self.spec_total(ch, spec), int(10 * p.mob_xp(15, 16)))
-        self.assertAlmostEqual(ch.xp_carry['spec', spec], .5)
+        self.assertEqual(self.spec_total(ch, spec), int(3 * 1996 * .95))
+        self.assertAlmostEqual(ch.xp_carry['spec', spec], .6)
 
     def test_unlearned_or_missing_spec_gets_no_reward_or_carry(self):
         f, ch, spec = self.fighter()

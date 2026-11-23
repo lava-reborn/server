@@ -125,12 +125,18 @@ def ordinary_plus_three():
 def ordinary_mob_pressure():
     """Live camp pressure; private range, bosses and site copies stay separate."""
     raw = json.loads(PATH.with_name('combat_balance.json').read_text(encoding='utf-8'))
-    row = raw['ordinary_mob_pressure']
+    row = raw.get('ordinary_mob_pressure') if isinstance(raw, dict) else None
     fields = {'damage_scale', 'high_gap_damage_scale', 'stamina_ratio', 'senior_stamina_ratio', 'hard_gap_stamina_scale',
               'stamina_levels', 'crit_bounds', 'crit_bonus_by_gap', 'player_damage_ratios',
-              'camp_hard_gap_damage_ratios', 'player_crit_ratios'}
-    bounds = row.get('crit_bounds', ())
-    if (raw['source_commit'] != data()['source_commit'] or set(row) != fields
+              'camp_hard_gap_damage_ratios', 'player_crit_ratios', 'plus_two_damage_ratio'}
+    arrays = ('stamina_levels', 'crit_bounds', 'crit_bonus_by_gap', 'player_damage_ratios',
+              'camp_hard_gap_damage_ratios', 'player_crit_ratios')
+    if (not isinstance(row, dict) or set(row) != fields
+            or any(not isinstance(row[key], list) for key in arrays)
+            or any(not isinstance(pair, list) for pair in row['crit_bounds'])):
+        raise ValueError('Invalid ordinary mob pressure')
+    bounds = row['crit_bounds']
+    if (raw.get('source_commit') != data()['source_commit']
             or len(row['stamina_levels']) != 2
             or any(type(v) is not int for v in row['stamina_levels'])
             or not 1 <= row['stamina_levels'][0] < row['stamina_levels'][1] <= 20
@@ -139,9 +145,13 @@ def ordinary_mob_pressure():
                    for k in ('damage_scale', 'high_gap_damage_scale', 'stamina_ratio', 'senior_stamina_ratio', 'hard_gap_stamina_scale'))
             or not .5 <= row['damage_scale'] <= 2 or not 1 <= row['high_gap_damage_scale'] <= 3
             or not 1 <= row['hard_gap_stamina_scale'] <= 2
+            or isinstance(row['plus_two_damage_ratio'], bool)
+            or not isinstance(row['plus_two_damage_ratio'], (int, float))
+            or not math.isfinite(row['plus_two_damage_ratio'])
             or len(row['player_damage_ratios']) != 5
             or any(isinstance(v, bool) or not isinstance(v, (int, float))
                    or not math.isfinite(v) or not 0 < v <= 1 for v in row['player_damage_ratios'])
+            or not 0 < row['plus_two_damage_ratio'] <= row['player_damage_ratios'][1]
             or len(row['camp_hard_gap_damage_ratios']) != 3
             or any(isinstance(v, bool) or not isinstance(v, (int, float))
                    or not math.isfinite(v) or not 0 < v <= 1 for v in row['camp_hard_gap_damage_ratios'])
@@ -209,8 +219,14 @@ def split(shooter, target, damage, piercing, critical, stamina_left, stamina_dam
                          * ordinary_plus_three()['player_damage_ratio'])
         if ordinary and gap >= 1:
             pressure = ordinary_mob_pressure()
-            factor *= (pressure['camp_hard_gap_damage_ratios'][min(gap - 2, 2)]
-                       if camp and gap >= 2 else pressure['player_damage_ratios'][min(gap, 4)])
+            # Retune ordinary +2, preserving site copies and the reviewed boss
+            # +4 equivalence. Base weapon damage and armour stay unchanged.
+            if (gap == 1 and not getattr(target, '_holding_prepared', False)
+                    and getattr(target.stats, 'role', None) in ('mob', 'animal', 'turret', 'boss')):
+                factor *= pressure['plus_two_damage_ratio']
+            else:
+                factor *= (pressure['camp_hard_gap_damage_ratios'][min(gap - 2, 2)]
+                           if camp and gap >= 2 else pressure['player_damage_ratios'][min(gap, 4)])
         # At +5 and above, do not turn an absorbed pellet into guaranteed
         # one-point damage. Keep fractional penetration until this rounding.
         floor = 0 if camp and gap >= 4 else 1

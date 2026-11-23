@@ -739,7 +739,7 @@ class ReleaseCatalogue(unittest.TestCase):
     def test_full_base_experience_starts_at_plus_one_without_another_increase(self):
         for level in range(1, 17):
             base = progression.mob_xp(level + 1, level)
-            for gap, ratio in ((1, 1), (2, 1.1), (3, 1.2), (4, 1.3), (5, 1.3)):
+            for gap, ratio in ((1, 1), (2, 1.05), (3, 1.15), (4, 1.25), (5, 1.25)):
                 with self.subTest(level=level, gap=gap):
                     self.assertAlmostEqual(progression.combat_mob_xp(level + gap, level), base * ratio)
                     self.assertAlmostEqual(progression.combat_mob_xp(level + gap, level, .25), base * ratio / 4)
@@ -905,7 +905,7 @@ class ReleaseCatalogue(unittest.TestCase):
         with patch.object(effects, 'multiplier', return_value=3):
             self.assertEqual(combat.RoomCombat.loot_multiplier(None, mob, fighter), 0)
             mob.stats.level = 11
-            self.assertEqual(combat.RoomCombat.loot_multiplier(None, mob, fighter), 3)
+            self.assertEqual(combat.RoomCombat.loot_multiplier(None, mob, fighter), .75)
             mob.stats.role = 'object'
             self.assertEqual(combat.RoomCombat.loot_multiplier(None, mob, fighter), 1)
         st = NS(role='mob', level=10)
@@ -932,7 +932,7 @@ class ReleaseCatalogue(unittest.TestCase):
                 patch.object(mobs, 'one_of_groups', return_value=[]):
             self.assertEqual(mobs.roll_table(82, Rng(), 3), [(333, 1)])
 
-    def test_old_boss_ingots_keep_their_chance_without_unlocking_other_loot(self):
+    def test_old_boss_ingots_are_certain_without_unlocking_other_loot(self):
         ingot = next(iter(items.GOLD_INGOTS))
         class Rng:
             def random(self):
@@ -943,7 +943,8 @@ class ReleaseCatalogue(unittest.TestCase):
                 patch.object(mobs, 'one_of_groups', return_value=[]), \
                 patch.object(mobs, 'count_of', return_value=2):
             for multiplier in (0, 1, 3):
-                self.assertEqual(mobs.loot_for(boss, Rng(), killer_level=17, multiplier=multiplier), [])
+                self.assertEqual(mobs.loot_for(boss, Rng(), killer_level=17, multiplier=multiplier),
+                                 [(ingot, 2)])
                 self.assertEqual(mobs.loot_for(boss, Rng(), killer_level=17,
                     multiplier=multiplier, gold_multiplier=2), [(ingot, 2)])
             boss.role = 'mob'
@@ -1085,7 +1086,7 @@ class ReleaseCatalogue(unittest.TestCase):
         target.stats.level = 14
         fighter.award_xp(progression.SHOOTING, spec, 1, target)
         character.set_skill(progression.SHOOTING, 10)
-        self.assertEqual(combat.RoomCombat.loot_multiplier(None, target, fighter), 1)
+        self.assertEqual(combat.RoomCombat.loot_multiplier(None, target, fighter), .95)
         mob = mobs.Mob(1, 258, 100)
         mob.loot_level = 14
         mob.reset()
@@ -1100,17 +1101,17 @@ class ReleaseCatalogue(unittest.TestCase):
         low, senior = Fighter(10), Fighter(14)
         mob = NS(stats=NS(level=13, role='mob'), xp_ledger={low: [100]})
         multiplier = lambda: combat.RoomCombat.loot_multiplier(None, mob, low)
-        self.assertEqual(multiplier(), 1.5)
+        self.assertEqual(multiplier(), 1.15)
         mob.stats.level = 14
-        self.assertEqual(multiplier(), 1.75)
-        for gap, reward in ((1, 1.15), (2, 1.3)):
+        self.assertEqual(multiplier(), 1.25)
+        for gap, reward in ((1, 1), (2, 1.05)):
             mob.stats.level = low.level + gap
             self.assertEqual(multiplier(), reward)
         mob.stats.level = 14
         with patch.object(effects, 'multiplier', return_value=3):
-            self.assertEqual(multiplier(), 5.25)
+            self.assertEqual(multiplier(), 3.75)
         mob.xp_ledger[senior] = [1]
-        self.assertEqual(multiplier(), 1)
+        self.assertEqual(multiplier(), .95)
         mob.stats.role = 'object'
         with patch.object(effects, 'multiplier', return_value=3):
             self.assertEqual(multiplier(), 1)
@@ -1152,7 +1153,7 @@ class ReleaseCatalogue(unittest.TestCase):
     def test_difficulty_steps_add_reviewed_resistance_after_plus_one(self):
         import battle_balance
         shooter = NS(is_player=True, character=lambda: NS(level=16))
-        for gap, expected in ((0, 10000), (1, 10000), (2, 3951), (3, 897), (4, 523), (5, 2), (6, 2)):
+        for gap, expected in ((0, 10000), (1, 10000), (2, 3693), (3, 897), (4, 523), (5, 2), (6, 2)):
             target = NS(is_player=False, stats=NS(level=16 + gap, role='mob'), armor=lambda: 0)
             self.assertEqual(battle_balance.split(shooter, target, 10000, 1, False, 0, ordinary=True),
                              (expected, 0))

@@ -255,11 +255,11 @@ class DamageXp(unittest.TestCase):
         returned.sess.inv = NS(bag_pieces=lambda: {})
         rc = self.room(returned)
         rc.store = object()
-        self.assertEqual(rc.loot_multiplier(mob, None), 1.75)
+        self.assertEqual(rc.loot_multiplier(mob, None), 1.25)
         current.set_skill(p.SHOOTING, 15)
-        self.assertEqual(rc.loot_multiplier(mob, None), 1.5)
+        self.assertEqual(rc.loot_multiplier(mob, None), 1.15)
         current.set_skill(p.SHOOTING, 10)
-        self.assertEqual(rc.loot_multiplier(mob, None), 1.75)
+        self.assertEqual(rc.loot_multiplier(mob, None), 1.25)
         with patch.object(combat.mobs, 'quest_table', return_value=((1234, .5),)), \
                 patch.object(combat.quests, 'wanted_things', return_value={1234}) as wanted:
             self.assertEqual(rc.quest_wants(mob, None), {1234})

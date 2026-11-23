@@ -13,6 +13,7 @@ from unittest.mock import patch
 
 import bosses
 import camp_elites
+import camp_loot
 import inventory
 import items
 import loot_rules
@@ -207,11 +208,11 @@ class LootRebalance(unittest.TestCase):
         for kind in (305, 306, 307, 308):
             self.assertIn(6942, {t for t, _, _ in mobs.loot_table(kind)})
 
-    def test_drop_table_is_type_only_even_in_different_locations(self):
+    def test_economic_drop_table_is_type_only_apart_from_the_separate_camp_armour_roll(self):
         for kind in (20, 264, 838, 930):
             a = mobs.loot_for(mobs.stats(kind), random.Random(19), (), loc_id=34)
             b = mobs.loot_for(mobs.stats(kind), random.Random(19), (), loc_id=132)
-            self.assertEqual(a, b)
+            self.assertEqual(camp_loot.without_armour(a), camp_loot.without_armour(b))
 
     def test_existing_quest_marks_keep_their_kill_targets_and_carriers(self):
         for lid in camp_elites.locations():

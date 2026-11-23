@@ -24,6 +24,7 @@ import math
 import os
 from collections import deque
 
+import camp_loot
 import inventory
 import items
 import loot_rules
@@ -635,12 +636,14 @@ def count_of(type_id, t):
     return counts.get(t, 1)
 
 
-def roll_table(type_id, rng, multiplier=1, *, gold_multiplier=1):
+def roll_table(type_id, rng, multiplier=1, *, gold_multiplier=1, guarantee_ingots=False):
     """[(type_id, count)] off loot_table: every row rolled, so the dice
     spent do not depend on what came up, and the first MAX_DROPS successes
     kept. A row at SURE is certain: in the bag every time, without a die and
     outside the cap. Explicit independent rows also do not consume or
     compete for the cap; their individual chances remain literal.
+    A boss's existing ingot rows are certain too; this adds no carriers,
+    and ONE_OF groups keep their single native weighted choice.
     The count is the row's own (count_of), 1 but where the
     owner's file says more. Then one thing of each ONE_OF group
     (one_of_groups)."""
@@ -648,7 +651,7 @@ def roll_table(type_id, rng, multiplier=1, *, gold_multiplier=1):
     kept = 0
     independent = independent_loot(type_id)
     for t, chance, _valuable in loot_table(type_id):
-        if chance >= SURE:
+        if chance >= SURE or (guarantee_ingots and t in items.GOLD_INGOTS):
             out.append((t, count_of(type_id, t)))
         elif rng.random() < min(1, chance * (gold_multiplier if t in items.GOLD_INGOTS else multiplier)) \
                 and (t in independent or kept < MAX_DROPS):
@@ -788,7 +791,8 @@ def carried(st, rng, multiplier=1):
     return out or [(FALLBACK_LOOT, 1)]
 
 
-def loot_for(st, rng, wanted=(), *, loc_id=None, killer_level=None, multiplier=1, gold_multiplier=1):
+def loot_for(st, rng, wanted=(), *, loc_id=None, ambush_camp=None,
+             killer_level=None, multiplier=1, gold_multiplier=1):
     """[(type_id, count)] for a corpse of this type: what it carried, then
     what its kind's table rolled, then the quest rows for what those who
     brought it down still need (quest_roll; wanted, the types). combat.
@@ -800,18 +804,22 @@ def loot_for(st, rng, wanted=(), *, loc_id=None, killer_level=None, multiplier=1
         out = quest_roll(st.type_id, personal, rng) if personal else []
         if st.role == 'boss':
             # The level cutoff excludes ordinary loot, not a boss's ingots.
-            # Keep its own chance; the scanner cannot multiply this reward.
-            out += [(t, n) for t, n in roll_table(st.type_id, rng, gold_multiplier=gold_multiplier)
+            # Its native ingot kinds/counts are certain at every level.
+            out += [(t, n) for t, n in roll_table(st.type_id, rng, guarantee_ingots=True)
                     if t in items.GOLD_INGOTS]
         return out
     import bosses                  # late: keep module initialization separate
     blueprint = bosses.blueprint_for(loc_id, st.type_id)
-    # Scanner x3 and the difficult-mob bonus up to x1.75 affect random
+    # Scanner x3 and the level ladder (0.25..1.25) affect random
     # drops only, never harvest/quest/event quantities.
-    multiplier = max(1, min(5.25, multiplier)) if st.role != 'object' else 1
-    out = carried(st, rng, multiplier) + roll_table(st.type_id, rng, multiplier,
-                                                   gold_multiplier=gold_multiplier) + \
-        quest_roll(st.type_id, wanted, rng)
+    multiplier = min(3.75, multiplier) if st.role != 'object' else 1
+    ordinary = carried(st, rng, multiplier) + roll_table(st.type_id, rng, multiplier,
+                                                       gold_multiplier=gold_multiplier,
+                                                       guarantee_ingots=st.role == 'boss')
+    personal = quest_roll(st.type_id, wanted, rng)
+    # A single dedicated camp roll replaces all legacy A-armour sources;
+    # an active quest's own reward is kept separately and suppresses it.
+    out = camp_loot.without_armour(ordinary) + personal
     # Encrypted blueprints have exactly one acquisition roll per corpse,
     # from the explicit scheduled-boss table below. Legacy quest rows or
     # an ordinary loot entry cannot supply an additional source.
@@ -824,6 +832,8 @@ def loot_for(st, rng, wanted=(), *, loc_id=None, killer_level=None, multiplier=1
         chance = bosses.blueprint_drop_chance(killer_level, blueprint_level)
         if rng.random() < min(1, chance * multiplier):
             out.append((blueprint, 1))
+    out += camp_loot.roll(st, rng, loc_id=loc_id, ambush_camp=ambush_camp,
+                          multiplier=multiplier, protected=personal)
     return out
 
 

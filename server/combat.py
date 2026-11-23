@@ -44,6 +44,7 @@ import action_animation
 import battle_medicine
 import battle_balance
 import bosses
+import camp_loot
 import eden
 import eden_harvest
 import eden_ground
@@ -3583,9 +3584,13 @@ class RoomCombat:
             return 1
         level = max([getattr(mob, 'loot_level', 0)] + [f.level for f in fighters])
         gap = mob.stats.level - level
+        if mob.stats.role == 'boss' and not include_scanner:
+            # Boss ingots are guaranteed by their table, never by a bonus.
+            return 1
         if gap <= -4:
             return 0
-        reward = {1: 1.15, 2: 1.3, 3: 1.5}.get(gap, 1.75 if gap >= 4 else 1)
+        reward = {-3: .25, -2: .5, -1: .75, 0: .95,
+                  1: 1, 2: 1.05, 3: 1.15}.get(gap, 1.25)
         scanner = (effects.multiplier(killer.sess, 'mob_drop')
                    if include_scanner and killer is not None and killer.is_player else 1)
         return reward * scanner
@@ -3821,13 +3826,16 @@ class RoomCombat:
         # What a timed event puts on top, by place (events.loot): a
         # prisoner's red armband in the uprising. An ore rock leaves its ore
         # beside the loot (production.yield_of).
-        for type_id, count in mobs.loot_for(mob.stats, RNG, mob.quest_wants,
+        native = mobs.loot_for(mob.stats, RNG, mob.quest_wants,
                               loc_id=self.room.loc.id,
+                              ambush_camp=getattr(self.room, 'ambush', None),
                               killer_level=getattr(mob, "blueprint_killer_level", None),
                               multiplier=getattr(mob, "loot_multiplier", 1),
-                              gold_multiplier=getattr(mob, "gold_loot_multiplier", 1)) \
-                + events.loot(self.room.loc.id, mob.type_id, RNG) \
-                + production.yield_of(mob.type_id):
+                              gold_multiplier=getattr(mob, "gold_loot_multiplier", 1))
+        extra = events.loot(self.room.loc.id, mob.type_id, RNG) + production.yield_of(mob.type_id)
+        extra = [(t, n) for t, n in extra if not camp_loot.is_afro_set_piece(t)
+                 or (t in mob.quest_wants and mobs.personal_quest_item(t))]
+        for type_id, count in native + extra:
             if (restricted and not (mob.stats.role == 'boss' and type_id in items.GOLD_INGOTS)
                     and (type_id not in mob.quest_wants or not mobs.personal_quest_item(type_id))):
                 continue

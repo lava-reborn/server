@@ -18908,6 +18908,7 @@
     "9:smg": 95
   },
   "ordinary_mob_pressure": {
+    "plus_two_damage_ratio": 0.43,
     "hard_gap_stamina_scale": 1.4,
     "damage_scale": 1.5,
     "stamina_ratio": 1.5,
@@ -18922,8 +18923,8 @@
         3
       ],
       [
-        3,
-        8
+        8,
+        15
       ],
       [
         50,
