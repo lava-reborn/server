@@ -36,6 +36,7 @@ class TimedItems(unittest.IsolatedAsyncioTestCase):
     async def test_local_bot_copies_worn_items_and_cleans_private_state_without_rewards(self):
         import asyncio
         import trophies
+        import sets
         from training import bot
         self.location(98)
         for skill in self.s.char.skill:
@@ -46,6 +47,9 @@ class TimedItems(unittest.IsolatedAsyncioTestCase):
         gun = self.s.inv.create(25540, slot=inventory.PRIMARY)
         self.store.update_item(gun['uniq'], ammo_count=20, ammo_type=6104)
         self.s.inv.create(6104, 100)
+        outfit = next(row for row in sets.SETS.values() if row['level'] == 16 and row['variant'] == 'A')
+        for type_id in outfit['members'].values():
+            self.s.inv.create(type_id, slot=inventory.HEAD + items.params_of(type_id)['slot_type'])
         self.s.inv.refresh_gear(push=False)
         before = list(self.store.db._db.iterdump())
         with patch('server.CHEATS', False):
@@ -74,6 +78,11 @@ class TimedItems(unittest.IsolatedAsyncioTestCase):
                 self.assertEqual(send.call_args_list[0].kwargs['lvl'], enemy.char.level)
                 self.s.cmd_ss_get(dict(target=enemy.pid, slot=inventory.MASK_HANDS))
                 self.assertTrue(any(call.args[0] == 'ss_ack' for call in send.call_args_list))
+                self.s.cmd_ss_get(dict(target=enemy.pid, slot=inventory.MASK_WEAR))
+                self.assertEqual(send.call_args.kwargs['set_res'], inventory.look_of(enemy.inv.rows()))
+                with patch.object(self.s.trophies, 'ss_get', return_value=True) as trophy_view:
+                    self.s.cmd_ss_get(dict(target=enemy.pid, slot=32))
+                    trophy_view.assert_called_once()
                 self.s.cmd_ss_get_di(dict(obj=inventory.oid_of(enemy.inv.in_slot(inventory.PRIMARY))))
                 self.assertEqual(send.call_args.args[0], inventory.DI_COMMAND[items.FIRE_ARM])
             self.assertIsNone(self.s.inv.find(inventory.oid_of(enemy.inv.in_slot(inventory.PRIMARY))))
@@ -146,13 +155,18 @@ class TimedItems(unittest.IsolatedAsyncioTestCase):
         import bosses
         import server
         rc = self.location(1442)
+        self.s.inv.create(inventory.STARTER_PISTOL, slot=inventory.PRIMARY)
         timers = []
+        identities = set()
         with patch.object(server, 'CHEATS', True):
             for _ in range(12):
                 self.s.admin_test_bot()
                 timers.append(self.s.local_test_bot.timer)
+                enemy = self.s.local_test_bot.enemy
+                identities.add((enemy.pid, inventory.oid_of(enemy.inv.in_slot(inventory.PRIMARY))))
             target = self.s.local_test_bot
             self.assertTrue(all(timer.cancelled() for timer in timers[:-1]))
+            self.assertEqual(len(identities), 1)
             self.assertEqual(sum(actor.peer == 'local-test-bot' for actor in self.s.room.players), 1)
             base = holdings.base_for(1442)
             moment = datetime(2026, 11, 21, 20, tzinfo=bosses.ZONE).timestamp()

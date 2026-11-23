@@ -14,6 +14,15 @@ import progression
 PATH_LEGS = 8
 
 
+def local_equipment(viewer, actor, params):
+    """Reuse native appearance replies without granting ownership of the copy."""
+    view = SimpleNamespace(char_id=None, character=viewer.character, send=viewer.send,
+                           char_for_entity=lambda entity: actor.char_id if entity == actor.pid else None)
+    reader = inventory.Inventory(view, actor.inv.store)
+    reader.shown, reader.acked = viewer.inv.shown, viewer.inv.acked
+    reader.ss_get(params)
+
+
 class LocalOpponent:
     """A disposable native player; only the local cheat command creates one."""
     def __init__(self, owner):
@@ -29,14 +38,24 @@ class LocalOpponent:
         self.rules = SimpleNamespace(ammo_modifiers=True)
         self.store = accounts.Store.temporary()
         try:
-            self.store.db.execute("INSERT INTO sqlite_sequence(name,seq) VALUES('items',?)", (next(SERIALS),))
+            # Flash keeps remote players and their items for the session.
+            # One reserved identity/serial range per creator bounds repeat tests.
+            identities = getattr(owner.inv.store, '_local_bot_ids', None)
+            if identities is None:
+                identities = owner.inv.store._local_bot_ids = {}
+            if owner.char_id not in identities:
+                if len(identities) >= 1024:
+                    raise ValueError('Лимит тестовых персонажей: перезапустите локальный сервер.')
+                identities[owner.char_id] = rooms.player_id(next(PLAYER_IDS)), next(SERIALS)
+            pid, serial_base = identities[owner.char_id]
+            self.store.db.execute("INSERT INTO sqlite_sequence(name,seq) VALUES('items',?)", (serial_base,))
             aid = self.store.db.execute("INSERT INTO accounts(login, hash, created) VALUES(?, ?, ?)",
                                         ('local-bot', '', 0)).lastrowid
             self.store.db.commit()
             cid, _ = self.store.create_character(aid, 'Тестовый противник', owner.active['sex'], owner.active['res'])
             enemy = self.enemy = clone_class(type(owner))(None, 'local-test-bot')
             enemy.ground = self
-            enemy.training_pid = rooms.player_id(next(PLAYER_IDS))
+            enemy.training_pid = pid
             enemy.char_id, enemy.active = cid, dict(self.store.character(cid))
             enemy.send = lambda *args, **kwargs: None
             enemy.send_npc_info = lambda eid: None
@@ -44,7 +63,8 @@ class LocalOpponent:
             enemy.char = copy.deepcopy(owner.character())
             enemy.char.char_id, enemy.char.name = cid, enemy.nick
             enemy.char.afro = enemy.char.gold = 0
-            for row in owner.inv.rows():
+            for row in sorted(owner.inv.rows(), key=lambda r: (r['slot'] not in inventory.BODY_SLOTS,
+                                                               r['slot'], r['type_id'], r['uniq'])):
                 if row['slot'] not in inventory.BODY_SLOTS and row['root'] != items.AMMO:
                     continue
                 fields = {key: row[key] for key in accounts.ITEM_FIELDS if key != 'char_id'}

@@ -3181,12 +3181,10 @@ class Session:
     def cmd_ss_get(self, p):
         if CHEATS and self.room is not None:
             actor = self.room.player(int(p.get('target', 0) or 0))
-            if actor is not None and actor.peer == 'local-test-bot':
-                mask = int(p.get('slot', 0) or 0) & (inventory.MASK_WEAR | inventory.MASK_HANDS)
-                rows = actor.inv.rows()
-                self.send('ss_ack', o_list=actor.inv.equipment_list(actor.char_id, mask, rows))
-                for command, fields in inventory.look_frames(actor.pid, rows):
-                    self.send(command, **fields)
+            mask = int(p.get('slot', 0) or 0)
+            if (actor is not None and actor.peer == 'local-test-bot'
+                    and mask in (inventory.MASK_WEAR, inventory.MASK_HANDS, inventory.MASK_WEAR | inventory.MASK_HANDS)):
+                training_ground.local_equipment(self, actor, p)
                 return
         # Answered whatever the target: the ss_ack queue is FIFO and the
         # client slices the list by the mask it remembers sending. A mob

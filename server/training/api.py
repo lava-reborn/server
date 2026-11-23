@@ -15,6 +15,11 @@ def local_bot(owner):
     return LocalOpponent(owner)
 
 
+def local_equipment(viewer, actor, params):
+    from training.bot import local_equipment as read
+    return read(viewer, actor, params)
+
+
 def preload():
     if enabled():
         from training import session
