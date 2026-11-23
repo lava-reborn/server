@@ -736,6 +736,14 @@ class ReleaseCatalogue(unittest.TestCase):
         target = NS(ap_max=100, balanced_modes=(affordable, unaffordable))
         self.assertEqual(battle_balance.mob_mode(target, 2)[1], 50)
 
+    def test_full_base_experience_starts_at_plus_one_without_another_increase(self):
+        for level in range(1, 17):
+            base = progression.mob_xp(level + 1, level)
+            for gap, ratio in ((1, 1), (2, 1.1), (3, 1.2), (4, 1.3), (5, 1.3)):
+                with self.subTest(level=level, gap=gap):
+                    self.assertAlmostEqual(progression.combat_mob_xp(level + gap, level), base * ratio)
+                    self.assertAlmostEqual(progression.combat_mob_xp(level + gap, level, .25), base * ratio / 4)
+
     def test_player_mob_critical_ladder_preserves_antikrit_distance_and_boss_equivalence(self):
         import battle_balance
         player = NS(is_player=True, character=lambda: NS(level=10))
