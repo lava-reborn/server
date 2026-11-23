@@ -217,11 +217,11 @@ try:
     check("the captains and colonels are rank and file (DESIGNED_KINDS): no hours, no boss's slot",
           {t: (world.creature_role(t), bosses.keeps_hours(t)) for t in (767, 771, 775, 1730, 2318)},
           {t: ("mob", False) for t in (767, 771, 775, 1730, 2318)})
-    check("the five bosses keep the hours, at the levels of their files; the treasurers and the"
+    check("the five bosses keep the hours at release level 18; the treasurers and the"
           " bookkeeper stand all day (bosses.ALL_DAY)",
           ({t: (bosses.keeps_hours(t), mobs.stats(t).level) for t in BOSSES},
            {t: (world.creature_role(t), bosses.keeps_hours(t), t in bosses.ALL_DAY) for t in TREASURERS}),
-          ({777: (True, 21), 778: (True, 21), 8620: (True, 21), 1037: (True, 23), 1038: (True, 23)},
+          ({t: (True, 18) for t in BOSSES},
            {t: ("boss", False, True) for t in TREASURERS}))
     placed = {lid: sorted(int(r["type"]) for r in world.placed_in(lid)) for lid in (132, 168, 263)}
     check("the named men stand by their camps by hand (data/placements.json), Кленз in the Dark Mine's"

@@ -39,6 +39,13 @@ print("sample seed %d (LAVA_TEST_SEED to repeat)" % SEED)
 rnd = random.Random(SEED)
 
 cat = items.catalogue()
+
+
+def with_shock(rounds):
+    return list(dict.fromkeys(list(rounds) + [items.SHOCK_ROUNDS[t] for t in rounds
+                                            if t in items.SHOCK_ROUNDS]))
+
+
 wiki = items.wiki()
 manual = items.heal_manual()
 cold = items.coldarm_manual()
@@ -141,6 +148,8 @@ for t in sample:
     # independently checked by test_weapon_upgrade_integrity; all unrelated
     # wiki fields must still remain intact here.
     ours.update(release_changes.get(str(t), {}))
+    if root == items.FIRE_ARM and t not in items.ADMIN_OVERRIDES:
+        ours['comp_array'] = with_shock(ours.get('comp_array', p['comp_array']))
     if t == 25803:
         ours["fire_costs"] = [28, 0, 40]  # reviewed simulator M24 burst cost
     if t in craft.DURABILITY_CORRECTIONS:
@@ -238,6 +247,9 @@ def deliberate(t):
         p['heal_cost'] = int(p['heal_cost'] * 2.5 + 0.5)
     if p.get("max_count") == 50:
         p["max_count"] = 100
+    if root == items.FIRE_ARM:
+        p['comp_array'] = with_shock(p['comp_array'])
+    p.update(release_changes.get(str(t), {}))
     return cmd, p
 
 
@@ -269,8 +281,8 @@ check("Eden's local item overlays keep their catalogue roots",
        for t in eden_loot})
 check("the other hand-made loot numbers -- the mine's sand and emeralds, the gold ingots of "
       "1, 5 and 10 ounces -- are for simple objects the client has and the wiki lacks",
-      (sorted(t for t in loot if t != 4203 and t not in eden_loot),
-       [t for t in loot if t != 4203 and t not in eden_loot
+      (sorted(t for t in loot if t != 4203 and t not in eden_loot and t not in items.SHOCK_ROUNDS.values()),
+       [t for t in loot if t != 4203 and t not in eden_loot and t not in items.SHOCK_ROUNDS.values()
         and (cat.get(t, (None,))[0] != items.TRASH or t in wiki)]),
       ([2258, 3159, 4796, 4797, 7620], []))
 check("the academy quest knife has only a death-drop override; its wiki data stays intact",
@@ -404,7 +416,7 @@ for t, rec in sorted(wiki.items()):
     want = article_rounds(page) or article_rounds(_MOD_TAIL.sub("", page))
     if want:
         said += 1
-        if set(items.params_of(t)["comp_array"]) != want:
+        if set(items.params_of(t)["comp_array"]) != set(with_shock(want)):
             odd.append((t, page))
 check("every linked gun whose article names its rounds chambers those and no others --"
       " P90 5.7x28, Thompson .45, G3 7.62x51, M16A2 5.56x45, ПК 7.62x54R, Li-Enfield 7.62x54R",
@@ -412,7 +424,7 @@ check("every linked gun whose article names its rounds chambers those and no oth
 check("  ..which is most of the linked guns (801 of 965; the rest name theirs in a table"
       " row alone)", said >= 800, True)
 check("  ..and a gun of no stated round keeps its class's: MEG-23 (its «23-й калибр» has"
-      " no page)", items.params_of(5727)["comp_array"], items.AMMO_FOR[items.params_of(5727)["weapon_type"]])
+      " no page)", items.params_of(5727)["comp_array"], with_shock(items.AMMO_FOR[items.params_of(5727)["weapon_type"]]))
 
 # A modification asks for the level of the gun it is made of: РПД's table and its Mod
 # pages' leave «Необходимые навыки» out, and the extractor puts the original's 16 into
@@ -461,9 +473,9 @@ check("and the original really is used where it has a name",
       names.text(items.STRING_ID_OFFSET + 25562) == _on.get(25562), True)
 wd = items.wiki_descs()
 check("over a thousand descriptions", len(wd) >= 1000, True)
-check("a level-16 item states its minimum wearer level and the end of accelerated wear",
+check("a finished laboratory pouch states the strict level-sixteen requirement",
       items.equipment_level_text(3735),
-      "Можно надеть с 13-го уровня. Без ускоренного износа — с 16-го.")
+      "Можно надеть только с 16-го уровня.")
 check("an ammunition card does not acquire an equipment-level requirement",
       items.equipment_level_text(386), "")
 _od = orig_texts.item_descs()

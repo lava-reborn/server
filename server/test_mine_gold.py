@@ -189,10 +189,10 @@ check("neither is premium or a quest's, so a corpse may hold them",
       [(items.premium(t), mobs.droppable(t)) for t in (SAND, EMERALD)], [(False, True)] * 2)
 check("a dead player may lose the sand and the emeralds, like any loot",
       [combat.drops_on_death(t) for t in (SAND, EMERALD)], [True, True])
-check("the file contains sand, emeralds, gold ingots, the academy knife death rule and Eden's local items",
+check("the file contains sand, emeralds, gold ingots, the academy knife, Eden items and designed shock rounds",
       sorted(loot_manual()),
       [SAND, EMERALD, 4203, 4231, 4232, 4233, 4234, 4235, 4236, 4237,
-       4304, 4796, 4797, 7620, 60010])
+       4304, 4796, 4797, 7620, 60010] + list(range(60011, 60027)))
 check("the academy quest knife is kept at death; the gold loot still falls",
       [combat.drops_on_death(t) for t in (4203, 4796, 4797, 7620)],
       [False, True, True, True])

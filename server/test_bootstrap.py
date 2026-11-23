@@ -257,7 +257,9 @@ try:
               served_icons, dict.fromkeys(["classes/WearItem/%s_Bs_U_LVL_%d_G_mod00/ico.swf"
                                            % (s, lvl) for lvl in (12, 16)
                                            for s in ("helm", "shirt", "armor", "pants", "boots")]
-                                          + ["classes/ColdArm/eden_banana_cleaver/ico.swf"],
+                                          + ["classes/ColdArm/eden_banana_cleaver/ico.swf"]
+                                          + [own_items.icon_path(*own_items.rows(own_items.table(here))[t])
+                                             for t in range(60011, 60027)],
                                           True))
     else:
         print("  --  no quest pieces' icons in %s; the check of ours is skipped" % world.RES)

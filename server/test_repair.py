@@ -430,10 +430,10 @@ print()
 print("gold rounds")
 rounds = {t: items.params_of(t) for t, (root, _n) in cat.items() if root == items.AMMO}
 gold = sorted(t for t, p in rounds.items() if items.gold_round(p))
-check("43 kinds of round are gold -- priced in gold alone, not premium: (G) ЭК, ББ, СБ, ШК"
+check("59 kinds of round are gold -- priced in gold alone, not premium: (G) ЭК, ББ, СБ, ШК"
       " and the prison's (Q) ОТ", (len(gold), sorted({cat[t][1].split("_")[-2] if t != SHOCK
                                                       else "shock" for t in gold})),
-      (43, ["BB", "EK", "OT", "SB", "shock"]))
+      (59, ["BB", "EK", "OT", "SB", "SHK", "shock"]))
 check("  ..BB/EK cost two hundredths per round; other gold types retain one hundredth",
       [t for t in gold if rounds[t]["g_cost"] != (2 if cat[t][1].endswith(('_BB_G', '_EK_G')) else 1) * rounds[t]["sell_num"]
        or items.GOLD_AMMO_ROUND != 1], [])

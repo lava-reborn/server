@@ -233,6 +233,13 @@ TRAINING_ROUNDS = 3727
 # window offer it; it was 200. Rounds only: the client asks "how many" for
 # nothing else (Trade.buy sends 1), and junk keeps its stack of 50.
 STARTER_ROUNDS = 6188          # only Самострел and its modified variants
+# Existing 9 mm shock round and designed counterparts, by standard calibre.
+SHOCK_ROUNDS = {6104: 6189, 6105: 60011, 6106: 60012, 6107: 60013,
+               6108: 60014, 6109: 60015, 6110: 60016, 6111: 60017,
+               6112: 60018, 6113: 60019, 6114: 60020, 6115: 60021,
+               7112: 60022, 35021: 60023, 35233: 60024, 41235: 60025, 42259: 60026}
+# Finished laboratory pouches require their tier without the +3 allowance.
+STRICT_LEVEL_GEAR = frozenset((3735, 3736, 3737, 3738, 3739, 3740, 5615))
 AMMO_PACK = 20
 AMMO_STACK = 5000
 
@@ -1299,6 +1306,10 @@ def static_info(type_id):
         import battle_balance
         for field, value in battle_balance.equipment_changes().get(type_id, {}).items():
             info[1][field] = list(value) if isinstance(value, list) else value
+        if root_of(type_id) == FIRE_ARM:
+            compatible = info[1]['comp_array']
+            info[1]['comp_array'] = list(dict.fromkeys(compatible + [SHOCK_ROUNDS[t]
+                for t in compatible if t in SHOCK_ROUNDS]))
         # Last, so neither the design nor the wiki can argue with it.
         admin = ADMIN_OVERRIDES.get(type_id)
         if admin:
@@ -1632,6 +1643,8 @@ def equipment_level_text(type_id):
     level = max(si.get("need_skills") or [0]) if si.get("need_skills_m") else 0
     if level <= 0 or not (si.get("cost", 0) or si.get("g_cost", 0)):
         return ""
+    if type_id in STRICT_LEVEL_GEAR:
+        return "Можно надеть только с %d-го уровня." % level
     return ("Можно надеть с %d-го уровня. Без ускоренного износа — с %d-го."
             % (max(0, level - 3), level))
 

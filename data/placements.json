@@ -16280,16 +16280,6 @@
       "why": "DESIGNED owner-marked outer guards, 2026-11-23. Safe reachable hexes with bypass routes; native guardian appearance and automatic weapon, owner-friendly, five-minute respawn outside capture."
     }
   ],
-  "185": [
-    {
-      "type": 1013,
-      "cell": [
-        26,
-        49
-      ],
-      "why": "DESIGNED existing NPC on verified walkable cell; approved 2026-11-22."
-    }
-  ],
   "609": [
     {
       "type": 989,

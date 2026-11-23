@@ -124,7 +124,7 @@ def ordinary_mob_pressure():
     """Live camp pressure; private range, bosses and site copies stay separate."""
     raw = json.loads(PATH.with_name('combat_balance.json').read_text(encoding='utf-8'))
     row = raw['ordinary_mob_pressure']
-    fields = {'damage_scale', 'high_gap_damage_scale', 'stamina_ratio', 'senior_stamina_ratio',
+    fields = {'damage_scale', 'high_gap_damage_scale', 'stamina_ratio', 'senior_stamina_ratio', 'hard_gap_stamina_scale',
               'stamina_levels', 'crit_bounds', 'player_damage_ratios'}
     bounds = row.get('crit_bounds', ())
     if (raw['source_commit'] != data()['source_commit'] or set(row) != fields
@@ -133,8 +133,9 @@ def ordinary_mob_pressure():
             or not 1 <= row['stamina_levels'][0] < row['stamina_levels'][1] <= 20
             or any(isinstance(row[k], bool) or not isinstance(row[k], (int, float))
                    or not math.isfinite(row[k]) or not 0 <= row[k] <= 5
-                   for k in ('damage_scale', 'high_gap_damage_scale', 'stamina_ratio', 'senior_stamina_ratio'))
+                   for k in ('damage_scale', 'high_gap_damage_scale', 'stamina_ratio', 'senior_stamina_ratio', 'hard_gap_stamina_scale'))
             or not .5 <= row['damage_scale'] <= 2 or not 1 <= row['high_gap_damage_scale'] <= 3
+            or not 1 <= row['hard_gap_stamina_scale'] <= 2
             or len(row['player_damage_ratios']) != 5
             or any(isinstance(v, bool) or not isinstance(v, (int, float))
                    or not math.isfinite(v) or not 0 < v <= 1 for v in row['player_damage_ratios'])
@@ -165,6 +166,8 @@ def split(shooter, target, damage, piercing, critical, stamina_left, stamina_dam
         low, high = pressure['stamina_levels']
         step = max(0, min(1, (level(shooter) - low) / (high - low)))
         ratio = pressure['stamina_ratio'] + step * (pressure['senior_stamina_ratio'] - pressure['stamina_ratio'])
+        if level(shooter) - level(target) >= 2:
+            ratio *= pressure['hard_gap_stamina_scale']
         stamina_damage = int(stamina_damage * scale)
         pressure_stamina = int(damage * ratio)
     if shooter.is_player and not target.is_player and getattr(target.stats, 'role', None) != 'object':
@@ -266,10 +269,13 @@ def boss_adjustments():
     raw = json.loads(PATH.with_name('combat_balance.json').read_text(encoding='utf-8'))
     result = {int(key): row for key, row in raw.get('boss_adjustments', {}).items()}
     for type_id, row in result.items():
-        if (str(type_id) not in data()['mobs'] or set(row) != {'damage_scale', 'hp_scale'}
+        if (str(type_id) not in data()['mobs'] or set(row) not in (
+                {'damage_scale', 'hp_scale'}, {'damage_scale', 'hp_scale', 'level'})
                 or any(isinstance(v, bool) or not isinstance(v, (int, float))
-                       or not math.isfinite(v) or not 0 < v <= 2 for v in row.values())
-                or row['hp_scale'] not in (.5, 1)):
+                       or not math.isfinite(v) or not 0 < v <= 2
+                       for v in (row['damage_scale'], row['hp_scale']))
+                or row['hp_scale'] not in (.5, 1)
+                or ('level' in row and (type(row['level']) is not int or not 1 <= row['level'] <= 20))):
             raise ValueError('Invalid ordinary boss adjustment: ' + str(type_id))
     return result
 
@@ -299,7 +305,11 @@ def ordinary_mob_reference():
         if row['level'] != int(level) or row['weapon_class'] != weapon_class:
             raise ValueError('Ordinary mob fallback has a different level or weapon')
         fallbacks[(int(level), weapon_class)] = index
-    return references, fallbacks
+    damage_scales = {int(key): value for key, value in raw.get('ordinary_mob_damage_scales', {}).items()}
+    if any(type(t) is not int or t <= 0 or isinstance(v, bool) or not isinstance(v, (int, float))
+           or not math.isfinite(v) or not .9 <= v <= 1 for t, v in damage_scales.items()):
+        raise ValueError('Invalid ordinary mob damage reduction')
+    return references, fallbacks, damage_scales
 
 
 @lru_cache(maxsize=1)
@@ -407,7 +417,9 @@ def configure_mob(stats, *, health_scale=1, damage_scale=1, site=False):
     if stats.role not in ('mob', 'boss', 'animal', 'turret'):
         return
     original_hp, original_sp = stats.hp_max, stats.sp_max
-    references, fallbacks = ordinary_mob_reference()
+    references, fallbacks, damage_scales = ordinary_mob_reference()
+    if stats.can_attack and stats.role in ('mob', 'animal', 'turret') and not site:
+        damage_scale *= damage_scales.get(stats.type_id, 1)
     index = data()['mobs'].get(str(stats.type_id))
     if index is None and stats.role == 'mob' and stats.can_attack and not site:
         index = fallbacks.get((stats.level, stats.weapon_class))
@@ -425,6 +437,7 @@ def configure_mob(stats, *, health_scale=1, damage_scale=1, site=False):
                 setattr(stats, key, value)
     adjustment = boss_adjustments().get(stats.type_id)
     if adjustment is not None and stats.role == 'boss':
+        stats.level = adjustment.get('level', stats.level)
         stats.hp_max = max(1, round(stats.hp_max * adjustment['hp_scale']))
         damage_scale *= adjustment['damage_scale']
     # Apply site multipliers before the common reduction, exactly once.

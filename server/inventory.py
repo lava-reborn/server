@@ -626,6 +626,11 @@ def card_repeat(rows):
 # remain independent.
 GEAR_LEVEL_ALLOWANCE = 3
 
+
+def gear_level_allowance(type_id):
+    return 0 if type_id in items.STRICT_LEVEL_GEAR else GEAR_LEVEL_ALLOWANCE
+
+
 def item_level(type_id):
     """The displayed item tier, retained for wear, prices and release rules."""
     si = items.params_of(type_id) or {}
@@ -644,9 +649,10 @@ def weapon_requirement_error(row, character):
     # on every shot repeats all catalogue/craft/set overlays.
     si = items.params_of(row["type_id"]) or {}
     required = max(unpacked(si.get("need_skills_m"), si.get("need_skills"), progression.SKILLS))
-    if not item_templates.contains(row['type_id']) and required > character.level + GEAR_LEVEL_ALLOWANCE:
+    allowance = gear_level_allowance(row['type_id'])
+    if not item_templates.contains(row['type_id']) and required > character.level + allowance:
         return '«%s»: нужен уровень персонажа %d, у вас %d' % (
-            item_title(row["type_id"]), required - GEAR_LEVEL_ALLOWANCE, character.level)
+            item_title(row["type_id"]), required - allowance, character.level)
     for field, size, value, titles in (
             ("skills", progression.SKILLS, character.skill_level, progression.SKILL_TITLES),
             ("specs", progression.SPECS, character.spec_level, progression.SPEC_TITLES)):
@@ -670,7 +676,7 @@ def weapon_requirement_error(row, character):
 def wearable(row, level, character=None):
     """The same level allowance with or without a loaded character card."""
     if (row["root"] in GEAR_ROOTS and not item_templates.contains(row['type_id'])
-            and item_level(row["type_id"]) > level + GEAR_LEVEL_ALLOWANCE):
+            and item_level(row["type_id"]) > level + gear_level_allowance(row['type_id'])):
         return False
     return character is None or weapon_requirement_error(row, character) is None
 
@@ -782,7 +788,8 @@ def level_line(row, level):
     «Наган 1895»: взять в руки можно с 1-го уровня, у вас 0-й."""
     verb = "надеть" if row["root"] == items.WEAR else "взять в руки"
     return "«%s»: %s можно с %d-го уровня, у вас %d-й" % (
-        item_title(row["type_id"]), verb, max(0, item_level(row["type_id"]) - GEAR_LEVEL_ALLOWANCE), level)
+        item_title(row["type_id"]), verb,
+        max(0, item_level(row["type_id"]) - gear_level_allowance(row['type_id'])), level)
 
 
 # --- the figure: a full set's look -------------------------------------------

@@ -181,7 +181,7 @@ class BossBlueprints(unittest.TestCase):
                             patch.object(mobs, 'quest_table', return_value=[(blueprint, 1.0)]):
                         self.assertEqual(mobs.loot_for(st, FixedRandom(0), wanted,
                             loc_id=loc, killer_level=player_level),
-                            [] if player_level - st.level >= 4 else [(7620, 4)])
+                            [(7620, 4)])
 
     def test_chance_and_finisher_level_boundaries_without_quests(self):
         for (loc, mob), item in bosses.BLUEPRINTS.items():
@@ -200,7 +200,7 @@ class BossBlueprints(unittest.TestCase):
                         if value < chance:
                             expected.append((item, 1))
                         if blueprint_level + delta - st.level >= 4:
-                            expected = []
+                            expected = [(7620, 2)]
                         self.assertEqual(result, expected)
             with patch.object(mobs, 'carried', return_value=[]), \
                     patch.object(mobs, 'roll_table', return_value=[]), \

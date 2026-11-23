@@ -1,6 +1,11 @@
 {
   "source_commit": "6b7b28dc7b40fb57078453d536837b0edcc0059f",
   "equipment": {
+    "1573": {"weight": 2500, "max_count": 1},
+    "6189": {"acc_mod": 1},
+    "3201": {"need_skills": [3, 6]},
+    "3202": {"need_skills": [5, 10]},
+    "3203": {"need_skills": [7, 14]},
     "5842": {
       "fire_mods": [
         6,
@@ -18465,20 +18470,20 @@
     "mob_damage_ratio": 1.0
   },
   "ordinary_plus_two": {
-    "2": 0.9634,
-    "3": 1.0,
-    "4": 1.0,
-    "5": 0.59,
-    "6": 0.801,
+    "2": 0.871111,
+    "3": 0.871111,
+    "4": 0.871111,
+    "5": 0.513955,
+    "6": 0.69776,
     "8": 0.418,
     "10": 0.4497,
-    "11": 1.0,
-    "12": 0.834,
+    "11": 0.871111,
+    "12": 0.726506,
     "13": 0.515,
     "14": 0.44,
-    "15": 0.6939,
-    "16": 0.7775,
-    "17": 0.94
+    "15": 0.6664,
+    "16": 0.748284,
+    "17": 0.818844
   },
   "boss_adjustments": {
     "269": {
@@ -18490,7 +18495,7 @@
       "hp_scale": 1
     },
     "283": {
-      "damage_scale": 0.425,
+      "damage_scale": 0.296341,
       "hp_scale": 1
     },
     "284": {
@@ -18498,7 +18503,7 @@
       "hp_scale": 1
     },
     "299": {
-      "damage_scale": 0.5,
+      "damage_scale": 0.195478,
       "hp_scale": 1
     },
     "300": {
@@ -18518,11 +18523,11 @@
       "hp_scale": 1
     },
     "328": {
-      "damage_scale": 0.325,
+      "damage_scale": 0.294155,
       "hp_scale": 1
     },
     "360": {
-      "damage_scale": 0.25,
+      "damage_scale": 0.234126,
       "hp_scale": 1
     },
     "361": {
@@ -18530,23 +18535,23 @@
       "hp_scale": 1
     },
     "374": {
-      "damage_scale": 0.25,
+      "damage_scale": 0.182098,
       "hp_scale": 1
     },
     "375": {
-      "damage_scale": 0.3,
+      "damage_scale": 0.225308,
       "hp_scale": 1
     },
     "407": {
-      "damage_scale": 0.175,
+      "damage_scale": 0.166729,
       "hp_scale": 1
     },
     "408": {
-      "damage_scale": 0.2,
+      "damage_scale": 0.166729,
       "hp_scale": 1
     },
     "2103": {
-      "damage_scale": 0.475,
+      "damage_scale": 0.461065,
       "hp_scale": 1
     },
     "586": {
@@ -18582,25 +18587,34 @@
       "hp_scale": 0.5
     },
     "777": {
-      "damage_scale": 0.5,
-      "hp_scale": 1
+      "damage_scale": 0.098822,
+      "hp_scale": 1,
+      "level": 18
     },
     "778": {
-      "damage_scale": 0.5,
-      "hp_scale": 1
+      "damage_scale": 0.141788,
+      "hp_scale": 1,
+      "level": 18
     },
     "1037": {
-      "damage_scale": 0.5,
-      "hp_scale": 1
+      "damage_scale": 0.112208,
+      "hp_scale": 1,
+      "level": 18
     },
     "1038": {
-      "damage_scale": 0.5,
-      "hp_scale": 1
+      "damage_scale": 0.112208,
+      "hp_scale": 1,
+      "level": 18
     },
     "8620": {
-      "damage_scale": 0.5,
-      "hp_scale": 1
+      "damage_scale": 0.175587,
+      "hp_scale": 1,
+      "level": 18
     }
+  },
+  "ordinary_mob_damage_scales": {
+    "279": 0.9,
+    "291": 0.9
   },
   "ordinary_mob_reference": {
     "1": {
@@ -18894,6 +18908,7 @@
     "9:smg": 95
   },
   "ordinary_mob_pressure": {
+    "hard_gap_stamina_scale": 1.4,
     "damage_scale": 1.5,
     "stamina_ratio": 1.5,
     "senior_stamina_ratio": 4.0,
@@ -18930,9 +18945,9 @@
     "high_gap_damage_scale": 1.75,
     "player_damage_ratios": [
       1,
-      0.9,
-      0.45,
-      0.6,
+      0.46,
+      0.47,
+      0.5,
       0.4
     ]
   }

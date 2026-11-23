@@ -218,7 +218,7 @@ npcs.stock = lambda tr: [STEYR, UMP, CHANG_G, STEYR_P] if tr == 1152 else _stock
 try:
     check("  ..and a list written by hand that names them (data/npcs.json) loses them on the"
           " wire and in the editor, UMP kept", (items.stock_for(1152), items.own_stock(1152)),
-          ([UMP, 6092, 6104, 6116, 6140, 6164, 6152], [UMP]))
+          ([UMP, 6092, 6104, 6116, 6140, 6164, 6152, 6189], [UMP]))
 finally:
     npcs.stock = _stock
 

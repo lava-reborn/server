@@ -115,8 +115,8 @@ MED_REACH = 4
 
 # City ceilings select the agreed stimulant ranks, independently of player level.
 BUFF_RANKS = {4: (0, 0), 8: (1, 3), 12: (3, 5), 16: (5, 7), 20: (7, 9)}
-BUFF_ASSISTANTS = frozenset((1196, 2015, 2016, 2017, 2018))
-BUFF_SELLERS = BUFF_ASSISTANTS | {1013}
+BUFF_ASSISTANTS = frozenset((1196, 2015, 2016, 2017, 2018, 5216))
+BUFF_SELLERS = BUFF_ASSISTANTS | {1013, 5215}
 BASE_AMMO_SELLERS = frozenset((714, 5240))
 
 
@@ -170,6 +170,19 @@ def stimulants(top, currency=None):
     return result
 
 
+@lru_cache(maxsize=1)
+def gold_ammunition_by_calibre():
+    """Index immutable retail ammunition once, not once per shop row."""
+    import items
+    groups = {}
+    for t, (root, name) in items.catalogue().items():
+        if (root == items.AMMO and name.endswith(('_EK_G', '_BB_G', '_SHK_G', '_shock'))
+                and items.gold_round(items.params_of(t))):
+            calibre, _rank = ammunition_order(t)
+            groups.setdefault(calibre, []).append(t)
+    return groups
+
+
 def gold_ammunition(stock):
     """Gold variants of the calibres already sold or used by this stall's guns."""
     import items
@@ -178,17 +191,15 @@ def gold_ammunition(stock):
         if items.root_of(type_id) == items.FIRE_ARM:
             compatible.update(items.params_of(type_id).get('comp_array', ()))
         elif items.root_of(type_id) == items.AMMO:
-            name = items.catalogue()[type_id][1]
-            stem = name.rsplit('_', 2)[0] if name.endswith('_G') else name.rsplit('_', 1)[0]
-            compatible.update(t for t, (root, other) in items.catalogue().items()
-                              if root == items.AMMO and other in (stem + '_EK_G', stem + '_BB_G'))
+            calibre, _rank = ammunition_order(type_id)
+            compatible.update(gold_ammunition_by_calibre().get(calibre, ()))
     return sorted(t for t in compatible if items.root_of(t) == items.AMMO
-                  and items.catalogue()[t][1].endswith(('_EK_G', '_BB_G'))
-                  and items.params_of(t).get('g_cost'))
+                  and items.catalogue()[t][1].endswith(('_EK_G', '_BB_G', '_SHK_G', '_shock'))
+                  and items.gold_round(items.params_of(t)))
 
 
-_AMMO_LINE = re.compile(r'^Ammo_(.+)_(KS|ST|OT|OT_PS|BB_G|EK_G)$')
-_AMMO_ORDER = {'KS': 0, 'ST': 1, 'OT': 2, 'OT_PS': 3, 'BB_G': 4, 'EK_G': 5}
+_AMMO_LINE = re.compile(r'^Ammo_(.+)_(KS|ST|OT|OT_PS|BB_G|EK_G|SHK_G)$')
+_AMMO_ORDER = {'KS': 0, 'ST': 1, 'OT': 2, 'OT_PS': 3, 'BB_G': 4, 'EK_G': 5, 'SHK_G': 6}
 
 
 @lru_cache(maxsize=256)
@@ -211,6 +222,7 @@ def with_weapon_ammunition(stock):
     if not any(items.root_of(t) in (items.FIRE_ARM, items.AMMO) for t in stock):
         return stock
     chosen = dict.fromkeys(stock)
+    chosen.update(dict.fromkeys(gold_ammunition(stock)))
     calibres = {}
     for gun in guns:
         if items.root_of(gun) != items.FIRE_ARM:
@@ -222,7 +234,7 @@ def with_weapon_ammunition(stock):
             calibres.setdefault(calibre, len(calibres))
             name = items.catalogue()[round_id][1]
             si = items.params_of(round_id)
-            if ((_AMMO_LINE.fullmatch(name) or round_id == items.STARTER_ROUNDS)
+            if ((_AMMO_LINE.fullmatch(name) or round_id in (items.STARTER_ROUNDS, 6189))
                     and (si.get('cost') or si.get('g_cost'))
                     and not items.out_of_game(round_id) and not items.acquisition_blocked(round_id)):
                 chosen[round_id] = None
@@ -589,6 +601,7 @@ def apply(trader_type, loc_id, own):
     if trader_type in BASE_AMMO_SELLERS:
         own = [t for t in own if items.root_of(t) == items.AMMO
                and (items.params_of(t).get('g_cost') or ammunition_order(t)[1] == 2)]
+        own += items.SHOCK_ROUNDS.values()
     if trader_type == 1013 and loc_id in (609, 1443):
         which = MED_KINDS
     stock = goods(which, low, top, ONLY.get(trader_type)) if which else []

@@ -75,7 +75,7 @@ ARCHIVE_STALL = [WALTHER, KS, ST, SHIRT, PANTS, BOOTS, HELM, ARMOR, ALPHA, OMEGA
 STALL = ARCHIVE_STALL[:-2]  # Reagents now belong to Gofus and assistants.
 # The combat release adds the other four qualities of his pistol's calibre.
 # Keep the original shopping basket independent of the live wire indices.
-LIVE_STALL = [WALTHER, KS, ST, 6116, 6140, 6164, 6152,
+LIVE_STALL = [WALTHER, KS, ST, 6116, 6140, 6164, 6152, 6189,
               SHIRT, PANTS, BOOTS, HELM, ARMOR]
 # Rounds are bought by the number, anything else one at a time.
 ROUNDS = 20

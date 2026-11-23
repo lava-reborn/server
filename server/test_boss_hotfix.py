@@ -95,14 +95,16 @@ check('each existing carrier drops its regional one-ounce ingot count',
                                     (3, {374, 375, 407, 408}),
                                     (4, {777, 778, 8620, 1037, 1038})) for t in types})
 
-def bag(hours):
+def bag(hours, type_id=777, killer_level=None, multiplier=1):
     rows = []
     def create(owner, t, root, **fields):
         row = dict(fields, type_id=t, root=root, char_id=owner)
         rows.append(row)
         return row
-    rc = NS(room=NS(loc=NS(id=132)), store=NS(create_item=create))
-    mob = NS(type_id=777, stats=mobs.stats(777), quest_wants={})
+    loc = next(loc for loc, t in bosses.CAMP_RECOVERY_BOSSES if t == type_id)
+    rc = NS(room=NS(loc=NS(id=loc)), store=NS(create_item=create))
+    mob = NS(type_id=type_id, stats=mobs.stats(type_id), quest_wants={},
+             blueprint_killer_level=killer_level, loot_multiplier=multiplier)
     with patch.object(bosses, 'HOURS', hours), patch.object(combat, 'RNG', random.Random(1)):
         combat.RoomCombat.drop_loot(rc, mob)
     return rows
@@ -115,6 +117,13 @@ check('real corpse creation preserves the scheduled-boss gold restriction',
 check('disabling boss hours leaves non-gold corpse loot unchanged',
       [(r['type_id'], r['count']) for r in on if r['type_id'] not in items.GOLD_INGOTS],
       [(r['type_id'], r['count']) for r in off])
+for type_id in sorted(CARRIERS):
+    for delta, multiplier in ((4, 1), (10, 3), (4, 0)):
+        on = bag([20 * 60], type_id, mobs.stats(type_id).level + delta, multiplier)
+        off = bag([], type_id, mobs.stats(type_id).level + delta, multiplier)
+        check('only the original ingots survive the level cutoff for boss %d, gap %d, loot x%d'
+              % (type_id, delta, multiplier),
+              ([(r['type_id'], r['count']) for r in on], off), (gold[type_id], []))
 q = quests.get(10)
 check('the valley exchange retains its two-ingot requirement and two-G reward',
       (q.wants(), q.rew_gold), ([(7620, 2)], 200))

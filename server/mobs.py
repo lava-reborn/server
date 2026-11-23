@@ -797,7 +797,13 @@ def loot_for(st, rng, wanted=(), *, loc_id=None, killer_level=None, multiplier=1
     if st.role != 'object' and (multiplier <= 0 or
             (killer_level is not None and killer_level - st.level >= 4)):
         personal = [t for t in wanted if personal_quest_item(t)]
-        return quest_roll(st.type_id, personal, rng) if personal else []
+        out = quest_roll(st.type_id, personal, rng) if personal else []
+        if st.role == 'boss':
+            # The level cutoff excludes ordinary loot, not a boss's ingots.
+            # Keep its own chance; the scanner cannot multiply this reward.
+            out += [(t, n) for t, n in roll_table(st.type_id, rng, gold_multiplier=gold_multiplier)
+                    if t in items.GOLD_INGOTS]
+        return out
     import bosses                  # late: keep module initialization separate
     blueprint = bosses.blueprint_for(loc_id, st.type_id)
     # Scanner x3 and the difficult-mob bonus up to x1.75 affect random

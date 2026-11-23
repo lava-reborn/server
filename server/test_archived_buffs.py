@@ -267,10 +267,10 @@ class GofusStock(unittest.TestCase):
                 stock = [t for t in items.stock_for(helper, loc) if effects.definition(t)]
                 self.assertTrue(stock)
                 self.assertTrue(all(items.params_of(t)['cost'] and not items.params_of(t)['g_cost'] for t in stock))
-        for loc in (185, 609, 1443):
+        for loc in (609, 1443):
             stock = [t for t in items.stock_for(1013, loc) if effects.definition(t)]
             self.assertTrue(any(items.params_of(t)['cost'] for t in stock))
-            self.assertTrue(any(items.params_of(t)['g_cost'] for t in stock) if loc != 185 else True)
+            self.assertTrue(any(items.params_of(t)['g_cost'] for t in stock))
         for trader, loc in ((1206, 102), (202, 76), (714, 609), (5240, 1443)):
             self.assertFalse(any(effects.definition(t) for t in items.stock_for(trader, loc)))
 

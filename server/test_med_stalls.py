@@ -395,14 +395,15 @@ for _title in _SUPPLY_TITLES:
     for _x in items.resolve_stock_title(_title):
         if _x in cat and items.root_of(_x) == items.AMMO and _x not in ROUNDS:
             ROUNDS.append(_x)
+LIVE_ROUNDS = ROUNDS + list(range(6152, 6176)) + list(range(60011, 60022))
 PINNED = {
     (26, 5225): [6055, 6061, BTR, 7100, 6056, 6062, ROSA, 7101],
     (176, 2180): [6055, 6061, BTR, 7100, 6056, 6062, ROSA, 7101, 6057, 6063, VILKA, 7102]
-    + ROUNDS,
+    + LIVE_ROUNDS,
     (159, 2181): [6057, 6063, VILKA, 7102, 6058, 6064, TUR, 7103, 6059, 6065, MAKS, 7104]
-    + ROUNDS,
+    + LIVE_ROUNDS,
     (177, 880): [6058, 6064, TUR, 7103, 6059, 6065, MAKS, 7104, 6060, 6066, SUPER, 7105]
-    + ROUNDS,
+    + LIVE_ROUNDS,
     (185, 5211): [6055, 6061, BTR, 7100, 6056, 6062, ROSA, 7101,
                   6043, 6898, 6049, 6904, 6044, 6899, 6050, 6905, 2178, 2184],
     (181, 5217): [6043, 6898, 6049, 6044, 6899, 6050, 2178, 2184],
@@ -437,7 +438,7 @@ check("  ..the supply men's rounds: their own list (data/npcs.json), the same at
       " prison yards, every calibre of the article, 49 types, each with a price",
       ([npcs.stock(t) == ROUNDS for t in (2180, 2181, 880)], len(ROUNDS),
        [x for x in ROUNDS if price(x) == (0, 0)], max(len(STALLS[k]) for k in PINNED)),
-      ([True] * 3, 49, [], 61))
+      ([True] * 3, 49, [], 96))
 check("  ..Донгола's grocer's own list (data/npcs.json) is the sack of beans and, since"
       " 2026-10-13, the Фуль «Старые приятели» and «Фуль ему!» send the player to buy «в местной"
       " лавке»: the «Коробка вяленого мяса» of his article is the food of ten of 12_15 (6901),"
@@ -555,8 +556,8 @@ check("«Пулеметы и патроны» (1208) stands at Донгола's 
       " link had given Серхио; Серхио sells no gun",
       (1208 in AT[103], STALLS[(103, 1208)],
        [x for x in STALLS[(103, 1214)] if items.root_of(x) != items.HEAL]),
-      (True, [24989, 24990, 25006, 25007, 6098, 6110, 6122, 6146, 6170, 6158,
-              6097, 6109, 6121, 6145, 6169, 6157], []))
+      (True, [24989, 24990, 25006, 25007, 6098, 6110, 6122, 6146, 6170, 6158, 60016,
+              6097, 6109, 6121, 6145, 6169, 6157, 60015], []))
 check("the four medics of Донгола and Абу-Хамед and the machine-gun trader by the original's rows"
       " (data/orig_names_manual.json: 62161, 62162, 62165, 62166, 50655)",
       {t: names.ALL.get(t) for t in (1214, 1215, 1221, 1222, 1208)},

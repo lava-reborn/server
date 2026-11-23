@@ -63,6 +63,21 @@ class TimedItems(unittest.IsolatedAsyncioTestCase):
         self.s.char.skill[progression.MELEE][0] = 9
         self.assertIsNone(effects.use_error(self.s.combat, self.s.combat, 3203))
 
+    async def test_pikodin_afro_skill_boundaries_and_gold_exception(self):
+        self.manager()
+        for type_id, shooting, melee in ((3201, 6, 3), (3202, 10, 5), (3203, 14, 7)):
+            for shot, hand, allowed in ((shooting - 1, melee, False),
+                                        (shooting, melee - 1, False), (shooting, melee, True)):
+                self.s.char.skill[progression.SHOOTING][0] = shot
+                self.s.char.skill[progression.MELEE][0] = hand
+                error = effects.use_error(self.s.combat, self.s.combat, type_id)
+                self.assertEqual(error is None, allowed, (type_id, shot, hand))
+        self.s.char.skill[progression.SHOOTING][0] = 0
+        self.s.char.skill[progression.MELEE][0] = 0
+        for type_id in (3205, 3206, 3207):
+            self.assertEqual(items.params_of(type_id).get('need_skills_m', 0), 0)
+            self.assertIsNone(effects.use_error(self.s.combat, self.s.combat, type_id))
+
     async def test_bonuses_do_not_stack_and_downward_effect_keeps_fraction(self):
         manager = self.manager()
         manager.add(3206)
@@ -478,6 +493,24 @@ class ReleaseCatalogue(unittest.TestCase):
                 patch.object(mobs, 'one_of_groups', return_value=[]):
             self.assertEqual(mobs.roll_table(82, Rng(), 3), [(333, 1)])
 
+    def test_old_boss_ingots_keep_their_chance_without_unlocking_other_loot(self):
+        ingot = next(iter(items.GOLD_INGOTS))
+        class Rng:
+            def random(self):
+                return .15
+        boss = NS(role='boss', level=1, type_id=269)
+        with patch.object(mobs, 'loot_table', return_value=[(ingot, .1, True), (333, 1, False)]), \
+                patch.object(mobs, 'independent_loot', return_value={ingot}), \
+                patch.object(mobs, 'one_of_groups', return_value=[]), \
+                patch.object(mobs, 'count_of', return_value=2):
+            for multiplier in (0, 1, 3):
+                self.assertEqual(mobs.loot_for(boss, Rng(), killer_level=17, multiplier=multiplier), [])
+                self.assertEqual(mobs.loot_for(boss, Rng(), killer_level=17,
+                    multiplier=multiplier, gold_multiplier=2), [(ingot, 2)])
+            boss.role = 'mob'
+            self.assertEqual(mobs.loot_for(boss, Rng(), killer_level=17,
+                multiplier=3, gold_multiplier=2), [])
+
     def test_ordinary_mob_pools_are_reduced_with_original_values_as_floor(self):
         import battle_balance
         frozen = copy.deepcopy(battle_balance.data()['mob_records'])
@@ -498,6 +531,25 @@ class ReleaseCatalogue(unittest.TestCase):
             self.assertEqual(mobs.MobStats(int(key)).sp_max, current.sp_max)
         self.assertGreater(tested, 100)
         self.assertEqual(battle_balance.data()['mob_records'], frozen)
+
+    def test_economic_damage_cuts_are_limited_and_do_not_change_pools_or_site_copies(self):
+        import battle_balance
+        references, fallbacks, scales = battle_balance.ordinary_mob_reference()
+        self.assertEqual(scales, {279: .9, 291: .9})
+        for type_id, factor in scales.items():
+            after = mobs.MobStats(type_id)
+            site = mobs.MobStats(type_id, balanced=False)
+            battle_balance.configure_mob(site, site=True)
+            with patch.object(battle_balance, 'ordinary_mob_reference', return_value=(references, fallbacks, {})):
+                before = mobs.MobStats(type_id)
+                unchanged_site = mobs.MobStats(type_id, balanced=False)
+                battle_balance.configure_mob(unchanged_site, site=True)
+            self.assertEqual((after.hp_max, after.sp_max), (before.hp_max, before.sp_max))
+            self.assertEqual(site.balanced_modes, unchanged_site.balanced_modes)
+            for old, new in zip(before.balanced_modes, after.balanced_modes):
+                for key in ('dmin', 'dmax'):
+                    self.assertLessEqual(new[key], old[key])
+                    self.assertLessEqual(abs(new[key] - old[key] * factor), 1)
 
     def test_boss_adjustments_and_common_reduction_cannot_modify_pinned_modes(self):
         import battle_balance
@@ -524,22 +576,70 @@ class ReleaseCatalogue(unittest.TestCase):
                     self.assertEqual(mode['dmax'], max(1, round(base * adjustment['damage_scale'] / 1.5)))
         self.assertEqual(battle_balance.data()['mob_records'], frozen)
 
-    def test_both_camp_bosses_use_reduced_attacks_without_an_extra_health_reduction(self):
+    def test_camp_boss_attacks_never_increase_or_exceed_the_youngest_local_mob(self):
         import battle_balance
         import bosses
-        expected = {269: .55, 270: .35, 283: .425, 284: .25, 299: .5, 300: .45,
+        import rooms
+        import world
+        previous = {269: .55, 270: .35, 283: .425, 284: .25, 299: .5, 300: .45,
                     313: .3, 314: .325, 327: .375, 328: .325, 360: .25, 361: .275,
                     374: .25, 375: .3, 407: .175, 408: .2, 2103: .475,
                     777: .5, 778: .5, 1037: .5, 1038: .5, 8620: .5}
-        self.assertEqual(set(expected), bosses.CAMP_RECOVERY_TYPES)
-        for tid, scale in expected.items():
-            with self.subTest(type_id=tid):
-                self.assertEqual(battle_balance.boss_adjustments()[tid], dict(damage_scale=scale, hp_scale=1))
+        self.assertEqual(set(previous), bosses.CAMP_RECOVERY_TYPES)
+        manager = rooms.Rooms(world.mob_types())
+        for loc, tid in bosses.CAMP_RECOVERY_BOSSES:
+            with self.subTest(location=loc, type_id=tid):
+                neighbours = [mobs.stats(n.type_id) for n in manager.get(loc).npcs.values()
+                              if n.root == world.MOB]
+                neighbours = [s for s in neighbours if s.can_attack and s.role == 'mob']
+                self.assertTrue(neighbours)
+                youngest = min(s.level for s in neighbours)
+                def maximum(s):
+                    return max(m['dmax'] for m in getattr(s, 'balanced_modes', ())) \
+                        if getattr(s, 'balanced_modes', ()) else s.dmg_max
+                cap = min(int(maximum(s) * battle_balance.ordinary_mob_pressure()['damage_scale'])
+                          for s in neighbours if s.level == youngest)
+                adjustment = battle_balance.boss_adjustments()[tid]
+                self.assertLessEqual(adjustment['damage_scale'], previous[tid])
+                self.assertEqual(adjustment['hp_scale'], 1)
                 source = battle_balance.data()['mob_records'][battle_balance.data()['mobs'][str(tid)]]
                 original, current = mobs.MobStats(tid, balanced=False), mobs.stats(tid)
+                self.assertLessEqual(maximum(current), cap)
+                with patch.object(battle_balance, 'boss_adjustments',
+                                  return_value={tid: dict(damage_scale=previous[tid], hp_scale=1)}):
+                    before = mobs.MobStats(tid)
+                for after_mode, before_mode in zip(current.balanced_modes, before.balanced_modes):
+                    for field in ('dmin', 'dmax', 'sdmin', 'sdmax'):
+                        self.assertLessEqual(after_mode.get(field, 0), before_mode.get(field, 0))
+                    self.assertEqual({k: v for k, v in after_mode.items()
+                                      if k not in ('dmin', 'dmax', 'sdmin', 'sdmax')},
+                                     {k: v for k, v in before_mode.items()
+                                      if k not in ('dmin', 'dmax', 'sdmin', 'sdmax')})
                 for field in ('hp_max', 'sp_max'):
                     self.assertEqual(getattr(current, field),
                                      max(getattr(original, field), round(source[field] / 1.5)))
+
+    def test_abu_camp_bosses_are_level_eighteen_without_changing_the_pinned_simulator(self):
+        import battle_balance
+        frozen = copy.deepcopy(battle_balance.data())
+        for tid in (777, 778, 8620, 1037, 1038):
+            with self.subTest(type_id=tid):
+                self.assertEqual(mobs.MobStats(tid).level, 18)
+                self.assertEqual(mobs.Mob(1, tid, 100).level, 18)
+                self.assertEqual(battle_balance.boss_adjustments()[tid]['level'], 18)
+        self.assertEqual(battle_balance.data(), frozen)
+
+    def test_boss_level_overrides_reject_non_integer_or_out_of_range_levels(self):
+        import battle_balance
+        battle_balance.data()
+        for level in (True, 18.0, 0, 21, '18'):
+            with self.subTest(level=level), \
+                    patch.object(battle_balance.json, 'loads', return_value={
+                        'boss_adjustments': {'777': dict(damage_scale=.1, hp_scale=1, level=level)}}):
+                battle_balance.boss_adjustments.cache_clear()
+                with self.assertRaises(ValueError):
+                    battle_balance.boss_adjustments()
+        battle_balance.boss_adjustments.cache_clear()
 
     def test_contributor_level_survives_character_selection_and_resets_on_respawn(self):
         fixture = xp_fixture.CombatXpCap()
@@ -615,7 +715,7 @@ class ReleaseCatalogue(unittest.TestCase):
     def test_difficulty_steps_add_reviewed_resistance_after_plus_one(self):
         import battle_balance
         shooter = NS(is_player=True, character=lambda: NS(level=16))
-        for gap, expected in ((0, 10000), (1, 10000), (2, 7731), (3, 3498), (4, 2332), (5, 200), (6, 200)):
+        for gap, expected in ((0, 10000), (1, 10000), (2, 3951), (3, 3516), (4, 1870), (5, 200), (6, 200)):
             target = NS(is_player=False, stats=NS(level=16 + gap, role='mob'), armor=lambda: 0)
             self.assertEqual(battle_balance.split(shooter, target, 10000, 1, False, 0, ordinary=True),
                              (expected, 0))
@@ -649,6 +749,7 @@ class ReleaseCatalogue(unittest.TestCase):
                 ordinary = battle_balance.split(mob, player, 1000, 1, False, 20000, 200, ordinary=True)
                 if role in ('mob', 'animal', 'turret'):
                     ratio = 1.5 + 2.5 * max(0, min(1, (mob.stats.level - 13) / 5))
+                    ratio *= 1.4
                     self.assertEqual(ordinary, (1500, 300 + int(1500 * ratio)))
                 else:
                     self.assertEqual(ordinary, native)
@@ -656,6 +757,8 @@ class ReleaseCatalogue(unittest.TestCase):
                 for gap in (0, 1, 2, 3, 5):
                     mob.stats.level = level + gap
                     ratio = 1.5 + 2.5 * max(0, min(1, (mob.stats.level - 13) / 5))
+                    if gap >= 2:
+                        ratio *= 1.4
                     scale = 2.625 if gap >= 5 else 1.5
                     expected = (int(1000 * scale), int(200 * scale) + int(int(1000 * scale) * ratio)) if role in ('mob', 'animal', 'turret') else (1000, 200)
                     self.assertEqual(battle_balance.split(mob, player, 1000, 1, False, 20000, 200, ordinary=True), expected)
@@ -735,8 +838,9 @@ class ReleaseCatalogue(unittest.TestCase):
         added = shop_bands.gold_ammunition(items.stock_for(1200))
         self.assertTrue(added)
         for t in added:
-            self.assertTrue(items.catalogue()[t][1].endswith(('_BB_G', '_EK_G')))
-            self.assertEqual(inventory.buy_price(items.params_of(t), items.AMMO, 100, True), 200)
+            shock = t in items.SHOCK_ROUNDS.values()
+            self.assertTrue(shock or items.catalogue()[t][1].endswith(('_BB_G', '_EK_G')))
+            self.assertEqual(inventory.buy_price(items.params_of(t), items.AMMO, 100, True), 100 if shock else 200)
 
     def test_every_present_city_gun_seller_keeps_compatible_rounds_in_calibre_groups(self):
         import shop_bands
@@ -777,10 +881,54 @@ class ReleaseCatalogue(unittest.TestCase):
     def test_round_order_has_gold_selected_then_ap_then_expansive_and_keeps_sp5_alias(self):
         import shop_bands
         stock = shop_bands.with_weapon_ammunition([25636])
-        self.assertEqual(stock[:7], [25636, 6092, 6104, 6116, 6140, 6164, 6152])
+        self.assertEqual(stock[:8], [25636, 6092, 6104, 6116, 6140, 6164, 6152, 6189])
         self.assertNotIn(6128, stock)  # Premium handcrafted rounds were not requested.
         self.assertEqual(shop_bands.ammunition_order(6124), ('SP_5_6', 2))
         self.assertEqual(shop_bands.ammunition_order(6160), ('SP_5_6', 5))
+
+    def test_shock_rounds_cover_every_standard_calibre_without_accuracy_bonus(self):
+        import names
+        import shop_bands
+        standards = {t for t, (root, name) in items.catalogue().items() if root == items.AMMO
+                     and name.startswith('Ammo_') and name.endswith('_ST') and name != 'Ammo_TEST_ST'}
+        self.assertEqual(set(items.SHOCK_ROUNDS), standards)
+        self.assertEqual(len(set(items.SHOCK_ROUNDS.values())), 17)
+        for trader, location in ((714, 609), (5240, 1443)):
+            self.assertTrue(set(items.SHOCK_ROUNDS.values()) <= set(items.stock_for(trader, location)))
+        for standard, shock in items.SHOCK_ROUNDS.items():
+            with self.subTest(calibre=standard):
+                p = items.params_of(shock)
+                self.assertEqual((p['acc_mod'], p['dam_mod'], p['st_mod'], p['range_mod'], p['piercing']),
+                                 (1, 1.1, 1.3, 1.1, 1))
+                self.assertEqual(inventory.buy_price(p, items.AMMO, 1, True), 1)
+                self.assertEqual(inventory.buy_price(p, items.AMMO, 5000, True), 5000)
+                self.assertEqual(p['cost'], 0)
+                self.assertEqual(p['weight'], items.params_of(standard)['weight'])
+                self.assertIn('ШК', names.text(p['name']))
+                self.assertIn(shock, shop_bands.gold_ammunition([standard]))
+                self.assertEqual(shop_bands.ammunition_order(shock)[1], 6)
+        checked = 0
+        for t, (root, _name) in items.catalogue().items():
+            if root == items.FIRE_ARM and t != items.ADMIN_GUN:
+                compatible = set(items.params_of(t)['comp_array'])
+                for standard in compatible.intersection(standards):
+                    self.assertIn(items.SHOCK_ROUNDS[standard], compatible, t)
+                    checked += 1
+        self.assertGreater(checked, 500)
+
+    def test_nubian_valley_uses_its_original_doctor_and_assistant(self):
+        import rooms
+        import shop_bands
+        import world
+        room = rooms.Rooms(world.mob_types()).get(185)
+        residents = {n.type_id for n in room.npcs.values()}
+        self.assertIn(5215, residents)
+        self.assertIn(5216, residents)
+        self.assertNotIn(1013, residents)
+        self.assertEqual(shop_bands.stimulant_currency(5215, 185), 'gold')
+        self.assertEqual(shop_bands.stimulant_currency(5216, 185), 'afro')
+        for t in shop_bands.stimulants(4, 'afro'):
+            self.assertIn(t, items.stock_for(5216, 185))
 
     def test_gear_boundary_all_existing_armour_and_weapons(self):
         for t, (root, _) in items.catalogue().items():
@@ -791,8 +939,9 @@ class ReleaseCatalogue(unittest.TestCase):
                 continue
             row = dict(type_id=t, root=root)
             with self.subTest(type=t):
-                self.assertTrue(inventory.wearable(row, level - 3))
-                self.assertFalse(inventory.wearable(row, level - 4))
+                minimum = level if t in items.STRICT_LEVEL_GEAR else level - 3
+                self.assertTrue(inventory.wearable(row, minimum))
+                self.assertFalse(inventory.wearable(row, minimum - 1))
 
 
 if __name__ == '__main__':

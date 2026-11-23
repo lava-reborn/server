@@ -3810,8 +3810,8 @@ class RoomCombat:
                               gold_multiplier=getattr(mob, "gold_loot_multiplier", 1)) \
                 + events.loot(self.room.loc.id, mob.type_id, RNG) \
                 + production.yield_of(mob.type_id):
-            if restricted and (type_id not in mob.quest_wants
-                               or not mobs.personal_quest_item(type_id)):
+            if (restricted and not (mob.stats.role == 'boss' and type_id in items.GOLD_INGOTS)
+                    and (type_id not in mob.quest_wants or not mobs.personal_quest_item(type_id))):
                 continue
             if items.out_of_game(type_id) or items.acquisition_blocked(type_id):
                 continue            # (P) or retired by name; see items.out_of_game

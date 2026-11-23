@@ -198,6 +198,7 @@ class Laborant(unittest.TestCase):
         self.assertEqual(self.store.money(self.cid), (1000, 599))
 
     def test_research_kit_buy_at_both_markets_and_carry_to_saved_laboratory(self):
+        self.assertEqual(items.params_of(1573)['max_count'], 1)
         for loc in (35, 104):
             with self.subTest(location=loc):
                 self.store.set_money(self.cid, 500000, 0)
@@ -232,9 +233,11 @@ class Laborant(unittest.TestCase):
         for type_id in types:
             row = dict(type_id=type_id, root=items.WEAR)
             self.assertEqual(inventory.item_level(type_id), 16)
-            for level in range(13):
+            minimum = 13 if type_id == 3726 else 16
+            for level in range(minimum):
                 self.assertFalse(inventory.wearable(row, level), (type_id, level))
-            self.assertTrue(inventory.wearable(row, 13))
+            self.assertTrue(inventory.wearable(row, minimum))
+            self.assertTrue(inventory.wearable(row, 17))
             for skill in self.s.char.skill:
                 skill[0] = 16
             self.assertEqual(inventory.wear_multiplier(row, self.s.char), 1)
@@ -245,6 +248,22 @@ class Laborant(unittest.TestCase):
                          [6000, 5500, 7000, 6000])
         for _base, output in quests.LABORANT_RECIPES.values():
             self.assertEqual(stock.count(output), 1)
+
+    def test_finished_pouches_require_real_level_and_old_equipped_copy_is_preserved(self):
+        finished = {output for _base, output in quests.LABORANT_RECIPES.values()}
+        self.assertEqual(items.STRICT_LEVEL_GEAR, finished)
+        for skill in self.s.char.skill:
+            skill[0] = 15
+        self.assertEqual(self.s.char.level, 15)
+        for type_id in finished:
+            row = self.s.inv.create(type_id, slot=inventory.BELT)
+            error = inventory.weapon_requirement_error(row, self.s.char)
+            self.assertIn('уровень персонажа 16', error)
+            self.assertIn('с 16-го уровня', inventory.level_line(row, 15))
+            self.assertEqual(items.equipment_level_text(type_id), 'Можно надеть только с 16-го уровня.')
+            self.assertEqual(self.s.inv.over_level_to_bag(), [row['uniq']])
+            self.assertEqual(self.store.item(row['uniq'])['slot'], inventory.BAG)
+            self.store.delete_item(row['uniq'])
 
     def test_all_finished_pouches_can_be_bought_without_consuming_the_laboratory_quota(self):
         self.store.set_money(self.cid, 0, 100000)
