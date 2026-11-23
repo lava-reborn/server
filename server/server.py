@@ -1924,10 +1924,22 @@ class Session:
         # LAVA_CHEATS is set by no script that serves anybody: not run.sh,
         # not the compose file, not the deployment.
         if CHEATS and text.split(" ")[0] in ("/goto", "/give", "/money",
-                                             "/skill", "/spec", "/base-respawn"):
+                                             "/skill", "/spec", "/base-respawn", "/boss-now",
+                                             "/base-now", "/test-bot", "/test-bot-stop", "/test-time-reset"):
             args = text.split()[1:]
             try:
-                if text.startswith("/base-respawn"):
+                if text.split()[0] in ('/boss-now', '/base-now', '/test-bot', '/test-bot-stop', '/test-time-reset'):
+                    command = text.split()[0]
+                    if args:
+                        out = 'Используйте %s без аргументов.' % command
+                    elif command in ('/boss-now', '/base-now'):
+                        out = self.admin_boss_now(base=command == '/base-now')
+                    elif command == '/test-time-reset':
+                        bosses._OFFSET = bosses._offset()
+                        out = 'Тестовые часы возвращены к исходной настройке сервера.'
+                    else:
+                        out = self.admin_test_bot(stop=command == '/test-bot-stop')
+                elif text.startswith("/base-respawn"):
                     out = ("Используйте /base-respawn без аргументов."
                            if args else self.admin_base_respawn())
                 elif text.startswith("/goto"):
@@ -2197,7 +2209,7 @@ class Session:
             return "Команда доступна только в локальном тестовом комплекте."
         base = holdings.base_for(self.loc.id)
         if base is None or self.loc.id != base.loc:
-            return "Войдите на поверхность клановой базы: /goto 382 или /goto 118."
+            return "Войдите на поверхность клановой базы: /goto 1442 или /goto 118."
         rc = self.room.combat
         due = rc.boss_slots(bosses.clock())
         if not any(slot is not None for slot in due.values()):
@@ -2216,6 +2228,67 @@ class Session:
             mob.base_respawn_at = None
         rc.keep_hours()
         return "Охрана восстановлена; хозяин появится после зачистки в окно захвата."
+
+    def admin_boss_now(self, base=False):
+        """Use the existing local test clock; production schedules are unchanged."""
+        if not CHEATS or self.on_map or self.room is None or self.room.combat is None:
+            return 'Команда доступна только на локации локального тестового комплекта.'
+        rc = self.room.combat
+        site = holdings.base_for(self.loc.id)
+        if base != bool(site) or site is not None and site.loc != self.loc.id:
+            return 'Для базы используйте /base-now на поверхности; для лагеря — /boss-now.'
+        if not rc.bosses:
+            return 'На этой локации нет босса с расписанием.'
+        if self.room.ws or any(m.target is not None or m.aim is not None
+                               or not m.alive and not m.away for m in rc.bosses):
+            return 'Дождитесь конца боя и исчезновения тел.'
+        now = bosses.clock()
+        held = holdings.holder(STORE, site) if site is not None else None
+        def opens(t):
+            if site is not None:
+                slot = holdings.battle_slot(site, t)
+                return slot is not None and (held is None or held['slot'] is None or slot > held['slot'])
+            return any(bosses.slot_of(m.type_id, t, self.loc.id) is not None for m in rc.bosses)
+        when = next((t for minute in range(7 * 24 * 60 + 1)
+                     if opens(t := now if minute == 0 else int(now // 60) * 60 + minute * 60)), None)
+        if when is None:
+            return 'В ближайшую неделю нет доступного окна появления.'
+        bosses._OFFSET += when - now
+        if base:
+            rc.keep_hours()
+            return self.admin_base_respawn() + ' Часы тестового сервера переведены к окну захвата.'
+        with storage.atomic(STORE.db):
+            for mob in rc.bosses:
+                STORE.db.execute('DELETE FROM boss_kills WHERE spot = ?', (rc.boss_spot(mob),))
+        for mob in rc.bosses:
+            if mob.alive:
+                rc.boss_leaves(mob)
+            mob.slot = None
+        rc.keep_hours()
+        for mob in rc.bosses:
+            if mob.alive and not mob.away:
+                self.room.broadcast(('lch', dict(lostUser=mob.eid)))
+                mob.cell = movement.get(self.room).free_cell(self.live_cell(), exclude=mob)
+                self.room.npcs[mob.eid] = self.room.npcs[mob.eid]._replace(cell=mob.cell)
+                self.room.broadcast(('lch', dict(newUser=mob.eid, pos=mob.cell, rtype=world.MOB)))
+                for viewer in list(self.room.players):
+                    viewer.send_npc_info(mob.eid)
+        return 'Босс появился рядом. Часы тестового сервера переведены к его окну появления.'
+
+    def admin_test_bot(self, stop=False):
+        if not CHEATS:
+            return 'Команда доступна только в локальном тестовом комплекте.'
+        previous = getattr(self, 'local_test_bot', None)
+        if previous is not None:
+            previous.exit()
+        if stop:
+            return 'Тестовый противник удалён.'
+        if self.on_map or self.room is None or self.combat.dead or not self.combat.pvp_allowed():
+            return 'Войдите живым персонажем на локацию, где разрешён PvP.'
+        if sum(getattr(s, 'peer', None) == 'local-test-bot' for s in self.room.players) >= 10:
+            return 'На локации уже десять тестовых противников.'
+        training_ground.local_bot(self)
+        return 'Рядом появился противник с твоими навыками, надетым снаряжением и патронами на 5 минут, без наград.'
 
     def admin_goto(self, loc_id=None, gx=None, gy=None):
         """Open a location, or the one standing on a map cell.
@@ -2651,6 +2724,12 @@ class Session:
         at once.
         """
         other = ONLINE.by_pid(pid)
+        if other is None and CHEATS and self.room is not None:
+            candidate = self.room.player(pid)
+            if candidate is not None and candidate.peer == 'local-test-bot':
+                self.send('userInfo_Player', **rooms.player_info(candidate))
+                self.send('usrUp', **rooms.player_health(candidate))
+                return
         if other is None or other.active is None:
             log.info("  ..    getInfo about %d, who is not online", pid)
             return
@@ -3046,6 +3125,13 @@ class Session:
         # same window of five as ss_get_si; the sixth item stalls without it.
         # A mob's weapon is an instance too, just not one in the database.
         parsed = inventory.parse_oid(p.get('obj'))
+        if CHEATS and parsed and self.room is not None:
+            for actor in self.room.players:
+                if actor.peer == 'local-test-bot':
+                    row = actor.inv.store.item(parsed[0])
+                    if row and (row['type_id'], row['root']) == parsed[1:]:
+                        self.send(inventory.DI_COMMAND[row['root']], **inventory.di_params(row, actor.inv.store))
+                        return
         if parsed and parsed[0] >= training_ground.SERIAL_BASE:
             # Late replies after leaving a range are empty real-instance frames,
             # never a virtual mob weapon with a different dynamic-info schema.
@@ -3093,6 +3179,15 @@ class Session:
         self.send("ss_si_set", **params)
 
     def cmd_ss_get(self, p):
+        if CHEATS and self.room is not None:
+            actor = self.room.player(int(p.get('target', 0) or 0))
+            if actor is not None and actor.peer == 'local-test-bot':
+                mask = int(p.get('slot', 0) or 0) & (inventory.MASK_WEAR | inventory.MASK_HANDS)
+                rows = actor.inv.rows()
+                self.send('ss_ack', o_list=actor.inv.equipment_list(actor.char_id, mask, rows))
+                for command, fields in inventory.look_frames(actor.pid, rows):
+                    self.send(command, **fields)
+                return
         # Answered whatever the target: the ss_ack queue is FIFO and the
         # client slices the list by the mask it remembers sending. A mob
         # answers with the weapon it holds, which picks its animation set.

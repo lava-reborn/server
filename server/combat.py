@@ -1503,7 +1503,7 @@ class Fighter:
 
     def same_clan(self, other):
         same_clan = getattr(self.store, 'same_clan', None)
-        return bool(other.is_player and same_clan
+        return bool(other.is_player and getattr(other, 'store', self.store) is self.store and same_clan
                     and same_clan(self.sess.char_id, other.sess.char_id))
 
     def allied(self, other):

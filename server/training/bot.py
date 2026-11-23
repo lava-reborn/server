@@ -1,4 +1,8 @@
 """One bounded decision per server combat tick, using ordinary player actions."""
+import asyncio
+import copy
+from types import SimpleNamespace
+import accounts
 import battle_medicine
 import combat
 import inventory
@@ -8,6 +12,119 @@ import movement
 import progression
 
 PATH_LEGS = 8
+
+
+class LocalOpponent:
+    """A disposable native player; only the local cheat command creates one."""
+    def __init__(self, owner):
+        from training.avatar import clone_class
+        from training.runtime import PLAYER_IDS, SERIALS
+        import rooms
+        self.owner = self.clone = owner
+        self.room = owner.room
+        self.closed = False
+        self.timer = None
+        self.deadline = combat.now() + 300
+        self.enemy_healing = False
+        self.rules = SimpleNamespace(ammo_modifiers=True)
+        self.store = accounts.Store.temporary()
+        try:
+            self.store.db.execute("INSERT INTO sqlite_sequence(name,seq) VALUES('items',?)", (next(SERIALS),))
+            aid = self.store.db.execute("INSERT INTO accounts(login, hash, created) VALUES(?, ?, ?)",
+                                        ('local-bot', '', 0)).lastrowid
+            self.store.db.commit()
+            cid, _ = self.store.create_character(aid, 'Тестовый противник', owner.active['sex'], owner.active['res'])
+            enemy = self.enemy = clone_class(type(owner))(None, 'local-test-bot')
+            enemy.ground = self
+            enemy.training_pid = rooms.player_id(next(PLAYER_IDS))
+            enemy.char_id, enemy.active = cid, dict(self.store.character(cid))
+            enemy.send = lambda *args, **kwargs: None
+            enemy.send_npc_info = lambda eid: None
+            enemy.inv = inventory.Inventory(enemy, self.store)
+            enemy.char = copy.deepcopy(owner.character())
+            enemy.char.char_id, enemy.char.name = cid, enemy.nick
+            enemy.char.afro = enemy.char.gold = 0
+            for row in owner.inv.rows():
+                if row['slot'] not in inventory.BODY_SLOTS and row['root'] != items.AMMO:
+                    continue
+                fields = {key: row[key] for key in accounts.ITEM_FIELDS if key != 'char_id'}
+                self.store.create_item(cid, row['type_id'], row['root'], **fields)
+            enemy.char.set_gear(inventory.gear_bonus(enemy.inv.rows(), enemy.char),
+                               inventory.card_repeat(enemy.inv.rows()))
+            enemy.char.hp, enemy.char.sp = enemy.char.hp_max, enemy.char.sp_max
+            enemy.char.save(self.store)
+            enemy.combat = LocalFighter(enemy)
+            enemy.loc, enemy.room = owner.loc, self.room
+            enemy.pos = movement.get(self.room).free_cell(owner.live_cell())
+            enemy.combat.ap = enemy.combat.amax_sent = enemy.char.ap_ceiling
+            self.room.enter(enemy)
+            owner.local_test_bot = self
+            self.timer = asyncio.get_running_loop().call_later(combat.AI_TICK, self.step)
+        except Exception:
+            self.exit()
+            raise
+
+    def combat_stats(self, actor):
+        pass
+
+    def step(self):
+        self.timer = None
+        if (self.closed or self.owner.closed or self.owner.room is not self.room
+                or self.owner.combat.dead or self.enemy.combat.dead or combat.now() >= self.deadline):
+            self.exit()
+            return
+        try:
+            turn(self)
+        except Exception:
+            self.exit()
+            raise
+        self.timer = asyncio.get_running_loop().call_later(combat.AI_TICK, self.step)
+
+    def exit(self, notify=False):
+        if self.closed:
+            return
+        self.closed = True
+        if self.timer is not None:
+            self.timer.cancel()
+            self.timer = None
+        enemy = getattr(self, 'enemy', None)
+        if enemy is not None:
+            enemy.combat.close()
+            enemy.combat.end_duels()
+            enemy.inv.close()
+            enemy.stop_walk()
+            self.room.leave(enemy)
+            enemy.room = None
+        self.store.close()
+        self.room.combat.calm()
+        if getattr(self.owner, 'local_test_bot', None) is self:
+            self.owner.local_test_bot = None
+
+
+class LocalFighter(combat.Fighter):
+    """Ordinary combat equations, with no artificial loot or progression."""
+    def prepare_weapon(self, weapon, ammo, row=None, mode=None):
+        return super().prepare_weapon(weapon, ammo, row)
+
+    def award_xp(self, *args, **kwargs):
+        pass
+
+    def credit_xp(self, *args, **kwargs):
+        pass
+
+    def count_kill(self, *args):
+        pass
+
+    def pvp_kill(self, victim):
+        pass
+
+    def die(self, killer):
+        self.dead = True
+        self.character().hp = 0
+        self.cancel_timers()
+        self.end_duels()
+        self.sess.room.broadcast(('lch', dict(dead=self.eid)))
+        asyncio.get_running_loop().call_soon(self.sess.ground.exit)
 
 
 def modes(ground, gun, distance):

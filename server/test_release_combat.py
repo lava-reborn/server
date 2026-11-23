@@ -1,5 +1,6 @@
 """Release boundaries: timed items, fractional XP, loot and purchase prices."""
 import copy
+from datetime import datetime
 from types import SimpleNamespace as NS
 import unittest
 from unittest.mock import Mock, patch
@@ -19,6 +20,148 @@ import test_training_ground as fixtures
 class TimedItems(unittest.IsolatedAsyncioTestCase):
     asyncSetUp = fixtures.TrainingGround.asyncSetUp
     asyncTearDown = fixtures.TrainingGround.asyncTearDown
+
+    def location(self, loc_id):
+        import rooms
+        import world
+        self.s.loc = world.location(loc_id)
+        self.s.room = rooms.Room(self.s.loc, rooms.IdAllocator(), world.mob_types())
+        self.s.room.combat = combat.RoomCombat(self.s.room, self.store)
+        self.s.pos = self.s.loc.entry_cell()
+        self.s.gx, self.s.gy = 6182, 1976
+        self.s.room.players[self.s] = True
+        self.s.on_map = False
+        return self.s.room.combat
+
+    async def test_local_bot_copies_worn_items_and_cleans_private_state_without_rewards(self):
+        import asyncio
+        import trophies
+        from training import bot
+        self.location(98)
+        for skill in self.s.char.skill:
+            skill[0] = 16
+        for spec in self.s.char.spec:
+            spec[0] = 5
+        self.s.char.recalc()
+        gun = self.s.inv.create(25540, slot=inventory.PRIMARY)
+        self.store.update_item(gun['uniq'], ammo_count=20, ammo_type=6104)
+        self.s.inv.create(6104, 100)
+        self.s.inv.refresh_gear(push=False)
+        before = list(self.store.db._db.iterdump())
+        with patch('server.CHEATS', False):
+            self.assertIn('локальном', self.s.admin_test_bot())
+        with patch('server.CHEATS', True):
+            self.assertIn('появился', self.s.admin_test_bot())
+            target = self.s.local_test_bot
+            async def close_target():
+                target.exit()
+            self.addAsyncCleanup(close_target)
+            enemy = target.enemy
+            self.assertEqual(enemy.character().level, self.s.char.level)
+            self.assertEqual(enemy.character().hp_max, self.s.char.hp_max)
+            self.assertEqual(enemy.inv.in_slot(inventory.PRIMARY)['type_id'], 25540)
+            self.assertEqual(enemy.inv.in_slot(inventory.PRIMARY)['ammo_count'], 20)
+            self.assertNotEqual(enemy.pid, self.s.pid)
+            self.assertIsNot(enemy.inv.store, self.store)
+            self.assertIn(enemy, self.s.room.players)
+            self.assertNotIn(enemy.pos, self.s.loc.obstacles)
+            self.assertNotEqual(enemy.pos, self.s.pos)
+            with patch.object(self.store, 'same_clan', return_value=True):
+                self.assertFalse(self.s.combat.same_clan(enemy.combat))
+            self.assertIsNone(trophies.drop(self.s.combat, enemy.combat, 0, inventory.BAG))
+            with patch.object(self.s, 'send') as send:
+                self.s.send_other_player_info(enemy.pid)
+                self.assertEqual(send.call_args_list[0].kwargs['lvl'], enemy.char.level)
+                self.s.cmd_ss_get(dict(target=enemy.pid, slot=inventory.MASK_HANDS))
+                self.assertTrue(any(call.args[0] == 'ss_ack' for call in send.call_args_list))
+                self.s.cmd_ss_get_di(dict(obj=inventory.oid_of(enemy.inv.in_slot(inventory.PRIMARY))))
+                self.assertEqual(send.call_args.args[0], inventory.DI_COMMAND[items.FIRE_ARM])
+            self.assertIsNone(self.s.inv.find(inventory.oid_of(enemy.inv.in_slot(inventory.PRIMARY))))
+            with patch.object(combat.pace, 'paced', return_value=0), \
+                    patch.object(combat, 'bullet_offset', return_value=0), \
+                    patch.object(self.s.combat, 'apply_damage', return_value=False) as damage:
+                bot.turn(target)
+                await asyncio.sleep(.01)
+                self.assertLess(enemy.inv.in_slot(inventory.PRIMARY)['ammo_count'], 20)
+                damage.assert_called()
+            with patch.object(bot, 'turn') as turn:
+                target.timer.cancel()
+                target.step()
+                turn.assert_called_once_with(target)
+            enemy.combat.die(self.s.combat)
+            await asyncio.sleep(0)
+            self.assertTrue(target.closed)
+            self.assertIsNone(target.timer)
+            self.assertNotIn(enemy, self.s.room.players)
+            self.assertEqual(list(self.store.db._db.iterdump()), before)
+
+    async def test_local_boss_commands_advance_existing_schedule_and_keep_native_spawns(self):
+        import bosses
+        import server
+        rc = self.location(133)
+        moment = datetime(2026, 11, 23, 17, 30, tzinfo=bosses.ZONE).timestamp()
+        with patch.object(bosses.time, 'time', return_value=moment), patch.object(bosses, '_OFFSET', 0), \
+                patch.object(server, 'CHEATS', True):
+            rc.keep_hours()
+            self.assertTrue(all(m.away for m in rc.bosses))
+            homes = {m.eid: m.home for m in rc.bosses}
+            self.assertIn('появился рядом', self.s.admin_boss_now())
+            rc.keep_hours()
+            for mob in rc.bosses:
+                self.assertTrue(mob.alive and not mob.away)
+                self.assertEqual(mob.home, homes[mob.eid])
+                self.assertNotIn(mob.cell, self.s.loc.obstacles)
+                self.assertLessEqual(mobs.hex_distance(mob.cell, self.s.pos, self.s.loc.width), 2)
+            self.assertGreater(bosses.clock(), moment)
+            before = bosses.clock()
+            self.s.room.ws = True
+            self.assertIn('конца боя', self.s.admin_boss_now())
+            self.assertEqual(bosses.clock(), before)
+        rc = self.location(1442)
+        with patch.object(bosses.time, 'time', return_value=moment), patch.object(bosses, '_OFFSET', 0), \
+                patch.object(server, 'CHEATS', True):
+            rc.keep_hours()
+            self.assertIn('восстановлена', self.s.admin_boss_now(base=True))
+            base = holdings.base_for(1442)
+            self.assertIsNotNone(holdings.battle_slot(base))
+            guards = [m for m in rc.bosses if m.type_id in base.guards + base.troops]
+            self.assertEqual(len(guards), 13)
+            self.assertTrue(all(m.alive and not m.away for m in guards))
+            self.assertTrue(next(m for m in rc.bosses if m.type_id == base.boss).away)
+
+    async def test_local_bot_replacement_expiry_and_capture_identity_are_bounded(self):
+        import bosses
+        import server
+        rc = self.location(1442)
+        timers = []
+        with patch.object(server, 'CHEATS', True):
+            for _ in range(12):
+                self.s.admin_test_bot()
+                timers.append(self.s.local_test_bot.timer)
+            target = self.s.local_test_bot
+            self.assertTrue(all(timer.cancelled() for timer in timers[:-1]))
+            self.assertEqual(sum(actor.peer == 'local-test-bot' for actor in self.s.room.players), 1)
+            base = holdings.base_for(1442)
+            moment = datetime(2026, 11, 21, 20, tzinfo=bosses.ZONE).timestamp()
+            with patch.object(bosses, 'clock', return_value=moment):
+                master = next(m for m in rc.bosses if m.type_id == base.boss)
+                for mob in rc.bosses:
+                    mob.slot = moment
+                    if mob.type_id in base.guards + base.troops:
+                        mob.alive = False
+                master.capture_harm = {self.s.char_id: 10}
+                target.enemy.char.set_skill(progression.SHOOTING, 20)
+                snap = holdings.snapshot(rc, master, target.enemy.combat)
+                self.assertIsNone(snap['killer'])
+                self.assertEqual(snap['fighters'][0]['level'], self.s.char.level)
+                with patch.object(holdings, 'member_of', return_value=True):
+                    self.assertFalse(holdings.defender_friendly(rc, master, target.enemy.combat))
+            target.timer.cancel()
+            with patch.object(combat, 'now', return_value=target.deadline + 1):
+                target.step()
+            self.assertTrue(target.closed)
+            self.assertIsNone(self.s.local_test_bot)
+            self.assertTrue(all(timer.cancelled() for timer in timers))
 
     def manager(self):
         self.s.on_map = False

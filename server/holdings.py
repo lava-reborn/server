@@ -337,6 +337,8 @@ def defender_friendly(rc, mob, fighter):
     s = base_for(loc_id)
     if s is None:
         return False
+    if getattr(fighter, 'store', rc.store) is not rc.store:
+        return False
     type_id = getattr(mob, 'type_id', None)
     if type_id != s.boss and (s.loc != loc_id or type_id not in s.guards + s.troops):
         return False
@@ -604,7 +606,7 @@ def snapshot(rc, mob, killer):
         return None
     here = {}
     for sess in list(rc.room.players):
-        if getattr(sess, "char_id", None):
+        if getattr(sess, "char_id", None) and getattr(sess.combat, 'store', rc.store) is rc.store:
             here[int(sess.char_id)] = sess.combat
     store = rc.store
     fighters = []
@@ -619,7 +621,8 @@ def snapshot(rc, mob, killer):
                          "clan": int(m["clan_id"]) if m is not None else None,
                          "clan_name": m["clan_name"] if m is not None else None})
     killer_char = killer_clan = None
-    if killer is not None and killer.is_player and getattr(killer.sess, "char_id", None):
+    if (killer is not None and killer.is_player and getattr(killer.sess, "char_id", None)
+            and getattr(killer, 'store', store) is store):
         killer_char = int(killer.sess.char_id)
         km = store.clan_member(killer_char)
         killer_clan = int(km["clan_id"]) if km is not None else None

@@ -9,6 +9,12 @@ def compatible(owner):
     return getattr(owner, 'training_protocol', None) == CLIENT_PROTOCOL
 
 
+def local_bot(owner):
+    """Local cheat adapter; ordinary sessions keep the public package boundary."""
+    from training.bot import LocalOpponent
+    return LocalOpponent(owner)
+
+
 def preload():
     if enabled():
         from training import session
