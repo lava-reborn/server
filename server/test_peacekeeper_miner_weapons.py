@@ -1,4 +1,4 @@
-"""Peacekeeper miners use native A rifles and KS rounds with their scoped AP pools."""
+"""Peacekeeper miners use A weapons/KS shots, ST loot and the native A-set AP pool."""
 import ast
 import os
 import random
@@ -15,7 +15,7 @@ tree = ast.parse(source.read_text(encoding='utf-8'))
 node = next(n for n in tree.body if isinstance(n, ast.Assign)
             and any(isinstance(t, ast.Name) and t.id == 'DESIGNED_KINDS' for t in n.targets))
 designed = ast.literal_eval(node.value)
-for t, level, ap, weapon in ((840, 16, 110, 25287), (841, 17, 115, 25319)):
+for t, level, ap, weapon in ((840, 16, 180, 25287), (841, 17, 200, 25319)):
     st = mobs.stats(t)
     check('%d: level retained and automatic weapon profile applied' % t,
           (st.level, st.weapon_class, st.weapon_type_id, st.ranged,
@@ -44,8 +44,8 @@ for t in (840, 841):
           [bullet[k] for k in ('acc_mod', 'dam_mod', 'st_mod', 'range_mod', 'piercing')], [1.1,.9,.9,1.2,.9])
     for seed in range(30):
         drops = mobs.carried(st, random.Random(seed))
-        check('%d: actual drop keeps 2-6 KS rounds' % t,
-              (drops[0][0], 2 <= drops[0][1] <= 6), (6097, True))
+        check('%d: actual drop keeps 2-6 rounds, now standard' % t,
+              (drops[0][0], 2 <= drops[0][1] <= 6), (6109, True))
 elite = mobs.stats(406)
 standard = items.params_of(6097)
 check('elite ammunition is compatible and keeps KS modifiers',
@@ -56,8 +56,8 @@ check('elite override survives generator rebuild',
       designed['pc_shturmovik_lvl16'], {'loot_ammo_type': 6110})
 for seed in range(30):
     drops = mobs.carried(elite, random.Random(seed))
-    check('elite drops 3-10 KS rounds',
-          (drops[0][0], 3 <= drops[0][1] <= 10), (6097, True))
+    check('elite drops 3-10 standard rounds',
+          (drops[0][0], 3 <= drops[0][1] <= 10), (6109, True))
 
 # --- no changes to Magrib miners or global curves ---
 for t in (838, 839):

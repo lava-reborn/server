@@ -214,7 +214,7 @@ class ClanBases(unittest.TestCase):
                 frames = []
                 s = NS(room=room, char_id=self.cid,
                        send=lambda command, **p: frames.append((command, p)),
-                       combat=NS(mob_info=lambda eid: dict(lvl=rc.mobs[eid].level),
+                       combat=NS(rc=rc, mob_info=lambda eid: dict(lvl=rc.mobs[eid].level),
                                  after_npc_info=lambda eid: None))
                 guard = next(m for m in rc.mobs.values() if m.type_id in base.troops)
                 server.Session.send_npc_info(s, guard.eid)

@@ -2057,45 +2057,58 @@ class Inventory:
         ss_di_heap, a new one arrives by ss_obj_status, an emptied one
         leaves by ss_obj_status;status=0 (items.md 2.2).
         """
-        row = self.find(p.get("obj"))
-        if not row or not items.heapable(row["type_id"]):
-            self.ack(RES_NOT_FOUND)
+        try:
+            with storage.atomic(self.store.db):
+                if not self.store.lock_quest_character(self.char_id):
+                    self.ack(RES_REFUSED)
+                    return
+                result, changes = self._change_heap(p)
+        except storage.CommitError:
+            self.close_after_uncertain_commit()
             return
-        if row['root'] == items.HEAL and (row['slot'] != BAG or row['use_count'] != 1):
+        except Exception:
+            log.exception("Stack transfer failed for character %s", self.char_id)
             self.ack(RES_REFUSED)
             return
+        # A client must not learn about a split/merge before both sides
+        # commit. A failed second write rolls the first one back too.
+        self.ack(result)
+        for status, row in changes:
+            if status is None:
+                self.push_di(row)
+            else:
+                self.push_status(row, status)
+
+    def _change_heap(self, p):
+        """Validate and mutate one stack transfer under the owner's lock."""
+        row = self.find(p.get("obj"))
+        if not row or not items.heapable(row["type_id"]):
+            return RES_NOT_FOUND, []
+        if row['root'] == items.HEAL and (row['slot'] != BAG or row['use_count'] != 1):
+            return RES_REFUSED, []
         try:
-            num = int(p.get("num", 0) or 0)
+            num = int(str(p.get("num", 0)))
         except (TypeError, ValueError):
-            num = 0
+            return RES_REFUSED, []
         if "trg" not in p:
             if not (0 < num < row["count"]):
-                self.ack(RES_REFUSED)
-                return
+                return RES_REFUSED, []
             row["count"] -= num
             self.store.update_item(row["uniq"], count=row["count"])
             part = self.create(row["type_id"], num)
-            self.ack(RES_OK)
-            self.push_status(part, 1)
-            self.push_di(part)
-            self.push_di(row)
-            return
+            return RES_OK, [(1, part), (None, part), (None, row)]
         donor = self.find(p.get("trg"))
         if not donor or donor["uniq"] == row["uniq"]:
-            self.ack(RES_NOT_FOUND)
-            return
+            return RES_NOT_FOUND, []
         if donor["type_id"] != row["type_id"]:
-            self.ack(RES_NO_ITEM)
-            return
+            return RES_NO_ITEM, []
         if row['root'] == items.HEAL and (donor['slot'] != BAG or donor['use_count'] != 1):
-            self.ack(RES_REFUSED)
-            return
+            return RES_REFUSED, []
         limit = (items.params_of(row["type_id"]) or {}).get("max_count", 1)
         if num == 0:
             num = donor["count"]
         if num < 1 or num > donor["count"] or row["count"] + num > limit:
-            self.ack(RES_REFUSED)
-            return
+            return RES_REFUSED, []
         row["count"] += num
         donor["count"] -= num
         self.store.update_item(row["uniq"], count=row["count"])
@@ -2103,12 +2116,7 @@ class Inventory:
             self.store.update_item(donor["uniq"], count=donor["count"])
         else:
             self.store.delete_item(donor["uniq"])
-        self.ack(RES_OK)
-        self.push_di(row)
-        if donor["count"]:
-            self.push_di(donor)
-        else:
-            self.push_status(donor, 0)
+        return RES_OK, [(None, row), (None if donor['count'] else 0, donor)]
 
     # --- the stall: ss_create s_type=1, ss_upd ------------------------------
     def open_trade(self, p):
@@ -2292,7 +2300,6 @@ class Inventory:
             return None
         if item_templates.source_type(row['type_id']) == items.POISON_SYRINGE:
             self.ack(RES_REFUSED)
-            self.sess.answer('Шприц с зельем не ремонтируется и не восстанавливается.')
             return None
         trader = getattr(self.trade, "trader_type", None)
         import eden
@@ -2390,8 +2397,9 @@ class Inventory:
         stock = items.stock_for(self.trade.trader_type, self.trade.loc_id)
         try:
             index = int(str(p.get("obj", "")), 16)
-            n = int(p.get("param", 1) or 1)
-        except ValueError:
+            requested = p.get("param", 1)
+            n = int(requested or 1)
+        except (TypeError, ValueError, OverflowError):
             self.ack(RES_REFUSED)
             return
         if not (0 <= index < len(stock)):
@@ -2405,6 +2413,15 @@ class Inventory:
             return
         # The native quantity dialogue also serves single-dose medicine.
         # Other goods retain one item per purchase, including charged packs.
+        if root == items.HEAL and items.heapable(type_id):
+            try:
+                valid = (not isinstance(requested, bool) and 1 <= n <= 10
+                         and int(str(requested)) == n)
+            except (TypeError, ValueError, OverflowError):
+                valid = False
+            if not valid:
+                self.ack(RES_REFUSED)
+                return
         if root != items.AMMO and not (root == items.HEAL and items.heapable(type_id)):
             n = 1
         if not (1 <= n <= si.get("max_count", 1)):

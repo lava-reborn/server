@@ -23,8 +23,9 @@ import logging
 import math
 import os
 from collections import deque
+from functools import lru_cache
 
-import camp_loot
+import mob_equipment_loot
 import inventory
 import items
 import loot_rules
@@ -121,10 +122,9 @@ MELEE_DODGE_CUT = 30
 
 ROW_H = 0.8660254037844386
 
-# getDirection's table (LocationGrid.as:15-22): the sign pair of (dx, dy)
-# picks k, angles[k] is what faAim carries. dx == 0 leaves k undefined and
-# the figure keeps its facing, which 0 tells the client as well
-# (DisplayLocScene.as:306).
+# Native eight-direction art (LocationGrid.as:15-22). Its legacy aiming
+# helper omitted exact verticals; LocWalker uses 2 south and 6 north.
+# Only coincident positions should keep the previous facing with angle 0.
 ANGLES = {1: 1, 2: 8, 3: 7, -1: 3, -2: 4, -3: 5}
 
 
@@ -148,7 +148,7 @@ def direction(a, b, width):
     bx, by = real(b, width)
     dx, dy = bx - ax, by - ay
     if dx == 0:
-        return 0
+        return 2 if dy > 0 else 6 if dy < 0 else 0
     if dy > 0:
         k = 1
     elif dy == 0:
@@ -636,6 +636,22 @@ def count_of(type_id, t):
     return counts.get(t, 1)
 
 
+@lru_cache(maxsize=1)
+def standard_ammunition_types():
+    """KS -> ST of the same native calibre, for corpse loot only."""
+    catalogue = items.catalogue()
+    by_name = {name: t for t, (root, name) in catalogue.items() if root == items.AMMO}
+    return {t: by_name[name[:-3] + '_ST']
+            for t, (root, name) in catalogue.items()
+            if root == items.AMMO and name.endswith('_KS') and name[:-3] + '_ST' in by_name}
+
+
+def standard_ammunition(drops):
+    """Keep native counts and other qualities; never change firing ammo."""
+    replacements = standard_ammunition_types()
+    return [(replacements.get(t, t), n) for t, n in drops]
+
+
 def roll_table(type_id, rng, multiplier=1, *, gold_multiplier=1, guarantee_ingots=False):
     """[(type_id, count)] off loot_table: every row rolled, so the dice
     spent do not depend on what came up, and the first MAX_DROPS successes
@@ -665,7 +681,7 @@ def roll_table(type_id, rng, multiplier=1, *, gold_multiplier=1, guarantee_ingot
             if pick < 0:
                 break
         out.append((t, 1))
-    return out
+    return standard_ammunition(out)
 
 
 # A group of data/loot_manual.json rows of which exactly one lies in the bag
@@ -788,7 +804,7 @@ def carried(st, rng, multiplier=1):
         piece = junk(st.level, rng)
         if piece is not None:
             out.append((piece, 1))
-    return out or [(FALLBACK_LOOT, 1)]
+    return standard_ammunition(out) if out else [(FALLBACK_LOOT, 1)]
 
 
 def loot_for(st, rng, wanted=(), *, loc_id=None, ambush_camp=None,
@@ -817,9 +833,9 @@ def loot_for(st, rng, wanted=(), *, loc_id=None, ambush_camp=None,
                                                        gold_multiplier=gold_multiplier,
                                                        guarantee_ingots=st.role == 'boss')
     personal = quest_roll(st.type_id, wanted, rng)
-    # A single dedicated camp roll replaces all legacy A-armour sources;
-    # an active quest's own reward is kept separately and suppresses it.
-    out = camp_loot.without_armour(ordinary) + personal
+    # One shared slot replaces native ordinary A equipment. Quest rewards
+    # and guaranteed G pouches retain their own acquisition rules.
+    out = (ordinary if st.role == 'object' else mob_equipment_loot.without_equipment(ordinary)) + personal
     # Encrypted blueprints have exactly one acquisition roll per corpse,
     # from the explicit scheduled-boss table below. Legacy quest rows or
     # an ordinary loot entry cannot supply an additional source.
@@ -832,8 +848,8 @@ def loot_for(st, rng, wanted=(), *, loc_id=None, ambush_camp=None,
         chance = bosses.blueprint_drop_chance(killer_level, blueprint_level)
         if rng.random() < min(1, chance * multiplier):
             out.append((blueprint, 1))
-    out += camp_loot.roll(st, rng, loc_id=loc_id, ambush_camp=ambush_camp,
-                          multiplier=multiplier, protected=personal)
+    out += mob_equipment_loot.roll(st, rng, loc_id=loc_id, ambush_camp=ambush_camp,
+                                  multiplier=multiplier, protected=personal)
     return out
 
 

@@ -10,8 +10,10 @@ os.environ['LAVA_DB'] = ':memory:'
 
 import bosses
 import camp_loot
+import mob_equipment_loot
 import combat
 import events
+import items
 import mobs
 import production
 import sets
@@ -47,7 +49,7 @@ class CampLootIntegration(unittest.TestCase):
                 patch.object(mobs, 'roll_table', return_value=[(self.sturm, 20), (41, 1)]), \
                 patch.object(mobs, 'quest_roll', return_value=[]), \
                 patch.object(bosses, 'blueprint_for', return_value=None), \
-                patch.object(camp_loot, 'roll', return_value=[(self.a, 1)]) as armour:
+                patch.object(mob_equipment_loot, 'roll', return_value=[(self.a, 1)]) as armour:
             drops = mobs.loot_for(stats, rng, loc_id=123456, ambush_camp=80,
                                   killer_level=1, multiplier=3.75)
         self.assertEqual(drops, [(self.g, 1), (41, 1), (self.a, 1)])
@@ -69,7 +71,7 @@ class CampLootIntegration(unittest.TestCase):
         for loc_id, ambush_camp in ((80, None), (82, None), (world.pack(6000, 2000), 80)):
             for multiplier in (.25, .95, 1, 1.25, 3.75):
                 chance = .01 * multiplier
-                for value, expected in ((chance - .000001, [(self.a, 1)]), (chance, [])):
+                for value, expected in ((chance - .000001, [(self.a, 1)]), (.02 * multiplier, [])):
                     with self.subTest(loc_id=loc_id, multiplier=multiplier, value=value), \
                             patch.object(mobs, 'carried', return_value=[]), \
                             patch.object(mobs, 'roll_table', return_value=[]), \
@@ -84,7 +86,7 @@ class CampLootIntegration(unittest.TestCase):
         stats = NS(role='mob', level=1, type_id=258)
         with patch.object(mobs, 'personal_quest_item', return_value=True), \
                 patch.object(mobs, 'quest_roll', return_value=[(self.a, 1)]), \
-                patch.object(camp_loot, 'roll') as armour, \
+                patch.object(mob_equipment_loot, 'roll') as armour, \
                 patch.object(mobs, 'carried') as carried:
             self.assertEqual(mobs.loot_for(stats, FixedRandom(0), {self.a}, loc_id=80,
                                           killer_level=5, multiplier=3.75), [(self.a, 1)])
@@ -120,6 +122,16 @@ class CampLootIntegration(unittest.TestCase):
         self.assertEqual(native.call_args.kwargs['ambush_camp'], 80)
         self.assertEqual(native.call_args.kwargs['loc_id'], 123456)
         self.assertEqual(native.call_args.kwargs['multiplier'], 1.05)
+        self.assertLess(rows[0]['max_break_cur'], items.params_of(self.a)['max_break_abs'])
+        self.assertGreaterEqual(2 * rows[0]['brk'], rows[0]['max_break_cur'])
+
+    def test_fixed_object_rewards_are_not_ordinary_creature_equipment_rolls(self):
+        stats = NS(role='object', level=1, type_id=258)
+        with patch.object(mobs, 'carried', return_value=[]), \
+                patch.object(mobs, 'roll_table', return_value=[(self.a, 1), (3577, 1)]), \
+                patch.object(mobs, 'quest_roll', return_value=[]), \
+                patch.object(bosses, 'blueprint_for', return_value=None):
+            self.assertEqual(mobs.loot_for(stats, FixedRandom(0), loc_id=80), [(self.a, 1), (3577, 1)])
 
     def test_repeated_materialization_does_not_repeat_a_drop_or_roll(self):
         loot = [dict(uniq=987, type_id=self.a)]

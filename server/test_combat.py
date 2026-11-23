@@ -526,7 +526,9 @@ even = 4 * W + 5
 check("facing east is 8", mobs.direction(even, even + 1, W), 8)
 check("facing west is 4", mobs.direction(even, even - 1, W), 4)
 check("down-right is 1", mobs.direction(even, even + W, W), 1)
-check("straight down keeps the facing", mobs.direction(even, even + 2 * W, W), 0)
+check("straight down faces south", mobs.direction(even, even + 2 * W, W), 2)
+check("straight up faces north", mobs.direction(even, even - 2 * W, W), 6)
+check("a coincident aim keeps the facing", mobs.direction(even, even, W), 0)
 check("neighbours are exactly one hex apart",
       sorted(round(mobs.hex_distance(even, n, W), 6)
              for n in progression.hex_neighbours(even, W, 128)), [1.0] * 6)
@@ -1739,8 +1741,8 @@ try:
     check("and not one of them Стрельба", shooting_pushed, 0)
     c.send("rp_get_info;")
     rp = named(c.until(lambda f: f[0] == "rp_info"), "rp_info")[0]
-    check("the kill paid Ближний бой the equal-level dog's whole price, 10 times its 0.7",
-          (rp["a_skills"][0], rp["xp_skills"][0]), (1, round(10 * dog_stats.xp_mult)))
+    check("the equal-level dog pays 95% of the +1 base 25, times its 0.7 (16 XP plus carry)",
+          (rp["a_skills"][0], rp["xp_skills"][0]), (1, 16))
     check("to exactly one solo kill's price, without per-hit experience",
           [rp["a_skills"][0], rp["xp_skills"][0]], mirror.skill[progression.MELEE][:2])
     check("while Стрельба is where it was", (rp["a_skills"][1], rp["xp_skills"][1]), (6, 0))

@@ -507,12 +507,18 @@ class TimedItems(unittest.IsolatedAsyncioTestCase):
         self.enterContext(patch.object(self.s.loc, 'war', True))
         self.enterContext(patch.object(rc, 'actor', return_value=NS(is_player=False, cell=self.s.pos + 1)))
         self.enterContext(patch.object(f, 'preparing', return_value=False))
+        answer = self.enterContext(patch.object(self.s, 'answer'))
+        say = self.enterContext(patch.object(self.s, 'say'))
+        ack = self.enterContext(patch.object(f, 'ack', wraps=f.ack))
         start = self.enterContext(patch.object(f, 'strike_with'))
         for target in ('000000001', '000000000'):
             f.use_fire(dict(obj=inventory.oid_of(row), target=target))
         self.assertFalse(start.called)
+        self.assertEqual([call.args for call in ack.call_args_list], [(inventory.RES_REFUSED,)] * 2)
         f.strike_now(NS(is_player=False, cell=1), None, (7000, 7000), combat.SPEC_BLADE, 0, row['uniq'])
         self.assertEqual(self.store.item(row['uniq'])['brk'], 20)
+        answer.assert_not_called()
+        say.assert_not_called()
 
     async def test_syringe_cannot_be_repaired_or_restored_with_either_currency(self):
         self.manager()
@@ -523,12 +529,14 @@ class TimedItems(unittest.IsolatedAsyncioTestCase):
         self.store.update_item(row['uniq'], brk=7, max_break_cur=20)
         before = dict(self.store.item(row['uniq']))
         money = self.store.money(self.s.char_id)
+        answer = self.enterContext(patch.object(self.s, 'answer'))
         for code in (inventory.UPD_REPAIR, inventory.UPD_REPAIR_GOLD, inventory.UPD_RESTORE):
             self.s.inv.repair(dict(obj=inventory.oid_of(row)), code)
             self.assertEqual(dict(self.store.item(row['uniq'])), before)
             self.assertEqual(self.store.money(self.s.char_id), money)
         self.s.inv.restore(dict(obj=inventory.oid_of(row)))
         self.assertEqual(dict(self.store.item(row['uniq'])), before)
+        answer.assert_not_called()
 
     async def test_requirement_check_reuses_one_frame_without_changing_masks(self):
         row = self.s.inv.create(26062)
@@ -698,7 +706,7 @@ class ReleaseCatalogue(unittest.TestCase):
         mob = NS(is_player=False, stats=NS(level=13, role='mob'))
         with patch.object(combat, 'roll', return_value=False) as roll:
             for gap, floor, ceiling in ((-1, 1, 3), (0, 1, 3), (1, 1, 3),
-                                        (2, 3, 8), (3, 50, 75), (4, 100, 100), (5, 100, 100), (6, 100, 100)):
+                                        (2, 8, 15), (3, 50, 75), (4, 100, 100), (5, 100, 100), (6, 100, 100)):
                 mob.stats.level = 12 + gap
                 battle_balance.critical(mob, player, 200, ordinary=True)
                 roll.assert_called_with(ceiling)
@@ -1011,7 +1019,7 @@ class ReleaseCatalogue(unittest.TestCase):
             ammo = items.params_of(current.loot_ammo_type)
             for mode, index in zip(current.balanced_modes, (i for i, n in enumerate(p['fire_mods']) if n)):
                 base = p['h_damage_max'][index]
-                self.assertEqual(mode['dmax'], max(1, round(base * min(1, adjustment['damage_scale'] / 1.5) * ammo['dam_mod'])))
+                self.assertLessEqual(mode['dmax'], max(1, round(base * min(1, adjustment['damage_scale'] / 1.5) * ammo['dam_mod'])))
         self.assertEqual(battle_balance.data()['mob_records'], frozen)
 
     def test_camp_boss_attacks_never_increase_or_exceed_the_youngest_local_mob(self):
@@ -1043,16 +1051,19 @@ class ReleaseCatalogue(unittest.TestCase):
                 source = battle_balance.data()['mob_records'][battle_balance.data()['mobs'][str(tid)]]
                 original, current = mobs.MobStats(tid, balanced=False), mobs.stats(tid)
                 self.assertLessEqual(maximum(current), cap)
-                with patch.object(battle_balance, 'boss_adjustments',
-                                  return_value={tid: dict(adjustment, damage_scale=previous[tid])}):
-                    before = mobs.MobStats(tid)
-                for after_mode, before_mode in zip(current.balanced_modes, before.balanced_modes):
+                ceilings = battle_balance.world_boss_damage_references()[tid]['ceiling']
+                for after_mode in current.balanced_modes:
                     for field in ('dmin', 'dmax', 'sdmin', 'sdmax'):
-                        self.assertLessEqual(after_mode.get(field, 0), before_mode.get(field, 0))
-                    self.assertEqual({k: v for k, v in after_mode.items()
-                                      if k not in ('dmin', 'dmax', 'sdmin', 'sdmax')},
-                                     {k: v for k, v in before_mode.items()
-                                      if k not in ('dmin', 'dmax', 'sdmin', 'sdmax')})
+                        self.assertLessEqual(after_mode.get(field, 0), ceilings[field])
+                    shots = after_mode.get('shots', 1)
+                    for damage, minimum, burst, per_ap, per_second in (
+                            ('dmax', 'dmin', 'burst_damage', 'damage_per_ap', 'damage_per_second'),
+                            ('sdmax', 'sdmin', 'burst_stamina', 'stamina_per_ap', 'stamina_per_second')):
+                        peak = after_mode.get(damage, 0) * shots
+                        average = (after_mode.get(damage, 0) + after_mode.get(minimum, 0)) / 2 * shots
+                        self.assertLessEqual(peak, ceilings[burst])
+                        self.assertLessEqual(average / after_mode['ap'], ceilings[per_ap] + 1e-9)
+                        self.assertLessEqual(average / after_mode['time'], ceilings[per_second] + 1e-9)
                 for field in ('hp_max', 'sp_max'):
                     self.assertEqual(getattr(current, field),
                                      max(getattr(original, field), round(source[field] / 1.5)))
@@ -1153,7 +1164,7 @@ class ReleaseCatalogue(unittest.TestCase):
     def test_difficulty_steps_add_reviewed_resistance_after_plus_one(self):
         import battle_balance
         shooter = NS(is_player=True, character=lambda: NS(level=16))
-        for gap, expected in ((0, 10000), (1, 10000), (2, 3693), (3, 897), (4, 523), (5, 2), (6, 2)):
+        for gap, expected in ((0, 10000), (1, 10000), (2, 3693), (3, 2244), (4, 935), (5, 2), (6, 2)):
             target = NS(is_player=False, stats=NS(level=16 + gap, role='mob'), armor=lambda: 0)
             self.assertEqual(battle_balance.split(shooter, target, 10000, 1, False, 0, ordinary=True),
                              (expected, 0))

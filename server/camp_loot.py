@@ -16,6 +16,10 @@ ECHO_LEVEL = 16
 CENTRES = frozenset((34, 80, 81, 84, 85, 88, 92, 93, 98, 132, 168, 263))
 SIDES = {80: 82, 81: 83, 84: 86, 85: 87, 88: 89, 92: 90,
          93: 91, 98: 99, 132: 133, 263: 274}
+# Native non-composite human models omit <body type="man"> in their XML.
+# In particular, every DSR patriot would otherwise miss the new loot slot.
+LEGACY_HUMAN_MODELS = frozenset(('patriot', 'm7', 'bich', 'm8_broken', 'band_leader',
+                                 'q1-2', '120', '136', '82', 'berber'))
 
 
 @lru_cache(maxsize=1)
@@ -68,16 +72,20 @@ def _active_sets():
     return tuple(sorted(records, key=lambda record: record['level']))
 
 
+def is_humanoid(stats):
+    """Native human models, including old records without a body attribute."""
+    import mobs
+    source = mobs.TYPES.get(str(stats.type_id), {})
+    body = source.get('body')
+    return body == 'man' or (body is None and source.get('resource') in LEGACY_HUMAN_MODELS)
+
+
 def eligible_set(stats, loc_id, ambush_camp=None):
     """Nearest released A set at or below this humanoid camp mob's level."""
     camp = camp_for(loc_id, ambush_camp)
     if camp is None or getattr(stats, 'role', None) not in ('mob', 'boss'):
         return None
-    if not getattr(stats, 'can_attack', False):
-        return None
-    import mobs
-    source = mobs.TYPES.get(str(stats.type_id), {})
-    if source.get('body') != 'man':
+    if not getattr(stats, 'can_attack', False) or not is_humanoid(stats):
         return None
     eligible = (record for record in _active_sets()
                 if record['level'] <= stats.level

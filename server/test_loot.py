@@ -213,9 +213,10 @@ pistol = sum(b == [PISTOL_BELT] for b in belts) / 4000.0
 check("  ..the pistol belt about three times in four (%.3f)" % pistol, abs(pistol - 0.75) < 0.03, True)
 check("no other creature has a group", [t for t in mobs.TYPES if int(t) != MVAMBA
                                         and mobs.one_of_groups(int(t))], [])
-rounds = mobs.stats(COURIER).loot_ammo_type
+firing_rounds = mobs.stats(COURIER).loot_ammo_type
+rounds = mobs.standard_ammunition_types().get(firing_rounds, firing_rounds)
 courier = [mobs.loot_for(mobs.stats(COURIER), rng) for _ in range(300)]
-check("a gunman leaves his rounds and a piece of junk as well, every time",
+check("a gunman leaves standard rounds of his calibre and a piece of junk, every time",
       all({t for t, _n in d} & {rounds} and {t for t, _n in d} & set(TRASH[0:3])
           for d in courier), True)
 dog = [mobs.loot_for(mobs.stats(DOG), rng) for _ in range(300)]

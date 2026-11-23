@@ -94,6 +94,23 @@ class CampArmourLoot(unittest.TestCase):
         unknown.type_id = -1
         self.assertIsNone(camp_loot.eligible_set(unknown, 263))
 
+    def test_legacy_human_models_without_body_metadata_include_actual_dsr(self):
+        for type_id, source in mobs.TYPES.items():
+            if (source.get('body') is None
+                    and source.get('resource') in camp_loot.LEGACY_HUMAN_MODELS
+                    and source.get('role') in ('mob', 'boss')):
+                stats = NS(type_id=int(type_id), level=14, role=source['role'], can_attack=True)
+                self.assertEqual(camp_loot.eligible_set(stats, 93)['level'], 14)
+        for type_id in (362, 365, 368, 373, 592):
+            stats = mobs.stats(type_id)
+            self.assertIsNone(mobs.TYPES[str(type_id)]['body'])
+            self.assertEqual(camp_loot.eligible_set(stats, 93)['level'], stats.level)
+        stats = self.stats()
+        for body, resource in (('dog', 'patriot'), ('none', 'patriot'), (None, ''),
+                               (None, 'unknown_model')):
+            with patch.dict(mobs.TYPES, {str(stats.type_id): dict(body=body, resource=resource)}):
+                self.assertIsNone(camp_loot.eligible_set(stats, 93))
+
     def test_one_percent_is_one_roll_not_one_roll_per_slot(self):
         stats = self.stats()
         parts = camp_loot.piece_types(stats, 98)

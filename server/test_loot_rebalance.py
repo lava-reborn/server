@@ -49,7 +49,8 @@ def expected(k):
         out[seq[i]] += 1 / (hi - lo + 1)
     si = items.params_of(st.weapon_type_id) if st.weapon_type_id else None
     if si and st.ranged and si.get('comp_array'):
-        out[st.loot_ammo_type or si['comp_array'][0]] += sum(st.loot_ammo_count) / 2
+        ammo = st.loot_ammo_type or si['comp_array'][0]
+        out[mobs.standard_ammunition_types().get(ammo, ammo)] += sum(st.loot_ammo_count) / 2
     state = [1., 0., 0.]
     independent = mobs.independent_loot(k)
     for t, p, _ in mobs.loot_table(k):
@@ -59,7 +60,7 @@ def expected(k):
             q = p * sum(state[:2])
             state = [state[0] * (1-p), state[1] * (1-p) + state[0] * p,
                      state[2] + state[1] * p]
-        out[t] += q * mobs.count_of(k, t)
+        out[mobs.standard_ammunition_types().get(t, t)] += q * mobs.count_of(k, t)
     for group in mobs.one_of_groups(k):
         total = sum(w for t, w in group)
         for t, w in group:
@@ -74,19 +75,21 @@ def revenue(k):
             + loot.get(mortimer.SAND, 0))
 
 
-def carried_ammo_revenue(st):
+def carried_ammo_revenue(st, *, standard=True):
     """Guaranteed rounds in 175 kills, independent of random economic rows."""
     si = items.params_of(st.weapon_type_id) if st.weapon_type_id else None
     if not si or not st.ranged or not si.get('comp_array'):
         return 0
     ammo = st.loot_ammo_type or si['comp_array'][0]
+    if standard:
+        ammo = mobs.standard_ammunition_types().get(ammo, ammo)
     return 175 * price(ammo) * sum(st.loot_ammo_count) / 2
 
 
 def current_income_target(k, afro):
     """The approved loot budget plus an existing carried-calibre change."""
     return (afro + carried_ammo_revenue(mobs.stats(k))
-            - carried_ammo_revenue(mobs.MobStats(k, balanced=False)))
+            - carried_ammo_revenue(mobs.MobStats(k, balanced=False), standard=False))
 
 
 class LootRebalance(unittest.TestCase):
@@ -146,6 +149,8 @@ class LootRebalance(unittest.TestCase):
                 self.assertEqual(current_quality, 'KS')
                 self.assertEqual(current.loot_ammo_count, original.loot_ammo_count)
                 self.assertEqual(current.loot_ammo_count, (2, 6))
+                drops = mobs.carried(current, random.Random(kind))
+                self.assertEqual(items.catalogue()[drops[0][0]][1].rsplit('_', 1)[-1], 'ST')
 
     def test_sa_base_income_is_105000_afro_and_1_2_gold(self):
         profile = next(p for p in self.doc['targets'] if p['id'] == 'camp-263')
@@ -154,7 +159,7 @@ class LootRebalance(unittest.TestCase):
         a = sum(revenue(k)[0] * n for k, n in counts.items()) / total
         g = sum(revenue(k)[1] * n for k, n in counts.items()) / total
         carried_change = sum((carried_ammo_revenue(mobs.stats(k))
-                              - carried_ammo_revenue(mobs.MobStats(k, balanced=False))) * n
+                              - carried_ammo_revenue(mobs.MobStats(k, balanced=False), standard=False)) * n
                              for k, n in counts.items()) / total
         self.assertAlmostEqual(a - carried_change, 105000, delta=1)
         self.assertAlmostEqual(g, 1.2, delta=.0001)

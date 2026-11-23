@@ -29,10 +29,10 @@ class MedicineCooldownClient(unittest.TestCase):
         self.call('__bfMedBuy',trade,item,3)
         self.assertEqual(sent,[(1,'a',10),(4,'a',3)])
         self.assertEqual(len(ack),2)
-        for n in (-1,11,1.5):
+        for n in (0,-1,11,1.5):
             self.call('__bfMedBuy',trade,item,n)
         self.assertEqual(len(sent),2)
-        self.assertEqual(rejected,[False]*3)
+        self.assertEqual(rejected,[False]*4)
 
     def test_heal_initialization_reuses_native_heap_without_changing_charged_packs(self):
         objects = self.env['lol']['core']['objects'] = dict(HealItem=dict(prototype={}),
@@ -64,13 +64,18 @@ class MedicineCooldownClient(unittest.TestCase):
         self.call('__bfMedQuantity', view)
         self.assertEqual(calls, ['native'])
 
-    def test_single_dose_counter_displays_pieces_and_keeps_charged_uses(self):
+    def test_single_dose_counter_uses_only_native_numeric_glyphs_and_keeps_charged_uses(self):
         self.env['lol']['core']['objects'] = dict(Item=dict(HEAL_ITEM=2))
         drawn = []
         card = dict(item=dict(rootID=2, getProp=lambda key: dict(size=7,max_count=10).get(key)),
                     __bfMedAmountOrig=drawn.append)
-        self.call('__bfMedAmount', card, '1/1')
-        self.assertEqual(drawn, ['7 шт.'])
+        for count in (1, 3, 7, 10):
+            card['item']['getProp'] = lambda key, n=count: dict(size=n,max_count=10).get(key)
+            self.call('__bfMedAmount', card, '1/1')
+            self.assertEqual(drawn[-1], str(count))
+            # TextCharCreate's numChar atlas supports digits but no suffix
+            # " шт.": unknown characters leave the zero frame visible.
+            self.assertTrue(all(symbol in '0123456789' for symbol in drawn[-1]))
         card['item']['getProp'] = lambda key: 1 if key=='max_count' else None
         self.call('__bfMedAmount', card, '19/20')
         self.assertEqual(drawn[-1], '19/20')

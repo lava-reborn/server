@@ -68,7 +68,8 @@ class TrainingFighter(combat.Fighter):
         ground = self.sess.ground
         if self.sess is ground.enemy and row is not None:
             after = self.store.item(uniq)
-            if after is None or after['use_count'] != row['use_count']:
+            if (after is None or after['use_count'] < row['use_count']
+                    or after['count'] < row['count']):
                 ground.enemy_heals_left = max(0, ground.enemy_heals_left - 1)
         return result
 

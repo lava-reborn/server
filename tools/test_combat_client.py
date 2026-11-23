@@ -236,7 +236,7 @@ class CombatClient(unittest.TestCase):
                         String=lambda value: format(value, 'g'),
                         parseFloat=lambda value: float(re.match(r'[-+]?\d+(?:\.\d+)?', str(value))[0])
                         if re.match(r'[-+]?\d+(?:\.\d+)?', str(value)) else float('nan'),
-                        Math=dict(max=max, min=min, round=round),
+                        Math=dict(max=max, min=min, round=round, floor=math.floor),
                         lol=dict(core=dict(SceneShifter=dict(linkGame=dict(
                             visavisAvatar=dict(removeMovieClip=lambda: self.calls.append('avatar')))),
                             player=dict(Training=dict(UPD_CLOSE=0)),
@@ -386,6 +386,90 @@ class CombatClient(unittest.TestCase):
                      shotgunFireAck=lambda e: None, busrtFireAck=lambda e: None,
                      __bfDeadOrig=lambda e: self.calls.append(('dead',e['dead'])))
         return scene, figure
+
+    def facing_scene(self, actor=1):
+        scene, figure = self.scene()
+        logical = dict(direction=4)
+        rotate = lambda *args: None
+
+        def cancel(callback):
+            self.assertIs(callback, rotate)
+            self.calls.append(('cancel-rotate', figure['__direction']))
+
+        def native_aim(event):
+            self.calls.append(('aim', event['seq'], figure['__direction']))
+            logical['direction'] = figure['__direction']
+            figure['behavior'] = 'fire_in'
+
+        figure.update(id=actor, __direction=4, rotate=rotate, deleteEnterFrame=cancel)
+        scene.update(__bfAimOrig=native_aim,
+                     master=dict(getPlayer=lambda _id: dict(walker=logical)))
+        return scene, figure, logical
+
+    def test_firing_faces_every_direction_before_native_aim_for_owner_observer_and_mob(self):
+        for actor in (0, 1, 1736):
+            for direction in range(1, 9):
+                with self.subTest(actor=actor, direction=direction):
+                    self.calls.clear()
+                    scene, figure, logical = self.facing_scene(actor)
+                    self.call('__bfAim', scene, dict(aim=actor, ang=str(direction), num_shots=1, seq=1))
+                    self.assertEqual(self.calls, [('cancel-rotate', 4), ('aim', 1, direction)])
+                    self.assertEqual((figure['__direction'], logical['direction']), (direction, direction))
+                    self.assertEqual(figure['behavior'], 'fire_in')
+                    self.assertEqual(self.sent, [])
+                    self.assertFalse(self.env['_global'].get('__bfInputTimer'))
+
+    def test_queued_volley_does_not_turn_the_current_shot_early(self):
+        scene, figure, logical = self.facing_scene(17)
+        self.call('__bfAim', scene, dict(aim=17, ang=2, num_shots=1, seq=1))
+        self.call('__bfFire', scene, dict(gunnerID=17, access=True, seq=1))
+        self.call('__bfAim', scene, dict(aim=17, ang=6, num_shots=1, seq=2))
+        self.call('__bfFire', scene, dict(gunnerID=17, access=True, seq=2))
+        self.assertEqual((figure['__direction'], logical['direction']), (2, 2))
+        self.assertEqual(self.calls, [('cancel-rotate', 4), ('aim', 1, 2)])
+        figure['burstArr'].shift()
+        self.call('__bfVisualFinal', scene, dict(target=figure, data='fire_out'))
+        figure['__bfNextSequenceOrig'] = lambda: self.calls.append('native-transition')
+        self.call('__bfNextSequence', figure)
+        self.assertEqual(self.calls[-3:], ['native-transition', ('cancel-rotate', 2), ('aim', 2, 6)])
+        self.assertEqual((figure['__direction'], logical['direction']), (6, 6))
+        self.assertEqual([event['seq'] for event in figure['burstArr']], [2])
+
+    def test_inactive_or_unanimated_figure_updates_facing_without_a_visual_queue(self):
+        for changed in (dict(animationEnabled=False), dict(isActive=False)):
+            with self.subTest(changed=changed):
+                self.calls.clear()
+                scene, figure, logical = self.facing_scene()
+                figure.update(changed)
+                self.call('__bfAim', scene, dict(aim=1, ang=6, num_shots=1, seq=1))
+                self.assertEqual(self.calls, [('cancel-rotate', 4), ('aim', 1, 6)])
+                self.assertEqual(logical['direction'], 6)
+                self.assertFalse(figure.get('__bfBursts'))
+
+    def test_invalid_or_coincident_facing_keeps_the_existing_direction_and_rotation(self):
+        _scene, figure, _logical = self.facing_scene()
+        for angle in (None, 0, -1, 9, 1.5, float('nan'), float('inf')):
+            with self.subTest(angle=angle):
+                self.call('__bfFaceAim', None, figure, dict(ang=angle))
+                self.assertEqual(figure['__direction'], 4)
+                self.assertEqual(self.calls, [])
+        self.call('__bfFaceAim', None, figure, {})
+        self.call('__bfFaceAim', None, None, dict(ang=2))
+        self.assertEqual(self.calls, [])
+
+    def test_firing_snap_does_not_override_the_next_native_movement_direction(self):
+        scene, figure, _logical = self.facing_scene()
+        self.call('__bfAim', scene, dict(aim=1, ang=6, num_shots=1, seq=1))
+        figure['__bfBursts'] = Arr()
+        walker = dict(id=1, direction=3)
+
+        def native_position(event):
+            figure['__direction'] = event['walker']['direction']
+            figure['behavior'] = 'run'
+
+        scene['__bfPositionOrig'] = native_position
+        self.call('__bfPosition', scene, dict(walker=walker))
+        self.assertEqual((figure['__direction'], figure['behavior']), (3, 'run'))
 
     def confirmed_volley(self, count=3, weapon=4):
         scene, figure = self.scene()

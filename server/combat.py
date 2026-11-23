@@ -44,7 +44,7 @@ import action_animation
 import battle_medicine
 import battle_balance
 import bosses
-import camp_loot
+import mob_equipment_loot
 import eden
 import eden_harvest
 import eden_ground
@@ -1575,7 +1575,20 @@ class Fighter:
         is all a player sees of a mob's level."""
         rc = self.rc
         mob = rc.mobs.get(npc_id) if rc is not None else None
-        return dict(lvl=mob.level) if mob is not None else {}
+        if mob is None:
+            return {}
+        shown = mob.level
+        if (mob.stats.role == 'boss' and not getattr(mob, '_holding_prepared', False)
+                and mob.type_id not in bosses.WAREHOUSE_MASTERS
+                and getattr(mob, 'training_ground', None) is None):
+            # Presentation only: keep the old fixed shield level without
+            # changing combat, recovery, contribution XP or loot eligibility.
+            source = battle_balance.data()
+            index = source['mobs'].get(str(mob.type_id))
+            shown = (source['mob_records'][index]['level'] if index is not None
+                     else mobs.TYPES.get(str(mob.type_id), {}).get('level', shown))
+            shown = max(1, shown)
+        return dict(lvl=shown)
 
     def after_npc_info(self, npc_id):
         """usrUp right behind a mob's userInfo, or the bar over its head
@@ -1746,7 +1759,6 @@ class Fighter:
         if (row is not None and item_templates.source_type(row['type_id']) == items.POISON_SYRINGE
                 and (target is None or not target.is_player)):
             self.ack(inventory.RES_REFUSED)
-            sess.answer('Шприц с зельем можно применять только к другим игрокам.')
             return
         if (row is not None and row['root'] == items.FIRE_ARM and self.aim is not None
                 and getattr(self, 'aim_request', None) == (row['uniq'], ttype, tid, row['cur_mode'])):
@@ -2169,11 +2181,14 @@ class Fighter:
     def heal_now(self, uniq, target, peace_damage=None, ap_cost=0):
         self.healing = None
         row = self.store.item(uniq)
-        if row is not None and effects.definition(row['type_id']) is not None:
-            return effects.activate(self, uniq, target, ap_cost, peace_damage)
-        if row is None or row["char_id"] != self.sess.char_id or self.dead:
+        if (row is None or row['char_id'] != self.sess.char_id or self.dead
+                or row['root'] != items.HEAL or row['use_count'] <= 0
+                or row.get('count', 1) <= 0 or row.get('slot', inventory.BAG) == inventory.BANK
+                or uniq in getattr(self.sess.inv, 'locked', ())):
             self.sess.send("actionCancel", release=1)
             return
+        if row is not None and effects.definition(row['type_id']) is not None:
+            return effects.activate(self, uniq, target, ap_cost, peace_damage)
         if items.stimulant_unavailable(row["type_id"]):
             self.sess.send("actionCancel", release=1)
             self.sess.answer(items.STIMULANT_UNAVAILABLE)
@@ -2228,6 +2243,24 @@ class Fighter:
         healed = min(v["hmax"] - v["hcur"], int(RNG.uniform(lo, hi) * mult))
         slo, shi = si.get("min_st_rest", 0), si.get("max_st_rest", 0)
         rested = min(v["smax"] - v["scur"], int(RNG.uniform(slo, shi) * mult))
+        # Consume the checked dose before granting vitals/AP or broadcasting
+        # success. A failed write must not heal for free or start cooldown.
+        left = row["use_count"] - 1
+        stacked = left <= 0 and items.heapable(row['type_id']) and row.get('count', 1) > 1
+        try:
+            if stacked:
+                self.store.update_item(uniq, count=row['count'] - 1)
+            elif left <= 0:
+                self.store.delete_item(uniq)
+            else:
+                self.store.update_item(uniq, use_count=left)
+        except storage.CommitError:
+            self.sess.inv.close_after_uncertain_commit()
+            return
+        except Exception:
+            log.exception("Medicine consumption failed for character %s", self.sess.char_id)
+            self.sess.send("actionCancel", release=1)
+            return
         patient.hp = v["hcur"] + max(0, healed)
         patient.sp = v["scur"] + max(0, rested)
         if ap_cost:
@@ -2239,15 +2272,11 @@ class Fighter:
             room.broadcast(frame)
         else:
             self.sess.send(frame[0], **frame[1])
-        left = row["use_count"] - 1
-        if left <= 0 and items.heapable(row['type_id']) and row.get('count', 1) > 1:
-            self.store.update_item(uniq, count=row['count'] - 1)
+        if stacked:
             self.sess.inv.push_di(self.store.item(uniq))
         elif left <= 0:
-            self.store.delete_item(uniq)
             self.sess.inv.push_status(row, 0)
         else:
-            self.store.update_item(uniq, use_count=left)
             self.sess.inv.push_di(self.store.item(uniq))
         if cooldown is not None:
             remaining = battle_medicine.start(
@@ -3833,7 +3862,7 @@ class RoomCombat:
                               multiplier=getattr(mob, "loot_multiplier", 1),
                               gold_multiplier=getattr(mob, "gold_loot_multiplier", 1))
         extra = events.loot(self.room.loc.id, mob.type_id, RNG) + production.yield_of(mob.type_id)
-        extra = [(t, n) for t, n in extra if not camp_loot.is_afro_set_piece(t)
+        extra = [(t, n) for t, n in extra if thing or not mob_equipment_loot.kind_of(t)
                  or (t in mob.quest_wants and mobs.personal_quest_item(t))]
         for type_id, count in native + extra:
             if (restricted and not (mob.stats.role == 'boss' and type_id in items.GOLD_INGOTS)
@@ -3850,6 +3879,8 @@ class RoomCombat:
                 # creature's bag from being empty: nothing found, no bag.
                 continue
             fields = inventory.new_fields(type_id, count)
+            if not thing and not (type_id in mob.quest_wants and mobs.personal_quest_item(type_id)):
+                fields.update(mob_equipment_loot.worn_fields(type_id, RNG))
             root = fields.pop("root")
             rows.append(self.store.create_item(LOOT_OWNER, type_id, root, **fields))
         return rows

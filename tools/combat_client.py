@@ -269,9 +269,22 @@ def __bfStamina(percent, value):
         p = 0
     this.__bfStaminaOrig(Math.max(0, Math.min(100, p)), value)
 
+def __bfFaceAim(figure, aim):
+    if not figure or not aim or aim.ang == None:
+        return
+    direction = Number(aim.ang)
+    if isNaN(direction) or direction < 1 or direction > 8 or Math.floor(direction) != direction:
+        return
+    # Native direction schedules gradual rotation on later frames. A queued
+    # confirmed volley may fire immediately: face it before FIRE_IN instead.
+    if figure.deleteEnterFrame and figure.rotate:
+        figure.deleteEnterFrame(figure.rotate)
+    figure.__direction = direction
+
 def __bfVisualStart(scene, figure, bundle):
     bundle.active = True
     figure.__fireCount = 0
+    _global.__bfFaceAim(figure, bundle.aim)
     scene.__bfAimOrig(bundle.aim)
     i = 0
     while i < len(bundle.events):
@@ -392,6 +405,7 @@ def __bfAim(obj):
     if figure.__bfSkipVisual:
         if figure.__bfBursts and len(figure.__bfBursts) > 0:
             _global.__bfVisualFlush(this, figure)
+        _global.__bfFaceAim(figure, obj)
         this.__bfAimOrig(obj)
         return
     if not figure.__bfBursts:

@@ -362,6 +362,93 @@ def boss_adjustments():
 
 
 @lru_cache(maxsize=1)
+def world_boss_damage_references():
+    """Ordinary attack ceilings for reachable world and quest bosses, not sites.
+
+    Locations record the real comparison rooms. Where no ordinary creature
+    lives there, the reviewed reference is an existing ordinary of the same
+    level. Loading never scans the world or creates combat rooms.
+    """
+    import bosses
+    import mobs
+    raw = json.loads(PATH.with_name('combat_balance.json').read_text(encoding='utf-8'))
+    records = raw.get('world_boss_damage_references') if isinstance(raw, dict) else None
+    ceiling_fields = {'dmin', 'dmax', 'sdmin', 'sdmax', 'damage_per_ap', 'stamina_per_ap',
+                      'burst_damage', 'burst_stamina', 'damage_per_second', 'stamina_per_second'}
+    if (not isinstance(records, dict)
+            or raw.get('source_commit') != data()['source_commit']
+            or not {str(type_id) for type_id in bosses.CAMP_RECOVERY_TYPES} <= records.keys()
+            or any(not isinstance(key, str) or not key.isdecimal()
+                   or int(key) in bosses.WAREHOUSE_MASTERS
+                   or mobs.TYPES.get(key, {}).get('role') != 'boss'
+                   or not isinstance(row, dict) or set(row) != {'reference', 'locations', 'ceiling'}
+                   or type(row['reference']) is not int
+                   or mobs.TYPES.get(str(row['reference']), {}).get('role') != 'mob'
+                   or not isinstance(row['locations'], list) or not row['locations']
+                   or any(type(loc) is not int or not 0 <= loc < 8192 for loc in row['locations'])
+                   or len(row['locations']) != len(set(row['locations']))
+                   or not isinstance(row['ceiling'], dict) or set(row['ceiling']) != ceiling_fields
+                   or any(isinstance(value, bool) or not isinstance(value, (int, float))
+                          or not math.isfinite(value) or value < 0 for value in row['ceiling'].values())
+                   or row['ceiling']['dmin'] > row['ceiling']['dmax']
+                   or row['ceiling']['sdmin'] > row['ceiling']['sdmax']
+                   or row['ceiling']['damage_per_ap'] <= 0 or row['ceiling']['burst_damage'] <= 0
+                   or row['ceiling']['damage_per_second'] <= 0
+                   for key, row in records.items())):
+        raise ValueError('Invalid world boss damage references')
+    return MappingProxyType({int(key): MappingProxyType(dict(reference=row['reference'],
+                             locations=tuple(row['locations']), ceiling=MappingProxyType(row['ceiling'])))
+                             for key, row in records.items()})
+
+
+def cap_world_boss_damage(stats):
+    """Cap real attacks by the ordinary reference and the frozen weaker profile.
+
+    The second ceiling prevents a new weapon class, burst or cheaper attack
+    mode from accidentally increasing a previously weak boss's damage.
+    """
+    record = world_boss_damage_references().get(stats.type_id)
+    if record is None:
+        return
+    import mobs
+    reference = mobs.stats(record['reference'])
+    if not reference.can_attack:
+        raise ValueError('World boss damage reference cannot attack')
+    reference_modes = getattr(reference, 'balanced_modes', ())
+    mode = max(reference_modes, key=lambda row: row['reach']) if reference_modes else {}
+    limits = dict(dmin=reference.dmg_min, dmax=reference.dmg_max,
+                  sdmin=mode.get('sdmin', 0), sdmax=mode.get('sdmax', 0))
+    ceiling = record['ceiling']
+    limits = {key: min(limit, ceiling[key]) for key, limit in limits.items()}
+
+    def capped(row):
+        result = dict(row, **{key: min(row.get(key, 0), limit) for key, limit in limits.items()})
+        shots, ap, seconds = max(1, row['shots']), max(1, row['ap']), max(.05, row['time'])
+        for low, high, per_ap, burst, per_second in (
+                ('dmin', 'dmax', 'damage_per_ap', 'burst_damage', 'damage_per_second'),
+                ('sdmin', 'sdmax', 'stamina_per_ap', 'burst_stamina', 'stamina_per_second')):
+            power = (result[low] + result[high]) / 2 * shots / ap
+            total = result[high] * shots
+            rate = (result[low] + result[high]) / 2 * shots / seconds
+            scale = min(1, ceiling[per_ap] / power if power > 0 else 1,
+                        ceiling[burst] / total if total > 0 else 1,
+                        ceiling[per_second] / rate if rate > 0 else 1)
+            result[low] = math.floor(result[low] * scale + 1e-9)
+            result[high] = math.floor(result[high] * scale + 1e-9)
+        return result
+
+    modes = getattr(stats, 'balanced_modes', ())
+    if modes:
+        stats.balanced_modes = tuple(capped(row) for row in modes)
+        display = max(stats.balanced_modes, key=lambda row: row['reach'])
+        stats.dmg_min, stats.dmg_max = display['dmin'], display['dmax']
+    else:
+        row = capped(dict(dmin=stats.dmg_min, dmax=stats.dmg_max,
+                          shots=stats.shots, ap=stats.attack_ap, time=stats.attack_time))
+        stats.dmg_min, stats.dmg_max = row['dmin'], row['dmax']
+
+
+@lru_cache(maxsize=1)
 def ordinary_mob_reference():
     """One reviewed level ladder for ordinary mobs, including legacy types."""
     raw = json.loads(PATH.with_name('combat_balance.json').read_text(encoding='utf-8'))
@@ -425,8 +512,15 @@ def equip_mob(stats, damage_scale, *, site=False):
         return False
     if not stats.ranged:
         kind = 'knife'
+    elif not site:
+        import mob_loadouts
+        kind = mob_loadouts.weapon_class(stats.type_id, kind)
     weapons = mob_weapons()
     choices = [row for row in weapons.get(kind, ()) if row[0] == stats.level]
+    if not choices and kind == 'rifle' and not site:
+        # A reviewed sniper keeps the nearest junior rifle when its own
+        # tier is absent. Below the first rifle, the native pistol rule wins.
+        choices = [row for row in weapons.get(kind, ()) if row[0] <= stats.level]
     if not choices and stats.ranged:
         alternatives = {
             'pistol': ('smg', 'assault_rifle', 'shotgun', 'rifle', 'machine_gun'),
@@ -436,6 +530,9 @@ def equip_mob(stats, damage_scale, *, site=False):
             'smg': ('assault_rifle', 'shotgun', 'machine_gun', 'rifle', 'pistol'),
             'machine_gun': ('assault_rifle', 'smg', 'rifle', 'shotgun', 'pistol'),
         }.get(kind, ())
+        if not site:
+            # Class gaps must not turn every ordinary gunner into a sniper.
+            alternatives = tuple(candidate for candidate in alternatives if candidate != 'rifle')
         if stats.level < min((row[0] for row in weapons.get(kind, ())), default=math.inf):
             alternatives = ('pistol', *alternatives)
         for candidate in alternatives:
@@ -557,6 +654,8 @@ def configure_mob(stats, *, health_scale=1, damage_scale=1, site=False):
     if not site:
         stats.ap_max = ordinary_mob_ap(stats.level)
     if equipped:
+        if not site and stats.role == 'boss':
+            cap_world_boss_damage(stats)
         return
     factor = damage_scale / MOB_BALANCE_DIVISOR
     if reference is not None and stats.shots > 0 and stats.attack_ap > 0:
@@ -589,6 +688,8 @@ def configure_mob(stats, *, health_scale=1, damage_scale=1, site=False):
             compatible = items.params_of(row['gun']).get('comp_array', ())
             stats.loot_ammo_type = next((t for t in compatible
                 if items.catalogue()[t][1].endswith('_ST')), None)
+    if not site and stats.role == 'boss':
+        cap_world_boss_damage(stats)
 
 
 def mob_mode(stats, distance):

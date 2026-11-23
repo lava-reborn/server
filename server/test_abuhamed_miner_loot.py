@@ -63,7 +63,7 @@ class AbuHamedMinerLoot(unittest.TestCase):
             self.assertIn(ammo_type, items.params_of(weapon)['comp_array'])
             for seed in range(10):
                 drops = mobs.carried(st, random.Random(seed))
-                self.assertEqual(drops[0][0], ammo_type)
+                self.assertEqual(drops[0][0], {6095: 6107, 6099: 6111}[ammo_type])
                 self.assertTrue(3 <= drops[0][1] <= 10)
             ammo = items.params_of(ammo_type)
             self.assertEqual([ammo[k] for k in ('acc_mod', 'dam_mod', 'st_mod', 'range_mod', 'piercing')],

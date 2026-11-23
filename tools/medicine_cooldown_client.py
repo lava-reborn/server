@@ -25,7 +25,9 @@ def __bfMedQuantity():
 def __bfMedBuy(item, count):
     if item.rootID != lol.core.objects.Item.HEAL_ITEM or not (item.getProp("max_count") > 1):
         return this.__bfMedBuyOrig(item, count)
-    n = count or 1
+    n = 1
+    if count != None:
+        n = count
     if n < 1 or n > 10 or n != Math.floor(n):
         return this.applyTransfer(False)
     code = lol.core.player.Trade.UPD_BUY
@@ -39,7 +41,9 @@ def __bfMedBuy(item, count):
 def __bfMedAmount(text):
     item = this.item
     if item and item.rootID == lol.core.objects.Item.HEAL_ITEM and item.getProp("max_count") > 1:
-        text = String(item.getProp("size") or 1) + " шт."
+        # showAmount uses numChar bitmap glyphs, not a text field. Spaces
+        # and Cyrillic letters have no frame and appear as extra zeroes.
+        text = String(item.getProp("size") or 1)
     return this.__bfMedAmountOrig(text)
 def __bfMedHover():
     _global.__bfMedHintIcon = this

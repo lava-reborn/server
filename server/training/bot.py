@@ -169,8 +169,10 @@ class LocalFighter(combat.Fighter):
         before = self.store.item(uniq)
         super().heal_now(uniq, target, peace_damage, ap_cost)
         after = self.store.item(uniq)
-        if before and (after is None or after['use_count'] < before['use_count']):
-            self.sess.ground.enemy_heals_left -= 1
+        if before and (after is None or after['use_count'] < before['use_count']
+                       or after['count'] < before['count']):
+            ground = self.sess.ground
+            ground.enemy_heals_left = max(0, ground.enemy_heals_left - 1)
 
     def credit_xp(self, *args, **kwargs):
         pass
