@@ -233,6 +233,13 @@ BASE = dict(ALL)
 # decides everyone the original is silent about.
 ALL.update({t: n for t, n in npcs.NAMES.items() if t not in ORIG_PERSON_NAMES})
 
+# Location-scoped captions have their own preloaded IDs. Never rename the
+# shared NPC or let an unknown string trigger a late client text request.
+for _sid, _caption in npcs.PRESENTATION_NAMES.items():
+    if _sid in ALL and ALL[_sid] != _caption:
+        raise ValueError('NPC presentation name overlaps an existing string id')
+    ALL[_sid] = _caption
+
 # Owner, 2026-10-28: set upgrades moved to Joseph; former exchangers
 # retain only personal names until the service is restored.
 ALL.update({

@@ -66,18 +66,18 @@
    "desc": "Добротная одежда беженца. Еще не успела истрепаться.",
    "_layout": "sgyqaabf",
    "_source": "key texts.xml 11221, the row of the set these types formed in the original; desc texts.xml 11219; numbers wiki, each piece's own page (its _wiki); bonus none: the wiki's Вещи Беженца says there is none",
-   "_designed": ["Стрельба 1 on every piece, the set's level (the wiki's pieces ask none)", "the wiki's pieces have no G column: the afro column's numbers, priced in gold at 4000 afro = 1 G"],
+   "_designed": ["Стрельба 1 on every piece, the set's level (the wiki's pieces ask none)", "the wiki's pieces have no G column: the afro column's numbers, priced in gold at 4000 afro = 1 G", "Release 2026-11-23: early G stats differentiated from the single-column A source; prices, requirements and durability retained"],
    "family": "Bs_M",
    "level": 1,
    "variant": "G",
    "res": 0,
    "bonus": {},
    "members": {
-    "helm": {"type": 10079, "name": "Панама[1][G]", "desc": "Легкая шляпа с упругими полями, выполненная в стиле милитари. Неплохо защищает от солнца.", "_wiki": "Панама (its one column, A)", "_desc": "texts.xml 22946, its Latin e made Cyrillic and its <br/> a space (the wiki's copy writes 'Не плохо')", "armor_class": 3, "max_break_abs": 625, "weight": 1250, "cost": 0, "g_cost": 13, "premium": 0, "exchang": 0, "bonus_st": 5, "bonus_cp": 1, "need": {"Телосложение": 5, "Стрельба": 1}},
-    "shirt": {"type": 10080, "name": "Пончо[1][G]", "desc": "Этот древнейший предмет одежды, пришедший к нам из Южной Америки. Хорошо защищает от солнца, ветра, песка и пыли.", "_wiki": "Пончо (its one column, A)", "armor_class": 1, "max_break_abs": 375, "weight": 750, "cost": 0, "g_cost": 8, "premium": 0, "exchang": 0, "bonus_st": 45, "need": {"Телосложение": 5, "Стрельба": 1}},
-    "armor": {"type": 10081, "name": "Самодельная Броня[1][G]", "desc": "Броня собранная из различного хлама техногенного происхождения.", "_wiki": "Самодельная броня (its one column, A)", "armor_class": 7, "max_break_abs": 675, "weight": 1500, "cost": 0, "g_cost": 15, "premium": 0, "exchang": 0, "bonus_st": 5, "bonus_ce": 1, "need": {"Телосложение": 5, "Стрельба": 1}},
-    "pants": {"type": 10082, "name": "Шорты[1][G]", "desc": "Некогда это были штаны, но элегантным движением руки, они превратились в эти замечательные шорты!", "_wiki": "Шорты (its one column, A)", "armor_class": 1, "max_break_abs": 500, "weight": 1000, "cost": 0, "g_cost": 10, "premium": 0, "exchang": 0, "bonus_st": 10, "need": {"Телосложение": 5, "Стрельба": 1}},
-    "boots": {"type": 10083, "name": "Самодельные тапки[1][G]", "desc": "Тапки изготовленные народными умельцами из старых автомобильных покрышек и полосок резины.", "_wiki": "Самодельные тапки (its one column, A)", "armor_class": 1, "max_break_abs": 250, "weight": 500, "cost": 0, "g_cost": 5, "premium": 0, "exchang": 0, "bonus_st": 5, "need": {"Телосложение": 5, "Стрельба": 1}}
+    "helm": {"type": 10079, "name": "Панама[1][G]", "desc": "Легкая шляпа с упругими полями, выполненная в стиле милитари. Неплохо защищает от солнца.", "_wiki": "Панама (its one column, A)", "_desc": "texts.xml 22946, its Latin e made Cyrillic and its <br/> a space (the wiki's copy writes 'Не плохо')", "armor_class": 4, "max_break_abs": 625, "weight": 1250, "cost": 0, "g_cost": 13, "premium": 0, "exchang": 0, "bonus_st": 6, "bonus_cp": 1, "need": {"Телосложение": 5, "Стрельба": 1}},
+    "shirt": {"type": 10080, "name": "Пончо[1][G]", "desc": "Этот древнейший предмет одежды, пришедший к нам из Южной Америки. Хорошо защищает от солнца, ветра, песка и пыли.", "_wiki": "Пончо (its one column, A)", "armor_class": 1, "max_break_abs": 375, "weight": 750, "cost": 0, "g_cost": 8, "premium": 0, "exchang": 0, "bonus_st": 54, "need": {"Телосложение": 5, "Стрельба": 1}},
+    "armor": {"type": 10081, "name": "Самодельная Броня[1][G]", "desc": "Броня собранная из различного хлама техногенного происхождения.", "_wiki": "Самодельная броня (its one column, A)", "armor_class": 9, "max_break_abs": 675, "weight": 1500, "cost": 0, "g_cost": 15, "premium": 0, "exchang": 0, "bonus_st": 6, "bonus_ce": 1, "need": {"Телосложение": 5, "Стрельба": 1}},
+    "pants": {"type": 10082, "name": "Шорты[1][G]", "desc": "Некогда это были штаны, но элегантным движением руки, они превратились в эти замечательные шорты!", "_wiki": "Шорты (its one column, A)", "armor_class": 1, "max_break_abs": 500, "weight": 1000, "cost": 0, "g_cost": 10, "premium": 0, "exchang": 0, "bonus_st": 12, "need": {"Телосложение": 5, "Стрельба": 1}},
+    "boots": {"type": 10083, "name": "Самодельные тапки[1][G]", "desc": "Тапки изготовленные народными умельцами из старых автомобильных покрышек и полосок резины.", "_wiki": "Самодельные тапки (its one column, A)", "armor_class": 1, "max_break_abs": 250, "weight": 500, "cost": 0, "g_cost": 5, "premium": 0, "exchang": 0, "bonus_st": 6, "need": {"Телосложение": 5, "Стрельба": 1}}
    }
   },
   "11167": {
@@ -149,23 +149,23 @@
    "desc": "Добротная экипировка, в которую облачены Странники. Они могут продать её всем желающим, предоставив защиту и удобство за минимум стоимости.",
    "_layout": "svmxr8oi",
    "_source": "key texts.xml 11193, the row of the set these types formed in the original; desc wiki Сет Странник; numbers wiki, each piece's own page (its _wiki); bonus wiki Сет Странник (one column)",
-   "_designed": ["Стрельба 4 on every piece, the set's level (the wiki's pieces ask none)"],
+   "_designed": ["Стрельба 4 on every piece, the set's level (the wiki's pieces ask none)", "Release 2026-11-23: early G stats differentiated from the single-column A source; prices, requirements and durability retained"],
    "family": "Set_M",
    "level": 4,
    "variant": "G",
    "res": 114,
    "bonus": {
     "2": {"hp": 2, "st": 2},
-    "3": {"st": 5, "od": 2, "Сила": 1},
-    "4": {"st": 8, "od": 3, "ce": 2, "Ловкость": 1},
-    "5": {"st": 12, "cp": 2, "Телосложение": 1, "Восприятие": 1, "Интеллект": 1}
+    "3": {"st": 6, "od": 2, "Сила": 1},
+    "4": {"st": 10, "od": 4, "ce": 3, "Ловкость": 1},
+    "5": {"st": 14, "cp": 3, "Телосложение": 1, "Восприятие": 1, "Интеллект": 1}
    },
    "members": {
-    "helm": {"type": 10919, "name": "Шапка странника[4][G]", "desc": "Плотная повязка на голову, защищающая от солнца и песка.", "_wiki": "Шапка странника (its one column, G)", "armor_class": 8, "max_break_abs": 1125, "weight": 2250, "cost": 0, "g_cost": 125, "premium": 0, "exchang": 0, "bonus_hp": 2, "bonus_st": 10, "bonus_cp": 1, "need": {"Телосложение": 5, "Стрельба": 4}},
-    "shirt": {"type": 10920, "name": "Плащ странника[4][G]", "desc": "Хороший плотный плащ с внутренними карманами и кожаным укреплением.", "_wiki": "Плащ странника (its one column, G)", "armor_class": 2, "max_break_abs": 675, "weight": 1350, "cost": 0, "g_cost": 75, "premium": 0, "exchang": 0, "bonus_hp": 2, "bonus_st": 22, "bonus_cp": 1, "need": {"Телосложение": 5, "Стрельба": 4}},
-    "armor": {"type": 10921, "name": "Броня странника[4][G]", "desc": "Легкий потрепанный бронежилет. Еще послужит.", "_wiki": "Броня странника (its one column, G)", "armor_class": 30, "max_break_abs": 1350, "weight": 2700, "cost": 0, "g_cost": 150, "premium": 0, "exchang": 0, "bonus_hp": 2, "bonus_st": 12, "bonus_cp": 1, "bonus_ce": 1, "need": {"Телосложение": 5, "Стрельба": 4}},
-    "pants": {"type": 10922, "name": "Штаны странника[4][G]", "desc": "Хорошие крепко сшитые штаны помогут выдержать возможную непогоду.", "_wiki": "Штаны странника (its one column, G)", "armor_class": 2, "max_break_abs": 900, "weight": 1800, "cost": 0, "g_cost": 100, "premium": 0, "exchang": 0, "bonus_hp": 2, "bonus_st": 20, "bonus_ce": 1, "need": {"Телосложение": 5, "Стрельба": 4}},
-    "boots": {"type": 10923, "name": "Ботинки странника[4][G]", "desc": "Немного изношенные сапоги тем не менее еще способные выдержать пару сотен километров.", "_wiki": "Ботинки странника (its one column, G)", "armor_class": 2, "max_break_abs": 450, "weight": 900, "cost": 0, "g_cost": 50, "premium": 0, "exchang": 0, "bonus_hp": 2, "bonus_st": 8, "bonus_ce": 1, "need": {"Телосложение": 5, "Стрельба": 4}}
+    "helm": {"type": 10919, "name": "Шапка странника[4][G]", "desc": "Плотная повязка на голову, защищающая от солнца и песка.", "_wiki": "Шапка странника (its one column, G)", "armor_class": 10, "max_break_abs": 1125, "weight": 2250, "cost": 0, "g_cost": 125, "premium": 0, "exchang": 0, "bonus_hp": 3, "bonus_st": 12, "bonus_cp": 1, "need": {"Телосложение": 5, "Стрельба": 4}},
+    "shirt": {"type": 10920, "name": "Плащ странника[4][G]", "desc": "Хороший плотный плащ с внутренними карманами и кожаным укреплением.", "_wiki": "Плащ странника (its one column, G)", "armor_class": 2, "max_break_abs": 675, "weight": 1350, "cost": 0, "g_cost": 75, "premium": 0, "exchang": 0, "bonus_hp": 2, "bonus_st": 27, "bonus_cp": 1, "need": {"Телосложение": 5, "Стрельба": 4}},
+    "armor": {"type": 10921, "name": "Броня странника[4][G]", "desc": "Легкий потрепанный бронежилет. Еще послужит.", "_wiki": "Броня странника (its one column, G)", "armor_class": 36, "max_break_abs": 1350, "weight": 2700, "cost": 0, "g_cost": 150, "premium": 0, "exchang": 0, "bonus_hp": 3, "bonus_st": 14, "bonus_cp": 1, "bonus_ce": 1, "need": {"Телосложение": 5, "Стрельба": 4}},
+    "pants": {"type": 10922, "name": "Штаны странника[4][G]", "desc": "Хорошие крепко сшитые штаны помогут выдержать возможную непогоду.", "_wiki": "Штаны странника (its one column, G)", "armor_class": 3, "max_break_abs": 900, "weight": 1800, "cost": 0, "g_cost": 100, "premium": 0, "exchang": 0, "bonus_hp": 2, "bonus_st": 24, "bonus_ce": 1, "need": {"Телосложение": 5, "Стрельба": 4}},
+    "boots": {"type": 10923, "name": "Ботинки странника[4][G]", "desc": "Немного изношенные сапоги тем не менее еще способные выдержать пару сотен километров.", "_wiki": "Ботинки странника (its one column, G)", "armor_class": 2, "max_break_abs": 450, "weight": 900, "cost": 0, "g_cost": 50, "premium": 0, "exchang": 0, "bonus_hp": 2, "bonus_st": 10, "bonus_ce": 1, "need": {"Телосложение": 5, "Стрельба": 4}}
    }
   },
   "11258": {

@@ -6,10 +6,13 @@ import json
 import math
 from pathlib import Path
 import re
+from types import SimpleNamespace as NS
 import unittest
+from unittest.mock import Mock, patch
 import xml.etree.ElementTree as ET
 
 import names
+import npcs
 import holdings
 import map_labels
 import progression
@@ -53,6 +56,74 @@ def reachable(loc, start):
 
 
 class ClanBaseWorldTests(unittest.TestCase):
+    def test_base_presentations_preserve_service_identity_and_preload_local_caption(self):
+        import accounts
+        import items
+        import server
+        from training import api
+        api.preload_strings()
+        texts = {int(row.attrib['id']): row.text or ''
+                 for row in ET.fromstring(names.document_bytes())}
+        self.assertEqual(texts[8000001], 'Снабженец базы клана')
+        self.assertEqual(names.text(1013), names.BASE[1013])
+        with closing(accounts.Store(':memory:')) as store, patch.object(server, 'STORE', store):
+            for lid, type_id in ((118, 688), (1442, 5275), (609, 1013), (1443, 1013), (185, 1013)):
+                with self.subTest(lid=lid, type_id=type_id):
+                    base_medic = type_id == 1013 and lid in (609, 1443)
+                    root = world.entity_root(type_id, world.mob_types()[type_id][0])
+                    seat = NS(room=NS(loc=world.location(lid), npc=lambda _eid: (0, type_id, root)),
+                              char_id=0, home_here=lambda _type: False,
+                              combat=NS(mob_info=lambda _eid: {}, after_npc_info=Mock()))
+                    frames = []
+                    seat.send = lambda command, **params: frames.append((command, params))
+                    server.Session.send_npc_info(seat, 123)
+                    command, params = frames[0]
+                    self.assertEqual(params['give_quests'], quests.given_by(type_id))
+                    self.assertEqual(params['take_quests'], quests.taken_by(type_id))
+                    self.assertEqual(params['res'], 4443 if base_medic else type_id if type_id == 1013 else 689)
+                    self.assertEqual(params['name'], 8000001 if base_medic else type_id)
+                    if type_id == 1013:
+                        self.assertEqual(command, 'userInfo_Trader')
+                        self.assertEqual(params['type_list'], items.stock_for(type_id, lid))
+                    else:
+                        self.assertEqual(command, 'userInfo_Commoner')
+                        self.assertEqual((params['can_trade'], params['can_repair']), (0, 0))
+                    self.assertTrue(names.known(params['name']))
+                    self.assertIn(params['res'], world.mob_types())
+        changed = npcs.presentation(1013, 609)
+        changed['name'] = 1
+        self.assertEqual(npcs.presentation(1013, 609)['name'], 8000001)
+        self.assertEqual(npcs.presentation(1013, 185), {})
+        for lid, type_id in ((118, 688), (1442, 5275)):
+            self.assertEqual(world.mob_types()[npcs.presentation(type_id, lid)['res']][2],
+                             world.mob_types()[689][2])
+        self.assertEqual(world.mob_types()[4443][2], '1f_Dok')
+
+    def test_presentation_records_cannot_change_services_or_use_unknown_captions(self):
+        for row in ({'res': 4443, 'can_trade': 1, 'why': 'invalid'},
+                    {'name': 8000001, 'why': 'unknown string'},
+                    {'res': -1, 'why': 'invalid model'}, {'res': 689}):
+            with self.subTest(row=row), self.assertRaises(RuntimeError):
+                npcs._presentation({'presentation': {'609': {'1013': row}}})
+
+    def test_ammunition_suppliers_stand_right_and_in_front_of_red_cylinders(self):
+        for lid, type_id in ((609, 714), (1443, 5240)):
+            with self.subTest(lid=lid):
+                loc = world.location(lid)
+                cell = next(cell for cell, typ in loc.spawns if typ == type_id)
+                x, y = cell % loc.width, cell // loc.width
+                self.assertEqual((x, y), (25, 51))
+                self.assertNotIn(cell, loc.obstacles)
+                self.assertNotIn(cell, travel.exit_sides(loc))
+                root = ET.fromstring(Path(world.overlay_path(lid)).read_bytes())
+                cylinders = root.find("sprite[@id='gasbalon.png']").text
+                bx, by = int(cylinders[:2], 16), int(cylinders[2:4], 16)
+                # The native point is (40*x + 20 for odd rows, 15*y).
+                self.assertGreater(40 * x + 20 * (y % 2), 40 * bx + 20 * (by % 2))
+                self.assertGreater(y, by)
+                neighbours = progression.hex_neighbours(cell, loc.width, loc.height)
+                self.assertGreaterEqual(sum(c not in loc.obstacles for c in neighbours), 4)
+
     def test_relocated_bases_retire_both_old_squares_and_reach_dongola(self):
         import map_cells
         plan = map_cells.load()
@@ -155,7 +226,10 @@ class ClanBaseWorldTests(unittest.TestCase):
                 source = Path(world.RES) / 'locations' / 'static' / ('%d.xml' % source_id)
                 original, art = parts(source.read_bytes())
                 current, restored_art = parts(Path(world.overlay_path(lid)).read_bytes())
-                self.assertEqual(restored_art, art)
+                # Git may normalize XML CRLF to LF. Every other byte of
+                # the non-NPC artwork/geometry fragment must stay exact.
+                self.assertEqual(restored_art.replace(b'\r\n', b'\n'),
+                                 art.replace(b'\r\n', b'\n'))
                 original.pop(b'title')
                 current.pop(b'title')
                 self.assertEqual(current, original)

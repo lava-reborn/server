@@ -1,5 +1,36 @@
 {
  "_": "Имена жителей и их ассортимент, выбранные вручную. server/npcs.py читает это при старте: names.py берёт отсюда имя поверх вики, items.stock_for — список товаров поверх неё же. Ключ — тип существа из mobs.xml, не локация: два рынка с одним типом торговца ставят одного и того же торговца. Пишется tools/npc_editor.py.",
+ "presentation_names": {
+  "8000001": "Снабженец базы клана"
+ },
+ "presentation": {
+  "118": {
+   "688": {
+    "res": 689,
+    "why": "Owner-approved base entrance uses the same native model as its bunker exit; service identity and passage quests stay unchanged."
+   }
+  },
+  "1442": {
+   "5275": {
+    "res": 689,
+    "why": "Owner-approved base entrance uses the same native model as its bunker exit; service identity and passage quests stay unchanged."
+   }
+  },
+  "609": {
+   "1013": {
+    "res": 4443,
+    "name": 8000001,
+    "why": "Owner-approved clan-base supply medic uses the native clan_healer_afrobase medical model, with a local caption. City Doctor Gofus and all stock bindings stay unchanged."
+   }
+  },
+  "1443": {
+   "1013": {
+    "res": 4443,
+    "name": 8000001,
+    "why": "Owner-approved clan-base supply medic uses the native clan_healer_afrobase medical model, with a local caption. City Doctor Gofus and all stock bindings stay unchanged."
+   }
+  }
+ },
  "names": {
   "4828": "Часовой",
   "4829": "Охранник",

@@ -223,29 +223,28 @@ def laborant_available(store, day):
 
 
 def laborant_wear(quest, inv):
-    """The two oldest unlocked bag ingredients retain their worst condition.
+    """Final experiments create a factory-new pouch; A0 exchanges keep wear.
 
-    Reuse the ordinary set rework conversion: no fresh factory ceiling or
-    repair is obtained by combining worn equipment and then selling it.
+    The final recipe spends a kit and five personal daily parts and uses
+    the shared daily experiment. Exchanging A0 for ordinary A1 is not that
+    experiment and must not repair its oldest unlocked bag ingredient.
     """
     recipe = LABORANT_RECIPES.get(quest.type)
     upgrade = LABORANT_MOD_UPGRADES.get(quest.type)
     if recipe is None and upgrade is None:
         return None
-    from fractions import Fraction
-    import inventory
     import items
+    if recipe is not None:
+        factory = items.params_of(recipe[1])["max_break_abs"]
+        return factory, factory, factory
+    import inventory
     import setcraft
-    new_abs = items.params_of(recipe[1] if recipe else LABORANT_MOD)["max_break_abs"]
-    worn = []
-    for type_id in ((LABORANT_MOD, recipe[0]) if recipe else (upgrade,)):
-        row = next(r for r in inv.rows() if r["type_id"] == type_id
-                   and r["slot"] == inventory.BAG and r["uniq"] not in inv.locked)
-        old_abs = items.params_of(type_id)["max_break_abs"]
-        worn.append(setcraft.worn_as((row["brk"], row["max_break_cur"], old_abs), new_abs))
-    top = min(ceiling for _brk, ceiling in worn)
-    condition = min(Fraction(brk, ceiling) for brk, ceiling in worn)
-    return top * condition.numerator // condition.denominator, top, new_abs
+    new_abs = items.params_of(LABORANT_MOD)["max_break_abs"]
+    row = next(r for r in inv.rows() if r["type_id"] == upgrade
+               and r["slot"] == inventory.BAG and r["uniq"] not in inv.locked)
+    old_abs = items.params_of(upgrade)["max_break_abs"]
+    brk, top = setcraft.worn_as((row["brk"], row["max_break_cur"], old_abs), new_abs)
+    return brk, top, new_abs
 
 # String id layout (recon/analysis/quests.md 4.4): 2 000 000 + 4 * type + k.
 STRING_BASE = 2_000_000
@@ -972,6 +971,9 @@ DISABLED_ACADEMY_LESSONS = frozenset(range(12000, 12075))
 # Replaced by one shared ingot payout per warehouse/day. Keep the old
 # definitions and journal ids so cancellation and NPC indices stay valid.
 REPLACED_WAREHOUSE_REWARDS = frozenset(range(765, 772))
+# Only the downward passages require a clan. The courtyard and the return
+# lifts remain open, including for a character who left the clan inside.
+CLAN_BASE_ENTRIES = frozenset((18201, 18203))
 
 
 

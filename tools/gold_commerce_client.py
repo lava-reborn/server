@@ -76,10 +76,43 @@ def __gcSaleUnit(item):
         unit = cap
     return unit
 
+def __gcBuyTotal(price, count, modifier, root, gold):
+    total = Math.ceil(price * count * modifier)
+    if gold and root != 3 and modifier > 0 and modifier < 1 and price * count > 1:
+        total = Math.max(1, Math.min(total, Math.ceil(price * count) - 1))
+    return total
+
 def __gcShowCost(item, align):
     this.__gcShowCostOrig(item, align)
     if lol.gpui.StaffInterface.ssType != "trade":
         return
+    # Native gold cards ignore pmod, while A cards floor a purchase that
+    # the server ceils. Quote the same whole purchase in both currencies.
+    if not this.showItemSellMod and (item.rootID == 2 or item.rootID == 3) and this.cost_mod > 0 and this.cost_mod < 1:
+        gold = this.showPriseInGold and item.getProp("g_cost") > 0
+        price = item.getProp("cost")
+        if gold:
+            price = item.getProp("g_cost")
+        if price > 0:
+            n = 1
+            if this.showHeapCount and item.getProp("size"):
+                n = item.getProp("size")
+            value = _global.__gcBuyTotal(price, n, this.cost_mod, item.rootID, gold)
+            frame = 1
+            prefix = "a"
+            this.costType = "Афро"
+            if gold:
+                value = value / 100
+                frame = 2
+                prefix = "g"
+                this.costType = "Золото"
+            this.price_mc._visible = value > 0
+            this.price_mc.gotoAndStop(frame)
+            this.mainCost = value
+            if not this.attachIconEnabled:
+                value = prefix + String(value)
+            this.price_mc.fontContainer.showValue(value)
+            return
     if _global.__gcBaseLoot(item) and this.showItemSellMod:
         n = 1
         if this.showHeapCount and item.getProp("size"):
@@ -156,6 +189,11 @@ def __gcCheckSell(item):
 
 def __gcExchange(item, title, mode, showGold, selling):
     pan = this.__gcExchangeOrig(item, title, mode, showGold, selling)
+    if not selling and (item.rootID == 2 or item.rootID == 3) and mode > 0 and mode < 1:
+        pan.__gcBuyRoot = item.rootID
+        pan.__gcBuyGold = showGold and item.getProp("g_cost") > 0
+        pan.countMoney()
+        return pan
     if selling and _global.__gcBaseLoot(item):
         pan.cost_num = item.getProp("base_loot_gold")
         pan.cost_mod = 1
@@ -172,6 +210,18 @@ def __gcExchange(item, title, mode, showGold, selling):
         pan.cost_mod = _global.__gcSaleQuality(item)
         pan.showCostInGold = False
     return pan
+
+def __gcCountMoney():
+    this.__gcCountMoneyOrig()
+    if this.__gcBuyRoot == None or this.sell_bool:
+        return
+    n = this[this.mainSize]
+    if not (n > 0):
+        return
+    total = _global.__gcBuyTotal(this.cost_num, n, this.cost_mod, this.__gcBuyRoot, this.__gcBuyGold)
+    if this.showCostInGold:
+        total = total / 100
+    this.money_mc.info_txt.text = String(total)
 
 def __gcAuctionCheck():
     item = this.currDDOperation.fromItem
@@ -368,9 +418,7 @@ def __gcBuy(item, count):
     if not n or n <= 0 or isNaN(n) or n != Math.floor(n):
         this.applyTransfer(False)
         return
-    total = Math.ceil(price * n * pan.trader.pmod)
-    if item.rootID != 3 and pan.trader.pmod > 0 and pan.trader.pmod < 1 and price * n > 1:
-        total = Math.max(1, Math.min(total, Math.ceil(price * n) - 1))
+    total = _global.__gcBuyTotal(price, n, pan.trader.pmod, item.rootID, True)
     if not total or total <= 0 or isNaN(total):
         this.applyTransfer(False)
         return
@@ -454,6 +502,7 @@ def patches(Asm, undef):
         (('gpui', 'TradeInterface'), 'askTradeItem', '__gcAskSaleOrig', '__gcAskSale'),
         (('gpui', 'TradeInterface'), 'checkSellItem', '__gcCheckSellOrig', '__gcCheckSell'),
         (('gpui', 'TradeInterface'), 'createExchangePan', '__gcExchangeOrig', '__gcExchange'),
+        (('gpui', 'ExchangePan'), 'countMoney', '__gcCountMoneyOrig', '__gcCountMoney'),
         (('gpui', 'AuctionMyLotsInterface'), 'checkDragItem', '__gcAuctionCheckOrig', '__gcAuctionCheck'),
         (('gpui', 'AuctionMyLotsInterface'), 'checkComission', '__gcCommissionOrig', '__gcCommission'),
         (('core', 'player', 'Trade'), 'buy', '__gcBuyOrig', '__gcBuy'),
@@ -472,4 +521,4 @@ def patches(Asm, undef):
         wraps.append((('core', 'player', 'Trade'), name, name + 'Orig', params, body))
     return dict(globals=[(name, params, body) for name, params, body in functions
                          if name in ('__gcQuality', '__gcSaleQuality', '__gcSaleUnit', '__gcConfirmInput',
-                                     '__esActive', '__esNominal', '__gcBaseLoot')], wraps=tuple(wraps))
+                                     '__esActive', '__esNominal', '__gcBaseLoot', '__gcBuyTotal')], wraps=tuple(wraps))

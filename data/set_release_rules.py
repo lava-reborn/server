@@ -42,6 +42,28 @@ LATE_SETS = {
              '5': {'st': 200, 'cp': 19, 'Сила': 3, 'Телосложение': 4, 'Восприятие': 3}}),
 }
 
+
+# These wiki pages have a single stat column, which made the sold G sets
+# identical to A. Keep the original prices/requirements and a modest G step.
+EARLY_GOLD = {
+    11221: (((0, 6, 4, 0, 1, 0),
+             (0, 54, 1, 0, 0, 0),
+             (0, 6, 9, 0, 0, 1),
+             (0, 12, 1, 0, 0, 0),
+             (0, 6, 1, 0, 0, 0)), {}),
+    11193: (((3, 12, 10, 0, 1, 0),
+             (2, 27, 2, 0, 1, 0),
+             (3, 14, 36, 0, 1, 1),
+             (2, 24, 3, 0, 0, 1),
+             (2, 10, 2, 0, 0, 1)),
+            {'2': {'hp': 2, 'st': 2},
+             '3': {'st': 6, 'od': 2, 'Сила': 1},
+             '4': {'st': 10, 'od': 4, 'ce': 3, 'Ловкость': 1},
+             '5': {'st': 14, 'cp': 3, 'Телосложение': 1,
+                   'Восприятие': 1, 'Интеллект': 1}}),
+}
+
+
 def apply(table):
     for key, rec in table.items():
         key = int(key)
@@ -71,3 +93,15 @@ def apply(table):
             for slot, values in zip(('helm', 'shirt', 'armor', 'pants', 'boots'), pieces):
                 rec['members'][slot].update(zip(fields, values))
             rec['bonus'] = {k: dict(v) for k, v in bonuses.items()}
+        if key in EARLY_GOLD:
+            pieces, bonuses = EARLY_GOLD[key]
+            fields = ('bonus_hp', 'bonus_st', 'armor_class', 'bonus_od', 'bonus_cp', 'bonus_ce')
+            for slot, values in zip(('helm', 'shirt', 'armor', 'pants', 'boots'), pieces):
+                piece = rec['members'][slot]
+                piece.update((field, value) for field, value in zip(fields, values)
+                             if value or field in piece)
+            rec['bonus'] = {k: dict(v) for k, v in bonuses.items()}
+            note = ('Release 2026-11-23: early G stats differentiated from the '
+                    'single-column A source; prices, requirements and durability retained')
+            if note not in rec.setdefault('_designed', []):
+                rec['_designed'].append(note)

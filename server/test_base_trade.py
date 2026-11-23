@@ -12,6 +12,7 @@ import items
 import mortimer
 import progression
 import protocol
+import effects
 import world
 from testkit import run_cases
 
@@ -120,6 +121,7 @@ class BaseTrade(unittest.TestCase):
         self.assertIsNotNone(self.store.item(row['uniq']))
 
     def test_rent_expiry_refuses_buy_repair_and_confirmed_sale(self):
+        self.open(989)
         row = self.give(26075)
         self.store.update_item(row['uniq'], brk=100)
         row = self.store.item(row['uniq'])
@@ -135,6 +137,7 @@ class BaseTrade(unittest.TestCase):
         self.assertEqual(self.store.item(row['uniq']), row)
 
     def test_repair_halves_only_ordinary_price_and_retains_ceiling_loss(self):
+        self.open(989)
         for code, money_index in ((inventory.UPD_REPAIR, 0), (inventory.UPD_REPAIR_GOLD, 1)):
             row = self.give(25636)
             self.store.update_item(row['uniq'], brk=0)
@@ -149,6 +152,123 @@ class BaseTrade(unittest.TestCase):
             repaired = self.store.item(row['uniq'])
             self.assertEqual(repaired['max_break_cur'], math.floor(row['max_break_cur'] * inventory.REPAIR_KEEPS))
             self.assertEqual(repaired['brk'], repaired['max_break_cur'])
+
+    def base_room(self, loc):
+        for key in holdings.base_keys():
+            self.store.holding_clear(key, 'admin')
+        self.site = holdings.site_at(loc)
+        self.store.holding_set(self.site.key, self.clan, 'admin', slot=1000, when=1000)
+        self.store.db.execute('UPDATE clan_holdings SET paid_until=? WHERE site=?',
+                              (1000 + 7 * 86400, self.site.key))
+        self.store.db.commit()
+        self.s.loc = NS(id=loc, width=20, height=20, spawns=[])
+        self.s.room.loc = self.s.loc
+
+    def test_every_a_g_base_consumable_wire_purchase_uses_advertised_discount(self):
+        self.inv.carry_limit = lambda: 1_000_000
+        checked = 0
+        categories = set()
+        for loc, supplier in ((609, 714), (1443, 5240)):
+            self.base_room(loc)
+            self.store.set_money(self.cid, 1_000_000_000, 1_000_000)
+            self.s.char.afro, self.s.char.gold = self.store.money(self.cid)
+            for trader in (supplier, 1013):
+                self.open(trader)
+                info = next(p for cmd, p in self.frames if cmd == 'userInfo_Trader')
+                stock = items.stock_for(trader, loc)
+                name, sent = protocol.decode(protocol.encode('userInfo_Trader', **info))
+                self.assertEqual(name, 'userInfo_Trader')
+                self.assertEqual(sent['type_list'], stock)
+                self.assertEqual((sent['pmod'], sent['smod']), (.9, .85))
+                for index, type_id in enumerate(stock):
+                    params = items.params_of(type_id)
+                    gold = bool(params.get('g_cost'))
+                    root = items.root_of(type_id)
+                    category = ('ammo' if root == items.AMMO else
+                                'buff' if effects.definition(type_id) else 'medicine')
+                    categories.add((loc, category, gold))
+                    counts = (1, 7, 100, 5000) if root == items.AMMO else (
+                        (1, 10) if items.heapable(type_id) else (1,))
+                    for n in counts:
+                        unit = params['g_cost'] if gold else params['cost']
+                        unit /= params.get('sell_num', 1) or 1
+                        if root == items.AMMO:
+                            precision = 1 if gold else 1000
+                            unit = math.floor(unit * precision + .5) / precision
+                        expected = math.ceil(unit * n * .9)
+                        if gold and root != items.AMMO and unit * n > 1:
+                            expected = max(1, min(expected, math.ceil(unit * n) - 1))
+                        before = self.store.money(self.cid)
+                        self.frames.clear()
+                        command, request = protocol.decode(protocol.encode('ss_upd',
+                            s_status=inventory.UPD_BUY_GOLD if gold else inventory.UPD_BUY,
+                            obj=protocol.BigUInt(format(index, 'x')), param=n))
+                        self.assertEqual(command, 'ss_upd')
+                        self.assertTrue(self.inv.ss_upd(request))
+                        self.assertEqual([p['res'] for cmd, p in self.frames if cmd == 'cmdAck'], [0],
+                                         (loc, trader, type_id, n))
+                        after = self.store.money(self.cid)
+                        self.assertEqual(before[int(gold)] - after[int(gold)], expected)
+                        self.assertEqual(before[int(not gold)], after[int(not gold)])
+                        if gold:
+                            self.assertGreater(expected, 0)
+                            if root != items.AMMO and unit * n > 1:
+                                self.assertLessEqual(expected, math.ceil(unit * n) - 1)
+                        for row in self.inv.rows():
+                            self.store.delete_item(row['uniq'])
+                        checked += 1
+        self.assertEqual(categories, {(loc, kind, gold) for loc in (609, 1443)
+                                     for kind in ('ammo', 'medicine', 'buff') for gold in (False, True)})
+        self.assertGreater(checked, 500)
+
+    def test_only_dedicated_base_repairer_advertises_and_accepts_repairs(self):
+        for loc, supplier in ((609, 714), (1443, 5240)):
+            self.base_room(loc)
+            row = self.give(25636)
+            self.store.update_item(row['uniq'], brk=0)
+            row = self.store.item(row['uniq'])
+            before = self.store.money(self.cid)
+            for trader in (supplier, 1013):
+                self.open(trader)
+                info = next(p for cmd, p in self.frames if cmd == 'userInfo_Trader')
+                self.assertEqual(info['can_repair'], 0)
+                for code in (inventory.UPD_REPAIR, inventory.UPD_REPAIR_GOLD, inventory.UPD_RESTORE):
+                    self.frames.clear()
+                    self.inv.repair(dict(obj=inventory.oid_of(row)), code)
+                    self.assertEqual([p['res'] for cmd, p in self.frames if cmd == 'cmdAck'],
+                                     [inventory.RES_REFUSED])
+                    self.assertEqual(self.store.item(row['uniq']), row)
+                    self.assertEqual(self.store.money(self.cid), before)
+            self.open(989)
+            info = next(p for cmd, p in self.frames if cmd == 'userInfo_Trader')
+            self.assertEqual((info['can_repair'], info['rmod']), (1, inventory.RMOD * .5))
+            for code, currency in ((inventory.UPD_REPAIR, 0), (inventory.UPD_REPAIR_GOLD, 1)):
+                self.store.update_item(row['uniq'], brk=0, max_break_cur=row['max_break_cur'])
+                before = self.store.money(self.cid)
+                expected = inventory.repair_prices(items.params_of(row['type_id']), 0,
+                                                   row['max_break_cur'], inventory.RMOD * .5)[currency]
+                self.frames.clear()
+                self.inv.repair(dict(obj=inventory.oid_of(row)), code)
+                self.assertEqual([p['res'] for cmd, p in self.frames if cmd == 'cmdAck'], [0])
+                self.assertEqual(before[currency] - self.store.money(self.cid)[currency], expected)
+
+    def test_nonowner_base_repair_window_cannot_use_an_absent_or_different_npc(self):
+        self.store.db.execute('DELETE FROM clan_members WHERE char_id=?', (self.cid,))
+        self.store.db.commit()
+        self.open(989)
+        row = self.give(26075)
+        self.store.update_item(row['uniq'], brk=0, max_break_cur=row['max_break_cur'] // 2)
+        before = (self.store.money(self.cid), self.store.item(row['uniq']))
+        self.s.room.npc = lambda _npc: None
+        for code in (inventory.UPD_REPAIR, inventory.UPD_REPAIR_GOLD, inventory.UPD_RESTORE):
+            self.frames.clear()
+            self.inv.repair(dict(obj=inventory.oid_of(row)), code)
+            self.assertEqual([p['res'] for cmd, p in self.frames if cmd == 'cmdAck'], [inventory.RES_REFUSED])
+            self.assertEqual((self.store.money(self.cid), self.store.item(row['uniq'])), before)
+        self.frames.clear()
+        self.inv.restore(dict(obj=inventory.oid_of(row)))
+        self.assertEqual([p['res'] for cmd, p in self.frames if cmd == 'cmdAck'], [inventory.RES_REFUSED])
+        self.assertEqual((self.store.money(self.cid), self.store.item(row['uniq'])), before)
 
     def test_resale_uses_factory_wear_and_remaining_doses_with_old_blueprint_caps(self):
         for t in (25586, 26075, 37679, 37645):

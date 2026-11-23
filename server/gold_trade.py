@@ -138,8 +138,9 @@ def sale_unit(type_id, params, share=NPC_SALE_SHARE):
         nominal = min(nominal, Fraction(cheapest) / BASE_SALE_SHARE)
     # Buying a finished lab pouch skips five personal daily parts. That
     # convenience premium must not become cash when crafting it instead.
-    # Keep ordinary/base buyback tied to the two wearable ingredients;
-    # their worst condition is already carried into the crafted item.
+    # Keep ordinary/base buyback tied to the two wearable ingredients.
+    # A factory-new experiment also spends a kit, five personal daily parts
+    # and the shared daily completion; worn-input value can rise by design.
     for base, output in quests.LABORANT_RECIPES.values():
         if type_id == output:
             ingredients = sum(Fraction(str(items.params_of(t).get('g_cost', 0)))

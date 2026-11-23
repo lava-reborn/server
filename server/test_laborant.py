@@ -1,4 +1,4 @@
-"""Native lab recipes: scarce daily completion, physical inputs and no free repair."""
+"""Native lab recipes: scarce daily factory pouches and wear-preserving A0 exchanges."""
 import asyncio
 import logging
 import os
@@ -131,6 +131,8 @@ class Laborant(unittest.TestCase):
             self.assertEqual((q.rew_obj, q.num_rew_obj, q.level, q.service), ([output], [1], 16, True))
             self.assertEqual(q.start_obj, [])
             self.assertEqual(q.holders, "wh_ah_center")
+            self.assertIn('100% заводской прочности и 100% заводского максимума', q.texts[quests.START])
+            self.assertNotIn('Износ обоих поясов сохраняется', q.texts[quests.START])
         si = items.params_of(3726)
         self.assertEqual((si["g_cost"], si["cost"], si["armor_class"], si["max_break_abs"],
                           si["weight"], si["bonus_ce"], si["bonus_skills"], si["bonus_specs"]),
@@ -414,7 +416,10 @@ class Laborant(unittest.TestCase):
 
     def test_failure_after_sql_claim_and_physical_item_restores_everything(self):
         qid = self.ready()
-        before = self.s.inv.bag_pieces()
+        for row in self.s.inv.rows():
+            if row['type_id'] in (3726, 3599):
+                self.store.update_item(row['uniq'], brk=1, max_break_cur=10)
+        before = self.s.inv.rows()
         original = self.s.inv.give_pieces
 
         def fail(*args):
@@ -423,12 +428,15 @@ class Laborant(unittest.TestCase):
 
         with patch.object(self.s.inv, "give_pieces", fail):
             self.assertEqual(self.finish(qid), [1])
-        self.assertEqual(self.s.inv.bag_pieces(), before)
+        self.assertEqual(self.s.inv.rows(), before)
         self.assertEqual(self.store.boss_kills([quests.LABORANT_SPOT]), {})
         self.assertFalse(self.store.quest_done(self.cid, 18306))
         self.assertIsNotNone(self.store.quest(qid))
         self.assertTrue(any(n.type_id == 1407 for n in self.room.npcs.values()))
         self.assertEqual(self.finish(qid), [0])
+        made = next(r for r in self.s.inv.rows() if r['type_id'] == 3735)
+        factory = items.params_of(3735)['max_break_abs']
+        self.assertEqual((made['brk'], made['max_break_cur']), (factory, factory))
 
     def test_missing_locked_or_equipped_input_never_consumes_daily_claim(self):
         qid = self.ready()
@@ -455,7 +463,7 @@ class Laborant(unittest.TestCase):
         self.assertEqual(self.s.inv.bag_pieces(), before)
         self.assertEqual(self.store.boss_kills([quests.LABORANT_SPOT]), {})
 
-    def test_reserved_inputs_are_kept_and_the_consumed_copies_pass_their_wear(self):
+    def test_reserved_inputs_are_kept_and_worn_copies_create_a_fresh_final_pouch(self):
         qid = self.ready()
         reserved = [r for r in self.s.inv.rows() if r["type_id"] in (3726, 3599)]
         self.s.inv.locked.update(r["uniq"] for r in reserved)
@@ -467,7 +475,10 @@ class Laborant(unittest.TestCase):
         for row in reserved:
             self.assertEqual(self.store.item(row["uniq"]), row)
         output = next(r for r in self.s.inv.rows() if r["type_id"] == 3735)
-        self.assertEqual((output["brk"], output["max_break_cur"]), (1400, 2800))
+        factory = items.params_of(3735)['max_break_abs']
+        self.assertEqual((output["brk"], output["max_break_cur"]), (factory, factory))
+        self.assertEqual([r['uniq'] for r in self.s.inv.rows() if r['type_id'] in (3726, 3599)],
+                         [r['uniq'] for r in reserved])
 
     def test_personal_parts_cannot_be_dropped_killed_out_or_picked_from_legacy_ground(self):
         async def scenario():
@@ -556,24 +567,26 @@ class Laborant(unittest.TestCase):
         self.assertEqual((items.params_of(1573)["cost"], items.params_of(1573)["quest"]),
                          (250000, 1))
 
-    def test_worst_condition_and_repaired_ceiling_of_both_sources_survive(self):
-        cases = [(5000, 5000, 0, 600, 0, 5600),
-                 (0, 5000, 600, 600, 0, 5600),
-                 (2500, 2500, 300, 600, 1400, 2800),
-                 (1000, 5000, 100, 300, 560, 2800),
-                 (5000, 5000, 600, 600, 5600, 5600)]
-        for mod_brk, mod_top, bag_brk, bag_top, brk, ceiling in cases:
-            with self.subTest(condition=(mod_brk, mod_top, bag_brk, bag_top)):
-                qid = self.ready()
-                for row in self.s.inv.rows():
-                    if row["type_id"] == 3726:
-                        self.store.update_item(row["uniq"], brk=mod_brk, max_break_cur=mod_top)
-                    elif row["type_id"] == 3599:
-                        self.store.update_item(row["uniq"], brk=bag_brk, max_break_cur=bag_top)
-                self.assertEqual(self.finish(qid), [0])
-                made = next(r for r in reversed(self.s.inv.rows()) if r["type_id"] == 3735)
-                self.assertEqual((made["brk"], made["max_break_cur"]), (brk, ceiling))
-                self.advance_day()
+    def test_all_final_pouches_are_factory_new_from_broken_or_repaired_inputs(self):
+        cases = ((1, 1, 0, 1), (0, 1, 1, 1), (.5, .5, .5, 1),
+                 (.2, 1, 1 / 6, .5), (1, 1, 1, 1))
+        for kind, (pouch, output) in quests.LABORANT_RECIPES.items():
+            for mod_brk, mod_top, bag_brk, bag_top in cases:
+                with self.subTest(quest=kind, condition=(mod_brk, mod_top, bag_brk, bag_top)):
+                    qid = self.ready(kind)
+                    for row in self.s.inv.rows():
+                        if row['type_id'] in (3726, pouch):
+                            factory = items.params_of(row['type_id'])['max_break_abs']
+                            brk, top = ((mod_brk, mod_top) if row['type_id'] == 3726
+                                        else (bag_brk, bag_top))
+                            self.store.update_item(row['uniq'], brk=int(factory * brk),
+                                                   max_break_cur=int(factory * top))
+                    self.assertEqual(self.finish(qid), [0])
+                    made = next(r for r in reversed(self.s.inv.rows()) if r['type_id'] == output)
+                    factory = items.params_of(output)['max_break_abs']
+                    self.assertEqual((made['brk'], made['max_break_cur']), (factory, factory))
+                    self.assertEqual(gold_trade.sale_quality(made, items.params_of(output)), 1)
+                    self.advance_day()
 
     def test_real_shop_buy_craft_and_paid_base_resale_never_make_profit(self):
         clan = self.clan
@@ -611,9 +624,14 @@ class Laborant(unittest.TestCase):
                     self.room.players[self.s] = None
                     self.s.pos = self.room.npcs[self.lab()].cell
                     qid = self.take(kind)
+                    old_lab = self.lab()
                     self.assertEqual(self.finish(qid), [0])
                     row = next(r for r in self.s.inv.rows() if r["type_id"] == output)
-                    self.assertLessEqual(gold_trade.sale_quality(row, items.params_of(output)), condition)
+                    self.assertEqual(gold_trade.sale_quality(row, items.params_of(output)), 1)
+                    completed = self.s.inv.rows()
+                    self.assertEqual(self.finish(qid, mob=old_lab), [server.RES_NO_SUCH])
+                    self.assertEqual(self.s.inv.rows(), completed)
+                    self.assertFalse(quests.laborant_available(self.store, self.s.day_start()))
                     self.visit(609, 714)
                     request = dict(obj=inventory.oid_of(row), param=1)
                     self.s.frames.clear()
@@ -626,13 +644,18 @@ class Laborant(unittest.TestCase):
                     after = self.store.money(self.cid)
                     value = lambda money: money[0] + money[1] * progression.GOLD_TO_AFRO_RATE / 100
                     self.assertLess(value(after), value(before))
-                    # Even valuing both worn inputs at the same85%buyback
-                    # floor (rather than their fresh shop prices) cannot
-                    # turn the researcher kit into profitable recycling.
+                    # Five personal daily parts and the shared daily slot
+                    # intentionally buy a full repair of worn ingredients.
+                    # This can lift their resale value, but not fund a
+                    # buy-fresh/craft/sell loop (checked above), nor replay
+                    # the daily experiment (checked before selling).
                     input_floor = sum(gold_trade.sale_unit(r["type_id"], items.params_of(r["type_id"]),
                                                           gold_trade.BASE_SALE_SHARE) * condition
                                       for r in sources) + 250000
-                    self.assertLessEqual(quote["price"], input_floor)
+                    if condition < 1:
+                        self.assertGreater(quote['price'], input_floor)
+                    else:
+                        self.assertLessEqual(quote['price'], input_floor)
                     self.advance_day()
                     # Keep a paid lease in each independent scenario; the
                     # weekly-expiry policy itself is covered by clan suites.

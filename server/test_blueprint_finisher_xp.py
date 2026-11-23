@@ -49,7 +49,7 @@ class Finisher:
 
 def victim(eid, level):
     return NS(is_player=False, eid=eid, type_id=269, level=level, hp=100,
-              cell=1, aim=None, stats=NS(name='test boss', hp_max=100,
+              cell=1, aim=None, slot=None, stats=NS(name='test boss', hp_max=100,
               sp_max=0, xp_mult=1, level=level, role='boss'), xp_ledger={}, armor=lambda: 0, present=lambda rc: True,
               dodge_melee=lambda: 0, crit_evade_melee=lambda: 0,
               sp_now=lambda: 0, apply_damage=lambda h, s: True)
@@ -118,7 +118,7 @@ async def exercise():
                                        (0.099999, [(2408, 1)]),
                                        (0.10, []), (0.100001, [])):
                     for player_level in (corpse.blueprint_killer_level, killer.level):
-                        with patch.object(mobs.camp_loot, 'roll', return_value=[]), \
+                        with patch.object(mobs.mob_equipment_loot, 'roll', return_value=[]), \
                                 patch.object(mobs, 'carried', return_value=[]), \
                                 patch.object(mobs, 'roll_table', return_value=[]), \
                                 patch.object(mobs, 'quest_table', return_value=[]):

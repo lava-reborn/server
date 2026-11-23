@@ -350,12 +350,27 @@ with open(os.path.join(HERE, '..', 'data', 'combat_balance.json'), encoding='utf
 
 def historical_params(type_id):
     params = dict(items.params_of(type_id))
+    # The archived wiki audit predates the two explicit early-G release steps.
+    early = {
+        10079: (0, 5, 3, 0, 1, 0), 10080: (0, 45, 1, 0, 0, 0),
+        10081: (0, 5, 7, 0, 0, 1), 10082: (0, 10, 1, 0, 0, 0),
+        10083: (0, 5, 1, 0, 0, 0),
+        10919: (2, 10, 8, 0, 1, 0), 10920: (2, 22, 2, 0, 1, 0),
+        10921: (2, 12, 30, 0, 1, 1), 10922: (2, 20, 2, 0, 0, 1),
+        10923: (2, 8, 2, 0, 0, 1),
+    }
+    if type_id in early:
+        params.update(zip(('bonus_hp', 'bonus_st', 'armor_class', 'bonus_od',
+                           'bonus_cp', 'bonus_ce'), early[type_id]))
     params.update(LEGACY['previous_equipment'].get(str(type_id), {}))
     return params
 
 
 def historical_frame(set_id):
     frame = dict(sets.frame(set_id))
+    if set_id == 11193:
+        frame.update(bonus_3_st=5, bonus_4_st=8, bonus_4_od=3,
+                     bonus_4_ce=2, bonus_5_st=12, bonus_5_cp=2)
     for count, fields in LEGACY['previous_sets'].get(str(set_id), {}).items():
         for key, value in fields.items():
             frame['bonus_%s_%s' % (count, key)] = value

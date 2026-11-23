@@ -5,6 +5,7 @@ transaction and restrict the intended synthetic character/account roster.
 """
 from types import SimpleNamespace
 from functools import lru_cache
+import re
 
 
 CLASS_NAMES = ('Пистолеты', 'Дробовики', 'Автоматы', 'Винтовки', 'Пулемёты', 'ПП')
@@ -51,7 +52,24 @@ def standard_ammo(type_id):
     return sorted(set(found))
 
 
-def plan_character(store, char_id):
+@lru_cache(maxsize=None)
+def collectible_arsenal(level):
+    """Verified ordinary Lamantin variants of exactly the character's level.
+
+    Named clan copies and unfinished catalogue placeholders are not supplies.
+    The name's tier must agree with the actual requirements sent to the client.
+    """
+    import inventory
+    import items
+    pattern = re.compile(r'lamantin_(?:machine_gun|pistols|assault_rifle|rifle|shotgun|sub_machine_guns)_(\d+)')
+    return tuple(sorted(type_id for type_id, (root, name) in items.catalogue().items()
+                        if root == items.FIRE_ARM and (match := pattern.fullmatch(name))
+                        and int(match[1]) == level == inventory.item_level(type_id)
+                        and not items.out_of_game(type_id) and not items.acquisition_blocked(type_id)
+                        and standard_ammo(type_id)))
+
+
+def plan_character(store, char_id, *, collectibles_only=False):
     """Read native rows and calculate only missing carried supplies/specs."""
     import combat
     import inventory
@@ -61,9 +79,13 @@ def plan_character(store, char_id):
     ch = progression.Character.load(store, char_id)
     before_stats = {(kind, index): (value, xp, cap) for kind, index, value, xp, cap in ch.rows()}
     rows = store.items_of(char_id)
-    candidates, exceptions = arsenal(ch.level)
-    carried = [row for row in rows if row['slot'] in
-               (inventory.BAG, inventory.PRIMARY, inventory.SECONDARY)]
+    candidates, exceptions = arsenal(ch.level) if not collectibles_only else ((), [])
+    supply_slots = (inventory.BAG, inventory.PRIMARY, inventory.SECONDARY)
+    inv = inventory.Inventory(SimpleNamespace(char_id=char_id), store)
+    bank_steps_added = 0
+    if collectibles_only:
+        supply_slots += (inventory.BANK,)
+    carried = [row for row in rows if row['slot'] in supply_slots]
     healthy = {row['type_id'] for row in carried if row['root'] == items.FIRE_ARM and row['brk'] > 0}
     guns = []
     for kind in range(len(CLASS_NAMES)):
@@ -71,6 +93,11 @@ def plan_character(store, char_id):
         if options:
             guns.append(min(options, key=lambda type_id: (type_id not in healthy,
                              items.params_of(type_id)['weight'], type_id)))
+    if collectibles_only:
+        guns.extend(collectible_arsenal(ch.level))
+        if not guns:
+            exceptions.append(dict(reason='No verified ordinary collectible weapon at this exact level',
+                                   character_level=ch.level))
     required = {}
     for type_id in guns:
         params = items.params_of(type_id)
@@ -130,10 +157,29 @@ def plan_character(store, char_id):
             raise ValueError('%s: %s' % (ch.name, error))
     ch.set_gear(inventory.gear_bonus(rows, ch), inventory.card_repeat(rows))
     weight = sum(inventory.weight_of(row) for row in rows if row['slot'] != inventory.BANK)
-    added_weight = sum(inventory.weight_of(row) for row in adds)
     capacity = ch.max_weight()
-    inv = inventory.Inventory(SimpleNamespace(char_id=char_id), store)
+    if collectibles_only:
+        # Preserve existing gear/progress; keep excess new test supplies in
+        # personal storage instead of silently increasing strength/capacity.
+        extra = sum(inventory.weight_of(row) for row in adds)
+        for row in sorted(adds, key=inventory.weight_of, reverse=True):
+            if weight + extra <= capacity:
+                break
+            row['slot'] = inventory.BANK
+            extra -= inventory.weight_of(row)
+        for gun in weapons:
+            if gun['added']:
+                gun['slot'] = next(row['slot'] for row in adds if row['type_id'] == gun['type'])
+    added_weight = sum(inventory.weight_of(row) for row in adds if row['slot'] != inventory.BANK)
     bank_weight = inv.bank_weight() + sum(inventory.weight_of(row) for row in adds if row['slot'] == inventory.BANK)
+    bank_capacity = inv.bank_max()
+    if collectibles_only and bank_weight > bank_capacity:
+        # The ordinary paid bank expansion keeps combat stats and all old
+        # items intact when this synthetic profile has filled its storage.
+        bank_steps_added = (bank_weight - bank_capacity + inventory.BANK_STEP - 1) // inventory.BANK_STEP
+        if ch.gold < bank_steps_added * inventory.BANK_STEP_GOLD:
+            raise ValueError('Insufficient test gold for collection storage')
+        bank_capacity += bank_steps_added * inventory.BANK_STEP
     return dict(character=ch.name, id=char_id, level=ch.level, weapons=weapons, ammunition=ammunition,
                 item_additions=adds, stat_updates=updates, specialisation_changes=changes,
                 specialisations={progression.SPEC_TITLES[i]: value[0]
@@ -141,8 +187,10 @@ def plan_character(store, char_id):
                 spec_slots=max(store.spec_slots(char_id), ch.specs_learned()),
                 exceptions=exceptions, weight_before=weight, added_weight=added_weight,
                 weight_after=weight + added_weight, capacity=capacity,
-                bank_weight_after=bank_weight, bank_capacity=inv.bank_max(),
-                bank_overweight=bank_weight > inv.bank_max(), overweight=weight + added_weight > capacity)
+                bank_weight_after=bank_weight, bank_capacity=bank_capacity,
+                bank_steps_added=bank_steps_added,
+                bank_expansion_cost_gold=bank_steps_added * inventory.BANK_STEP_GOLD,
+                bank_overweight=bank_weight > bank_capacity, overweight=weight + added_weight > capacity)
 
 
 def apply_character(store, profile):
@@ -152,6 +200,11 @@ def apply_character(store, profile):
     if profile['overweight'] or profile['bank_overweight']:
         raise ValueError('Supplies would overload %s' % profile['character'])
     inv = inventory.Inventory(SimpleNamespace(char_id=profile['id']), store)
+    for _ in range(profile.get('bank_steps_added', 0)):
+        current = store.character(profile['id'])
+        if current['gold'] < inventory.BANK_STEP_GOLD:
+            raise ValueError('Insufficient test gold for collection storage')
+        store.bank_expand(profile['id'], current['afro'], current['gold'] - inventory.BANK_STEP_GOLD)
     for fields in profile['item_additions']:
         row = inv.create(fields['type_id'], count=fields['count'], slot=fields['slot'])
         dynamic = {key: value for key, value in fields.items() if key not in ('type_id', 'root', 'count', 'slot')}

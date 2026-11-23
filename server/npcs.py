@@ -10,10 +10,13 @@ This is where the decisions live. `data/npcs.json` is written by
 need it -- the game server and the HTTP one, which must agree about every
 string id on the wire (see names.py).
 
-Keyed by creature type, not by location, because that is how the client and
+Services are keyed by creature type, not by location, because that is how the client and
 the server already think: `items.stock_for` takes a trader type, and a name
 travels as the type id itself. Two markets that put down the same trader are
 putting down the same trader.
+
+Presentation overrides alone may be scoped to a location. They change only
+the numeric name/resource in userInfo, preserving the native service type.
 
 A missing file means no decisions have been made yet, which is not an error:
 everything falls back to the tables underneath.
@@ -25,12 +28,34 @@ PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                     "data", "npcs.json")
 
 
+def _presentation(doc):
+    strings = {int(key): value for key, value in (doc.get('presentation_names') or {}).items()}
+    if any(key <= 0 or not isinstance(value, str) or not value.strip()
+           for key, value in strings.items()):
+        raise RuntimeError('data/npcs.json presentation_names needs positive ids and nonempty text')
+    locations = {}
+    for loc_id, rows in (doc.get('presentation') or {}).items():
+        for type_id, row in rows.items():
+            if (not isinstance(row, dict) or not set(row) <= {'name', 'res', 'why'}
+                    or not str(row.get('why') or '').strip()
+                    or not ({'name', 'res'} & row.keys())
+                    or any(type(row[key]) is not int or row[key] <= 0
+                           for key in ('name', 'res') if key in row)
+                    or ('name' in row and row['name'] not in strings)):
+                raise RuntimeError('data/npcs.json presentation %s/%s is invalid' % (loc_id, type_id))
+            location, creature = int(loc_id), int(type_id)
+            if location <= 0 or creature <= 0:
+                raise RuntimeError('data/npcs.json presentation needs positive location/type ids')
+            locations[location, creature] = {key: row[key] for key in ('name', 'res') if key in row}
+    return locations, strings
+
+
 def _load():
     try:
         with open(PATH, encoding="utf-8") as fh:
             doc = json.load(fh)
     except FileNotFoundError:
-        return {}, {}, {}, {}
+        return {}, {}, {}, {}, {}, {}
     except (OSError, ValueError) as e:
         # Deliberately loud, like the wiki tables in items.py: a file that is
         # there but unreadable is a mistake someone just made, and starting
@@ -56,10 +81,11 @@ def _load():
                 or not str(row.get("why") or "").strip():
             raise RuntimeError("data/npcs.json home %s needs a boolean home and a why" % key)
         home[int(key)] = row["home"]
-    return names, stock, healer, home
+    presentation, strings = _presentation(doc)
+    return names, stock, healer, home, presentation, strings
 
 
-NAMES, STOCK, HEALER_PRICE, HOME = _load()
+NAMES, STOCK, HEALER_PRICE, HOME, PRESENTATION, PRESENTATION_NAMES = _load()
 
 
 def name(type_id):
@@ -84,3 +110,8 @@ def healer_price(type_id, default):
 def home(type_id):
     """An explicit registration decision, or None to use the NPC's class."""
     return HOME.get(type_id)
+
+
+def presentation(type_id, loc_id):
+    """Name/model only; service identity, stock and quest bindings stay native."""
+    return dict(PRESENTATION.get((loc_id, type_id), {}))

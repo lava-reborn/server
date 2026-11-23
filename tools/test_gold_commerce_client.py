@@ -68,6 +68,64 @@ class GoldCommerceClient(unittest.TestCase):
         self.methods['checkComission'].invoke(ui, [])
         self.assertEqual(ui['info_txt']['htmlText'], '\rКомиссия: 19338 А')
 
+    def test_discounted_a_g_consumable_cards_show_exact_purchase_total(self):
+        cases = (
+            (2, True, 4, 1, .03), (2, True, 4, 10, .36), (2, True, 1, 1, .01),
+            (2, False, 13, 1, 12), (2, False, 13, 10, 117),
+            (3, True, 2, 1, .02), (3, True, 2, 100, 1.8),
+            (3, True, 1, 1, .01), (3, True, 1, 100, .9),
+            (3, False, .65, 1, 1), (3, False, .65, 100, 59),
+        )
+        for root, gold, price, count, expected in cases:
+            with self.subTest(root=root, gold=gold, price=price, count=count):
+                values, frames = [], []
+                item = self.item(size=count, cost=0 if gold else price, g_cost=price if gold else 0)
+                item['rootID'] = root
+                card = dict(showItemSellMod=False, showHeapCount=True, attachIconEnabled=True,
+                            showPriseInGold=True, cost_mod=.9, __gcShowCostOrig=lambda *a: None,
+                            price_mc=dict(gotoAndStop=frames.append, fontContainer=dict(showValue=values.append)))
+                self.methods['showCost'].invoke(card, [item, 'left'])
+                self.assertEqual((values, frames), ([expected], [2 if gold else 1]))
+                self.assertEqual(card['mainCost'], expected)
+                self.assertEqual(card['costType'], 'Золото' if gold else 'Афро')
+
+    def test_minimum_cent_discount_is_visible_in_quantity_dialogue_immediately(self):
+        exchange = dict(mainSize='rightNum', rightNum=1, cost_num=4, cost_mod=.9,
+                        showCostInGold=True, sell_bool=False, money_mc=dict(info_txt=dict(text='native')),
+                        __gcCountMoneyOrig=lambda: None)
+        exchange['countMoney'] = lambda: self.methods['countMoney'].invoke(exchange, [])
+        ui = dict(__gcExchangeOrig=lambda *args: exchange)
+        item = self.item(g_cost=4)
+        item['rootID'] = 2
+        self.methods['createExchangePan'].invoke(ui, [item, '', .9, True, False])
+        self.assertEqual(float(exchange['money_mc']['info_txt']['text']), .03)
+        for count, expected in ((2, .07), (10, .36)):
+            exchange['rightNum'] = count
+            exchange['countMoney']()
+            self.assertEqual(float(exchange['money_mc']['info_txt']['text']), expected)
+        # The same cheap ammunition cannot gain the minimum-cent cut:
+        # a single 0.02 G round stays 0.02 G; 100 cost 1.80 G.
+        exchange['__gcBuyRoot'] = 3
+        exchange['cost_num'] = 2
+        for count, expected in ((1, .02), (100, 1.8)):
+            exchange['rightNum'] = count
+            exchange['countMoney']()
+            self.assertEqual(float(exchange['money_mc']['info_txt']['text']), expected)
+
+    def test_purchase_price_override_keeps_ordinary_cards_gear_and_sale_routes_native(self):
+        for root, modifier, scene in ((2, 1, 'trade'), (0, .9, 'trade'), (1, .9, 'trade'), (2, .9, 'repair')):
+            values, native = [], []
+            self.env['lol']['gpui']['StaffInterface']['ssType'] = scene
+            item = self.item(g_cost=4)
+            item['rootID'] = root
+            card = dict(showItemSellMod=False, showHeapCount=True, attachIconEnabled=True,
+                        showPriseInGold=True, cost_mod=modifier,
+                        __gcShowCostOrig=lambda *a: native.append(a),
+                        price_mc=dict(gotoAndStop=lambda *args: None, fontContainer=dict(showValue=values.append)))
+            self.methods['showCost'].invoke(card, [item, 'left'])
+            self.assertEqual(len(native), 1)
+            self.assertEqual(values, [])
+
     def test_paid_base_selects_static_base_price_without_corrupting_cached_ordinary_price(self):
         item = self.item(g_sale_unit=700, g_base_sale_unit=850, size=2)
         unit = self.env['_global']['__gcSaleUnit']

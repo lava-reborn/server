@@ -543,6 +543,10 @@ def may_repair(store, loc_id, trader_type, char_id):
     """Whether a repair at this trader may go ahead (inventory.Inventory.
     repair): anywhere but at a site's flag in its room, always; there, for a
     member of the holding clan only."""
+    # Bases have one dedicated repair service; the medic and ammunition
+    # supplier must not regain it through a direct ss_upd request.
+    if base_for(loc_id) is not None:
+        return trader_type == 989
     got = flag_for(store, loc_id, trader_type, char_id) if trader_type is not None else None
     return got is None or got[1]
 

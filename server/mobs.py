@@ -808,7 +808,8 @@ def carried(st, rng, multiplier=1):
 
 
 def loot_for(st, rng, wanted=(), *, loc_id=None, ambush_camp=None,
-             killer_level=None, multiplier=1, gold_multiplier=1):
+             killer_level=None, multiplier=1, gold_multiplier=1,
+             box_player_kill=False, box_weapon_type=None):
     """[(type_id, count)] for a corpse of this type: what it carried, then
     what its kind's table rolled, then the quest rows for what those who
     brought it down still need (quest_roll; wanted, the types). combat.
@@ -832,6 +833,11 @@ def loot_for(st, rng, wanted=(), *, loc_id=None, ambush_camp=None,
     ordinary = carried(st, rng, multiplier) + roll_table(st.type_id, rng, multiplier,
                                                        gold_multiplier=gold_multiplier,
                                                        guarantee_ingots=st.role == 'boss')
+    if st.role == 'object':
+        import camp_box_loot
+        ordinary = camp_box_loot.replace(ordinary, st, rng, loc_id=loc_id,
+                                        ambush_camp=ambush_camp, player_kill=box_player_kill,
+                                        weapon_type_id=box_weapon_type, killer_level=killer_level)
     personal = quest_roll(st.type_id, wanted, rng)
     # One shared slot replaces native ordinary A equipment. Quest rewards
     # and guaranteed G pouches retain their own acquisition rules.
@@ -956,6 +962,8 @@ class Mob:
         # set at the kill (RoomCombat.kill): the quest rows of its loot that
         # may come up in its bag (quest_roll).
         self.quest_wants = frozenset()
+        self.box_player_kill = False
+        self.box_weapon_type = None
         # A boss's hours (bosses.py, RoomCombat.keep_hours): the window it
         # last came for, whether it is gone until the next one, and whether
         # its stay is over and it is only finishing the fight it is in.
@@ -1054,6 +1062,8 @@ class Mob:
         self.capture_harm = {}
         self.capture = None
         self.quest_wants = frozenset()
+        self.box_player_kill = False
+        self.box_weapon_type = None
         self.busy_until = 0.0
         self.walk = None
         self.next_attack = 0.0

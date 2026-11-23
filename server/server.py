@@ -1925,7 +1925,7 @@ class Session:
         # not the compose file, not the deployment.
         if CHEATS and text.split(" ")[0] in ("/goto", "/give", "/money",
                                              "/skill", "/spec", "/base-respawn", "/boss-now",
-                                             "/base-now", "/test-bot", "/test-bot-stop", "/test-time-reset",
+                                             "/base-now", "/boss-spawn", "/test-bot", "/test-bot-stop", "/test-time-reset",
                                              "/test-allies", "/test-allies-stop"):
             args = text.split()[1:]
             try:
@@ -1934,12 +1934,14 @@ class Session:
                     out = ('Используйте /test-allies [1–9] или /test-allies-stop.' if len(args) > 1
                            or (text.split()[0] == '/test-allies-stop' and args) else
                            self.admin_test_allies(count, stop=text.split()[0] == '/test-allies-stop'))
-                elif text.split()[0] in ('/boss-now', '/base-now', '/test-bot', '/test-bot-stop', '/test-time-reset'):
+                elif text.split()[0] in ('/boss-now', '/base-now', '/boss-spawn', '/test-bot', '/test-bot-stop', '/test-time-reset'):
                     command = text.split()[0]
                     if args:
                         out = 'Используйте %s без аргументов.' % command
-                    elif command in ('/boss-now', '/base-now'):
-                        out = self.admin_boss_now(base=command == '/base-now')
+                    elif command in ('/boss-now', '/base-now', '/boss-spawn'):
+                        base = command == '/base-now' or (command == '/boss-spawn'
+                                                       and holdings.base_for(self.loc.id) is not None)
+                        out = self.admin_boss_now(base=base)
                     elif command == '/test-time-reset':
                         bosses._OFFSET = bosses._offset()
                         out = 'Тестовые часы возвращены к исходной настройке сервера.'
@@ -2245,8 +2247,11 @@ class Session:
             return 'Для базы используйте /base-now на поверхности; для лагеря — /boss-now.'
         if not rc.bosses:
             return 'На этой локации нет босса с расписанием.'
+        # Native escorts share the boss's test reset. Do not interrupt an
+        # escort's shot or remove its still-visible corpse either.
+        actors = rc.bosses + [m for m in rc.escorts if m not in rc.bosses]
         if self.room.ws or any(m.target is not None or m.aim is not None
-                               or not m.alive and not m.away for m in rc.bosses):
+                               or not m.alive and not m.away for m in actors):
             return 'Дождитесь конца боя и исчезновения тел.'
         now = bosses.clock()
         held = holdings.holder(STORE, site) if site is not None else None
@@ -2266,12 +2271,14 @@ class Session:
         with storage.atomic(STORE.db):
             for mob in rc.bosses:
                 STORE.db.execute('DELETE FROM boss_kills WHERE spot = ?', (rc.boss_spot(mob),))
-        for mob in rc.bosses:
+        for mob in actors:
+            movement.get(self.room).forget(mob)
             if mob.alive:
                 rc.boss_leaves(mob)
+            mob.recalled = False
             mob.slot = None
         rc.keep_hours()
-        for mob in rc.bosses:
+        for mob in actors:
             if mob.alive and not mob.away:
                 self.room.broadcast(('lch', dict(lostUser=mob.eid)))
                 mob.cell = movement.get(self.room).free_cell(self.live_cell(), exclude=mob)
@@ -2279,7 +2286,8 @@ class Session:
                 self.room.broadcast(('lch', dict(newUser=mob.eid, pos=mob.cell, rtype=world.MOB)))
                 for viewer in list(self.room.players):
                     viewer.send_npc_info(mob.eid)
-        return 'Босс появился рядом. Часы тестового сервера переведены к его окну появления.'
+        return ('Босс появился рядом со штатной охраной этой локации. '
+                'Часы тестового сервера переведены к его окну появления.')
 
     def admin_test_bot(self, stop=False):
         if not CHEATS:
@@ -2848,6 +2856,9 @@ class Session:
                           # One source, not two: the client draws prices
                           # with these and the server charges with the same.
                           **rates)
+            if holdings.base_for(self.room.loc.id) is not None:
+                params['can_repair'] = int(holdings.may_repair(
+                    STORE, self.room.loc.id, type_id, self.char_id))
             params['base_gold_buyer'] = int(type_id in gold_trade.BASE_GOLD_BUYERS
                 and rates['smod'] == float(gold_trade.BASE_SALE_SHARE))
             if eden_shop.is_buyer(type_id):
@@ -2927,6 +2938,7 @@ class Session:
                 # Use the final display type: base soldiers deliberately
                 # share their guard's model, never their actual combat type.
                 params['res'] = mobs.visual_type(params['res'], mob.stats.weapon_type_id)
+        params.update(npcs.presentation(type_id, self.room.loc.id))
         self.send(cmd, **params)
         if holder is not None:
             self.send("fellow", id=npc_id, reg=int(holder["clan_id"]),
@@ -3340,6 +3352,11 @@ class Session:
         """The player's best skill level, the number quest.level is held to."""
         return self.character().level
 
+    def base_entry_allowed(self, quest):
+        """Ask live membership, including for an old or fight-delayed passage."""
+        return (quest.type not in quests.CLAN_BASE_ENTRIES
+                or bool(self.char_id and STORE.clan_member(self.char_id) is not None))
+
     def quest_available(self, quest, state=None):
         """Whether this player may take or carry the quest right now.
 
@@ -3377,6 +3394,8 @@ class Session:
         lesson dropped by mistake is the player's to take again at once.
         """
         if not eden.allowed(self, quest):
+            return False
+        if not self.base_entry_allowed(quest):
             return False
         if quest.type == training_ground.EXIT_QUEST:
             return False
@@ -3988,6 +4007,10 @@ class Session:
         if not quest or npc_type not in quest.take:
             self.send("cmdAck", res=RES_WRONG_NPC)
             return
+        if not self.base_entry_allowed(quest):
+            self.send("cmdAck", res=RES_NOT_AVAILABLE)
+            self.answer("В бункер клановой базы могут входить только участники кланов.")
+            return
         if quest.type in eden.QUESTS:
             # Both placement and sentence are checked again under the quest
             # character lock. A forged/stale journal cannot pay for an escape.
@@ -4391,7 +4414,8 @@ class Session:
                 or self.combat.dead):
             self.refund_way(quest)
             return
-        if quest.over_cap(self.skill_level()) or quest.level > self.skill_level():
+        if (quest.over_cap(self.skill_level()) or quest.level > self.skill_level()
+                or not self.base_entry_allowed(quest)):
             self.refund_way(quest)
             return
         hold = self.hold_line("отправитесь")

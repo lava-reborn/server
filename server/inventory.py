@@ -2144,14 +2144,19 @@ class Inventory:
         room = getattr(self.sess, 'room', None)
         loc_id = room.loc.id if room is not None else None
         rates = trade_rates(self.store, loc_id, getattr(trade, 'trader_type', None), self.char_id)
-        if rates['smod'] == float(gold_trade.BASE_SALE_SHARE):
-            entry = room.npc(trade.npc_id) if room is not None and trade else None
-            if (not entry or entry[1] != trade.trader_type or entry[2] != world.TRADER
-                    or trade.loc_id != loc_id):
+        if holdings.base_for(loc_id) is not None:
+            if not self.trade_present(room):
                 return None
         if trade is not None and trade.rates is not None and trade.rates != rates:
             return None
         return rates
+
+    def trade_present(self, room):
+        """The open counterpart still occupies this base's current room."""
+        trade = self.trade
+        entry = room.npc(trade.npc_id) if room is not None and trade else None
+        return bool(entry and entry[1] == trade.trader_type and entry[2] == world.TRADER
+                    and trade.loc_id == room.loc.id)
 
     def ss_upd(self, p):
         """An operation inside the open stall. Returns False when no stall
@@ -2317,6 +2322,10 @@ class Inventory:
             self.ack(RES_REFUSED)
             return None
         room = getattr(self.sess, "room", None)
+        if (room is not None and holdings.base_for(room.loc.id) is not None
+                and not self.trade_present(room)):
+            self.ack(RES_REFUSED)
+            return None
         if not holdings.may_repair(self.store, room.loc.id if room is not None else None,
                                    trader, self.char_id):
             self.ack(RES_REFUSED)
@@ -2331,12 +2340,17 @@ class Inventory:
                     self.ack(RES_REFUSED)
                     return
                 import eden_shop
-                if eden_shop.is_buyer(getattr(self.trade, 'trader_type', None)):
+                room = getattr(self.sess, 'room', None)
+                base = holdings.base_for(room.loc.id) if room is not None else None
+                if base is not None or eden_shop.is_buyer(getattr(self.trade, 'trader_type', None)):
                     row = self.repair_context(p)
                     if row is None:
                         return
                 else:
                     row = self.find(p.get("obj"))
+                if base is not None and self.current_trade_rates() is None:
+                    self.ack(RES_REFUSED)
+                    return
                 if not row or row["root"] not in items.BREAKABLE_ROOTS:
                     self.ack(RES_NOT_FOUND)
                     return

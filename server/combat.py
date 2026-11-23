@@ -1937,13 +1937,15 @@ class Fighter:
             for body, _h, _s, _dead, _pool in others:
                 rc.after_hostile(self, body)
             if killed:
-                rc.kill(target, self, blueprint_killer_level=blueprint_killer_level)
+                rc.kill(target, self, blueprint_killer_level=blueprint_killer_level,
+                        killing_weapon_type=row['type_id'])
             for body, _h, _s, dead, _pool in others:
                 if dead:
                     # kill() lets the held rp_info go; each kill's price in
                     # one frame of its own.
                     self.hold_stats()
-                    rc.kill(body, self, blueprint_killer_level=blueprint_killer_level)
+                    rc.kill(body, self, blueprint_killer_level=blueprint_killer_level,
+                            killing_weapon_type=row['type_id'])
         finally:
             self.release_stats()
 
@@ -3508,7 +3510,7 @@ class RoomCombat:
                 side.hit_exchanged(t)
 
     # --- death, corpse, bag, respawn ----------------------------------------------------
-    def kill(self, victim, killer, *, blueprint_killer_level=None):
+    def kill(self, victim, killer, *, blueprint_killer_level=None, killing_weapon_type=None):
         if eden_harvest.native_kill(self, victim, killer):
             return
         if victim.is_player:
@@ -3526,6 +3528,10 @@ class RoomCombat:
         mob.blueprint_killer_level = (
             (killer.level if blueprint_killer_level is None else blueprint_killer_level)
             if killer is not None and killer.is_player else None)
+        # Save the lethal shot's type, not whichever gun is held when the
+        # corpse fades. Melee kills intentionally keep a random A-OT calibre.
+        mob.box_player_kill = bool(killer is not None and killer.is_player)
+        mob.box_weapon_type = killing_weapon_type if mob.box_player_kill else None
         if getattr(self.room, 'motion', None) is not None:
             self.room.motion.advance()
         cell = (mob.walk_cell(now()) if getattr(mob, 'walk', None) is not None
@@ -3860,7 +3866,9 @@ class RoomCombat:
                               ambush_camp=getattr(self.room, 'ambush', None),
                               killer_level=getattr(mob, "blueprint_killer_level", None),
                               multiplier=getattr(mob, "loot_multiplier", 1),
-                              gold_multiplier=getattr(mob, "gold_loot_multiplier", 1))
+                              gold_multiplier=getattr(mob, "gold_loot_multiplier", 1),
+                              box_player_kill=getattr(mob, 'box_player_kill', False),
+                              box_weapon_type=getattr(mob, 'box_weapon_type', None))
         extra = events.loot(self.room.loc.id, mob.type_id, RNG) + production.yield_of(mob.type_id)
         extra = [(t, n) for t, n in extra if thing or not mob_equipment_loot.kind_of(t)
                  or (t in mob.quest_wants and mobs.personal_quest_item(t))]
