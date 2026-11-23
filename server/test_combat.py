@@ -546,7 +546,7 @@ def _parity(level):
 check("a knife against a creature of one's own level lands 65-75% of blows at every level",
       [lv for lv in (1, 4, 8, 12, 16, 20) if not 65 <= _parity(lv) <= 75], [])
 check("an armed bandit carries a pistol of his own",
-      mobs.stats(17).weapon_type_id, 25596)
+      mobs.stats(17).weapon_type_id, 25586)
 
 
 # --- a target is let go of only when it is gone ---------------------------------
@@ -1227,7 +1227,7 @@ try:
     hands = oids(c.frames()[0][1])
     knife = inventory.parse_oid(hands[6])
     check("the bum holds a knife in the primary hand",
-          (len(hands), hands[:6], hands[7], knife[1:]), (8, ["0"] * 6, "0", (195, items.COLD_ARM)))
+          (len(hands), hands[:6], hands[7], knife[1:]), (8, ["0"] * 6, "0", (6230, items.COLD_ARM)))
     check("a virtual serial, far above the items table", knife[0] >= mobs.VIRTUAL_BASE, True)
     c.send("ss_get_di;obj=x%s;" % hands[6])
     got = c.frames()
@@ -1388,6 +1388,9 @@ try:
         got += c.frames(0.2)
         if not [p for n, p in got if n == "lch" and p.get("dead") == dog]:
             got += try_exit(got)
+        if got and got[-1][0] == 'caHit' and got[-1][1].get('id') == dog:
+            # TCP may split the adjacent hit/update frames across reads.
+            got += c.until(lambda f: f[0] == 'usrUp' and f[1].get('id') == 0, 1)
         tracker.feed(got)
         for i, (n, p) in enumerate(got):
             if n == "userMove" and p.get("id") == dog:

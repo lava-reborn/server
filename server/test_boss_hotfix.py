@@ -43,9 +43,14 @@ for t, info in mobs.TYPES.items():
                                          * adjustment.get('hp_scale', 1) / 1.5))
     if st.hp_max != expected:
         health_errors.append(int(t))
+    native = getattr(st, 'balanced_modes', ())
+    weapon = items.params_of(st.weapon_type_id) if native and st.weapon_class != 'pistol' else None
+    damage = (round(weapon['h_damage_min'][max(range(len(native)), key=lambda i: native[i]['reach'])]
+                    * adjustment.get('damage_scale', 1) / 1.5) if weapon else
+              round((accepted['dmg_min'] if accepted else original.dmg_min)
+                    * adjustment.get('damage_scale', 1) / 1.5))
     if (st.sp_max != max(original.sp_max, round((accepted['sp_max'] if accepted else original.sp_max) / 1.5))
-            or st.dmg_min != round((accepted['dmg_min'] if accepted else original.dmg_min)
-                                   * adjustment.get('damage_scale', 1) / 1.5)
+            or st.dmg_min != max(1, damage)
             or st.xp_mult != role['xp_mult']):
         other_errors.append(int(t))
 check('reviewed bosses follow the final reduction with the historical HP floor',

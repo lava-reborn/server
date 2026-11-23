@@ -588,7 +588,20 @@ env = dict(os.environ, LAVA_PORT=str(PORT), LAVA_HOST="127.0.0.1", LAVA_DB=DB,
            LAVA_CHEATS="1", LAVA_START="181", LAVA_AP_REGEN="50", LAVA_RESPAWN="600",
            LAVA_SEED="23", LAVA_LEAVE_COMBAT="2")
 LOG = os.path.join(os.path.dirname(DB), "server.log")
-srv = subprocess.Popen([sys.executable, "server.py"], cwd=HERE, env=env,
+# Keep the real quest-drop chances and wanted-item checks, but isolate their
+# seeded draws from combat. New weapon modes must not decide whether the
+# finite set of miners happens to contain the ring in this story test.
+_boot = """import random, runpy
+from unittest.mock import patch
+import mobs
+original = mobs.quest_roll
+quest_rng = random.Random(23)
+def quest_roll(type_id, wanted, rng, excluded_groups=()):
+    return original(type_id, wanted, quest_rng, excluded_groups)
+with patch.object(mobs, 'quest_roll', quest_roll):
+    runpy.run_path('server.py', run_name='__main__')
+"""
+srv = subprocess.Popen([sys.executable, "-c", _boot], cwd=HERE, env=env,
                        stdout=open(LOG, "w"), stderr=subprocess.STDOUT, text=True)
 
 

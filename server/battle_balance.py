@@ -125,7 +125,7 @@ def ordinary_mob_pressure():
     raw = json.loads(PATH.with_name('combat_balance.json').read_text(encoding='utf-8'))
     row = raw['ordinary_mob_pressure']
     fields = {'damage_scale', 'high_gap_damage_scale', 'stamina_ratio', 'senior_stamina_ratio',
-              'stamina_levels', 'crit_bounds'}
+              'stamina_levels', 'crit_bounds', 'player_damage_ratios'}
     bounds = row.get('crit_bounds', ())
     if (raw['source_commit'] != data()['source_commit'] or set(row) != fields
             or len(row['stamina_levels']) != 2
@@ -135,13 +135,17 @@ def ordinary_mob_pressure():
                    or not math.isfinite(row[k]) or not 0 <= row[k] <= 5
                    for k in ('damage_scale', 'high_gap_damage_scale', 'stamina_ratio', 'senior_stamina_ratio'))
             or not .5 <= row['damage_scale'] <= 2 or not 1 <= row['high_gap_damage_scale'] <= 3
+            or len(row['player_damage_ratios']) != 5
+            or any(isinstance(v, bool) or not isinstance(v, (int, float))
+                   or not math.isfinite(v) or not 0 < v <= 1 for v in row['player_damage_ratios'])
             or len(bounds) != 6
             or any(len(pair) != 2 or any(type(v) is not int for v in pair)
                    or not 0 <= pair[0] <= pair[1] <= 25 for pair in bounds)
             or any(bounds[i][j] > bounds[i + 1][j] for i in range(5) for j in range(2))):
         raise ValueError('Invalid ordinary mob pressure')
     return MappingProxyType(dict(row, crit_bounds=tuple(tuple(pair) for pair in bounds),
-                                 stamina_levels=tuple(row['stamina_levels'])))
+                                 stamina_levels=tuple(row['stamina_levels']),
+                                 player_damage_ratios=tuple(row['player_damage_ratios'])))
 
 
 def ordinary_attacker(shooter, target, ordinary):
@@ -151,6 +155,7 @@ def ordinary_attacker(shooter, target, ordinary):
 
 
 def split(shooter, target, damage, piercing, critical, stamina_left, stamina_damage=0, melee=False, rifle=False, ordinary=False):
+    pressure_stamina = 0
     if ordinary_attacker(shooter, target, ordinary):
         pressure = ordinary_mob_pressure()
         scale = pressure['damage_scale']
@@ -160,7 +165,8 @@ def split(shooter, target, damage, piercing, critical, stamina_left, stamina_dam
         low, high = pressure['stamina_levels']
         step = max(0, min(1, (level(shooter) - low) / (high - low)))
         ratio = pressure['stamina_ratio'] + step * (pressure['senior_stamina_ratio'] - pressure['stamina_ratio'])
-        stamina_damage = int(stamina_damage * scale) + int(damage * ratio)
+        stamina_damage = int(stamina_damage * scale)
+        pressure_stamina = int(damage * ratio)
     if shooter.is_player and not target.is_player and getattr(target.stats, 'role', None) != 'object':
         player_level = level(shooter)
         gap = level(target) - player_level
@@ -178,6 +184,8 @@ def split(shooter, target, damage, piercing, critical, stamina_left, stamina_dam
         elif ordinary and gap == 3 and getattr(target.stats, 'role', None) in ('mob', 'animal', 'turret'):
             factor = max(factors.get(GAP_MAX, 1), ordinary_plus_two().get(player_level, factors.get(2, 1))
                          * ordinary_plus_three()['player_damage_ratio'])
+        if ordinary and gap >= 1:
+            factor *= ordinary_mob_pressure()['player_damage_ratios'][min(gap, 4)]
         damage = max(1, int(damage * factor)) if damage > 0 else 0
         stamina_damage = int(stamina_damage * factor)
     elif (ordinary and not shooter.is_player and target.is_player
@@ -186,9 +194,11 @@ def split(shooter, target, damage, piercing, critical, stamina_left, stamina_dam
         factor = ordinary_plus_three()['mob_damage_ratio']
         damage = max(1, int(damage * factor)) if damage > 0 else 0
         stamina_damage = int(stamina_damage * factor)
+        pressure_stamina = int(pressure_stamina * factor)
     left = max(0, stamina_left)
     if critical:
-        return damage, 0 if melee else min(damage, left)
+        stamina = 0 if melee else min(damage, left)
+        return damage, stamina + min(pressure_stamina, max(0, left - stamina))
     armour = max(0, target.armor()) / max(.5, piercing)
     if rifle and not melee:
         share = min(MAX_ARMOUR_SHARE, armour / (armour + reference_armour(level(target))))
@@ -196,7 +206,9 @@ def split(shooter, target, damage, piercing, critical, stamina_left, stamina_dam
         share = min(1, armour / max(1, reference_armour(level(shooter) - ARMOUR_LEVEL_GAP)))
     moved = int(damage * share)
     stamina = stamina_damage + moved
-    return damage - moved + max(0, stamina - left), min(stamina, left)
+    spent = min(stamina, left)
+    return (damage - moved + max(0, stamina - left),
+            spent + min(pressure_stamina, max(0, left - spent)))
 
 
 def critical(shooter, target, chance, optimal=True, *, ordinary=False):
@@ -290,6 +302,106 @@ def ordinary_mob_reference():
     return references, fallbacks
 
 
+@lru_cache(maxsize=1)
+def mob_weapons():
+    """Existing plain A items, indexed once by NPC class and required level."""
+    import items
+    import inventory
+    classes = {items.PISTOL: 'pistol', items.SHOTGUN: 'shotgun', items.SMG: 'smg',
+               items.ASSAULT: 'assault_rifle', items.RIFLE: 'rifle', items.MACHINEGUN: 'machine_gun'}
+    standard = re.compile(r'(?:(?:pistols?|shotgun|assault_rifle|rifle|machine_gun|sub_machine_guns)_\d+_lvl_\d+'
+                          r'|knife_lvl\d+_A)')
+    result = {}
+    for type_id, (root, name) in items.catalogue().items():
+        if root not in (items.FIRE_ARM, items.COLD_ARM) or not standard.fullmatch(name):
+            continue
+        params = items.params_of(type_id)
+        if not params or not params.get('cost') or params.get('g_cost') or items.out_of_game(type_id):
+            continue
+        kind = 'knife' if root == items.COLD_ARM else classes.get(params.get('weapon_type'))
+        if kind is not None:
+            result.setdefault(kind, []).append((inventory.item_level(type_id), params['cost'], type_id))
+    return MappingProxyType({kind: tuple(sorted(rows)) for kind, rows in result.items()})
+
+
+def equip_mob(stats, damage_scale):
+    """Native item modes and ST ammunition; resources and animal attacks stay natural."""
+    if not stats.can_attack or stats.role not in ('mob', 'boss', 'turret'):
+        return False
+    kind = {'assault': 'assault_rifle', 'machinegun': 'machine_gun'}.get(stats.weapon_class, stats.weapon_class)
+    if stats.role == 'boss' and kind == 'pistol':
+        # Named pistol bosses retain their reviewed, stronger NPC attacks.
+        return False
+    if not stats.ranged:
+        kind = 'knife'
+    weapons = mob_weapons()
+    choices = [row for row in weapons.get(kind, ()) if row[0] == stats.level]
+    if not choices and stats.ranged:
+        alternatives = {
+            'pistol': ('smg', 'assault_rifle', 'shotgun', 'rifle', 'machine_gun'),
+            'shotgun': ('assault_rifle', 'smg', 'machine_gun', 'rifle', 'pistol'),
+            'assault_rifle': ('machine_gun', 'smg', 'rifle', 'shotgun', 'pistol'),
+            'rifle': ('assault_rifle', 'smg', 'machine_gun', 'shotgun', 'pistol'),
+            'smg': ('assault_rifle', 'shotgun', 'machine_gun', 'rifle', 'pistol'),
+            'machine_gun': ('assault_rifle', 'smg', 'rifle', 'shotgun', 'pistol'),
+        }.get(kind, ())
+        if stats.level < min((row[0] for row in weapons.get(kind, ())), default=math.inf):
+            alternatives = ('pistol', *alternatives)
+        for candidate in alternatives:
+            choices = [row for row in weapons.get(candidate, ()) if row[0] == stats.level]
+            if choices:
+                kind = candidate
+                break
+    if not choices:
+        choices = [row for row in weapons.get(kind, ()) if row[0] <= stats.level]
+    if not choices:
+        return False
+    import items
+    import combat
+    type_id = max(choices, key=lambda row: (row[0], row[1], -row[2]))[2]
+    params = items.params_of(type_id)
+    stats.weapon_type_id = type_id
+    stats.weapon_class = kind
+    factor = damage_scale / MOB_BALANCE_DIVISOR
+    if not stats.ranged:
+        stats.dmg_min = max(1, round(params['h_damage_min'] * factor))
+        stats.dmg_max = max(stats.dmg_min, round(params['h_damage_max'] * factor))
+        stats.attack_ap = params['strike_cost']
+        stats.attack_time = params['strike_time'] / 1000
+        stats.shots, stats.range = 1, 1
+        stats.loot_ammo_type = None
+        if hasattr(stats, 'balanced_modes'):
+            del stats.balanced_modes
+        stats.ap_max = max(stats.ap_max, stats.attack_ap)
+        return True
+    ammo_type = next(t for t in params['comp_array'] if items.catalogue()[t][1].endswith('_ST'))
+    ammo = items.params_of(ammo_type)
+    stats.loot_ammo_type = ammo_type
+    modes = []
+    for mode, shots in enumerate(params['fire_mods']):
+        if not shots or not params['max_range'][mode]:
+            continue
+        damage = factor * ammo.get('dam_mod', 1)
+        stamina = factor * ammo.get('st_mod', 1)
+        modes.append(dict(shots=shots, ap=params['fire_costs'][mode], time=params['fire_times'][mode] / 1000,
+            reach=math.floor(params['max_range'][mode] * ammo.get('range_mod', 1) + 1e-9),
+            opt_lo=params['opt_range'][mode], opt_hi=params['end_opt_range'][mode],
+            dmin=max(1, round(params['h_damage_min'][mode] * damage)),
+            dmax=max(1, round(params['h_damage_max'][mode] * damage)),
+            sdmin=round(params.get('st_damage_min', [0, 0, 0])[mode] * stamina),
+            sdmax=round(params.get('st_damage_max', [0, 0, 0])[mode] * stamina),
+            piercing=ammo.get('piercing', 1), crit=stats.crit, hit=stats.hit,
+            cone=combat.cone_of(combat.spread_factor(stats.level, stats.spec), params['target_size'][mode],
+                                ammo.get('acc_mod', 1) or 1, params['max_range'][mode])))
+    stats.balanced_modes = tuple(modes)
+    row = max(modes, key=lambda row: row['reach'])
+    stats.range, stats.shots = row['reach'], row['shots']
+    stats.dmg_min, stats.dmg_max = row['dmin'], row['dmax']
+    stats.attack_ap, stats.attack_time = row['ap'], row['time']
+    stats.ap_max = max(stats.ap_max, max(row['ap'] for row in modes))
+    return True
+
+
 def configure_mob(stats, *, health_scale=1, damage_scale=1, site=False):
     """Only existing combat creatures; harvest objects keep their own rules."""
     if stats.role not in ('mob', 'boss', 'animal', 'turret'):
@@ -319,6 +431,8 @@ def configure_mob(stats, *, health_scale=1, damage_scale=1, site=False):
     # Even creatures absent from the simulator retain the original pool floor.
     stats.hp_max = max(original_hp, round(stats.hp_max * health_scale / MOB_BALANCE_DIVISOR))
     stats.sp_max = max(original_sp, round(stats.sp_max * health_scale / MOB_BALANCE_DIVISOR))
+    if equip_mob(stats, damage_scale):
+        return
     factor = damage_scale / MOB_BALANCE_DIVISOR
     if reference is not None and stats.shots > 0 and stats.attack_ap > 0:
         power = (stats.dmg_min + stats.dmg_max) / 2 * stats.shots / stats.attack_ap
@@ -346,15 +460,10 @@ def configure_mob(stats, *, health_scale=1, damage_scale=1, site=False):
     import items
     if row is not None and row['gun'] in items.catalogue():
         stats.weapon_type_id = row['gun']
-        # Retain an explicit carried-ammo quality when the reviewed profile
-        # changes calibre. Never leave a mob carrying incompatible rounds.
-        ammo = stats.loot_ammo_type
-        compatible = items.params_of(row['gun']).get('comp_array', ())
-        if ammo is not None and ammo not in compatible:
-            quality = items.catalogue()[ammo][1].rsplit('_', 1)[-1]
+        if stats.ranged:
+            compatible = items.params_of(row['gun']).get('comp_array', ())
             stats.loot_ammo_type = next((t for t in compatible
-                if items.catalogue()[t][1].rsplit('_', 1)[-1] == quality),
-                compatible[0] if compatible else None)
+                if items.catalogue()[t][1].endswith('_ST')), None)
 
 
 def mob_mode(stats, distance):

@@ -26,6 +26,7 @@ import combat
 import events
 import holdings
 import inventory
+import items
 import mobs
 import progression
 import quests
@@ -38,8 +39,16 @@ from testkit import attack_fixture, run_cases
 
 
 def site_damage(type_id, scale):
-    """Site profiles use archived or pinned attacks, then one common /1.5."""
+    """Issued A weapon damage, with the local scale applied exactly once."""
     source = mobs.MobStats(type_id, balanced=False)
+    current = mobs.stats(type_id)
+    if not (current.role == 'boss' and current.weapon_class == 'pistol'):
+        p = items.params_of(current.weapon_type_id)
+        if items.root_of(current.weapon_type_id) == items.FIRE_ARM:
+            mode = max((i for i, shots in enumerate(p['fire_mods']) if shots), key=lambda i: p['max_range'][i])
+            return tuple(max(1, round(p[field][mode] * scale / 1.5)) for field in ('h_damage_min', 'h_damage_max'))
+        if items.root_of(current.weapon_type_id) == items.COLD_ARM:
+            return tuple(max(1, round(p[field] * scale / 1.5)) for field in ('h_damage_min', 'h_damage_max'))
     index = battle_balance.data()['mobs'].get(str(type_id))
     row = battle_balance.data()['mob_records'][index] if index is not None else vars(source)
     return tuple(round(row[field] * scale / 1.5) for field in ('dmg_min', 'dmg_max'))
@@ -190,7 +199,7 @@ class ClanBases(unittest.TestCase):
                                      site_damage(base.guards[0], base.troop_damage_scale))
                     self.assertIsNot(soldier.stats, original)
                     self.assertTrue(soldier.stats.ranged)
-                    self.assertGreater(soldier.stats.shots, 1)
+                    self.assertTrue(any(mode['shots'] > 1 for mode in soldier.stats.balanced_modes))
                     self.assertEqual(soldier.stats.weapon_type_id, bodyguard.stats.weapon_type_id)
                     self.assertEqual(soldier.stats.type_id, soldier.type_id)
                     self.assertTrue(bosses.keeps_hours(soldier.type_id, base.loc))

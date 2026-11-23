@@ -213,7 +213,7 @@ pistol = sum(b == [PISTOL_BELT] for b in belts) / 4000.0
 check("  ..the pistol belt about three times in four (%.3f)" % pistol, abs(pistol - 0.75) < 0.03, True)
 check("no other creature has a group", [t for t in mobs.TYPES if int(t) != MVAMBA
                                         and mobs.one_of_groups(int(t))], [])
-rounds = (items.params_of(mobs.stats(COURIER).weapon_type_id) or {}).get("comp_array", [0])[0]
+rounds = mobs.stats(COURIER).loot_ammo_type
 courier = [mobs.loot_for(mobs.stats(COURIER), rng) for _ in range(300)]
 check("a gunman leaves his rounds and a piece of junk as well, every time",
       all({t for t, _n in d} & {rounds} and {t for t, _n in d} & set(TRASH[0:3])

@@ -432,12 +432,13 @@ try:
         loc = world.location(world.pack(rx, ry))
         ring_locs.setdefault(loc.file, loc)
     longest_type = max((t for band, _reach in encounters.bands() for t in band.types), key=lambda t: mobs.stats(t).range)
-    near = min(mobs.hex_distance(encounters.arrival_cell(loc, side, [(n, longest_type) for n in encounters.nests(loc)]), n, loc.width)
-               for loc in ring_locs.values() for side in (travel.N, travel.S, travel.E, travel.W)
+    arrivals = [(loc, encounters.arrival_cell(loc, side, [(n, longest_type) for n in encounters.nests(loc)]))
+                for loc in ring_locs.values() for side in (travel.N, travel.S, travel.E, travel.W)]
+    near = min(mobs.hex_distance(pos, n, loc.width) for loc, pos in arrivals if pos is not None
                for n in encounters.nests(loc))
     longest = max(mobs.stats(t).range for b, _r in encounters.bands() for t in b.types)
     check("  ..and the arrival, over any edge of any of them, out of every band's reach",
-          (len(ring_locs), near > longest, longest), (4, True, 36))
+          (len(ring_locs), near > longest, longest), (4, True, 55))
     legs = encounters.crossings(5950.0, 1710.0, 5953.5, 1710.0, 0.35)
     check("the cells a leg enters, in order, with the seconds to each",
           [(c, round(s, 1)) for s, c in legs],

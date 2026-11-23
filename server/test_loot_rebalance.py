@@ -134,16 +134,15 @@ class LootRebalance(unittest.TestCase):
                     self.assertAlmostEqual(a, current_income_target(k, profile['afro'] * factor), delta=1)
                     self.assertAlmostEqual(g, profile['gold'] * factor, delta=.0001)
 
-    def test_changed_calibre_preserves_explicit_ammo_quality_and_quantity(self):
+    def test_changed_calibre_uses_standard_ammo_and_preserves_quantity(self):
         for kind in (840, 841):
             with self.subTest(kind=kind):
                 original = mobs.MobStats(kind, balanced=False)
                 current = mobs.stats(kind)
                 compatible = items.params_of(current.weapon_type_id)['comp_array']
                 self.assertIn(current.loot_ammo_type, compatible)
-                original_quality = items.catalogue()[original.loot_ammo_type][1].rsplit('_', 1)[-1]
                 current_quality = items.catalogue()[current.loot_ammo_type][1].rsplit('_', 1)[-1]
-                self.assertEqual(current_quality, original_quality)
+                self.assertEqual(current_quality, 'ST')
                 self.assertEqual(current.loot_ammo_count, original.loot_ammo_count)
                 self.assertEqual(current.loot_ammo_count, (2, 6))
 
@@ -153,7 +152,10 @@ class LootRebalance(unittest.TestCase):
         total = sum(counts.values())
         a = sum(revenue(k)[0] * n for k, n in counts.items()) / total
         g = sum(revenue(k)[1] * n for k, n in counts.items()) / total
-        self.assertAlmostEqual(a, 105000, delta=1)
+        carried_change = sum((carried_ammo_revenue(mobs.stats(k))
+                              - carried_ammo_revenue(mobs.MobStats(k, balanced=False))) * n
+                             for k, n in counts.items()) / total
+        self.assertAlmostEqual(a - carried_change, 105000, delta=1)
         self.assertAlmostEqual(g, 1.2, delta=.0001)
 
     def test_elite_roster_is_absent_from_every_patrol_and_not_officers(self):

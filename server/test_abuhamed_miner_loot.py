@@ -53,27 +53,28 @@ class AbuHamedMinerLoot(unittest.TestCase):
         tree = ast.parse(path.read_text(encoding='utf-8'))
         designed = next(ast.literal_eval(n.value) for n in tree.body if isinstance(n, ast.Assign)
                         and any(isinstance(t, ast.Name) and t.id == 'DESIGNED_KINDS' for t in n.targets))
-        for kind, level in ((930, 18), (931, 19)):
+        for kind, level, weapon, ammo_type in ((930, 18, 25039, 6107), (931, 19, 25074, 6111)):
             st = mobs.stats(kind)
             self.assertEqual((st.level, st.weapon_type_id, st.weapon_class, st.ranged),
-                             (level, 25319, 'assault', True))
+                             (level, weapon, 'machine_gun', True))
             for k, v in designed[st.name].items():
                 self.assertEqual(mobs.TYPES[str(kind)][k], v)
-            self.assertIn(6109, items.params_of(25319)['comp_array'])
+            self.assertEqual(inventory.item_level(weapon), level)
+            self.assertIn(ammo_type, items.params_of(weapon)['comp_array'])
             for seed in range(10):
                 drops = mobs.carried(st, random.Random(seed))
-                self.assertEqual(drops[0][0], 6109)
+                self.assertEqual(drops[0][0], ammo_type)
                 self.assertTrue(3 <= drops[0][1] <= 10)
-        ammo = items.params_of(6109)
-        self.assertEqual([ammo[k] for k in ('acc_mod', 'dam_mod', 'st_mod', 'range_mod', 'piercing')], [1]*5)
+            ammo = items.params_of(ammo_type)
+            self.assertEqual([ammo[k] for k in ('acc_mod', 'dam_mod', 'st_mod', 'range_mod', 'piercing')], [1]*5)
 
     def test_actual_weapon_response_uses_standard_rounds(self):
         frames = []
         npc = NS(type_id=930, root=world.MOB)
         sess = NS(room=NS(npcs={123: npc}), send=lambda *cmd, **p: frames.append((cmd[0], p)))
-        obj = inventory.oid(mobs.VIRTUAL_BASE + 123, 25319, items.FIRE_ARM)
+        obj = inventory.oid(mobs.VIRTUAL_BASE + 123, 25039, items.FIRE_ARM)
         self.assertTrue(combat.Fighter.ss_get_di(NS(sess=sess), dict(obj=obj)))
-        self.assertEqual(frames[0][1]['ammo_type'], 6109)
+        self.assertEqual(frames[0][1]['ammo_type'], 6107)
 
     def test_quest_diamond_is_preserved_and_saleable_diamond_has_an_independent_source(self):
         for kind in (930, 931):

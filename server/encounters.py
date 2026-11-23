@@ -246,7 +246,7 @@ def entered_over(vx, vy):
 
 
 def arrival_cell(loc, side, spawns):
-    """Enter on the same edge, outside the pack's initial weapon reach."""
+    """A safe cell on the same edge, or no ambush if the weapons cover it."""
     start = travel.arrival_cell(loc, side)
     threats = [(cell, mobs.stats(type_id).range) for cell, type_id in spawns]
 
@@ -258,9 +258,11 @@ def arrival_cell(loc, side, spawns):
         return start
     goals = {cell for cell, edge in travel.exit_sides(loc).items()
              if edge == side and cell not in loc.obstacles and safe(cell)}
+    if not goals:
+        return None
     path = mobs.find_path(loc, start, lambda cell: cell in goals,
                           {cell for cell, _reach in threats}, limit=20000)
-    return path[-1] if path and path[-1] in goals else start
+    return path[-1] if path and path[-1] in goals else None
 
 
 def day(now=None):
@@ -373,6 +375,9 @@ class Encounters:
                                                          world.MOB)
         side = entered_over(leg[3], leg[4]) if leg else travel.W
         pos = arrival_cell(loc, side, [(npc.cell, npc.type_id) for npc in room.npcs.values()])
+        if pos is None:
+            del self.rooms.rooms[key]
+            return None
         self.met[sess] = Meeting(key, loc_id, cell)
         when, n = self.today.get(sess.char_id, (None, 0))
         self.today[sess.char_id] = (day(), (n if when == day() else 0) + 1)
