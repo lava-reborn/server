@@ -83,11 +83,17 @@ def use_error(fighter, target, type_id):
         return None
     if value.get('self_only') and target is not fighter:
         return 'Этот предмет можно применить только к себе.'
-    required = items.params_of(type_id).get('need_pvp_rep', 0)
+    params = items.params_of(type_id)
+    if 'buff_level' in params:
+        required = params['buff_level']
+        if fighter.character().level < required:
+            return 'Для применения нужен уровень персонажа: %d.' % required
+        return None
+    # Registered/private templates retain their explicit independent gates.
+    required = params.get('need_pvp_rep', 0)
     if required > fighter.character().rep:
         return 'Для применения нужен навык бойца: %d.' % required
     import inventory
-    params = items.params_of(type_id)
     mask = params.get('need_skills_m', 0)
     levels = inventory.unpacked(mask, params.get('need_skills'), progression.SKILLS)
     for skill, needed in enumerate(levels):

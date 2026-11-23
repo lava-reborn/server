@@ -2235,7 +2235,7 @@ class Session:
             mob.slot = None
             mob.base_respawn_at = None
         rc.keep_hours()
-        return "Охрана восстановлена; хозяин появится после зачистки в окно захвата."
+        return "Охрана восстановлена; хозяин и телохранители появляются по таймеру в окно захвата."
 
     def admin_boss_now(self, base=False):
         """Use the existing local test clock; production schedules are unchanged."""
@@ -2840,6 +2840,16 @@ class Session:
                       take_quests=quests.taken_by(type_id), m_hello=[],
                       can_set_home=0, can_banking=0, can_trophy=0,
                       can_repair=0, can_trade=0)
+        # These lifts offer only the bunker entry. Do not expose that list
+        # to a clanless client: QuestInspector can still hold an earlier
+        # positive q_status. Clearing the whole entry-only offer preserves
+        # every remaining q_idx; the live take/hand-in checks also remain.
+        if (params['give_quests']
+                and all(t in quests.CLAN_BASE_ENTRIES for t in params['give_quests'])
+                and not self.base_entry_allowed(quests.get(params['give_quests'][0]))):
+            params['give_quests'] = []
+            params['take_quests'] = [t for t in params['take_quests']
+                                     if t not in quests.CLAN_BASE_ENTRIES]
         holder = None
         if root == world.TRADER:
             import gold_trade
@@ -3354,8 +3364,13 @@ class Session:
 
     def base_entry_allowed(self, quest):
         """Ask live membership, including for an old or fight-delayed passage."""
-        return (quest.type not in quests.CLAN_BASE_ENTRIES
-                or bool(self.char_id and STORE.clan_member(self.char_id) is not None))
+        if quest.type not in quests.CLAN_BASE_ENTRIES:
+            return True
+        member = STORE.clan_member(self.char_id) if self.char_id else None
+        # 0 and 16777215 are clanless wire sentinels, even if an old import
+        # left matching rows. Never trust a cached character/clan label.
+        return bool(member and type(member['clan_id']) is int
+                    and 0 < member['clan_id'] <= accounts.Store.CLAN_MAX_ID)
 
     def quest_available(self, quest, state=None):
         """Whether this player may take or carry the quest right now.

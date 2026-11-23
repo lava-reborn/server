@@ -753,7 +753,14 @@ class TrainingClient(unittest.TestCase):
         with patch.dict(os.environ, {}, clear=True):
             ordinary = widescreen.injected()
             enabled = widescreen.injected(training=True)
-            self.assertNotIn(b'__tg', ordinary)
+            # Shared range guards preserve private polygon formulas; the guard
+            # does not install its UI, handshake, connection or request hooks.
+            import re
+            self.assertEqual(set(re.findall(rb'__tg[A-Za-z_0-9]*', ordinary)),
+                             {b'__tgActive'})
+            for token in (b'__tgInstall', b'__tgHandshakeOrig', b'__tgConnectOrig',
+                          b'__tgLoadFeature', b'__tgPanel', b'__tgCombatStats'):
+                self.assertNotIn(token, ordinary)
             self.assertIn(b'__tgHandshakeOrig', enabled)
             self.assertIn(b'__tgConnectOrig', enabled)
             self.assertIn(b'__tgLoadFeature', enabled)

@@ -207,7 +207,7 @@ class BossBlueprints(unittest.TestCase):
                         expected = [(4796, 1), (7620, 2)]
                         if value < chance:
                             expected.append((item, 1))
-                        if blueprint_level + delta - st.level >= 4:
+                        if blueprint_level + delta - st.level >= 5:
                             expected = [(7620, 2)]
                         self.assertEqual(result, expected)
             with patch.object(mobs, 'carried', return_value=[]), \
@@ -232,9 +232,9 @@ class BossBlueprints(unittest.TestCase):
             self.assertIn((ready, 1), result)
             self.assertIn((3742, 1), result)
             blocked = mobs.loot_for(st, FixedRandom(0.10), wanted, loc_id=82,
-                                    killer_level=5)  # blueprint level 1, difference +4
+                                    killer_level=6)  # boss level 1, difference +5
             self.assertNotIn((encrypted, 1), blocked)
-            self.assertEqual(blocked, [])  # Tradeable loot is blocked at four levels below.
+            self.assertEqual(blocked, [])  # Tradeable loot is blocked at five levels below.
             # Wrong locations cannot fall back to legacy quest sources.
             self.assertEqual(mobs.loot_for(st, FixedRandom(0), wanted,
                                           loc_id=999, killer_level=st.level).count((encrypted, 1)), 0)
@@ -251,7 +251,7 @@ class BossBlueprints(unittest.TestCase):
                 self.assertEqual(mobs.loot_for(st, FixedRandom(0.21), wanted,
                     loc_id=82, killer_level=4), [])
                 self.assertEqual(mobs.loot_for(st, FixedRandom(0.03), wanted,
-                    loc_id=82, killer_level=5), [])
+                    loc_id=82, killer_level=6), [])
 
     def test_boss_combat_level_does_not_affect_blueprint_chance(self):
         # Asmund drops a level-1 blueprint even if his combat stats change.
@@ -261,9 +261,9 @@ class BossBlueprints(unittest.TestCase):
             for boss_level in (0, 10, 100):
                 st = SimpleNamespace(type_id=269, level=boss_level, role='boss')
                 self.assertEqual(mobs.loot_for(st, FixedRandom(0.015), (),
-                    loc_id=82, killer_level=4), [] if boss_level == 0 else [(2408, 1)])
+                    loc_id=82, killer_level=4), [(2408, 1)])
                 self.assertEqual(mobs.loot_for(st, FixedRandom(0.1), (),
-                    loc_id=82, killer_level=5), [])
+                    loc_id=82, killer_level=6), [])
 
     def test_equal_level_chance_uses_one_roll_per_kill(self):
         st = mobs.stats(269)
@@ -323,7 +323,7 @@ class BossBlueprints(unittest.TestCase):
                 rows = combat.RoomCombat.drop_loot(rc, mob)
                 self.assertEqual([r['type_id'] for r in rows], [4796, 2408])
                 self.assertTrue(all(store.item(r['uniq']) is not None for r in rows))
-                mob.blueprint_killer_level = 5  # level-1 blueprint +4
+                mob.blueprint_killer_level = 6  # boss level 1, loot cutoff at +5
                 combat.RNG.value = 0.10
                 self.assertEqual(combat.RoomCombat.drop_loot(rc, mob), [])
         finally:

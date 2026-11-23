@@ -227,6 +227,27 @@ class ArchivedBuffs(unittest.IsolatedAsyncioTestCase):
         self.assertEqual((f.ap_max, f.ap), (initial, 17))
 
 
+    async def test_level_is_rechecked_before_consumption_and_qualification_uses_base_level(self):
+        manager = self.manager()
+        fighter = self.s.combat
+        for skill in self.s.char.skill:
+            skill[0] = 0
+        self.s.char.skill[p.MELEE][0] = 13
+        self.s.char.rep = -100
+        row = self.s.inv.create(3203)
+        fighter.ap = fighter.ap_max
+        before_ap = fighter.ap
+        effects.activate(fighter, row['uniq'], fighter, 1)
+        self.assertIsNotNone(self.store.item(row['uniq']))
+        self.assertFalse(manager.active)
+        self.assertEqual(fighter.ap, before_ap)
+        self.s.char.skill[p.MELEE][0] = 14
+        effects.activate(fighter, row['uniq'], fighter, 1)
+        self.assertIsNone(self.store.item(row['uniq']))
+        self.assertEqual(fighter.ap, before_ap - 1)
+        self.assertIn('experience_down', manager.active)
+
+
 class GofusStock(unittest.TestCase):
     def test_each_city_offers_its_ranks_scanner_and_ap_at_the_doctor(self):
         for loc, booster, strength, scanner, salus in (
@@ -274,26 +295,38 @@ class GofusStock(unittest.TestCase):
         for trader, loc in ((1206, 102), (202, 76), (714, 609), (5240, 1443)):
             self.assertFalse(any(effects.definition(t) for t in items.stock_for(trader, loc)))
 
-    def test_afro_buffs_have_real_skill_requirements_and_no_zero_packed_rows(self):
+    def test_afro_buffs_use_strict_character_level_and_gold_has_no_requirement(self):
         for tid in effects.definitions():
             params = items.params_of(tid)
             for field in ('need_attribs', 'need_skills', 'need_specs', 'bonus_attribs', 'bonus_skills', 'bonus_specs'):
                 self.assertTrue(all(params.get(field, ())), (tid, field))
                 self.assertEqual(int(params.get(field + '_m', 0)).bit_count(), len(params.get(field, ())))
+            self.assertEqual(params.get('need_pvp_rep', 0), 0)
+            self.assertEqual((params['need_skills_m'], params['need_skills']), (0, []))
+            ch = p.Character()
+            ch.rep = -100
+            fighter = type('BuffUser', (), {'character': lambda self: ch})()
+            for skill in ch.skill:
+                skill[0] = 0
             if params.get('cost') and not params.get('g_cost'):
-                self.assertEqual(params.get('need_pvp_rep', 0), 0)
-                self.assertEqual(params['need_skills_m'], 3)
-                melee, shooting = params['need_skills']
-                self.assertTrue(2 <= shooting <= 17)
-                self.assertEqual(melee, (shooting + 1) // 2)
-                ch = p.Character()
-                fighter = type('BuffUser', (), {'character': lambda self: ch})()
-                ch.skill[p.SHOOTING][0], ch.skill[p.MELEE][0] = shooting, melee - 1
-                self.assertIsNotNone(effects.use_error(fighter, fighter, tid))
-                ch.skill[p.MELEE][0] = melee
+                required = params['buff_level']
+                self.assertTrue(2 <= required <= 17)
+                # A melee character qualifies with no shooting or PvP skill.
+                ch.skill[p.MELEE][0] = required
                 self.assertIsNone(effects.use_error(fighter, fighter, tid))
-                ch.skill[p.SHOOTING][0] = shooting - 1
-                self.assertIsNotNone(effects.use_error(fighter, fighter, tid))
+                ch.skill[p.MELEE][0] = required - 1
+                ch.bonus_skills = [100] * p.SKILLS
+                self.assertIn('уровень персонажа', effects.use_error(fighter, fighter, tid))
+                ch.skill[p.MELEE][0] = 0
+                ch.skill[p.INDUSTRY][0] = required
+                self.assertIsNone(effects.use_error(fighter, fighter, tid))
+            else:
+                self.assertEqual(params['buff_level'], 0)
+                self.assertIsNone(effects.use_error(fighter, fighter, tid))
+
+    def test_picodin_keeps_agreed_six_ten_fourteen_character_levels(self):
+        self.assertEqual([items.params_of(t)['buff_level'] for t in (3201, 3202, 3203)], [6, 10, 14])
+        self.assertEqual([items.params_of(t)['buff_level'] for t in (3205, 3206, 3207)], [0, 0, 0])
 
     def test_outside_city_and_without_location_keep_the_archive_list(self):
         for trader in (1013, 1196, 2018):

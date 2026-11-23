@@ -1328,6 +1328,13 @@ def static_info(type_id):
             if effect is not None:
                 info[1].update(bonus_act_time=effect['duration'],
                                effects=[effects.FIRST + type_id], effects_prob=[100])
+                # Ordinary A stimulants use the agreed strict character-level
+                # ladder; G stimulants are unrestricted. Neither asks for PvP
+                # reputation or independent shooting/melee levels.
+                level = (max(info[1].get('need_skills') or [0])
+                         if info[1].get('cost') and not info[1].get('g_cost') else 0)
+                info[1].update(buff_level=level, need_pvp_rep=0,
+                               need_skills_m=0, need_skills=[])
                 # Packed masks and their dense lists must change together.
                 # Zero rows are noise in a stimulant's requirements/bonuses.
                 for prefix in ('need', 'bonus'):
@@ -1364,6 +1371,8 @@ def static_info(type_id):
         single = (name.startswith(('Med_Battle_', 'Med_Pacific_'))
                   and info[1].get('use_count') == 1)
         info[1]['max_count'] = MEDICINE_STACK if single else 1
+    if info:
+        info[1].update(equipment_level_fields(type_id, info[1]))
     return info
 
 
@@ -1648,15 +1657,41 @@ def wiki_descs():
     return out
 
 
+def equipment_level_allowance(type_id):
+    """The +3 equip allowance belongs only to weapons and set pieces."""
+    if type_id in STRICT_LEVEL_GEAR:
+        return 0
+    root = root_of(type_id)
+    if root in (FIRE_ARM, COLD_ARM):
+        return 3
+    if root == WEAR:
+        import setcraft
+        if sets.set_of(setcraft.base_of(type_id)):
+            return 3
+    return 0
+
+
+def equipment_level_fields(type_id, si):
+    """Presentation of the native character-level gate, not a new requirement.
+
+    Item templates use separate equip rules. Medicine and buffs have their
+    own requirements and must not advertise an equipment allowance.
+    """
+    if root_of(type_id) not in (WEAR, FIRE_ARM, COLD_ARM) or item_templates.contains(type_id):
+        return {}
+    level = max(si.get("need_skills") or [0]) if si.get("need_skills_m") else 0
+    if level <= 0:
+        return {}
+    return dict(equip_level=level, equip_allowance=equipment_level_allowance(type_id))
+
+
 def equipment_level_text(type_id):
     """Explain the equip allowance without suggesting an upper wearing limit."""
-    if root_of(type_id) not in (WEAR, FIRE_ARM, COLD_ARM) or item_templates.contains(type_id):
+    fields = equipment_level_fields(type_id, params_of(type_id) or {})
+    if not fields:
         return ""
-    si = params_of(type_id) or {}
-    level = max(si.get("need_skills") or [0]) if si.get("need_skills_m") else 0
-    if level <= 0 or not (si.get("cost", 0) or si.get("g_cost", 0)):
-        return ""
-    if type_id in STRICT_LEVEL_GEAR:
+    level = fields['equip_level']
+    if not fields['equip_allowance']:
         return "Можно надеть только с %d-го уровня." % level
     return ("Можно надеть с %d-го уровня. Без ускоренного износа — с %d-го."
             % (max(0, level - 3), level))

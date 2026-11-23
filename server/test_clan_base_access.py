@@ -186,6 +186,122 @@ class ClanBaseAccess(BaseScene):
                     fighters[0]['level'] = base.min_level - 1
                     self.assertIsNone(holdings.winner(snap, holdings.BASE_SQUAD, base.min_level))
 
+    def entry_npcs(self, loc_id, kind):
+        self.scene(loc_id)
+        found = [(eid, npc) for eid, npc in self.s.room.npcs.items()
+                 if kind in quests.given_by(npc.type_id)]
+        self.assertEqual(len(found), 3)
+        return found
+
+    def npc_quest_frame(self, eid):
+        # Only combat presentation is unrelated to this packet regression;
+        # membership, actual room NPCs, quest indices and handlers are native.
+        with patch.object(self.s, 'combat', NS(mob_info=lambda _: {}, after_npc_info=lambda _: None)):
+            self.s.send_npc_info(eid)
+        return next(p for cmd, p in reversed(self.s.frames)
+                    if cmd.startswith('userInfo') and p['id'] == eid)
+
+    def test_all_six_lifts_hide_entries_and_reject_native_status_and_take_for_clanless(self):
+        for loc_id, kind in ((118, 18201), (1442, 18203)):
+            for eid, npc in self.entry_npcs(loc_id, kind):
+                with self.subTest(location=loc_id, npc=eid):
+                    self.s.pos = npc.cell
+                    self.s.frames.clear()
+                    frame = self.npc_quest_frame(eid)
+                    self.assertEqual(frame['give_quests'], [])
+                    self.assertEqual(frame['take_quests'], [])
+                    self.s.cmd_q_status(dict(q_type=kind))
+                    self.assertEqual(self.s.frames[-1][0], 'q_status')
+                    self.assertEqual(self.s.frames[-1][1]['status'], 0)
+                    self.take(kind, eid)
+                    self.assertEqual(self.s.frames[-1], ('cmdAck', dict(res=server.RES_NOT_AVAILABLE)))
+                    self.assertFalse(self.store.has_quest(self.cid, kind))
+                    self.assertEqual(self.s.loc.id, loc_id)
+                    # A private packet must not edit the shared/native index.
+                    self.assertEqual(quests.given_by(npc.type_id), [kind])
+
+    def test_all_six_lifts_keep_real_member_indices_and_complete_native_passages(self):
+        self.member()
+        for loc_id, kind, interior in ((118, 18201, 609), (1442, 18203, 1443)):
+            for index in range(3):
+                entries = self.entry_npcs(loc_id, kind)
+                eid, npc = entries[index]
+                self.s.pos = npc.cell
+                with self.subTest(location=loc_id, npc=eid):
+                    frame = self.npc_quest_frame(eid)
+                    self.assertEqual(frame['give_quests'], quests.given_by(npc.type_id))
+                    self.assertEqual(frame['take_quests'], quests.taken_by(npc.type_id))
+                    self.s.cmd_q_status(dict(q_type=kind))
+                    self.assertEqual(self.s.frames[-1][1]['status'], 1)
+                    self.take(kind, eid)
+                    row = next(r for r in self.store.quests(self.cid) if r['type'] == kind)
+                    self.s.cmd_q_co(dict(q_id=row['q_id'], mob=eid))
+                    self.assertIsNone(self.store.quest(row['q_id']))
+                    self.assertEqual(self.s.loc.id, interior)
+
+    def test_cached_member_status_and_old_active_quest_cannot_open_any_lift_after_leaving(self):
+        for loc_id, kind in ((118, 18201), (1442, 18203)):
+            self.member()
+            entries = self.entry_npcs(loc_id, kind)
+            quest = quests.get(kind)
+            q_id = self.store.take_quest(self.cid, kind, quest.fresh_progress(), True)
+            self.s.cmd_q_status(dict(q_type=kind))
+            self.assertEqual(self.s.frames[-1][1]['status'], 1)
+            snapshot = self.s._quest_status_snapshot
+            before = dict(self.store.quest(q_id))
+            self.assertTrue(self.store.clan_member_remove(self.cid, self.clan))
+            # A stale cached identity is not evidence of actual membership.
+            self.s.active = dict(self.s.active, clan_id=str(self.clan), clan_name='Passage clan')
+            for eid, npc in entries:
+                with self.subTest(location=loc_id, npc=eid):
+                    self.s.pos = npc.cell
+                    self.s.frames.clear()
+                    frame = self.npc_quest_frame(eid)
+                    self.assertEqual((frame['give_quests'], frame['take_quests']), ([], []))
+                    self.s.cmd_q_status(dict(q_type=kind))
+                    self.assertEqual(self.s.frames[-1][1]['status'], 0)
+                    self.assertIs(self.s._quest_status_snapshot, snapshot)
+                    self.s.cmd_q_co(dict(q_id=q_id, mob=eid))
+                    self.assertIn(('cmdAck', dict(res=server.RES_NOT_AVAILABLE)), self.s.frames)
+                    self.assertEqual(dict(self.store.quest(q_id)), before)
+                    self.assertEqual(self.s.loc.id, loc_id)
+            self.store.drop_quest(q_id)
+
+    def test_no_clan_wire_sentinels_or_orphan_membership_are_not_actual_clans(self):
+        for clan_id in (-1, 0, 16777215, 999999):
+            with self.subTest(clan=clan_id):
+                if clan_id != 999999:
+                    self.store.db.execute('INSERT INTO clans (id,name,name_key,head,created_at) VALUES (?,?,?,?,?)',
+                                          (clan_id, 'Imported sentinel', 'sentinel-' + str(clan_id), self.cid, 1))
+                self.store.db.execute('INSERT INTO clan_members (char_id,clan_id,joined_at) VALUES (?,?,?)',
+                                      (self.cid, clan_id, 1))
+                self.store.db.commit()
+                for loc_id, kind in ((118, 18201), (1442, 18203)):
+                    eid = self.scene(loc_id, kind)
+                    self.s.active = dict(self.s.active, clan_id=str(clan_id))
+                    self.s.cmd_q_status(dict(q_type=kind))
+                    self.assertEqual(self.s.frames[-1][1]['status'], 0)
+                    self.assertEqual(self.npc_quest_frame(eid)['give_quests'], [])
+                    self.take(kind, eid)
+                    self.assertFalse(self.store.has_quest(self.cid, kind))
+                self.store.db.execute('DELETE FROM clan_members WHERE char_id=?', (self.cid,))
+                if clan_id != 999999:
+                    self.store.db.execute('DELETE FROM clans WHERE id=?', (clan_id,))
+                self.store.db.commit()
+
+    def test_clanless_exit_lists_and_status_remain_available_at_all_six_return_lifts(self):
+        for interior, kind in ((609, 18202), (1443, 18204)):
+            for eid, npc in self.entry_npcs(interior, kind):
+                with self.subTest(location=interior, npc=eid):
+                    self.s.pos = npc.cell
+                    frame = self.npc_quest_frame(eid)
+                    self.assertEqual(frame['give_quests'], quests.given_by(npc.type_id))
+                    self.assertEqual(frame['take_quests'], quests.taken_by(npc.type_id))
+                    self.assertIn(kind, frame['give_quests'])
+                    self.assertIn(kind, frame['take_quests'])
+                    self.s.cmd_q_status(dict(q_type=kind))
+                    self.assertEqual(self.s.frames[-1][1]['status'], 1)
+
 
 class LocalBossSpawning(BaseScene):
     def room_combat(self, loc_id):
@@ -235,7 +351,7 @@ class LocalBossSpawning(BaseScene):
             self.assertTrue(all(m.alive and not m.away for m in guards))
             self.assertTrue(next(m for m in rc.bosses if m.type_id == site.boss).alive)
 
-    def test_alias_restores_both_base_waves_without_bypassing_master_gate(self):
+    def test_alias_advances_to_weekly_timer_and_restores_master_with_living_guards(self):
         moment = datetime(2026, 11, 23, 17, 30, tzinfo=bosses.ZONE).timestamp()
         for key in ('base_dn', 'base_ah'):
             base = holdings.site(key)
@@ -243,20 +359,30 @@ class LocalBossSpawning(BaseScene):
             with self.subTest(base=key), patch.object(server, 'CHEATS', True), \
                     patch.object(bosses.time, 'time', return_value=moment), patch.object(bosses, '_OFFSET', 0):
                 rc.keep_hours()
+                master = next(m for m in rc.bosses if m.type_id == base.boss)
+                self.assertTrue(master.away)
+                self.assertTrue(all(m.away for m in rc.bosses if m.type_id in base.guards))
+                treasury = self.store.clan_treasury(self.clan)
                 self.assertTrue(any('восстановлена' in text for text in self.command()))
                 slot = holdings.battle_slot(base)
                 guards = [m for m in rc.bosses if m.type_id in base.guards + base.troops]
                 master = next(m for m in rc.bosses if m.type_id == base.boss)
                 self.assertEqual(len(guards), 13)
                 self.assertTrue(all(m.alive and not m.away for m in guards))
-                self.assertTrue(master.away)
-                for guard in guards:
-                    guard.alive = False
-                    guard.away = True
-                    guard.slot = slot
-                    self.s.room.npcs.pop(guard.eid, None)
+                self.assertTrue(master.alive and not master.away)
+                self.assertEqual(master.slot, slot)
+                opened = datetime.fromtimestamp(slot, bosses.ZONE)
+                self.assertEqual((opened.weekday(), opened.hour, opened.minute), (5, 20, 0))
                 rc.keep_hours()
                 self.assertTrue(master.alive and not master.away)
+                self.assertIsNone(self.store.holding(base.key))
+                self.assertEqual(self.store.clan_treasury(self.clan), treasury)
+                self.assertTrue(any('исходной' in text for text in self.command('/test-time-reset')))
+                self.assertEqual(bosses.clock(), moment)
+                rc.keep_hours()
+                self.assertTrue(master.away)
+                self.assertTrue(all(m.away for m in guards if m.type_id in base.guards))
+                self.assertTrue(all(m.alive and not m.away for m in guards if m.type_id in base.troops))
 
     def test_refuses_invalid_arguments_production_and_active_escort(self):
         rc = self.room_combat(31)

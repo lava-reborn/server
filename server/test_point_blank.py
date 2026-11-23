@@ -196,18 +196,23 @@ async def shoot(sess, row, target, before=None):
     sess.combat.ap = sess.combat.ap_max
     sess.writer.frames.clear()
     where = "x0%08x" % target[1] if isinstance(target, tuple) else "x1%08x" % target
-    sess.handle(*decode("ss_use;type=16;obj=x%s;target=%s;"
-                        % (inventory.oid_of(row), where)))
-    if before is not None:
-        before()
-    for _ in range(40):
-        await asyncio.sleep(0.01)
-        aims = named(sess.writer.frames, "faAim")
-        closed = [p for n, p in sess.writer.frames
-                  if n == "faShot" and p.get("id") == 0 and p["status"] == 0]
-        if aims and len(closed) >= aims[0]["num_shots"]:
-            break
-    await asyncio.sleep(0.02)
+    # Flight/settlement faults require known hits, not a chance of passing.
+    # Native 95% accuracy remains intact; this fixture chooses the centre
+    # of its scatter draw, including while async aim resolution runs.
+    # A dead/missing body and a ground shot still produce genuine misses.
+    with patch.object(combat, "bullet_offset", return_value=0):
+        sess.handle(*decode("ss_use;type=16;obj=x%s;target=%s;"
+                            % (inventory.oid_of(row), where)))
+        if before is not None:
+            before()
+        for _ in range(40):
+            await asyncio.sleep(0.01)
+            aims = named(sess.writer.frames, "faAim")
+            closed = [p for n, p in sess.writer.frames
+                      if n == "faShot" and p.get("id") == 0 and p["status"] == 0]
+            if aims and len(closed) >= aims[0]["num_shots"]:
+                break
+        await asyncio.sleep(0.02)
     return list(sess.writer.frames)
 
 

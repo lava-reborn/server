@@ -4,19 +4,19 @@
   "20": [
    {
     "type": 6941,
-    "chance": 0.068382,
+    "chance": 0.0752202,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6944,
-    "chance": 0.047867,
+    "chance": 0.0526537,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.020514,
+    "chance": 0.0225654,
     "valuable": true,
     "independent": false
    },
@@ -30,19 +30,19 @@
   "21": [
    {
     "type": 6941,
-    "chance": 0.062479,
+    "chance": 0.0687269,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6944,
-    "chance": 0.043735,
+    "chance": 0.0481085,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.018744,
+    "chance": 0.0206184,
     "valuable": true,
     "independent": false
    },
@@ -56,19 +56,19 @@
   "258": [
    {
     "type": 6941,
-    "chance": 0.103018,
+    "chance": 0.1133198,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6944,
-    "chance": 0.072112,
+    "chance": 0.0793232,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.030906,
+    "chance": 0.0339966,
     "valuable": true,
     "independent": false
    },
@@ -82,19 +82,19 @@
   "259": [
    {
     "type": 6941,
-    "chance": 0.102918,
+    "chance": 0.1132098,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6944,
-    "chance": 0.072043,
+    "chance": 0.0792473,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.030876,
+    "chance": 0.0339636,
     "valuable": true,
     "independent": false
    },
@@ -108,19 +108,19 @@
   "260": [
    {
     "type": 6941,
-    "chance": 0.098389,
+    "chance": 0.1082279,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6944,
-    "chance": 0.068872,
+    "chance": 0.0757592,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.029517,
+    "chance": 0.0324687,
     "valuable": true,
     "independent": false
    },
@@ -134,19 +134,19 @@
   "261": [
    {
     "type": 6941,
-    "chance": 0.098389,
+    "chance": 0.1082279,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6944,
-    "chance": 0.068872,
+    "chance": 0.0757592,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.029517,
+    "chance": 0.0324687,
     "valuable": true,
     "independent": false
    },
@@ -160,19 +160,19 @@
   "262": [
    {
     "type": 6941,
-    "chance": 0.098389,
+    "chance": 0.1082279,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6944,
-    "chance": 0.068872,
+    "chance": 0.0757592,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.029517,
+    "chance": 0.0324687,
     "valuable": true,
     "independent": false
    },
@@ -186,19 +186,19 @@
   "263": [
    {
     "type": 6941,
-    "chance": 0.098389,
+    "chance": 0.1082279,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6944,
-    "chance": 0.068872,
+    "chance": 0.0757592,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.029517,
+    "chance": 0.0324687,
     "valuable": true,
     "independent": false
    },
@@ -212,19 +212,19 @@
   "266": [
    {
     "type": 6941,
-    "chance": 0.098289,
+    "chance": 0.1081179,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6944,
-    "chance": 0.068802,
+    "chance": 0.0756822,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.029487,
+    "chance": 0.0324357,
     "valuable": true,
     "independent": false
    },
@@ -238,19 +238,19 @@
   "267": [
    {
     "type": 6941,
-    "chance": 0.098289,
+    "chance": 0.1081179,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6944,
-    "chance": 0.068802,
+    "chance": 0.0756822,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.029487,
+    "chance": 0.0324357,
     "valuable": true,
     "independent": false
    },
@@ -264,19 +264,19 @@
   "271": [
    {
     "type": 6941,
-    "chance": 0.118791,
+    "chance": 0.1306701,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6944,
-    "chance": 0.083154,
+    "chance": 0.0914694,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.035637,
+    "chance": 0.0392007,
     "valuable": true,
     "independent": false
    },
@@ -290,19 +290,19 @@
   "272": [
    {
     "type": 6941,
-    "chance": 0.118791,
+    "chance": 0.1306701,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6944,
-    "chance": 0.083154,
+    "chance": 0.0914694,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.035637,
+    "chance": 0.0392007,
     "valuable": true,
     "independent": false
    },
@@ -316,19 +316,19 @@
   "273": [
    {
     "type": 6941,
-    "chance": 0.114193,
+    "chance": 0.1256123,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6944,
-    "chance": 0.079935,
+    "chance": 0.0879285,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.034258,
+    "chance": 0.0376838,
     "valuable": true,
     "independent": false
    },
@@ -342,19 +342,19 @@
   "274": [
    {
     "type": 6941,
-    "chance": 0.114193,
+    "chance": 0.1256123,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6944,
-    "chance": 0.079935,
+    "chance": 0.0879285,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.034258,
+    "chance": 0.0376838,
     "valuable": true,
     "independent": false
    },
@@ -368,19 +368,19 @@
   "276": [
    {
     "type": 6941,
-    "chance": 0.114708,
+    "chance": 0.1261788,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6944,
-    "chance": 0.080296,
+    "chance": 0.0883256,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.034412,
+    "chance": 0.0378532,
     "valuable": true,
     "independent": false
    },
@@ -394,19 +394,19 @@
   "277": [
    {
     "type": 6941,
-    "chance": 0.110115,
+    "chance": 0.1211265,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6944,
-    "chance": 0.077081,
+    "chance": 0.0847891,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.033034,
+    "chance": 0.0363374,
     "valuable": true,
     "independent": false
    },
@@ -420,19 +420,19 @@
   "278": [
    {
     "type": 6941,
-    "chance": 0.110115,
+    "chance": 0.1211265,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6944,
-    "chance": 0.077081,
+    "chance": 0.0847891,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.033034,
+    "chance": 0.0363374,
     "valuable": true,
     "independent": false
    },
@@ -446,19 +446,19 @@
   "280": [
    {
     "type": 6941,
-    "chance": 0.106041,
+    "chance": 0.1166451,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6944,
-    "chance": 0.074229,
+    "chance": 0.0816519,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.031812,
+    "chance": 0.0349932,
     "valuable": true,
     "independent": false
    },
@@ -478,19 +478,19 @@
   "281": [
    {
     "type": 6941,
-    "chance": 0.11063,
+    "chance": 0.121693,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6944,
-    "chance": 0.077441,
+    "chance": 0.0851851,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.033189,
+    "chance": 0.0365079,
     "valuable": true,
     "independent": false
    },
@@ -510,19 +510,19 @@
   "285": [
    {
     "type": 6941,
-    "chance": 0.114708,
+    "chance": 0.1261788,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6944,
-    "chance": 0.080296,
+    "chance": 0.0883256,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.034412,
+    "chance": 0.0378532,
     "valuable": true,
     "independent": false
    },
@@ -536,19 +536,19 @@
   "287": [
    {
     "type": 6941,
-    "chance": 0.046195,
+    "chance": 0.0508145,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6944,
-    "chance": 0.092391,
+    "chance": 0.1016301,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.073912,
+    "chance": 0.0813032,
     "valuable": true,
     "independent": false
    },
@@ -568,19 +568,19 @@
   "288": [
    {
     "type": 6941,
-    "chance": 0.04794,
+    "chance": 0.052734,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6944,
-    "chance": 0.09588,
+    "chance": 0.105468,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.076704,
+    "chance": 0.0843744,
     "valuable": true,
     "independent": false
    },
@@ -600,19 +600,19 @@
   "289": [
    {
     "type": 6941,
-    "chance": 0.046195,
+    "chance": 0.0508145,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6944,
-    "chance": 0.092391,
+    "chance": 0.1016301,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.073912,
+    "chance": 0.0813032,
     "valuable": true,
     "independent": false
    },
@@ -632,19 +632,19 @@
   "290": [
    {
     "type": 6941,
-    "chance": 0.046195,
+    "chance": 0.0508145,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6944,
-    "chance": 0.092391,
+    "chance": 0.1016301,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.073912,
+    "chance": 0.0813032,
     "valuable": true,
     "independent": false
    },
@@ -664,19 +664,19 @@
   "291": [
    {
     "type": 6941,
-    "chance": 0.045014,
+    "chance": 0.0495154,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6944,
-    "chance": 0.090029,
+    "chance": 0.0990319,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.072023,
+    "chance": 0.0792253,
     "valuable": true,
     "independent": false
    },
@@ -696,19 +696,19 @@
   "292": [
    {
     "type": 6941,
-    "chance": 0.045014,
+    "chance": 0.0495154,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6944,
-    "chance": 0.090029,
+    "chance": 0.0990319,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.072023,
+    "chance": 0.0792253,
     "valuable": true,
     "independent": false
    },
@@ -728,19 +728,19 @@
   "293": [
    {
     "type": 6941,
-    "chance": 0.045014,
+    "chance": 0.0495154,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6944,
-    "chance": 0.090029,
+    "chance": 0.0990319,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.072023,
+    "chance": 0.0792253,
     "valuable": true,
     "independent": false
    },
@@ -760,19 +760,19 @@
   "294": [
    {
     "type": 6941,
-    "chance": 0.046758,
+    "chance": 0.0514338,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6944,
-    "chance": 0.093518,
+    "chance": 0.1028698,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.074814,
+    "chance": 0.0822954,
     "valuable": true,
     "independent": false
    },
@@ -792,19 +792,19 @@
   "301": [
    {
     "type": 6941,
-    "chance": 0.049988,
+    "chance": 0.0549868,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6944,
-    "chance": 0.099975,
+    "chance": 0.1099725,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.079979,
+    "chance": 0.0879769,
     "valuable": true,
     "independent": false
    },
@@ -824,19 +824,19 @@
   "302": [
    {
     "type": 6941,
-    "chance": 0.049988,
+    "chance": 0.0549868,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6944,
-    "chance": 0.099975,
+    "chance": 0.1099725,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.079979,
+    "chance": 0.0879769,
     "valuable": true,
     "independent": false
    },
@@ -856,19 +856,19 @@
   "304": [
    {
     "type": 6941,
-    "chance": 0.049988,
+    "chance": 0.0549868,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6944,
-    "chance": 0.099975,
+    "chance": 0.1099725,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.079979,
+    "chance": 0.0879769,
     "valuable": true,
     "independent": false
    },
@@ -888,19 +888,19 @@
   "306": [
    {
     "type": 6941,
-    "chance": 0.049256,
+    "chance": 0.0541816,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6944,
-    "chance": 0.098512,
+    "chance": 0.1083632,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.078809,
+    "chance": 0.0866899,
     "valuable": true,
     "independent": false
    },
@@ -920,19 +920,19 @@
   "308": [
    {
     "type": 6941,
-    "chance": 0.049256,
+    "chance": 0.0541816,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6944,
-    "chance": 0.098512,
+    "chance": 0.1083632,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.078809,
+    "chance": 0.0866899,
     "valuable": true,
     "independent": false
    },
@@ -952,19 +952,19 @@
   "303": [
    {
     "type": 6941,
-    "chance": 0.049988,
+    "chance": 0.0549868,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6944,
-    "chance": 0.099975,
+    "chance": 0.1099725,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.079979,
+    "chance": 0.0879769,
     "valuable": true,
     "independent": false
    },
@@ -984,19 +984,19 @@
   "307": [
    {
     "type": 6941,
-    "chance": 0.049256,
+    "chance": 0.0541816,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6944,
-    "chance": 0.098512,
+    "chance": 0.1083632,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.078809,
+    "chance": 0.0866899,
     "valuable": true,
     "independent": false
    },
@@ -1016,19 +1016,19 @@
   "311": [
    {
     "type": 6941,
-    "chance": 0.048614,
+    "chance": 0.0534754,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6944,
-    "chance": 0.097228,
+    "chance": 0.1069508,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.077782,
+    "chance": 0.0855602,
     "valuable": true,
     "independent": false
    },
@@ -1054,19 +1054,19 @@
   "315": [
    {
     "type": 6944,
-    "chance": 0.055412,
+    "chance": 0.0609532,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.083117,
+    "chance": 0.0914287,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6946,
-    "chance": 0.092352,
+    "chance": 0.1015872,
     "valuable": true,
     "independent": false
    },
@@ -1092,19 +1092,19 @@
   "316": [
    {
     "type": 6944,
-    "chance": 0.055412,
+    "chance": 0.0609532,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.083117,
+    "chance": 0.0914287,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6946,
-    "chance": 0.092352,
+    "chance": 0.1015872,
     "valuable": true,
     "independent": false
    },
@@ -1130,19 +1130,19 @@
   "317": [
    {
     "type": 6944,
-    "chance": 0.055412,
+    "chance": 0.0609532,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.083117,
+    "chance": 0.0914287,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6946,
-    "chance": 0.092352,
+    "chance": 0.1015872,
     "valuable": true,
     "independent": false
    },
@@ -1168,19 +1168,19 @@
   "318": [
    {
     "type": 6944,
-    "chance": 0.057088,
+    "chance": 0.0627968,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.08563,
+    "chance": 0.094193,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6946,
-    "chance": 0.095145,
+    "chance": 0.1046595,
     "valuable": true,
     "independent": false
    },
@@ -1206,19 +1206,19 @@
   "319": [
    {
     "type": 6944,
-    "chance": 0.055338,
+    "chance": 0.0608718,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.083006,
+    "chance": 0.0913066,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6946,
-    "chance": 0.09223,
+    "chance": 0.101453,
     "valuable": true,
     "independent": false
    },
@@ -1244,19 +1244,19 @@
   "320": [
    {
     "type": 6944,
-    "chance": 0.055338,
+    "chance": 0.0608718,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.083006,
+    "chance": 0.0913066,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6946,
-    "chance": 0.09223,
+    "chance": 0.101453,
     "valuable": true,
     "independent": false
    },
@@ -1282,19 +1282,19 @@
   "321": [
    {
     "type": 6944,
-    "chance": 0.055338,
+    "chance": 0.0608718,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.083006,
+    "chance": 0.0913066,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6946,
-    "chance": 0.09223,
+    "chance": 0.101453,
     "valuable": true,
     "independent": false
    },
@@ -1320,19 +1320,19 @@
   "322": [
    {
     "type": 6944,
-    "chance": 0.057014,
+    "chance": 0.0627154,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.08552,
+    "chance": 0.094072,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6946,
-    "chance": 0.095023,
+    "chance": 0.1045253,
     "valuable": true,
     "independent": false
    },
@@ -1358,19 +1358,19 @@
   "323": [
    {
     "type": 6944,
-    "chance": 0.055265,
+    "chance": 0.0607915,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.082896,
+    "chance": 0.0911856,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6946,
-    "chance": 0.092107,
+    "chance": 0.1013177,
     "valuable": true,
     "independent": false
    },
@@ -1396,19 +1396,19 @@
   "348": [
    {
     "type": 6944,
-    "chance": 0.061938,
+    "chance": 0.0681318,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.092906,
+    "chance": 0.1021966,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6946,
-    "chance": 0.103229,
+    "chance": 0.1135519,
     "valuable": true,
     "independent": false
    },
@@ -1434,19 +1434,19 @@
   "349": [
    {
     "type": 6944,
-    "chance": 0.06026,
+    "chance": 0.066286,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.09039,
+    "chance": 0.099429,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6946,
-    "chance": 0.100433,
+    "chance": 0.1104763,
     "valuable": true,
     "independent": false
    },
@@ -1472,19 +1472,19 @@
   "350": [
    {
     "type": 6944,
-    "chance": 0.061938,
+    "chance": 0.0681318,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.092906,
+    "chance": 0.1021966,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6946,
-    "chance": 0.103229,
+    "chance": 0.1135519,
     "valuable": true,
     "independent": false
    },
@@ -1510,19 +1510,19 @@
   "351": [
    {
     "type": 6944,
-    "chance": 0.061938,
+    "chance": 0.0681318,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.092906,
+    "chance": 0.1021966,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6946,
-    "chance": 0.103229,
+    "chance": 0.1135519,
     "valuable": true,
     "independent": false
    },
@@ -1548,19 +1548,19 @@
   "352": [
    {
     "type": 6944,
-    "chance": 0.06225,
+    "chance": 0.068475,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.093375,
+    "chance": 0.1027125,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6946,
-    "chance": 0.103749,
+    "chance": 0.1141239,
     "valuable": true,
     "independent": false
    },
@@ -1586,19 +1586,19 @@
   "353": [
    {
     "type": 6944,
-    "chance": 0.060572,
+    "chance": 0.0666292,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.090858,
+    "chance": 0.0999438,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6946,
-    "chance": 0.100953,
+    "chance": 0.1110483,
     "valuable": true,
     "independent": false
    },
@@ -1624,19 +1624,19 @@
   "354": [
    {
     "type": 6944,
-    "chance": 0.06225,
+    "chance": 0.068475,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.093375,
+    "chance": 0.1027125,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6946,
-    "chance": 0.103749,
+    "chance": 0.1141239,
     "valuable": true,
     "independent": false
    },
@@ -1662,19 +1662,19 @@
   "355": [
    {
     "type": 6944,
-    "chance": 0.06225,
+    "chance": 0.068475,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6945,
-    "chance": 0.093375,
+    "chance": 0.1027125,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6946,
-    "chance": 0.103749,
+    "chance": 0.1141239,
     "valuable": true,
     "independent": false
    },
@@ -1700,19 +1700,19 @@
   "362": [
    {
     "type": 6946,
-    "chance": 0.05878,
+    "chance": 0.064658,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6947,
-    "chance": 0.083971,
+    "chance": 0.0923681,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6949,
-    "chance": 0.05878,
+    "chance": 0.064658,
     "valuable": true,
     "independent": false
    },
@@ -1744,19 +1744,19 @@
   "363": [
    {
     "type": 6946,
-    "chance": 0.05878,
+    "chance": 0.064658,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6947,
-    "chance": 0.083971,
+    "chance": 0.0923681,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6949,
-    "chance": 0.05878,
+    "chance": 0.064658,
     "valuable": true,
     "independent": false
    },
@@ -1788,19 +1788,19 @@
   "364": [
    {
     "type": 6946,
-    "chance": 0.05878,
+    "chance": 0.064658,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6947,
-    "chance": 0.083971,
+    "chance": 0.0923681,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6949,
-    "chance": 0.05878,
+    "chance": 0.064658,
     "valuable": true,
     "independent": false
    },
@@ -1832,19 +1832,19 @@
   "365": [
    {
     "type": 6946,
-    "chance": 0.05878,
+    "chance": 0.064658,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6947,
-    "chance": 0.083971,
+    "chance": 0.0923681,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6949,
-    "chance": 0.05878,
+    "chance": 0.064658,
     "valuable": true,
     "independent": false
    },
@@ -1876,19 +1876,19 @@
   "366": [
    {
     "type": 6946,
-    "chance": 0.059425,
+    "chance": 0.0653675,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6947,
-    "chance": 0.084893,
+    "chance": 0.0933823,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6949,
-    "chance": 0.059425,
+    "chance": 0.0653675,
     "valuable": true,
     "independent": false
    },
@@ -1920,19 +1920,19 @@
   "367": [
    {
     "type": 6946,
-    "chance": 0.059425,
+    "chance": 0.0653675,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6947,
-    "chance": 0.084893,
+    "chance": 0.0933823,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6949,
-    "chance": 0.059425,
+    "chance": 0.0653675,
     "valuable": true,
     "independent": false
    },
@@ -1964,19 +1964,19 @@
   "370": [
    {
     "type": 6946,
-    "chance": 0.060071,
+    "chance": 0.0660781,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6947,
-    "chance": 0.085815,
+    "chance": 0.0943965,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6949,
-    "chance": 0.060071,
+    "chance": 0.0660781,
     "valuable": true,
     "independent": false
    },
@@ -2008,19 +2008,19 @@
   "371": [
    {
     "type": 6946,
-    "chance": 0.060071,
+    "chance": 0.0660781,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6947,
-    "chance": 0.085815,
+    "chance": 0.0943965,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6949,
-    "chance": 0.060071,
+    "chance": 0.0660781,
     "valuable": true,
     "independent": false
    },
@@ -2052,19 +2052,19 @@
   "395": [
    {
     "type": 6946,
-    "chance": 0.05822,
+    "chance": 0.064042,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6947,
-    "chance": 0.083171,
+    "chance": 0.0914881,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6949,
-    "chance": 0.05822,
+    "chance": 0.064042,
     "valuable": true,
     "independent": false
    },
@@ -2096,19 +2096,19 @@
   "396": [
    {
     "type": 6946,
-    "chance": 0.05822,
+    "chance": 0.064042,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6947,
-    "chance": 0.083171,
+    "chance": 0.0914881,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6949,
-    "chance": 0.05822,
+    "chance": 0.064042,
     "valuable": true,
     "independent": false
    },
@@ -2140,19 +2140,19 @@
   "397": [
    {
     "type": 6946,
-    "chance": 0.05822,
+    "chance": 0.064042,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6947,
-    "chance": 0.083171,
+    "chance": 0.0914881,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6949,
-    "chance": 0.05822,
+    "chance": 0.064042,
     "valuable": true,
     "independent": false
    },
@@ -2184,19 +2184,19 @@
   "398": [
    {
     "type": 6946,
-    "chance": 0.05822,
+    "chance": 0.064042,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6947,
-    "chance": 0.083171,
+    "chance": 0.0914881,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6949,
-    "chance": 0.05822,
+    "chance": 0.064042,
     "valuable": true,
     "independent": false
    },
@@ -2228,19 +2228,19 @@
   "399": [
    {
     "type": 6946,
-    "chance": 0.059145,
+    "chance": 0.0650595,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6947,
-    "chance": 0.084493,
+    "chance": 0.0929423,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6949,
-    "chance": 0.059145,
+    "chance": 0.0650595,
     "valuable": true,
     "independent": false
    },
@@ -2272,19 +2272,19 @@
   "401": [
    {
     "type": 6946,
-    "chance": 0.059145,
+    "chance": 0.0650595,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6947,
-    "chance": 0.084493,
+    "chance": 0.0929423,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6949,
-    "chance": 0.059145,
+    "chance": 0.0650595,
     "valuable": true,
     "independent": false
    },
@@ -2316,19 +2316,19 @@
   "403": [
    {
     "type": 6946,
-    "chance": 0.060158,
+    "chance": 0.0661738,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6947,
-    "chance": 0.08594,
+    "chance": 0.094534,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6949,
-    "chance": 0.060158,
+    "chance": 0.0661738,
     "valuable": true,
     "independent": false
    },
@@ -2366,19 +2366,19 @@
   "405": [
    {
     "type": 6946,
-    "chance": 0.060158,
+    "chance": 0.0661738,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6947,
-    "chance": 0.08594,
+    "chance": 0.094534,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6949,
-    "chance": 0.060158,
+    "chance": 0.0661738,
     "valuable": true,
     "independent": false
    },
@@ -2416,13 +2416,13 @@
   "765": [
    {
     "type": 6947,
-    "chance": 0.048824,
+    "chance": 0.0537064,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6949,
-    "chance": 0.081374,
+    "chance": 0.0895114,
     "valuable": true,
     "independent": false
    },
@@ -2452,7 +2452,7 @@
    },
    {
     "type": 6954,
-    "chance": 0.073236,
+    "chance": 0.0805596,
     "valuable": true,
     "independent": false
    },
@@ -2466,13 +2466,13 @@
   "766": [
    {
     "type": 6947,
-    "chance": 0.047658,
+    "chance": 0.0524238,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6949,
-    "chance": 0.079431,
+    "chance": 0.0873741,
     "valuable": true,
     "independent": false
    },
@@ -2502,7 +2502,7 @@
    },
    {
     "type": 6954,
-    "chance": 0.071487,
+    "chance": 0.0786357,
     "valuable": true,
     "independent": false
    },
@@ -2516,13 +2516,13 @@
   "767": [
    {
     "type": 6947,
-    "chance": 0.047658,
+    "chance": 0.0524238,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6949,
-    "chance": 0.079431,
+    "chance": 0.0873741,
     "valuable": true,
     "independent": false
    },
@@ -2552,7 +2552,7 @@
    },
    {
     "type": 6954,
-    "chance": 0.071487,
+    "chance": 0.0786357,
     "valuable": true,
     "independent": false
    },
@@ -2566,13 +2566,13 @@
   "768": [
    {
     "type": 6947,
-    "chance": 0.048824,
+    "chance": 0.0537064,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6949,
-    "chance": 0.081374,
+    "chance": 0.0895114,
     "valuable": true,
     "independent": false
    },
@@ -2602,7 +2602,7 @@
    },
    {
     "type": 6954,
-    "chance": 0.073236,
+    "chance": 0.0805596,
     "valuable": true,
     "independent": false
    },
@@ -2616,13 +2616,13 @@
   "769": [
    {
     "type": 6947,
-    "chance": 0.050094,
+    "chance": 0.0551034,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6949,
-    "chance": 0.08349,
+    "chance": 0.091839,
     "valuable": true,
     "independent": false
    },
@@ -2652,7 +2652,7 @@
    },
    {
     "type": 6954,
-    "chance": 0.075141,
+    "chance": 0.0826551,
     "valuable": true,
     "independent": false
    },
@@ -2666,13 +2666,13 @@
   "771": [
    {
     "type": 6947,
-    "chance": 0.048926,
+    "chance": 0.0538186,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6949,
-    "chance": 0.081545,
+    "chance": 0.0896995,
     "valuable": true,
     "independent": false
    },
@@ -2702,7 +2702,7 @@
    },
    {
     "type": 6954,
-    "chance": 0.07339,
+    "chance": 0.080729,
     "valuable": true,
     "independent": false
    },
@@ -2716,13 +2716,13 @@
   "772": [
    {
     "type": 6947,
-    "chance": 0.050094,
+    "chance": 0.0551034,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6949,
-    "chance": 0.08349,
+    "chance": 0.091839,
     "valuable": true,
     "independent": false
    },
@@ -2752,7 +2752,7 @@
    },
    {
     "type": 6954,
-    "chance": 0.075141,
+    "chance": 0.0826551,
     "valuable": true,
     "independent": false
    },
@@ -2766,13 +2766,13 @@
   "773": [
    {
     "type": 6947,
-    "chance": 0.051307,
+    "chance": 0.0564377,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6949,
-    "chance": 0.085513,
+    "chance": 0.0940643,
     "valuable": true,
     "independent": false
    },
@@ -2802,7 +2802,7 @@
    },
    {
     "type": 6954,
-    "chance": 0.076961,
+    "chance": 0.0846571,
     "valuable": true,
     "independent": false
    },
@@ -2816,13 +2816,13 @@
   "775": [
    {
     "type": 6947,
-    "chance": 0.050138,
+    "chance": 0.0551518,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6949,
-    "chance": 0.083564,
+    "chance": 0.0919204,
     "valuable": true,
     "independent": false
    },
@@ -2852,7 +2852,7 @@
    },
    {
     "type": 6954,
-    "chance": 0.075207,
+    "chance": 0.0827277,
     "valuable": true,
     "independent": false
    },
@@ -2866,13 +2866,13 @@
   "1025": [
    {
     "type": 6947,
-    "chance": 0.048123,
+    "chance": 0.0529353,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6949,
-    "chance": 0.080204,
+    "chance": 0.0882244,
     "valuable": true,
     "independent": false
    },
@@ -2902,7 +2902,7 @@
    },
    {
     "type": 6954,
-    "chance": 0.072185,
+    "chance": 0.0794035,
     "valuable": true,
     "independent": false
    },
@@ -2916,13 +2916,13 @@
   "1026": [
    {
     "type": 6947,
-    "chance": 0.048123,
+    "chance": 0.0529353,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6949,
-    "chance": 0.080204,
+    "chance": 0.0882244,
     "valuable": true,
     "independent": false
    },
@@ -2952,7 +2952,7 @@
    },
    {
     "type": 6954,
-    "chance": 0.072185,
+    "chance": 0.0794035,
     "valuable": true,
     "independent": false
    },
@@ -2966,13 +2966,13 @@
   "1027": [
    {
     "type": 6947,
-    "chance": 0.048123,
+    "chance": 0.0529353,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6949,
-    "chance": 0.080204,
+    "chance": 0.0882244,
     "valuable": true,
     "independent": false
    },
@@ -3002,7 +3002,7 @@
    },
    {
     "type": 6954,
-    "chance": 0.072185,
+    "chance": 0.0794035,
     "valuable": true,
     "independent": false
    },
@@ -3016,13 +3016,13 @@
   "1028": [
    {
     "type": 6947,
-    "chance": 0.048123,
+    "chance": 0.0529353,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6949,
-    "chance": 0.080204,
+    "chance": 0.0882244,
     "valuable": true,
     "independent": false
    },
@@ -3052,7 +3052,7 @@
    },
    {
     "type": 6954,
-    "chance": 0.072185,
+    "chance": 0.0794035,
     "valuable": true,
     "independent": false
    },
@@ -3066,13 +3066,13 @@
   "1029": [
    {
     "type": 6947,
-    "chance": 0.049392,
+    "chance": 0.0543312,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6949,
-    "chance": 0.08232,
+    "chance": 0.090552,
     "valuable": true,
     "independent": false
    },
@@ -3102,7 +3102,7 @@
    },
    {
     "type": 6954,
-    "chance": 0.074088,
+    "chance": 0.0814968,
     "valuable": true,
     "independent": false
    },
@@ -3116,13 +3116,13 @@
   "1030": [
    {
     "type": 6947,
-    "chance": 0.049392,
+    "chance": 0.0543312,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6949,
-    "chance": 0.08232,
+    "chance": 0.090552,
     "valuable": true,
     "independent": false
    },
@@ -3152,7 +3152,7 @@
    },
    {
     "type": 6954,
-    "chance": 0.074088,
+    "chance": 0.0814968,
     "valuable": true,
     "independent": false
    },
@@ -3166,13 +3166,13 @@
   "1031": [
    {
     "type": 6947,
-    "chance": 0.049392,
+    "chance": 0.0543312,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6949,
-    "chance": 0.08232,
+    "chance": 0.090552,
     "valuable": true,
     "independent": false
    },
@@ -3202,7 +3202,7 @@
    },
    {
     "type": 6954,
-    "chance": 0.074088,
+    "chance": 0.0814968,
     "valuable": true,
     "independent": false
    },
@@ -3216,13 +3216,13 @@
   "1034": [
    {
     "type": 6947,
-    "chance": 0.050605,
+    "chance": 0.0556655,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6949,
-    "chance": 0.084341,
+    "chance": 0.0927751,
     "valuable": true,
     "independent": false
    },
@@ -3252,7 +3252,7 @@
    },
    {
     "type": 6954,
-    "chance": 0.075907,
+    "chance": 0.0834977,
     "valuable": true,
     "independent": false
    },
@@ -3266,13 +3266,13 @@
   "1728": [
    {
     "type": 6947,
-    "chance": 0.057102,
+    "chance": 0.0628122,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6949,
-    "chance": 0.09517,
+    "chance": 0.104687,
     "valuable": true,
     "independent": false
    },
@@ -3302,7 +3302,7 @@
    },
    {
     "type": 6954,
-    "chance": 0.085652,
+    "chance": 0.0942172,
     "valuable": true,
     "independent": false
    },
@@ -3316,13 +3316,13 @@
   "1729": [
    {
     "type": 6947,
-    "chance": 0.057102,
+    "chance": 0.0628122,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6949,
-    "chance": 0.09517,
+    "chance": 0.104687,
     "valuable": true,
     "independent": false
    },
@@ -3352,7 +3352,7 @@
    },
    {
     "type": 6954,
-    "chance": 0.085652,
+    "chance": 0.0942172,
     "valuable": true,
     "independent": false
    },
@@ -3366,13 +3366,13 @@
   "1730": [
    {
     "type": 6947,
-    "chance": 0.057102,
+    "chance": 0.0628122,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6949,
-    "chance": 0.09517,
+    "chance": 0.104687,
     "valuable": true,
     "independent": false
    },
@@ -3402,7 +3402,7 @@
    },
    {
     "type": 6954,
-    "chance": 0.085652,
+    "chance": 0.0942172,
     "valuable": true,
     "independent": false
    },
@@ -3416,13 +3416,13 @@
   "1734": [
    {
     "type": 6947,
-    "chance": 0.058891,
+    "chance": 0.0647801,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6949,
-    "chance": 0.098151,
+    "chance": 0.1079661,
     "valuable": true,
     "independent": false
    },
@@ -3452,7 +3452,7 @@
    },
    {
     "type": 6954,
-    "chance": 0.088336,
+    "chance": 0.0971696,
     "valuable": true,
     "independent": false
    },
@@ -3466,13 +3466,13 @@
   "2315": [
    {
     "type": 6947,
-    "chance": 0.058891,
+    "chance": 0.0647801,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6949,
-    "chance": 0.098151,
+    "chance": 0.1079661,
     "valuable": true,
     "independent": false
    },
@@ -3502,7 +3502,7 @@
    },
    {
     "type": 6954,
-    "chance": 0.088336,
+    "chance": 0.0971696,
     "valuable": true,
     "independent": false
    },
@@ -3516,13 +3516,13 @@
   "2317": [
    {
     "type": 6947,
-    "chance": 0.057102,
+    "chance": 0.0628122,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6949,
-    "chance": 0.09517,
+    "chance": 0.104687,
     "valuable": true,
     "independent": false
    },
@@ -3552,7 +3552,7 @@
    },
    {
     "type": 6954,
-    "chance": 0.085652,
+    "chance": 0.0942172,
     "valuable": true,
     "independent": false
    },
@@ -3566,13 +3566,13 @@
   "2318": [
    {
     "type": 6947,
-    "chance": 0.057102,
+    "chance": 0.0628122,
     "valuable": true,
     "independent": false
    },
    {
     "type": 6949,
-    "chance": 0.09517,
+    "chance": 0.104687,
     "valuable": true,
     "independent": false
    },
@@ -3602,7 +3602,7 @@
    },
    {
     "type": 6954,
-    "chance": 0.085652,
+    "chance": 0.0942172,
     "valuable": true,
     "independent": false
    },
@@ -3719,6 +3719,12 @@
     "chance": 0.75,
     "valuable": false,
     "independent": true
+   },
+   {
+    "type": 3159,
+    "chance": 0.7,
+    "valuable": true,
+    "independent": true
    }
   ],
   "839": [
@@ -3762,6 +3768,12 @@
     "type": 2258,
     "chance": 0.75,
     "valuable": false,
+    "independent": true
+   },
+   {
+    "type": 3159,
+    "chance": 0.7,
+    "valuable": true,
     "independent": true
    }
   ],
@@ -3819,6 +3831,12 @@
     "chance": 1.0,
     "valuable": false,
     "independent": true
+   },
+   {
+    "type": 3159,
+    "chance": 1.0,
+    "valuable": true,
+    "independent": true
    }
   ],
   "841": [
@@ -3874,6 +3892,12 @@
     "type": 2258,
     "chance": 1.0,
     "valuable": false,
+    "independent": true
+   },
+   {
+    "type": 3159,
+    "chance": 1.0,
+    "valuable": true,
     "independent": true
    }
   ],
@@ -3931,6 +3955,12 @@
     "chance": 1.0,
     "valuable": false,
     "independent": true
+   },
+   {
+    "type": 3159,
+    "chance": 1.0,
+    "valuable": true,
+    "independent": true
    }
   ],
   "931": [
@@ -3986,6 +4016,12 @@
     "type": 2258,
     "chance": 1.0,
     "valuable": false,
+    "independent": true
+   },
+   {
+    "type": 3159,
+    "chance": 1.0,
+    "valuable": true,
     "independent": true
    }
   ],
@@ -4324,5 +4360,2188 @@
    "gold": 1.7,
    "context": "Нересурсная шахта"
   }
- ]
+ ],
+ "followup_2026_11_23": {
+  "source": "Owner: Halfa mine small emeralds70%; Dongola/Abu100%; modest ordinary surrounding-camp AF trash increase only.",
+  "chance_factor": 1.1,
+  "camp_type_ids": [
+   20,
+   21,
+   258,
+   259,
+   260,
+   261,
+   262,
+   263,
+   266,
+   267,
+   271,
+   272,
+   273,
+   274,
+   276,
+   277,
+   278,
+   280,
+   281,
+   285,
+   287,
+   288,
+   289,
+   290,
+   291,
+   292,
+   293,
+   294,
+   301,
+   302,
+   303,
+   304,
+   306,
+   307,
+   308,
+   311,
+   315,
+   316,
+   317,
+   318,
+   319,
+   320,
+   321,
+   322,
+   323,
+   348,
+   349,
+   350,
+   351,
+   352,
+   353,
+   354,
+   355,
+   362,
+   363,
+   364,
+   365,
+   366,
+   367,
+   370,
+   371,
+   395,
+   396,
+   397,
+   398,
+   399,
+   401,
+   403,
+   405,
+   765,
+   766,
+   767,
+   768,
+   769,
+   771,
+   772,
+   773,
+   775,
+   1025,
+   1026,
+   1027,
+   1028,
+   1029,
+   1030,
+   1031,
+   1034,
+   1728,
+   1729,
+   1730,
+   1734,
+   2315,
+   2317,
+   2318
+  ],
+  "changed_rows": [
+   {
+    "mob": 20,
+    "item": 6941,
+    "before": 0.068382,
+    "after": 0.0752202
+   },
+   {
+    "mob": 20,
+    "item": 6944,
+    "before": 0.047867,
+    "after": 0.0526537
+   },
+   {
+    "mob": 20,
+    "item": 6945,
+    "before": 0.020514,
+    "after": 0.0225654
+   },
+   {
+    "mob": 21,
+    "item": 6941,
+    "before": 0.062479,
+    "after": 0.0687269
+   },
+   {
+    "mob": 21,
+    "item": 6944,
+    "before": 0.043735,
+    "after": 0.0481085
+   },
+   {
+    "mob": 21,
+    "item": 6945,
+    "before": 0.018744,
+    "after": 0.0206184
+   },
+   {
+    "mob": 258,
+    "item": 6941,
+    "before": 0.103018,
+    "after": 0.1133198
+   },
+   {
+    "mob": 258,
+    "item": 6944,
+    "before": 0.072112,
+    "after": 0.0793232
+   },
+   {
+    "mob": 258,
+    "item": 6945,
+    "before": 0.030906,
+    "after": 0.0339966
+   },
+   {
+    "mob": 259,
+    "item": 6941,
+    "before": 0.102918,
+    "after": 0.1132098
+   },
+   {
+    "mob": 259,
+    "item": 6944,
+    "before": 0.072043,
+    "after": 0.0792473
+   },
+   {
+    "mob": 259,
+    "item": 6945,
+    "before": 0.030876,
+    "after": 0.0339636
+   },
+   {
+    "mob": 260,
+    "item": 6941,
+    "before": 0.098389,
+    "after": 0.1082279
+   },
+   {
+    "mob": 260,
+    "item": 6944,
+    "before": 0.068872,
+    "after": 0.0757592
+   },
+   {
+    "mob": 260,
+    "item": 6945,
+    "before": 0.029517,
+    "after": 0.0324687
+   },
+   {
+    "mob": 261,
+    "item": 6941,
+    "before": 0.098389,
+    "after": 0.1082279
+   },
+   {
+    "mob": 261,
+    "item": 6944,
+    "before": 0.068872,
+    "after": 0.0757592
+   },
+   {
+    "mob": 261,
+    "item": 6945,
+    "before": 0.029517,
+    "after": 0.0324687
+   },
+   {
+    "mob": 262,
+    "item": 6941,
+    "before": 0.098389,
+    "after": 0.1082279
+   },
+   {
+    "mob": 262,
+    "item": 6944,
+    "before": 0.068872,
+    "after": 0.0757592
+   },
+   {
+    "mob": 262,
+    "item": 6945,
+    "before": 0.029517,
+    "after": 0.0324687
+   },
+   {
+    "mob": 263,
+    "item": 6941,
+    "before": 0.098389,
+    "after": 0.1082279
+   },
+   {
+    "mob": 263,
+    "item": 6944,
+    "before": 0.068872,
+    "after": 0.0757592
+   },
+   {
+    "mob": 263,
+    "item": 6945,
+    "before": 0.029517,
+    "after": 0.0324687
+   },
+   {
+    "mob": 266,
+    "item": 6941,
+    "before": 0.098289,
+    "after": 0.1081179
+   },
+   {
+    "mob": 266,
+    "item": 6944,
+    "before": 0.068802,
+    "after": 0.0756822
+   },
+   {
+    "mob": 266,
+    "item": 6945,
+    "before": 0.029487,
+    "after": 0.0324357
+   },
+   {
+    "mob": 267,
+    "item": 6941,
+    "before": 0.098289,
+    "after": 0.1081179
+   },
+   {
+    "mob": 267,
+    "item": 6944,
+    "before": 0.068802,
+    "after": 0.0756822
+   },
+   {
+    "mob": 267,
+    "item": 6945,
+    "before": 0.029487,
+    "after": 0.0324357
+   },
+   {
+    "mob": 271,
+    "item": 6941,
+    "before": 0.118791,
+    "after": 0.1306701
+   },
+   {
+    "mob": 271,
+    "item": 6944,
+    "before": 0.083154,
+    "after": 0.0914694
+   },
+   {
+    "mob": 271,
+    "item": 6945,
+    "before": 0.035637,
+    "after": 0.0392007
+   },
+   {
+    "mob": 272,
+    "item": 6941,
+    "before": 0.118791,
+    "after": 0.1306701
+   },
+   {
+    "mob": 272,
+    "item": 6944,
+    "before": 0.083154,
+    "after": 0.0914694
+   },
+   {
+    "mob": 272,
+    "item": 6945,
+    "before": 0.035637,
+    "after": 0.0392007
+   },
+   {
+    "mob": 273,
+    "item": 6941,
+    "before": 0.114193,
+    "after": 0.1256123
+   },
+   {
+    "mob": 273,
+    "item": 6944,
+    "before": 0.079935,
+    "after": 0.0879285
+   },
+   {
+    "mob": 273,
+    "item": 6945,
+    "before": 0.034258,
+    "after": 0.0376838
+   },
+   {
+    "mob": 274,
+    "item": 6941,
+    "before": 0.114193,
+    "after": 0.1256123
+   },
+   {
+    "mob": 274,
+    "item": 6944,
+    "before": 0.079935,
+    "after": 0.0879285
+   },
+   {
+    "mob": 274,
+    "item": 6945,
+    "before": 0.034258,
+    "after": 0.0376838
+   },
+   {
+    "mob": 276,
+    "item": 6941,
+    "before": 0.114708,
+    "after": 0.1261788
+   },
+   {
+    "mob": 276,
+    "item": 6944,
+    "before": 0.080296,
+    "after": 0.0883256
+   },
+   {
+    "mob": 276,
+    "item": 6945,
+    "before": 0.034412,
+    "after": 0.0378532
+   },
+   {
+    "mob": 277,
+    "item": 6941,
+    "before": 0.110115,
+    "after": 0.1211265
+   },
+   {
+    "mob": 277,
+    "item": 6944,
+    "before": 0.077081,
+    "after": 0.0847891
+   },
+   {
+    "mob": 277,
+    "item": 6945,
+    "before": 0.033034,
+    "after": 0.0363374
+   },
+   {
+    "mob": 278,
+    "item": 6941,
+    "before": 0.110115,
+    "after": 0.1211265
+   },
+   {
+    "mob": 278,
+    "item": 6944,
+    "before": 0.077081,
+    "after": 0.0847891
+   },
+   {
+    "mob": 278,
+    "item": 6945,
+    "before": 0.033034,
+    "after": 0.0363374
+   },
+   {
+    "mob": 280,
+    "item": 6941,
+    "before": 0.106041,
+    "after": 0.1166451
+   },
+   {
+    "mob": 280,
+    "item": 6944,
+    "before": 0.074229,
+    "after": 0.0816519
+   },
+   {
+    "mob": 280,
+    "item": 6945,
+    "before": 0.031812,
+    "after": 0.0349932
+   },
+   {
+    "mob": 281,
+    "item": 6941,
+    "before": 0.11063,
+    "after": 0.121693
+   },
+   {
+    "mob": 281,
+    "item": 6944,
+    "before": 0.077441,
+    "after": 0.0851851
+   },
+   {
+    "mob": 281,
+    "item": 6945,
+    "before": 0.033189,
+    "after": 0.0365079
+   },
+   {
+    "mob": 285,
+    "item": 6941,
+    "before": 0.114708,
+    "after": 0.1261788
+   },
+   {
+    "mob": 285,
+    "item": 6944,
+    "before": 0.080296,
+    "after": 0.0883256
+   },
+   {
+    "mob": 285,
+    "item": 6945,
+    "before": 0.034412,
+    "after": 0.0378532
+   },
+   {
+    "mob": 287,
+    "item": 6941,
+    "before": 0.046195,
+    "after": 0.0508145
+   },
+   {
+    "mob": 287,
+    "item": 6944,
+    "before": 0.092391,
+    "after": 0.1016301
+   },
+   {
+    "mob": 287,
+    "item": 6945,
+    "before": 0.073912,
+    "after": 0.0813032
+   },
+   {
+    "mob": 288,
+    "item": 6941,
+    "before": 0.04794,
+    "after": 0.052734
+   },
+   {
+    "mob": 288,
+    "item": 6944,
+    "before": 0.09588,
+    "after": 0.105468
+   },
+   {
+    "mob": 288,
+    "item": 6945,
+    "before": 0.076704,
+    "after": 0.0843744
+   },
+   {
+    "mob": 289,
+    "item": 6941,
+    "before": 0.046195,
+    "after": 0.0508145
+   },
+   {
+    "mob": 289,
+    "item": 6944,
+    "before": 0.092391,
+    "after": 0.1016301
+   },
+   {
+    "mob": 289,
+    "item": 6945,
+    "before": 0.073912,
+    "after": 0.0813032
+   },
+   {
+    "mob": 290,
+    "item": 6941,
+    "before": 0.046195,
+    "after": 0.0508145
+   },
+   {
+    "mob": 290,
+    "item": 6944,
+    "before": 0.092391,
+    "after": 0.1016301
+   },
+   {
+    "mob": 290,
+    "item": 6945,
+    "before": 0.073912,
+    "after": 0.0813032
+   },
+   {
+    "mob": 291,
+    "item": 6941,
+    "before": 0.045014,
+    "after": 0.0495154
+   },
+   {
+    "mob": 291,
+    "item": 6944,
+    "before": 0.090029,
+    "after": 0.0990319
+   },
+   {
+    "mob": 291,
+    "item": 6945,
+    "before": 0.072023,
+    "after": 0.0792253
+   },
+   {
+    "mob": 292,
+    "item": 6941,
+    "before": 0.045014,
+    "after": 0.0495154
+   },
+   {
+    "mob": 292,
+    "item": 6944,
+    "before": 0.090029,
+    "after": 0.0990319
+   },
+   {
+    "mob": 292,
+    "item": 6945,
+    "before": 0.072023,
+    "after": 0.0792253
+   },
+   {
+    "mob": 293,
+    "item": 6941,
+    "before": 0.045014,
+    "after": 0.0495154
+   },
+   {
+    "mob": 293,
+    "item": 6944,
+    "before": 0.090029,
+    "after": 0.0990319
+   },
+   {
+    "mob": 293,
+    "item": 6945,
+    "before": 0.072023,
+    "after": 0.0792253
+   },
+   {
+    "mob": 294,
+    "item": 6941,
+    "before": 0.046758,
+    "after": 0.0514338
+   },
+   {
+    "mob": 294,
+    "item": 6944,
+    "before": 0.093518,
+    "after": 0.1028698
+   },
+   {
+    "mob": 294,
+    "item": 6945,
+    "before": 0.074814,
+    "after": 0.0822954
+   },
+   {
+    "mob": 301,
+    "item": 6941,
+    "before": 0.049988,
+    "after": 0.0549868
+   },
+   {
+    "mob": 301,
+    "item": 6944,
+    "before": 0.099975,
+    "after": 0.1099725
+   },
+   {
+    "mob": 301,
+    "item": 6945,
+    "before": 0.079979,
+    "after": 0.0879769
+   },
+   {
+    "mob": 302,
+    "item": 6941,
+    "before": 0.049988,
+    "after": 0.0549868
+   },
+   {
+    "mob": 302,
+    "item": 6944,
+    "before": 0.099975,
+    "after": 0.1099725
+   },
+   {
+    "mob": 302,
+    "item": 6945,
+    "before": 0.079979,
+    "after": 0.0879769
+   },
+   {
+    "mob": 303,
+    "item": 6941,
+    "before": 0.049988,
+    "after": 0.0549868
+   },
+   {
+    "mob": 303,
+    "item": 6944,
+    "before": 0.099975,
+    "after": 0.1099725
+   },
+   {
+    "mob": 303,
+    "item": 6945,
+    "before": 0.079979,
+    "after": 0.0879769
+   },
+   {
+    "mob": 304,
+    "item": 6941,
+    "before": 0.049988,
+    "after": 0.0549868
+   },
+   {
+    "mob": 304,
+    "item": 6944,
+    "before": 0.099975,
+    "after": 0.1099725
+   },
+   {
+    "mob": 304,
+    "item": 6945,
+    "before": 0.079979,
+    "after": 0.0879769
+   },
+   {
+    "mob": 306,
+    "item": 6941,
+    "before": 0.049256,
+    "after": 0.0541816
+   },
+   {
+    "mob": 306,
+    "item": 6944,
+    "before": 0.098512,
+    "after": 0.1083632
+   },
+   {
+    "mob": 306,
+    "item": 6945,
+    "before": 0.078809,
+    "after": 0.0866899
+   },
+   {
+    "mob": 307,
+    "item": 6941,
+    "before": 0.049256,
+    "after": 0.0541816
+   },
+   {
+    "mob": 307,
+    "item": 6944,
+    "before": 0.098512,
+    "after": 0.1083632
+   },
+   {
+    "mob": 307,
+    "item": 6945,
+    "before": 0.078809,
+    "after": 0.0866899
+   },
+   {
+    "mob": 308,
+    "item": 6941,
+    "before": 0.049256,
+    "after": 0.0541816
+   },
+   {
+    "mob": 308,
+    "item": 6944,
+    "before": 0.098512,
+    "after": 0.1083632
+   },
+   {
+    "mob": 308,
+    "item": 6945,
+    "before": 0.078809,
+    "after": 0.0866899
+   },
+   {
+    "mob": 311,
+    "item": 6941,
+    "before": 0.048614,
+    "after": 0.0534754
+   },
+   {
+    "mob": 311,
+    "item": 6944,
+    "before": 0.097228,
+    "after": 0.1069508
+   },
+   {
+    "mob": 311,
+    "item": 6945,
+    "before": 0.077782,
+    "after": 0.0855602
+   },
+   {
+    "mob": 315,
+    "item": 6944,
+    "before": 0.055412,
+    "after": 0.0609532
+   },
+   {
+    "mob": 315,
+    "item": 6945,
+    "before": 0.083117,
+    "after": 0.0914287
+   },
+   {
+    "mob": 315,
+    "item": 6946,
+    "before": 0.092352,
+    "after": 0.1015872
+   },
+   {
+    "mob": 316,
+    "item": 6944,
+    "before": 0.055412,
+    "after": 0.0609532
+   },
+   {
+    "mob": 316,
+    "item": 6945,
+    "before": 0.083117,
+    "after": 0.0914287
+   },
+   {
+    "mob": 316,
+    "item": 6946,
+    "before": 0.092352,
+    "after": 0.1015872
+   },
+   {
+    "mob": 317,
+    "item": 6944,
+    "before": 0.055412,
+    "after": 0.0609532
+   },
+   {
+    "mob": 317,
+    "item": 6945,
+    "before": 0.083117,
+    "after": 0.0914287
+   },
+   {
+    "mob": 317,
+    "item": 6946,
+    "before": 0.092352,
+    "after": 0.1015872
+   },
+   {
+    "mob": 318,
+    "item": 6944,
+    "before": 0.057088,
+    "after": 0.0627968
+   },
+   {
+    "mob": 318,
+    "item": 6945,
+    "before": 0.08563,
+    "after": 0.094193
+   },
+   {
+    "mob": 318,
+    "item": 6946,
+    "before": 0.095145,
+    "after": 0.1046595
+   },
+   {
+    "mob": 319,
+    "item": 6944,
+    "before": 0.055338,
+    "after": 0.0608718
+   },
+   {
+    "mob": 319,
+    "item": 6945,
+    "before": 0.083006,
+    "after": 0.0913066
+   },
+   {
+    "mob": 319,
+    "item": 6946,
+    "before": 0.09223,
+    "after": 0.101453
+   },
+   {
+    "mob": 320,
+    "item": 6944,
+    "before": 0.055338,
+    "after": 0.0608718
+   },
+   {
+    "mob": 320,
+    "item": 6945,
+    "before": 0.083006,
+    "after": 0.0913066
+   },
+   {
+    "mob": 320,
+    "item": 6946,
+    "before": 0.09223,
+    "after": 0.101453
+   },
+   {
+    "mob": 321,
+    "item": 6944,
+    "before": 0.055338,
+    "after": 0.0608718
+   },
+   {
+    "mob": 321,
+    "item": 6945,
+    "before": 0.083006,
+    "after": 0.0913066
+   },
+   {
+    "mob": 321,
+    "item": 6946,
+    "before": 0.09223,
+    "after": 0.101453
+   },
+   {
+    "mob": 322,
+    "item": 6944,
+    "before": 0.057014,
+    "after": 0.0627154
+   },
+   {
+    "mob": 322,
+    "item": 6945,
+    "before": 0.08552,
+    "after": 0.094072
+   },
+   {
+    "mob": 322,
+    "item": 6946,
+    "before": 0.095023,
+    "after": 0.1045253
+   },
+   {
+    "mob": 323,
+    "item": 6944,
+    "before": 0.055265,
+    "after": 0.0607915
+   },
+   {
+    "mob": 323,
+    "item": 6945,
+    "before": 0.082896,
+    "after": 0.0911856
+   },
+   {
+    "mob": 323,
+    "item": 6946,
+    "before": 0.092107,
+    "after": 0.1013177
+   },
+   {
+    "mob": 348,
+    "item": 6944,
+    "before": 0.061938,
+    "after": 0.0681318
+   },
+   {
+    "mob": 348,
+    "item": 6945,
+    "before": 0.092906,
+    "after": 0.1021966
+   },
+   {
+    "mob": 348,
+    "item": 6946,
+    "before": 0.103229,
+    "after": 0.1135519
+   },
+   {
+    "mob": 349,
+    "item": 6944,
+    "before": 0.06026,
+    "after": 0.066286
+   },
+   {
+    "mob": 349,
+    "item": 6945,
+    "before": 0.09039,
+    "after": 0.099429
+   },
+   {
+    "mob": 349,
+    "item": 6946,
+    "before": 0.100433,
+    "after": 0.1104763
+   },
+   {
+    "mob": 350,
+    "item": 6944,
+    "before": 0.061938,
+    "after": 0.0681318
+   },
+   {
+    "mob": 350,
+    "item": 6945,
+    "before": 0.092906,
+    "after": 0.1021966
+   },
+   {
+    "mob": 350,
+    "item": 6946,
+    "before": 0.103229,
+    "after": 0.1135519
+   },
+   {
+    "mob": 351,
+    "item": 6944,
+    "before": 0.061938,
+    "after": 0.0681318
+   },
+   {
+    "mob": 351,
+    "item": 6945,
+    "before": 0.092906,
+    "after": 0.1021966
+   },
+   {
+    "mob": 351,
+    "item": 6946,
+    "before": 0.103229,
+    "after": 0.1135519
+   },
+   {
+    "mob": 352,
+    "item": 6944,
+    "before": 0.06225,
+    "after": 0.068475
+   },
+   {
+    "mob": 352,
+    "item": 6945,
+    "before": 0.093375,
+    "after": 0.1027125
+   },
+   {
+    "mob": 352,
+    "item": 6946,
+    "before": 0.103749,
+    "after": 0.1141239
+   },
+   {
+    "mob": 353,
+    "item": 6944,
+    "before": 0.060572,
+    "after": 0.0666292
+   },
+   {
+    "mob": 353,
+    "item": 6945,
+    "before": 0.090858,
+    "after": 0.0999438
+   },
+   {
+    "mob": 353,
+    "item": 6946,
+    "before": 0.100953,
+    "after": 0.1110483
+   },
+   {
+    "mob": 354,
+    "item": 6944,
+    "before": 0.06225,
+    "after": 0.068475
+   },
+   {
+    "mob": 354,
+    "item": 6945,
+    "before": 0.093375,
+    "after": 0.1027125
+   },
+   {
+    "mob": 354,
+    "item": 6946,
+    "before": 0.103749,
+    "after": 0.1141239
+   },
+   {
+    "mob": 355,
+    "item": 6944,
+    "before": 0.06225,
+    "after": 0.068475
+   },
+   {
+    "mob": 355,
+    "item": 6945,
+    "before": 0.093375,
+    "after": 0.1027125
+   },
+   {
+    "mob": 355,
+    "item": 6946,
+    "before": 0.103749,
+    "after": 0.1141239
+   },
+   {
+    "mob": 362,
+    "item": 6946,
+    "before": 0.05878,
+    "after": 0.064658
+   },
+   {
+    "mob": 362,
+    "item": 6947,
+    "before": 0.083971,
+    "after": 0.0923681
+   },
+   {
+    "mob": 362,
+    "item": 6949,
+    "before": 0.05878,
+    "after": 0.064658
+   },
+   {
+    "mob": 363,
+    "item": 6946,
+    "before": 0.05878,
+    "after": 0.064658
+   },
+   {
+    "mob": 363,
+    "item": 6947,
+    "before": 0.083971,
+    "after": 0.0923681
+   },
+   {
+    "mob": 363,
+    "item": 6949,
+    "before": 0.05878,
+    "after": 0.064658
+   },
+   {
+    "mob": 364,
+    "item": 6946,
+    "before": 0.05878,
+    "after": 0.064658
+   },
+   {
+    "mob": 364,
+    "item": 6947,
+    "before": 0.083971,
+    "after": 0.0923681
+   },
+   {
+    "mob": 364,
+    "item": 6949,
+    "before": 0.05878,
+    "after": 0.064658
+   },
+   {
+    "mob": 365,
+    "item": 6946,
+    "before": 0.05878,
+    "after": 0.064658
+   },
+   {
+    "mob": 365,
+    "item": 6947,
+    "before": 0.083971,
+    "after": 0.0923681
+   },
+   {
+    "mob": 365,
+    "item": 6949,
+    "before": 0.05878,
+    "after": 0.064658
+   },
+   {
+    "mob": 366,
+    "item": 6946,
+    "before": 0.059425,
+    "after": 0.0653675
+   },
+   {
+    "mob": 366,
+    "item": 6947,
+    "before": 0.084893,
+    "after": 0.0933823
+   },
+   {
+    "mob": 366,
+    "item": 6949,
+    "before": 0.059425,
+    "after": 0.0653675
+   },
+   {
+    "mob": 367,
+    "item": 6946,
+    "before": 0.059425,
+    "after": 0.0653675
+   },
+   {
+    "mob": 367,
+    "item": 6947,
+    "before": 0.084893,
+    "after": 0.0933823
+   },
+   {
+    "mob": 367,
+    "item": 6949,
+    "before": 0.059425,
+    "after": 0.0653675
+   },
+   {
+    "mob": 370,
+    "item": 6946,
+    "before": 0.060071,
+    "after": 0.0660781
+   },
+   {
+    "mob": 370,
+    "item": 6947,
+    "before": 0.085815,
+    "after": 0.0943965
+   },
+   {
+    "mob": 370,
+    "item": 6949,
+    "before": 0.060071,
+    "after": 0.0660781
+   },
+   {
+    "mob": 371,
+    "item": 6946,
+    "before": 0.060071,
+    "after": 0.0660781
+   },
+   {
+    "mob": 371,
+    "item": 6947,
+    "before": 0.085815,
+    "after": 0.0943965
+   },
+   {
+    "mob": 371,
+    "item": 6949,
+    "before": 0.060071,
+    "after": 0.0660781
+   },
+   {
+    "mob": 395,
+    "item": 6946,
+    "before": 0.05822,
+    "after": 0.064042
+   },
+   {
+    "mob": 395,
+    "item": 6947,
+    "before": 0.083171,
+    "after": 0.0914881
+   },
+   {
+    "mob": 395,
+    "item": 6949,
+    "before": 0.05822,
+    "after": 0.064042
+   },
+   {
+    "mob": 396,
+    "item": 6946,
+    "before": 0.05822,
+    "after": 0.064042
+   },
+   {
+    "mob": 396,
+    "item": 6947,
+    "before": 0.083171,
+    "after": 0.0914881
+   },
+   {
+    "mob": 396,
+    "item": 6949,
+    "before": 0.05822,
+    "after": 0.064042
+   },
+   {
+    "mob": 397,
+    "item": 6946,
+    "before": 0.05822,
+    "after": 0.064042
+   },
+   {
+    "mob": 397,
+    "item": 6947,
+    "before": 0.083171,
+    "after": 0.0914881
+   },
+   {
+    "mob": 397,
+    "item": 6949,
+    "before": 0.05822,
+    "after": 0.064042
+   },
+   {
+    "mob": 398,
+    "item": 6946,
+    "before": 0.05822,
+    "after": 0.064042
+   },
+   {
+    "mob": 398,
+    "item": 6947,
+    "before": 0.083171,
+    "after": 0.0914881
+   },
+   {
+    "mob": 398,
+    "item": 6949,
+    "before": 0.05822,
+    "after": 0.064042
+   },
+   {
+    "mob": 399,
+    "item": 6946,
+    "before": 0.059145,
+    "after": 0.0650595
+   },
+   {
+    "mob": 399,
+    "item": 6947,
+    "before": 0.084493,
+    "after": 0.0929423
+   },
+   {
+    "mob": 399,
+    "item": 6949,
+    "before": 0.059145,
+    "after": 0.0650595
+   },
+   {
+    "mob": 401,
+    "item": 6946,
+    "before": 0.059145,
+    "after": 0.0650595
+   },
+   {
+    "mob": 401,
+    "item": 6947,
+    "before": 0.084493,
+    "after": 0.0929423
+   },
+   {
+    "mob": 401,
+    "item": 6949,
+    "before": 0.059145,
+    "after": 0.0650595
+   },
+   {
+    "mob": 403,
+    "item": 6946,
+    "before": 0.060158,
+    "after": 0.0661738
+   },
+   {
+    "mob": 403,
+    "item": 6947,
+    "before": 0.08594,
+    "after": 0.094534
+   },
+   {
+    "mob": 403,
+    "item": 6949,
+    "before": 0.060158,
+    "after": 0.0661738
+   },
+   {
+    "mob": 405,
+    "item": 6946,
+    "before": 0.060158,
+    "after": 0.0661738
+   },
+   {
+    "mob": 405,
+    "item": 6947,
+    "before": 0.08594,
+    "after": 0.094534
+   },
+   {
+    "mob": 405,
+    "item": 6949,
+    "before": 0.060158,
+    "after": 0.0661738
+   },
+   {
+    "mob": 765,
+    "item": 6947,
+    "before": 0.048824,
+    "after": 0.0537064
+   },
+   {
+    "mob": 765,
+    "item": 6949,
+    "before": 0.081374,
+    "after": 0.0895114
+   },
+   {
+    "mob": 765,
+    "item": 6954,
+    "before": 0.073236,
+    "after": 0.0805596
+   },
+   {
+    "mob": 766,
+    "item": 6947,
+    "before": 0.047658,
+    "after": 0.0524238
+   },
+   {
+    "mob": 766,
+    "item": 6949,
+    "before": 0.079431,
+    "after": 0.0873741
+   },
+   {
+    "mob": 766,
+    "item": 6954,
+    "before": 0.071487,
+    "after": 0.0786357
+   },
+   {
+    "mob": 767,
+    "item": 6947,
+    "before": 0.047658,
+    "after": 0.0524238
+   },
+   {
+    "mob": 767,
+    "item": 6949,
+    "before": 0.079431,
+    "after": 0.0873741
+   },
+   {
+    "mob": 767,
+    "item": 6954,
+    "before": 0.071487,
+    "after": 0.0786357
+   },
+   {
+    "mob": 768,
+    "item": 6947,
+    "before": 0.048824,
+    "after": 0.0537064
+   },
+   {
+    "mob": 768,
+    "item": 6949,
+    "before": 0.081374,
+    "after": 0.0895114
+   },
+   {
+    "mob": 768,
+    "item": 6954,
+    "before": 0.073236,
+    "after": 0.0805596
+   },
+   {
+    "mob": 769,
+    "item": 6947,
+    "before": 0.050094,
+    "after": 0.0551034
+   },
+   {
+    "mob": 769,
+    "item": 6949,
+    "before": 0.08349,
+    "after": 0.091839
+   },
+   {
+    "mob": 769,
+    "item": 6954,
+    "before": 0.075141,
+    "after": 0.0826551
+   },
+   {
+    "mob": 771,
+    "item": 6947,
+    "before": 0.048926,
+    "after": 0.0538186
+   },
+   {
+    "mob": 771,
+    "item": 6949,
+    "before": 0.081545,
+    "after": 0.0896995
+   },
+   {
+    "mob": 771,
+    "item": 6954,
+    "before": 0.07339,
+    "after": 0.080729
+   },
+   {
+    "mob": 772,
+    "item": 6947,
+    "before": 0.050094,
+    "after": 0.0551034
+   },
+   {
+    "mob": 772,
+    "item": 6949,
+    "before": 0.08349,
+    "after": 0.091839
+   },
+   {
+    "mob": 772,
+    "item": 6954,
+    "before": 0.075141,
+    "after": 0.0826551
+   },
+   {
+    "mob": 773,
+    "item": 6947,
+    "before": 0.051307,
+    "after": 0.0564377
+   },
+   {
+    "mob": 773,
+    "item": 6949,
+    "before": 0.085513,
+    "after": 0.0940643
+   },
+   {
+    "mob": 773,
+    "item": 6954,
+    "before": 0.076961,
+    "after": 0.0846571
+   },
+   {
+    "mob": 775,
+    "item": 6947,
+    "before": 0.050138,
+    "after": 0.0551518
+   },
+   {
+    "mob": 775,
+    "item": 6949,
+    "before": 0.083564,
+    "after": 0.0919204
+   },
+   {
+    "mob": 775,
+    "item": 6954,
+    "before": 0.075207,
+    "after": 0.0827277
+   },
+   {
+    "mob": 1025,
+    "item": 6947,
+    "before": 0.048123,
+    "after": 0.0529353
+   },
+   {
+    "mob": 1025,
+    "item": 6949,
+    "before": 0.080204,
+    "after": 0.0882244
+   },
+   {
+    "mob": 1025,
+    "item": 6954,
+    "before": 0.072185,
+    "after": 0.0794035
+   },
+   {
+    "mob": 1026,
+    "item": 6947,
+    "before": 0.048123,
+    "after": 0.0529353
+   },
+   {
+    "mob": 1026,
+    "item": 6949,
+    "before": 0.080204,
+    "after": 0.0882244
+   },
+   {
+    "mob": 1026,
+    "item": 6954,
+    "before": 0.072185,
+    "after": 0.0794035
+   },
+   {
+    "mob": 1027,
+    "item": 6947,
+    "before": 0.048123,
+    "after": 0.0529353
+   },
+   {
+    "mob": 1027,
+    "item": 6949,
+    "before": 0.080204,
+    "after": 0.0882244
+   },
+   {
+    "mob": 1027,
+    "item": 6954,
+    "before": 0.072185,
+    "after": 0.0794035
+   },
+   {
+    "mob": 1028,
+    "item": 6947,
+    "before": 0.048123,
+    "after": 0.0529353
+   },
+   {
+    "mob": 1028,
+    "item": 6949,
+    "before": 0.080204,
+    "after": 0.0882244
+   },
+   {
+    "mob": 1028,
+    "item": 6954,
+    "before": 0.072185,
+    "after": 0.0794035
+   },
+   {
+    "mob": 1029,
+    "item": 6947,
+    "before": 0.049392,
+    "after": 0.0543312
+   },
+   {
+    "mob": 1029,
+    "item": 6949,
+    "before": 0.08232,
+    "after": 0.090552
+   },
+   {
+    "mob": 1029,
+    "item": 6954,
+    "before": 0.074088,
+    "after": 0.0814968
+   },
+   {
+    "mob": 1030,
+    "item": 6947,
+    "before": 0.049392,
+    "after": 0.0543312
+   },
+   {
+    "mob": 1030,
+    "item": 6949,
+    "before": 0.08232,
+    "after": 0.090552
+   },
+   {
+    "mob": 1030,
+    "item": 6954,
+    "before": 0.074088,
+    "after": 0.0814968
+   },
+   {
+    "mob": 1031,
+    "item": 6947,
+    "before": 0.049392,
+    "after": 0.0543312
+   },
+   {
+    "mob": 1031,
+    "item": 6949,
+    "before": 0.08232,
+    "after": 0.090552
+   },
+   {
+    "mob": 1031,
+    "item": 6954,
+    "before": 0.074088,
+    "after": 0.0814968
+   },
+   {
+    "mob": 1034,
+    "item": 6947,
+    "before": 0.050605,
+    "after": 0.0556655
+   },
+   {
+    "mob": 1034,
+    "item": 6949,
+    "before": 0.084341,
+    "after": 0.0927751
+   },
+   {
+    "mob": 1034,
+    "item": 6954,
+    "before": 0.075907,
+    "after": 0.0834977
+   },
+   {
+    "mob": 1728,
+    "item": 6947,
+    "before": 0.057102,
+    "after": 0.0628122
+   },
+   {
+    "mob": 1728,
+    "item": 6949,
+    "before": 0.09517,
+    "after": 0.104687
+   },
+   {
+    "mob": 1728,
+    "item": 6954,
+    "before": 0.085652,
+    "after": 0.0942172
+   },
+   {
+    "mob": 1729,
+    "item": 6947,
+    "before": 0.057102,
+    "after": 0.0628122
+   },
+   {
+    "mob": 1729,
+    "item": 6949,
+    "before": 0.09517,
+    "after": 0.104687
+   },
+   {
+    "mob": 1729,
+    "item": 6954,
+    "before": 0.085652,
+    "after": 0.0942172
+   },
+   {
+    "mob": 1730,
+    "item": 6947,
+    "before": 0.057102,
+    "after": 0.0628122
+   },
+   {
+    "mob": 1730,
+    "item": 6949,
+    "before": 0.09517,
+    "after": 0.104687
+   },
+   {
+    "mob": 1730,
+    "item": 6954,
+    "before": 0.085652,
+    "after": 0.0942172
+   },
+   {
+    "mob": 1734,
+    "item": 6947,
+    "before": 0.058891,
+    "after": 0.0647801
+   },
+   {
+    "mob": 1734,
+    "item": 6949,
+    "before": 0.098151,
+    "after": 0.1079661
+   },
+   {
+    "mob": 1734,
+    "item": 6954,
+    "before": 0.088336,
+    "after": 0.0971696
+   },
+   {
+    "mob": 2315,
+    "item": 6947,
+    "before": 0.058891,
+    "after": 0.0647801
+   },
+   {
+    "mob": 2315,
+    "item": 6949,
+    "before": 0.098151,
+    "after": 0.1079661
+   },
+   {
+    "mob": 2315,
+    "item": 6954,
+    "before": 0.088336,
+    "after": 0.0971696
+   },
+   {
+    "mob": 2317,
+    "item": 6947,
+    "before": 0.057102,
+    "after": 0.0628122
+   },
+   {
+    "mob": 2317,
+    "item": 6949,
+    "before": 0.09517,
+    "after": 0.104687
+   },
+   {
+    "mob": 2317,
+    "item": 6954,
+    "before": 0.085652,
+    "after": 0.0942172
+   },
+   {
+    "mob": 2318,
+    "item": 6947,
+    "before": 0.057102,
+    "after": 0.0628122
+   },
+   {
+    "mob": 2318,
+    "item": 6949,
+    "before": 0.09517,
+    "after": 0.104687
+   },
+   {
+    "mob": 2318,
+    "item": 6954,
+    "before": 0.085652,
+    "after": 0.0942172
+   }
+  ],
+  "emerald_chances": {
+   "838": 0.7,
+   "839": 0.7,
+   "840": 1.0,
+   "841": 1.0,
+   "930": 1.0,
+   "931": 1.0
+  },
+  "income_delta_175": {
+   "20": {
+    "afro_175": 1724.5727133179407,
+    "gold_175": -0.0003263224509747855
+   },
+   "21": {
+    "afro_175": 1577.0530674284512,
+    "gold_175": -0.0002956644911355198
+   },
+   "258": {
+    "afro_175": 2583.733118287713,
+    "gold_175": -0.0006787416163503738
+   },
+   "259": {
+    "afro_175": 2581.284342827179,
+    "gold_175": -0.0007060560440339133
+   },
+   "260": {
+    "afro_175": 2469.6051614949256,
+    "gold_175": -0.0006560096178382388
+   },
+   "261": {
+    "afro_175": 2469.6051614949256,
+    "gold_175": -0.0006560096178382388
+   },
+   "262": {
+    "afro_175": 2469.6051614949256,
+    "gold_175": -0.0006560096178382388
+   },
+   "263": {
+    "afro_175": 2469.6051614949256,
+    "gold_175": -0.0006560096178382388
+   },
+   "266": {
+    "afro_175": 2467.137165489761,
+    "gold_175": -0.0006812461095384722
+   },
+   "267": {
+    "afro_175": 2467.137165489761,
+    "gold_175": -0.0006812461095384722
+   },
+   "271": {
+    "afro_175": 2933.0371330898793,
+    "gold_175": -0.0015980465809531863
+   },
+   "272": {
+    "afro_175": 2933.0371330898793,
+    "gold_175": -0.0015980465809531863
+   },
+   "273": {
+    "afro_175": 2822.872608689939,
+    "gold_175": -0.0015060522212477262
+   },
+   "274": {
+    "afro_175": 2822.872608689939,
+    "gold_175": -0.0015060522212477262
+   },
+   "276": {
+    "afro_175": 2835.226703048277,
+    "gold_175": -0.0015787240704990028
+   },
+   "277": {
+    "afro_175": 2724.9055700070758,
+    "gold_175": -0.0014853012675065534
+   },
+   "278": {
+    "afro_175": 2724.9055700070758,
+    "gold_175": -0.0014853012675065534
+   },
+   "280": {
+    "afro_175": 2626.7947400556777,
+    "gold_175": -0.0015165983752871192
+   },
+   "281": {
+    "afro_175": 2737.2913862384116,
+    "gold_175": -0.0016134010774739396
+   },
+   "285": {
+    "afro_175": 2835.226703048277,
+    "gold_175": -0.0015787240704990028
+   },
+   "287": {
+    "afro_175": 3010.4920148247134,
+    "gold_175": -0.0015704514077120022
+   },
+   "288": {
+    "afro_175": 3122.8499401923073,
+    "gold_175": -0.0016810913441796618
+   },
+   "289": {
+    "afro_175": 3010.4920148247134,
+    "gold_175": -0.0015704514077120022
+   },
+   "290": {
+    "afro_175": 3010.4920148247134,
+    "gold_175": -0.0015704514077120022
+   },
+   "291": {
+    "afro_175": 2934.36668027403,
+    "gold_175": -0.001565485609928449
+   },
+   "292": {
+    "afro_175": 2934.36668027403,
+    "gold_175": -0.001565485609928449
+   },
+   "293": {
+    "afro_175": 2934.36668027403,
+    "gold_175": -0.001565485609928449
+   },
+   "294": {
+    "afro_175": 3046.7970738904996,
+    "gold_175": -0.0016782607232802252
+   },
+   "301": {
+    "afro_175": 3254.4999963636924,
+    "gold_175": -0.0027936322208931734
+   },
+   "302": {
+    "afro_175": 3254.4999963636924,
+    "gold_175": -0.0027936322208931734
+   },
+   "303": {
+    "afro_175": 3254.4999963636924,
+    "gold_175": -0.0027936322208931734
+   },
+   "304": {
+    "afro_175": 3254.4999963636924,
+    "gold_175": -0.0027936322208931734
+   },
+   "306": {
+    "afro_175": 3207.4877901926193,
+    "gold_175": -0.002847146017176134
+   },
+   "307": {
+    "afro_175": 3207.4877901926193,
+    "gold_175": -0.002847146017176134
+   },
+   "308": {
+    "afro_175": 3207.4877901926193,
+    "gold_175": -0.002847146017176134
+   },
+   "311": {
+    "afro_175": 3166.2072151820225,
+    "gold_175": -0.0030827313293301873
+   },
+   "315": {
+    "afro_175": 3759.766363266245,
+    "gold_175": -0.003285339573678753
+   },
+   "316": {
+    "afro_175": 3759.766363266245,
+    "gold_175": -0.003285339573678753
+   },
+   "317": {
+    "afro_175": 3759.766363266245,
+    "gold_175": -0.003285339573678753
+   },
+   "318": {
+    "afro_175": 3871.8947836950065,
+    "gold_175": -0.003459300382717542
+   },
+   "319": {
+    "afro_175": 3754.834601314375,
+    "gold_175": -0.003438388818064928
+   },
+   "320": {
+    "afro_175": 3754.834601314375,
+    "gold_175": -0.003438388818064928
+   },
+   "321": {
+    "afro_175": 3754.834601314375,
+    "gold_175": -0.003438388818064928
+   },
+   "322": {
+    "afro_175": 3866.9849351385074,
+    "gold_175": -0.0036198817762757556
+   },
+   "323": {
+    "afro_175": 3749.915331069063,
+    "gold_175": -0.0035928181105098324
+   },
+   "348": {
+    "afro_175": 4195.656221662165,
+    "gold_175": -0.004310130387475981
+   },
+   "349": {
+    "afro_175": 4083.8174099961975,
+    "gold_175": -0.00410982277966928
+   },
+   "350": {
+    "afro_175": 4195.656221662165,
+    "gold_175": -0.004310130387475981
+   },
+   "351": {
+    "afro_175": 4195.656221662165,
+    "gold_175": -0.004310130387475981
+   },
+   "352": {
+    "afro_175": 4216.455201030327,
+    "gold_175": -0.004557724389009452
+   },
+   "353": {
+    "afro_175": 4104.62866669998,
+    "gold_175": -0.004347658731219451
+   },
+   "354": {
+    "afro_175": 4216.455201030327,
+    "gold_175": -0.004557724389009452
+   },
+   "355": {
+    "afro_175": 4216.455201030327,
+    "gold_175": -0.004557724389009452
+   },
+   "362": {
+    "afro_175": 3915.460279198142,
+    "gold_175": -0.0030304308588466073
+   },
+   "363": {
+    "afro_175": 3915.460279198142,
+    "gold_175": -0.0030304308588466073
+   },
+   "364": {
+    "afro_175": 3915.460279198142,
+    "gold_175": -0.0030304308588466073
+   },
+   "365": {
+    "afro_175": 3915.460279198142,
+    "gold_175": -0.0030304308588466073
+   },
+   "366": {
+    "afro_175": 3957.9635660815165,
+    "gold_175": -0.0032442518908240093
+   },
+   "367": {
+    "afro_175": 3957.9635660815165,
+    "gold_175": -0.0032442518908240093
+   },
+   "370": {
+    "afro_175": 4000.4903005741353,
+    "gold_175": -0.0034662009755483288
+   },
+   "371": {
+    "afro_175": 4000.4903005741353,
+    "gold_175": -0.0034662009755483288
+   },
+   "395": {
+    "afro_175": 3878.5551408320716,
+    "gold_175": -0.003119675328672818
+   },
+   "396": {
+    "afro_175": 3878.5551408320716,
+    "gold_175": -0.003119675328672818
+   },
+   "397": {
+    "afro_175": 3878.5551408320716,
+    "gold_175": -0.003119675328672818
+   },
+   "398": {
+    "afro_175": 3878.5551408320716,
+    "gold_175": -0.003119675328672818
+   },
+   "399": {
+    "afro_175": 3939.519094547218,
+    "gold_175": -0.0033676095765301133
+   },
+   "401": {
+    "afro_175": 3939.519094547218,
+    "gold_175": -0.0033676095765301133
+   },
+   "403": {
+    "afro_175": 4006.2320282758847,
+    "gold_175": -0.003594629300288782
+   },
+   "405": {
+    "afro_175": 4006.2320282758847,
+    "gold_175": -0.003594629300288782
+   },
+   "765": {
+    "afro_175": 4758.328563398037,
+    "gold_175": -0.0018542753235769845
+   },
+   "766": {
+    "afro_175": 4647.594447328078,
+    "gold_175": -0.001788481877405281
+   },
+   "767": {
+    "afro_175": 4647.594447328078,
+    "gold_175": -0.001788481877405281
+   },
+   "768": {
+    "afro_175": 4758.328563398037,
+    "gold_175": -0.0018542753235769845
+   },
+   "769": {
+    "afro_175": 4874.286640052357,
+    "gold_175": -0.0020416820654266645
+   },
+   "771": {
+    "afro_175": 4763.7629629185385,
+    "gold_175": -0.001971124418381938
+   },
+   "772": {
+    "afro_175": 4874.286640052357,
+    "gold_175": -0.0020416820654266645
+   },
+   "773": {
+    "afro_175": 4984.3313719967555,
+    "gold_175": -0.002237104226428363
+   },
+   "775": {
+    "afro_175": 4873.967757163984,
+    "gold_175": -0.002161687835742056
+   },
+   "1025": {
+    "afro_175": 4691.2281722096595,
+    "gold_175": -0.0018280062099345707
+   },
+   "1026": {
+    "afro_175": 4691.2281722096595,
+    "gold_175": -0.0018280062099345707
+   },
+   "1027": {
+    "afro_175": 4691.2281722096595,
+    "gold_175": -0.0018280062099345707
+   },
+   "1028": {
+    "afro_175": 4691.2281722096595,
+    "gold_175": -0.0018280062099345707
+   },
+   "1029": {
+    "afro_175": 4807.2940485422605,
+    "gold_175": -0.0020133449144204988
+   },
+   "1030": {
+    "afro_175": 4807.2940485422605,
+    "gold_175": -0.0020133449144204988
+   },
+   "1031": {
+    "afro_175": 4807.2940485422605,
+    "gold_175": -0.0020133449144204988
+   },
+   "1034": {
+    "afro_175": 4917.452599985038,
+    "gold_175": -0.002206632186178663
+   },
+   "1728": {
+    "afro_175": 5529.071483317661,
+    "gold_175": -0.002615924983775768
+   },
+   "1729": {
+    "afro_175": 5529.071483317661,
+    "gold_175": -0.002615924983775768
+   },
+   "1730": {
+    "afro_175": 5529.071483317661,
+    "gold_175": -0.002615924983775768
+   },
+   "1734": {
+    "afro_175": 5690.053231548756,
+    "gold_175": -0.0028988285887444985
+   },
+   "2315": {
+    "afro_175": 5690.053231548756,
+    "gold_175": -0.0028988285887444985
+   },
+   "2317": {
+    "afro_175": 5529.071483317661,
+    "gold_175": -0.002615924983775768
+   },
+   "2318": {
+    "afro_175": 5529.071483317661,
+    "gold_175": -0.002615924983775768
+   },
+   "838": {
+    "afro_175": 34300.0,
+    "gold_175": 0.0
+   },
+   "839": {
+    "afro_175": 34300.00000000001,
+    "gold_175": 0.0
+   },
+   "840": {
+    "afro_175": 48999.99999999999,
+    "gold_175": 0.0
+   },
+   "841": {
+    "afro_175": 49000.0,
+    "gold_175": 0.0
+   },
+   "930": {
+    "afro_175": 49000.0,
+    "gold_175": 0.0
+   },
+   "931": {
+    "afro_175": 49000.0,
+    "gold_175": 0.0
+   }
+  },
+  "calibration": "Deltas against previous targets, ordinary NPC70%, legacy QUEST_MATERIALS suppression used only by old budget test. Sand/G tables unchanged; capped competition can slightly reduce G inclusion.",
+  "shared_type_scope": "A type shared by the surrounding patrol/encounter and a centre changes everywhere it already appears."
+ }
 }

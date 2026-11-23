@@ -38,8 +38,8 @@ class LootLevelLadder(unittest.TestCase):
 
     def test_every_level_boundary_with_and_without_a_scanner(self):
         fighter = Fighter()
-        ladder = {-10: 0, -5: 0, -4: 0, -3: .25, -2: .5, -1: .75,
-                  0: .95, 1: 1, 2: 1.05, 3: 1.15, 4: 1.25, 5: 1.25, 10: 1.25}
+        ladder = {-10: 0, -5: 0, -4: .25, -3: .5, -2: 1, -1: 1,
+                  0: 1, 1: 1, 2: 1.05, 3: 1.15, 4: 1.25, 5: 1.25, 10: 1.25}
         for gap, expected in ladder.items():
             target = self.mob(fighter.level + gap, fighter=fighter)
             for scanner in (1, 3):
@@ -55,8 +55,8 @@ class LootLevelLadder(unittest.TestCase):
         target = self.mob(14, fighter=low)
         target.xp_ledger = {123: [100], low: [1]}
         target.loot_level = 14
-        self.assertEqual(combat.RoomCombat.loot_multiplier(None, target, low), .95)
-        target.loot_level = 18
+        self.assertEqual(combat.RoomCombat.loot_multiplier(None, target, low), 1)
+        target.loot_level = 19
         with patch.object(effects, 'multiplier', return_value=3):
             self.assertEqual(combat.RoomCombat.loot_multiplier(None, target, low), 0)
 
@@ -103,7 +103,7 @@ class LootLevelLadder(unittest.TestCase):
                 self.assertEqual(set(drops), expected)
 
     def test_boss_ingot_is_certain_through_cutoff_without_unlocking_other_rewards(self):
-        fighter = Fighter(14)
+        fighter = Fighter(15)
         target = self.mob(10, role='boss', fighter=fighter)
         ingot = next(iter(items.GOLD_INGOTS))
         with patch.object(effects, 'multiplier', return_value=3), \
@@ -118,10 +118,10 @@ class LootLevelLadder(unittest.TestCase):
             self.assertEqual((ordinary, gold), (0, 1))
             for roll in (.19, .21, .99):
                 drops = mobs.loot_for(target.stats, FixedRandom(roll), {3770, 2408},
-                                      killer_level=14, multiplier=ordinary, gold_multiplier=gold)
+                                      killer_level=15, multiplier=ordinary, gold_multiplier=gold)
                 expected = {(ingot, 1)} | ({(3770, 1)} if roll < .5 else set())
                 self.assertEqual(set(drops), expected)
-            self.assertEqual(mobs.loot_for(target.stats, FixedRandom(.19), (), killer_level=14,
+            self.assertEqual(mobs.loot_for(target.stats, FixedRandom(.19), (), killer_level=15,
                                           multiplier=ordinary, gold_multiplier=gold), [(ingot, 1)])
             carried.assert_not_called()
 
@@ -179,7 +179,7 @@ class LootLevelLadder(unittest.TestCase):
                 patch.object(mobs, 'quest_table', return_value=[]), \
                 patch.object(bosses, 'blueprint_for', return_value=None):
             self.assertEqual(mobs.loot_for(stats, FixedRandom(.1), killer_level=14), [(333, 1)])
-            self.assertEqual(mobs.loot_for(stats, FixedRandom(.1), killer_level=18), [])
+            self.assertEqual(mobs.loot_for(stats, FixedRandom(.1), killer_level=19), [])
 
     def test_nonboss_ingot_chance_stays_native_and_only_uses_explicit_gold_modifier(self):
         ingot = next(iter(items.GOLD_INGOTS))

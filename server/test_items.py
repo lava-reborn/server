@@ -23,6 +23,7 @@ sys.path.insert(0, HERE)
 import blueprint_prices
 import craft
 import events
+import effects
 import items
 import names
 import production
@@ -256,6 +257,7 @@ def deliberate(t):
     if root == items.FIRE_ARM:
         p['comp_array'] = with_shock(p['comp_array'])
     p.update(release_changes.get(str(t), {}))
+    p.update(items.equipment_level_fields(t, p))
     return cmd, p
 
 
@@ -313,6 +315,14 @@ for t in linked + sorted(manual) + pieces + sorted(set(cold) - set(linked)) + so
     if missing:
         why.append("keys lost %s" % sorted(missing))
     extra = set(p) - set(d) - set(items.NEED_BONUS_KEYS) - {"repair_cost"}
+    presentation = items.equipment_level_fields(t, p)
+    if effects.definition(t) is not None:
+        source = dict(wiki.get(t, {}), **release_changes.get(str(t), {}))
+        presentation['buff_level'] = (max(source.get('need_skills') or [0])
+                                      if p.get('cost') and not p.get('g_cost') else 0)
+    for key, expected in presentation.items():
+        if key in extra and p[key] == expected:
+            extra.remove(key)
     if root == items.HEAL and 'max_count' in extra:
         expected = (10 if cat[t][1].startswith(('Med_Battle_', 'Med_Pacific_'))
                     and p.get('use_count') == 1 else 1)

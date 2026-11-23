@@ -128,7 +128,7 @@ else:
         print("  ..  edge01: %d half-transparent px, mean RGB %.1f, rgb above alpha in %.0f%%"
               % (semi.sum(), mean, 100 * over))
         check("Mountains edge01.png: its half-transparent edge is not dark "
-              "(mean RGB about 86; 51 premultiplied)", 78 <= mean <= 95, True)
+              "(mean RGB about 86; 51 premultiplied)", bool(78 <= mean <= 95), True)
         check("90 symbols, every one drawn", (len(m.exports),
               sum(1 for n in m.exports if m.library_bitmap(n)[0] is not None)), (90, 90))
 

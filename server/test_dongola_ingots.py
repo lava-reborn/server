@@ -511,9 +511,12 @@ try:
     c.send("selPers;num=0;")
     c.until(lambda f: f[0] == "lcall")
     arrival, pos = enter(c)
-    # Meet the gold minimum through the live session; keep combat skills unchanged.
+    # Meet the gold minimum through the live session.
     c.send("userMsg;entry=@/skill 3 3@;group=0;")
     c.frames()
+    # This verifies boss loot, walking and cashing with an admin weapon, not
+    # a below-level combat challenge against the camp's level14 guards.
+    chat(c, "/skill 1 14")
 
     # --- Мортимер in the new market ---------------------------------------------------------
     check("the new market of Донгола: the room the player stands in",

@@ -88,9 +88,9 @@ START_AFRO = 20000
 # The pieces of clothing and the article each one's numbers are.
 ARTICLE = {HELM: "Каска строителя", SHIRT: "Рубашка", ARMOR: "Кусковая броня",
            PANTS: "Джинсы", BOOTS: "Старые ботинки"}
-# The level each thing asks (inventory.item_level): its Стрельба.
+# Equipment's Shooting level; reagents now have a separate character gate.
 LEVEL = {WALTHER: 4, SHIRT: 2, PANTS: 2, BOOTS: 2, HELM: 2, ARMOR: 2,
-         KS: 0, ST: 0, ALPHA: 2, OMEGA: 2}
+         KS: 0, ST: 0, ALPHA: 0, OMEGA: 0}
 cat = items.catalogue()
 
 # --- in process ------------------------------------------------------------------------
@@ -115,6 +115,9 @@ check("  ..priced in afro, nothing premium, nothing gold",
       [])
 check("  ..and asking the levels of their Стрельба", {t: inventory.item_level(t) for t in ARCHIVE_STALL},
       LEVEL)
+check("  ..reagents require character level two without a Shooting skill gate",
+      {t: (items.params_of(t)['buff_level'], items.params_of(t)['need_skills_m'])
+       for t in (ALPHA, OMEGA)}, {ALPHA: (2, 0), OMEGA: (2, 0)})
 
 # Every trader of the client, as the stall would be without this change: the
 # same data with Сет's entry taken out again.

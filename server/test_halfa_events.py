@@ -316,8 +316,10 @@ try:
     check("the talons come from Томпсон's 75 alone, two once a day: 37.5 armbands a talon, the"
           " original's rate (62292), and no row of the whole table pays one faster",
           payers, {SEVENTY_FIVE: (2, [75], 1)})
+    # Nominal purchase value differs from the 70% NPC resale payout.
+    # test_prison_farm_economy checks actual redemption and sale transactions.
     check("  ..a talon is 500 rounds, 5 G at the stalls' gold price: 10 G of rounds a day at"
-          " most, 500 000 afro at the one rate, which no stall buys back",
+          " most, nominally 500 000 afro before the NPC resale share",
           (per_talon, 2 * max(per_talon) * progression.GOLD_TO_AFRO_RATE // 100),
           ({500}, 500_000))
     paid = sorted({t for q in Q.values() for t in q.rew_obj + [o for o, _n in q.rew_also]})

@@ -253,6 +253,11 @@ def prepare(sources):
         simulator_copies[source] = target
         profile_sources[target] = source
     validate_ammunition(frames, roots)
+    # Private profiles rewrite the source requirements after copying native
+    # frames. Ordinary level captions/gates would be stale in these copies.
+    for _command, params in frames.values():
+        for field in ('equip_level', 'equip_allowance', 'buff_level'):
+            params.pop(field, None)
     # Register generic catalogue hooks before publishing range indexes.
     sources_by_type = {t: s for s, t in copies.items()}
     sources_by_type.update(prototype_sources)

@@ -10,9 +10,114 @@ import widescreen as w
 from avm_test import Arr, Function
 from combat_client import patches
 from testkit import run_cases
+from test_weapon_tooltips import sparse
+from avm_test import execute, get
 
 
 class CombatClient(unittest.TestCase):
+    def level_card(self, root, level, allowance=3, skills=None):
+        panel, rows = self.annotation()
+        skills = sparse({1: level}) if skills is None else skills
+        titles = sparse({0: 'Ближний бой', 1: 'Стрельба', 2: 'Медицина',
+                         3: 'Промышленность', 4: 'Производство'}, 5)
+        spec_titles = sparse({6: 'Ручные пулеметы'})
+        specs = sparse({6: 0})
+        props = dict(equip_level=level, equip_allowance=allowance,
+                     need_skills=skills, need_specs=specs)
+        panel.update(item=dict(rootID=root, getProp=props.get),
+                     skillsTitle=titles, specTitle=spec_titles)
+
+        def original(arr, title_arr):
+            return ''.join(str(get(title_arr, i)) + ' ' + str(get(arr, i)) + '\r'
+                           for i in range(get(arr, 'length')) if get(arr, i)) or None
+
+        # Compose with the existing zero-specialisation wrapper, exactly as
+        # injected into the client, rather than replacing its behaviour.
+        panel['__requirementsReadOrig'] = original
+        panel['__bfLevelReadOrig'] = lambda arr, title_arr: execute(
+            w.fn_annotation_requirements_read().assemble(),
+            dict(this=panel, arr=arr, titleArr=title_arr))
+        return panel, rows, skills, titles, props
+
+    def test_gear_level_requirement_has_allowance_and_retains_independent_skills(self):
+        for root in (0, 1, 5):
+            for level, allowance, label in ((4, 3, '4(-3)'), (16, 0, '16')):
+                with self.subTest(root=root, level=level, allowance=allowance):
+                    skills = sparse({0: level, 1: level, 2: 2, 3: 3}, 5)
+                    panel, rows, _, titles, _ = self.level_card(root, level, allowance, skills)
+                    text = self.call('__bfLevelRead', panel, skills, titles)
+                    self.call('__bfAnnotationRow', panel, 'Необходимые\rнавыки', text)
+                    self.assertEqual(rows, [('Требуемый уровень:', label),
+                                            ('Необходимые\rнавыки',
+                                             'Медицина 2\rПромышленность 3\r')])
+                    self.assertEqual(get(skills, 1), level)
+
+    def test_level_row_remains_when_native_combat_skill_row_becomes_empty(self):
+        panel, rows, skills, titles, _ = self.level_card(0, 4)
+        text = self.call('__bfLevelRead', panel, skills, titles)
+        self.assertIsNone(text)
+        self.call('__bfAnnotationRow', panel, 'Необходимые навыки', text)
+        self.call('__bfAnnotationRow', panel, 'Необходимый навык бойца', 5)
+        self.assertEqual(rows, [('Требуемый уровень:', '4(-3)'),
+                                ('Необходимый навык бойца', 5)])
+
+    def test_native_gear_callers_always_forward_even_undefined_requirement_rows(self):
+        source = (Path(__file__).resolve().parents[1] /
+                  'recon/as-src/lol/gpui/Annotation.as').read_text(encoding='utf-8')
+        for method in ('fireArm', 'coldArm', 'wear', 'healItem'):
+            body = source.split('   function ' + method + '(', 1)[1].split('\n   function ', 1)[0]
+            self.assertRegex(body, r'\.push\(\["Необходимые(?:\\r| )навыки",(?:_loc\d+_|str)\]\);')
+            # This native unconditional loop calls our addItem wrapper before
+            # native addItem suppresses undefined values; there is no caller
+            # filter that could hide a level-only requirement card.
+            self.assertRegex(body, r'while\([^\n]+\.length\)\s*\{\s*'
+                                  r'this\.addItem\(_loc\d+_\[_loc\d+_\]\[0\],'
+                                  r'_loc\d+_\[_loc\d+_\]\[1\]\);')
+
+    def test_buff_medicine_and_gear_without_level_keep_literal_skill_requirements(self):
+        for root, level in ((2, 14), (3, 14), (6, 14), (0, None), (1, 0), (5, 0)):
+            with self.subTest(root=root, level=level):
+                panel, rows, _, titles, _ = self.level_card(root, level)
+                skills = sparse({1: 14, 0: 7}, 5)
+                panel['item']['getProp'] = dict(need_skills=skills, equip_level=level,
+                                               equip_allowance=3).get
+                text = self.call('__bfLevelRead', panel, skills, titles)
+                self.call('__bfAnnotationRow', panel, 'Необходимые\rнавыки', text)
+                self.assertEqual(rows, [('Необходимые\rнавыки',
+                                        'Ближний бой 7\rСтрельба 14\r')])
+
+    def test_stimulant_strict_level_is_visible_without_equipment_allowance(self):
+        panel, rows = self.annotation()
+        props = dict(buff_level=14)
+        panel['item'] = dict(rootID=2, getProp=props.get)
+        self.call('__bfAnnotationRow', panel, 'Необходимые\rнавыки', None)
+        self.assertEqual(rows, [('Требуемый уровень:', '14')])
+        rows.clear()
+        props['buff_level'] = 0  # G copy.
+        self.call('__bfAnnotationRow', panel, 'Необходимые\rнавыки', None)
+        self.assertEqual(rows, [])
+
+    def test_bonus_array_identity_and_zero_specialisation_remain_unchanged(self):
+        panel, _, _, titles, props = self.level_card(0, 4)
+        bonus = sparse({1: 4}, 5)
+        self.assertEqual(self.call('__bfLevelRead', panel, bonus, titles), 'Стрельба 4\r')
+        self.assertEqual(self.call('__bfLevelRead', panel, props['need_specs'], panel['specTitle']),
+                         'Ручные пулеметы 0\r')
+
+    def test_static_level_fields_are_retained_before_native_need_parser(self):
+        seen = []
+        obj = dict(equip_level=16, equip_allowance=0, need_skills=[16], need_skills_m=2)
+        item = {}
+        item['__bfLevelNeedsOrig'] = lambda supplied: seen.append(
+            (item.get('equip_level'), item.get('equip_allowance'), supplied)) or 'native'
+        self.assertEqual(self.call('__bfLevelNeeds', item, obj), 'native')
+        self.assertEqual(seen, [(16, 0, obj)])
+        # Reusing a prototype with an ordinary static packet cannot leave a
+        # stale allowance on medicine, templates or level-zero equipment.
+        self.call('__bfLevelNeeds', item, {})
+        self.assertIsNone(item['equip_level'])
+        self.assertIsNone(item['equip_allowance'])
+
     def annotation(self):
         rows = []
         panel = dict(__bfAnnotationRowOrig=lambda title, value:

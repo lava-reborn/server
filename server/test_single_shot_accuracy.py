@@ -29,7 +29,7 @@ class SingleShotAccuracy(unittest.TestCase):
         return combat.Weapon(shots, 100, 200, 2, 5, 100, 1, cone, 10,
                              progression.SHOOTING, 5, sdmin=30, sdmax=50)
 
-    def test_all_classes_and_modes_keep_identity_and_boost_only_native_single_rifle_or_assault(self):
+    def test_all_classes_and_modes_keep_identity_with_small_rifle_and_native_single_bonuses(self):
         ch = self.character()
         for kind in combat.SPEC_OF_WEAPON:
             params = dict(weapon_type=kind, fire_mods=[1, 3, 6])
@@ -40,6 +40,8 @@ class SingleShotAccuracy(unittest.TestCase):
                             patch.object(items, 'params_of', return_value=params):
                         result = battle_balance.weapon(original, ch, dict(type_id=1, cur_mode=mode), {})
                     bonus = .8 if shots == 1 and kind in (items.ASSAULT, items.RIFLE) else 1
+                    if kind == items.RIFLE:
+                        bonus *= .95
                     self.assertAlmostEqual(result.cone, original.cone * bonus)
                     self.assertEqual(result.hit_cap, .95)
                     for field in original._fields:
@@ -57,6 +59,31 @@ class SingleShotAccuracy(unittest.TestCase):
             self.assertEqual(result.cone, original.cone)
             self.assertEqual(result.hit_cap, .95)
 
+    def test_rifle_followup_is_small_smooth_and_keeps_every_probability_cap(self):
+        params = dict(weapon_type=items.RIFLE, fire_mods=[1, 3, 6])
+        for mode, shots in enumerate(params['fire_mods']):
+            for spec in (0, 3, 5):
+                ch = self.character(spec=spec)
+                for missing in range(4):
+                    original = self.weapon(shots=shots,
+                        cone=combat.cone_of(combat.spread_factor(13, spec), .7, 1, 100))
+                    row = dict(type_id=1, cur_mode=mode)
+                    with patch.object(inventory, 'item_level', return_value=13 + missing), \
+                            patch.object(items, 'params_of', return_value=params):
+                        with patch.object(battle_balance, 'RIFLE_SPREAD', 1):
+                            before = battle_balance.weapon(original, ch, row, {})
+                        after = battle_balance.weapon(original, ch, row, {})
+                    self.assertAlmostEqual(after.cone, before.cone * .95)
+                    self.assertEqual(after.hit_cap, before.hit_cap)
+                    for fraction in (.25, .5, .9, 1):
+                        distance = original.max_range * fraction
+                        old = combat.hit_probability(before.cone, distance, before.hit_cap)
+                        new = combat.hit_probability(after.cone, distance, after.hit_cap)
+                        self.assertGreaterEqual(new, old)
+                        self.assertLessEqual(new, after.hit_cap)
+                        self.assertLessEqual(new - old, .0475 + 1e-12)
+                        self.assertLessEqual(new, old / .95 + 1e-12)
+
     def test_spec_ammo_and_senior_gear_are_preserved_at_near_and_maximum_distances(self):
         params = items.params_of(25803)
         frozen = copy.deepcopy(params)
@@ -72,7 +99,7 @@ class SingleShotAccuracy(unittest.TestCase):
                         ratio = 1 - missing * .05
                         with patch.object(inventory, 'item_level', return_value=13 + missing):
                             result = battle_balance.weapon(original, ch, dict(type_id=25803, cur_mode=2), ammo)
-                        self.assertAlmostEqual(result.cone, cone * .8 / ratio)
+                        self.assertAlmostEqual(result.cone, cone * .8 * .95 / ratio)
                         self.assertAlmostEqual(result.hit_cap, .95 * ratio)
                         self.assertEqual((result.dmin, result.dmax, result.sdmin, result.sdmax),
                                          (110, 220, 39, 65))
@@ -83,7 +110,7 @@ class SingleShotAccuracy(unittest.TestCase):
                                      result.max_range * .99, result.max_range)
                         for distance in distances:
                             chance = combat.hit_probability(result.cone, distance, result.hit_cap)
-                            own = combat.hit_probability(cone * .8, distance, .95)
+                            own = combat.hit_probability(cone * .8 * .95, distance, .95)
                             self.assertGreater(chance, 0)
                             self.assertLessEqual(chance, .95 * ratio)
                             self.assertAlmostEqual(chance, own * ratio)

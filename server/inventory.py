@@ -629,7 +629,7 @@ GEAR_LEVEL_ALLOWANCE = 3
 
 
 def gear_level_allowance(type_id):
-    return 0 if type_id in items.STRICT_LEVEL_GEAR else GEAR_LEVEL_ALLOWANCE
+    return items.equipment_level_allowance(type_id)
 
 
 def item_level(type_id):

@@ -282,7 +282,9 @@ class TimedItems(unittest.IsolatedAsyncioTestCase):
             guards = [m for m in rc.bosses if m.type_id in base.guards + base.troops]
             self.assertEqual(len(guards), 13)
             self.assertTrue(all(m.alive and not m.away for m in guards))
-            self.assertTrue(next(m for m in rc.bosses if m.type_id == base.boss).away)
+            master = next(m for m in rc.bosses if m.type_id == base.boss)
+            self.assertTrue(master.alive and not master.away)
+            self.assertEqual(master.slot, holdings.battle_slot(base))
             # A time reset keeps the captured state; a second test must still
             # reach a new battle even when that saved owner is in the future.
             slot = holdings.battle_slot(base)
@@ -379,15 +381,19 @@ class TimedItems(unittest.IsolatedAsyncioTestCase):
         self.s.char.skill[progression.MELEE][0] = 9
         self.assertIsNone(effects.use_error(self.s.combat, self.s.combat, 3203))
 
-    async def test_pikodin_afro_skill_boundaries_and_gold_exception(self):
+    async def test_pikodin_strict_character_level_and_gold_exception(self):
         self.manager()
-        for type_id, shooting, melee in ((3201, 6, 3), (3202, 10, 5), (3203, 14, 7)):
-            for shot, hand, allowed in ((shooting - 1, melee, False),
-                                        (shooting, melee - 1, False), (shooting, melee, True)):
-                self.s.char.skill[progression.SHOOTING][0] = shot
-                self.s.char.skill[progression.MELEE][0] = hand
+        # Character.level is the highest base skill; no independent melee
+        # or PvP gate is attached to ordinary stimulants anymore.
+        for skill in self.s.char.skill:
+            skill[0] = 0
+        self.s.char.rep = 0
+        for type_id, required in ((3201, 6), (3202, 10), (3203, 14)):
+            for level, allowed in ((required - 1, False), (required, True)):
+                self.s.char.skill[progression.SHOOTING][0] = level
+                self.assertEqual(self.s.char.level, level)
                 error = effects.use_error(self.s.combat, self.s.combat, type_id)
-                self.assertEqual(error is None, allowed, (type_id, shot, hand))
+                self.assertEqual(error is None, allowed, (type_id, level))
         self.s.char.skill[progression.SHOOTING][0] = 0
         self.s.char.skill[progression.MELEE][0] = 0
         for type_id in (3205, 3206, 3207):
@@ -903,13 +909,13 @@ class ReleaseCatalogue(unittest.TestCase):
             roll.assert_called_with(20)
             self.assertFalse(battle_balance.critical(shooter, target, 40, optimal=False))
 
-    def test_four_level_loot_cutoff_has_no_last_hit_or_scanner_bypass(self):
-        fighter = NS(is_player=True, level=14, sess=NS())
+    def test_five_level_loot_cutoff_has_no_last_hit_or_scanner_bypass(self):
+        fighter = NS(is_player=True, level=15, sess=NS())
         # Object keys in older transient ledgers are also supported.
         class Contributor:
-            is_player, level, sess = True, 14, NS()
+            is_player, level, sess = True, 15, NS()
         senior = Contributor()
-        mob = NS(stats=NS(level=10, role='mob'), xp_ledger={senior: [100]}, loot_level=14)
+        mob = NS(stats=NS(level=10, role='mob'), xp_ledger={senior: [100]}, loot_level=15)
         with patch.object(effects, 'multiplier', return_value=3):
             self.assertEqual(combat.RoomCombat.loot_multiplier(None, mob, fighter), 0)
             mob.stats.level = 11
@@ -918,17 +924,17 @@ class ReleaseCatalogue(unittest.TestCase):
             self.assertEqual(combat.RoomCombat.loot_multiplier(None, mob, fighter), 1)
         st = NS(role='mob', level=10)
         with patch.object(mobs, 'carried') as carried:
-            self.assertEqual(mobs.loot_for(st, None, killer_level=14, multiplier=3), [])
+            self.assertEqual(mobs.loot_for(st, None, killer_level=15, multiplier=3), [])
             carried.assert_not_called()
 
-    def test_four_level_cutoff_preserves_only_wanted_personal_quest_loot(self):
+    def test_five_level_cutoff_preserves_only_wanted_personal_quest_loot(self):
         st = NS(role='mob', level=10, type_id=1411)
         class Rng:
             def random(self):
                 return 0
         with patch.object(mobs, 'quest_table', return_value=[(3770, 1), (2408, 1)]):
-            self.assertEqual(mobs.loot_for(st, Rng(), {3770, 2408}, killer_level=14), [(3770, 1)])
-            self.assertEqual(mobs.loot_for(st, Rng(), (), killer_level=14), [])
+            self.assertEqual(mobs.loot_for(st, Rng(), {3770, 2408}, killer_level=15), [(3770, 1)])
+            self.assertEqual(mobs.loot_for(st, Rng(), (), killer_level=15), [])
 
     def test_scanner_never_multiplies_gold_ingot_chance(self):
         ingot = next(iter(items.GOLD_INGOTS))
@@ -1097,7 +1103,7 @@ class ReleaseCatalogue(unittest.TestCase):
         target.stats.level = 14
         fighter.award_xp(progression.SHOOTING, spec, 1, target)
         character.set_skill(progression.SHOOTING, 10)
-        self.assertEqual(combat.RoomCombat.loot_multiplier(None, target, fighter), .95)
+        self.assertEqual(combat.RoomCombat.loot_multiplier(None, target, fighter), 1)
         mob = mobs.Mob(1, 258, 100)
         mob.loot_level = 14
         mob.reset()
@@ -1122,7 +1128,7 @@ class ReleaseCatalogue(unittest.TestCase):
         with patch.object(effects, 'multiplier', return_value=3):
             self.assertEqual(multiplier(), 3.75)
         mob.xp_ledger[senior] = [1]
-        self.assertEqual(multiplier(), .95)
+        self.assertEqual(multiplier(), 1)
         mob.stats.role = 'object'
         with patch.object(effects, 'multiplier', return_value=3):
             self.assertEqual(multiplier(), 1)
@@ -1401,6 +1407,8 @@ class ReleaseCatalogue(unittest.TestCase):
             self.assertIn(t, items.stock_for(5216, 185))
 
     def test_gear_boundary_all_existing_armour_and_weapons(self):
+        import setcraft
+        import sets
         for t, (root, _) in items.catalogue().items():
             if root not in items.BREAKABLE_ROOTS or items.out_of_game(t):
                 continue
@@ -1409,7 +1417,9 @@ class ReleaseCatalogue(unittest.TestCase):
                 continue
             row = dict(type_id=t, root=root)
             with self.subTest(type=t):
-                minimum = level if t in items.STRICT_LEVEL_GEAR else level - 3
+                relaxed = (root in (items.FIRE_ARM, items.COLD_ARM)
+                           or root == items.WEAR and bool(sets.set_of(setcraft.base_of(t))))
+                minimum = level - (3 if relaxed and t not in items.STRICT_LEVEL_GEAR else 0)
                 self.assertTrue(inventory.wearable(row, minimum))
                 self.assertFalse(inventory.wearable(row, minimum - 1))
 

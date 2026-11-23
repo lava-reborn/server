@@ -283,7 +283,7 @@ check('disabling boss hours leaves non-gold corpse loot unchanged',
       [(r['type_id'], r['count']) for r in on if r['type_id'] not in items.GOLD_INGOTS],
       [(r['type_id'], r['count']) for r in off])
 for type_id in sorted(CARRIERS):
-    for delta, multiplier in ((4, 1), (10, 3), (4, 0)):
+    for delta, multiplier in ((5, 1), (10, 3), (5, 0)):
         on = bag([20 * 60], type_id, mobs.stats(type_id).level + delta, multiplier)
         off = bag([], type_id, mobs.stats(type_id).level + delta, multiplier)
         check('only the original ingots survive the level cutoff for boss %d, gap %d, loot x%d'

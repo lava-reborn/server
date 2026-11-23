@@ -2,7 +2,45 @@
 from avm_codegen import Compiler
 
 SOURCE = '''
+def __bfLevelNeeds(obj):
+    # Native Item.initialize ignores additional protocol fields. Keep these
+    # on the prototype so instances inherit them through Item.getProp.
+    this.equip_level = obj.equip_level
+    this.equip_allowance = obj.equip_allowance
+    this.buff_level = obj.buff_level
+    return this.__bfLevelNeedsOrig(obj)
+
+def __bfLevelRead(arr, titleArr):
+    item = this.item
+    if item and (item.rootID == 0 or item.rootID == 1 or item.rootID == 5):
+        level = item.getProp("equip_level")
+        if level and level > 0 and titleArr == this.skillsTitle and arr == item.getProp("need_skills"):
+            # Shooting/melee are the character-level gate for equipment.
+            # Retain independent medicine, industry and production needs.
+            text = ""
+            i = 2
+            while i < len(titleArr):
+                if arr[i]:
+                    text = text + titleArr[i] + " " + String(arr[i]) + "\\r"
+                i = i + 1
+            if text != "":
+                return text
+            return
+    return this.__bfLevelReadOrig(arr, titleArr)
+
 def __bfAnnotationRow(title, value):
+    if title == "Необходимые\\rнавыки" or title == "Необходимые навыки":
+        item = this.item
+        level = None
+        if item and (item.rootID == 0 or item.rootID == 1 or item.rootID == 5):
+            level = item.getProp("equip_level")
+        elif item and item.rootID == 2:
+            level = item.getProp("buff_level")
+        if level and level > 0:
+            text = String(level)
+            if item.rootID != 2 and item.getProp("equip_allowance") == 3:
+                text = text + "(-3)"
+            this.__bfAnnotationRowOrig("Требуемый уровень:", text)
     # Native item cards emit fighter requirement 0 and empty effect bonuses.
     if value == 0:
         if title == "Необходимый навык бойца" or title.indexOf("Бонус") == 0:
@@ -508,6 +546,8 @@ def patches(Asm, undef, *, training=False):
     bodies = {name: (params, body) for name, params, body in functions}
     wraps = []
     for path, method, keep, helper in (
+        (('core','objects','Item'), 'parseNeedBonus', '__bfLevelNeedsOrig', '__bfLevelNeeds'),
+        (('gpui','Annotation'), 'readArray', '__bfLevelReadOrig', '__bfLevelRead'),
         (('gpui','Annotation'), 'addItem', '__bfAnnotationRowOrig', '__bfAnnotationRow'),
         (('gpui','Annotation'), 'effectAnnotation', '__bfEffectAnnotationOrig', '__bfEffectAnnotation'),
         (('gpui','Annotation'), 'showEffectsInfo', '__bfEffectsInfoOrig', '__bfEffectsInfo'),

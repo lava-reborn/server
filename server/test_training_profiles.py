@@ -60,6 +60,16 @@ class Profiles(unittest.TestCase):
         self.assertEqual(p['h_damage_min'][0],200)
         self.assertEqual(p['clip_size'],10)
 
+    def test_private_profiles_do_not_inherit_native_level_captions_or_buff_gates(self):
+        training_items.prepare(range_catalog.item_catalogue())
+        self.assertTrue(training_items.FRAMES)
+        for target, (_command, params) in training_items.FRAMES.items():
+            self.assertFalse({'equip_level', 'equip_allowance', 'buff_level'} & params.keys(), target)
+            self.assertFalse({'equip_level', 'equip_allowance', 'buff_level'} &
+                             items.params_of(target).keys(), target)
+        self.assertEqual(items.params_of(3941)['equip_allowance'], 3)
+        self.assertEqual(items.params_of(3203)['buff_level'], 14)
+
 
 if __name__ == '__main__':
     from testkit import run_cases

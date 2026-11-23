@@ -18,9 +18,6 @@ import mobs
 import world
 from testkit import run_cases
 
-CHANCES = {2258: 1, 3159: .25, 6953: .05, 6946: .1}
-
-
 class AbuHamedMinerLoot(unittest.TestCase):
     def test_other_miners_have_the_approved_region_sand_chances(self):
         for kind, chance in ((836,.25),(837,.25),(838,.75),(839,.75),(840,1),(841,1)):
@@ -41,12 +38,13 @@ class AbuHamedMinerLoot(unittest.TestCase):
                     drops = mobs.roll_table(kind, NS(random=lambda:next(rolls)))
                     self.assertEqual(any(t==target for t,n in drops),expected)
 
-    def test_only_sand_is_outside_the_random_loot_cap(self):
+    def test_approved_sand_and_emeralds_are_outside_the_random_loot_cap(self):
         for kind in (838,839,840,841,930,931):
-            self.assertEqual(mobs.independent_loot(kind),frozenset({2258}))
+            self.assertEqual(mobs.independent_loot(kind),frozenset({2258,3159}))
             drops=mobs.roll_table(kind,NS(random=lambda:0))
             self.assertIn((2258,1),drops)
-            self.assertEqual(len([t for t,n in drops if t!=2258]),mobs.MAX_DROPS)
+            self.assertIn((3159,1),drops)
+            self.assertEqual(len([t for t,n in drops if t not in (2258,3159)]),mobs.MAX_DROPS)
 
     def test_normal_ammunition_and_generator(self):
         path = Path(__file__).resolve().parents[1] / 'data/build_mob_types.py'

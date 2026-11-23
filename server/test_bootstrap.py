@@ -159,7 +159,7 @@ try:
     everything = get('/res/database/texts.xml?all=1')
     check('all=1 is not empty', len(everything) > 100000, True)
     sys.path.insert(0, HERE)
-    import world, items, quests, transport, names
+    import world, items, quests, transport, names, npcs
     ids = set(world.mob_types())
     ids |= {items.STRING_ID_OFFSET + t for t in items.catalogue()}
     # item descriptions, the id ss_si_* puts in desc: the wiki's, and the
@@ -178,6 +178,8 @@ try:
     ids |= set(quests.strings())
     # vehicle names and descriptions, the ids ts_si puts in name and desc
     ids |= set(transport.strings())
+    # Location-scoped NPC captions are preloaded independently of mob IDs.
+    ids |= set(npcs.PRESENTATION_NAMES)
     # clothing set names and descriptions, the ids ss_si_set puts in name and desc
     import sets                                        # noqa: E402
     ids |= set(sets.strings())
@@ -187,7 +189,7 @@ try:
     # and the reworked pieces' and the clothing cheques' words (setcraft.py)
     import setcraft                                    # noqa: E402
     ids |= set(setcraft.strings())
-    # Priced equipment also preloads the +3 allowance and wear-level note,
+    # Equipment also preloads its exact allowance and wear-level note,
     # including articles without an original/wiki description.
     ids |= {items.DESC_ID_OFFSET + t for t in items.catalogue()
             if items.equipment_level_text(t)}

@@ -49,7 +49,9 @@ class PlusTwoPressure(unittest.TestCase):
         target.stats.level = 20
         self.assertEqual(battle_balance.split(*args, ordinary=True), mob_plus_two)
         target.stats.role = 'mob'
-        for gap, expected in ((3, 897), (4, 523), (5, 2)):
+        # Final reviewed curve: floor(10000 * .748284 * .30) and
+        # floor(10000 * .748284 * .5 * .25); +5 remains near-impermeable.
+        for gap, expected in ((3, 2244), (4, 935), (5, 2)):
             target.stats.level = 16 + gap
             self.assertEqual(battle_balance.split(*args, ordinary=True), (expected, 0))
 

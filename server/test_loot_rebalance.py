@@ -24,6 +24,14 @@ import rooms
 import world
 
 ROOT = Path(__file__).resolve().parents[1]
+FOLLOWUP = json.loads((ROOT / 'data/loot_rebalance.json').read_text(encoding='utf-8'))['followup_2026_11_23']
+
+
+def followup_delta(kind, currency):
+    """Explicit release adjustment, without discarding the old calibration."""
+    return FOLLOWUP['income_delta_175'].get(str(kind), {}).get(currency + '_175', 0)
+
+
 sys.path.insert(0, str(ROOT / 'data'))
 import build_camp_patrols as builder
 
@@ -87,9 +95,10 @@ def carried_ammo_revenue(st, *, standard=True):
 
 
 def current_income_target(k, afro):
-    """The approved loot budget plus an existing carried-calibre change."""
+    """Old budget plus carried-calibre and explicit approved loot changes."""
     return (afro + carried_ammo_revenue(mobs.stats(k))
-            - carried_ammo_revenue(mobs.MobStats(k, balanced=False), standard=False))
+            - carried_ammo_revenue(mobs.MobStats(k, balanced=False), standard=False)
+            + followup_delta(k, 'afro'))
 
 
 class LootRebalance(unittest.TestCase):
@@ -110,7 +119,9 @@ class LootRebalance(unittest.TestCase):
                 seen.add(row['type'])
                 self.assertTrue(mobs.droppable(row['type']))
                 self.assertTrue(0 < row['chance'] <= 1)
-                self.assertEqual(row['independent'], row['type'] == mortimer.SAND)
+                expected = (row['type'] == mortimer.SAND or row['type'] == 3159
+                            and str(k) in FOLLOWUP['emerald_chances'])
+                self.assertEqual(row['independent'], expected)
 
     @patch.object(loot_rules, 'QUEST_MATERIALS', frozenset())
     def test_real_patrol_composition_meets_the_income_targets(self):
@@ -129,14 +140,15 @@ class LootRebalance(unittest.TestCase):
                 target = sum(current_income_target(k, profile['afro']) * n
                              for k, n in counts.items()) / total
                 self.assertAlmostEqual(a, target, delta=1)
-                self.assertAlmostEqual(g, profile['gold'], delta=.0001)
+                gold_adjustment = sum(followup_delta(k, 'gold') * n for k, n in counts.items()) / total
+                self.assertAlmostEqual(g, profile['gold'] + gold_adjustment, delta=.0001)
             else:
                 top = max(mobs.stats(k).level for k in counts)
                 for k in counts:
                     factor = 1 - .03 * (top - mobs.stats(k).level)
                     a, g = revenue(k)
                     self.assertAlmostEqual(a, current_income_target(k, profile['afro'] * factor), delta=1)
-                    self.assertAlmostEqual(g, profile['gold'] * factor, delta=.0001)
+                    self.assertAlmostEqual(g, profile['gold'] * factor + followup_delta(k, 'gold'), delta=.0001)
 
     def test_changed_calibre_uses_makeshift_ammo_and_preserves_quantity(self):
         for kind in (840, 841):
@@ -152,7 +164,7 @@ class LootRebalance(unittest.TestCase):
                 drops = mobs.carried(current, random.Random(kind))
                 self.assertEqual(items.catalogue()[drops[0][0]][1].rsplit('_', 1)[-1], 'ST')
 
-    def test_sa_base_income_is_105000_afro_and_1_2_gold(self):
+    def test_sa_base_income_keeps_105000_baseline_and_explicit_release_adjustment(self):
         profile = next(p for p in self.doc['targets'] if p['id'] == 'camp-263')
         counts = {int(k): n for k, n in profile['counts'].items()}
         total = sum(counts.values())
@@ -161,8 +173,10 @@ class LootRebalance(unittest.TestCase):
         carried_change = sum((carried_ammo_revenue(mobs.stats(k))
                               - carried_ammo_revenue(mobs.MobStats(k, balanced=False), standard=False)) * n
                              for k, n in counts.items()) / total
-        self.assertAlmostEqual(a - carried_change, 105000, delta=1)
-        self.assertAlmostEqual(g, 1.2, delta=.0001)
+        afro_adjustment = sum(followup_delta(k, 'afro') * n for k, n in counts.items()) / total
+        gold_adjustment = sum(followup_delta(k, 'gold') * n for k, n in counts.items()) / total
+        self.assertAlmostEqual(a - carried_change, 105000 + afro_adjustment, delta=1)
+        self.assertAlmostEqual(g, 1.2 + gold_adjustment, delta=.0001)
 
     def test_elite_roster_is_absent_from_every_patrol_and_not_officers(self):
         forbidden = ('командир', 'командер', 'полков', 'капитан', 'лейтенант', 'майор', 'казнач', 'бухгалтер')
@@ -235,14 +249,15 @@ class LootRebalance(unittest.TestCase):
                     if set(carriers) & before:
                         self.assertTrue(set(carriers) & after, (lid, q.type))
 
-    def test_sand_is_outside_cap_and_normal_random_rows_still_share_two_slots(self):
+    def test_sand_and_approved_emeralds_are_outside_the_two_ordinary_slots(self):
         for k in (836, 837, 838, 839, 840, 841, 930, 931):
             self.assertIn(mortimer.SAND, mobs.independent_loot(k))
             rng = random.Random(7)
             rng.random = lambda: 0
             drops = mobs.roll_table(k, rng)
             self.assertIn((mortimer.SAND, 1), drops)
-            self.assertLessEqual(len([t for t, n in drops if t != mortimer.SAND]), 2)
+            independent = mobs.independent_loot(k)
+            self.assertLessEqual(len([t for t, n in drops if t not in independent]), 2)
 
     def test_five_gold_valuables_expand_by_level_without_changing_quantity(self):
         for k, rows in loot_rules.records().items():

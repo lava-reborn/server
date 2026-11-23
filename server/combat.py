@@ -300,6 +300,31 @@ Weapon = namedtuple("Weapon", "num_shots dmin dmax opt_lo opt_hi max_range "
                     defaults=(False, True, 0, 0, 1.0))
 
 
+def machinegun_burst_limit(shooter, target, weapon):
+    """A full same-tier player survives one MG pull; later pulls stay lethal.
+
+    Called once per struck body before applying the burst. Only health is
+    bounded: stamina damage, ammunition, AP, accuracy and criticals are paid
+    normally. Impact vitals prevent this from protecting an already hurt foe.
+    """
+    if not target.is_player or weapon.num_shots <= 1:
+        return None
+    if shooter.is_player:
+        if weapon.spec != SPEC_OF_WEAPON[items.MACHINEGUN]:
+            return None
+    else:
+        type_id = getattr(shooter.stats, 'weapon_type_id', None)
+        params = items.params_of(type_id) if type_id is not None else None
+        if not params or params.get('weapon_type') != items.MACHINEGUN:
+            return None
+    if shooter.level - target.level not in (0, 1):
+        return None
+    vital = target.vitals()
+    if vital['hcur'] != vital['hmax'] or vital['scur'] != vital['smax']:
+        return None
+    return max(0, vital['hmax'] - 1)
+
+
 def checked_weapon(original, prepared):
     """Validate optional attack preparation before any acceptance side effect."""
     if not isinstance(prepared, Weapon):
@@ -2843,6 +2868,7 @@ class RoomCombat:
                      for eid, npc in room.npcs.items() if npc.root == world.MOB}
         eden_harvest.prepare_room(self)
         holdings.prepare_room(self)
+        battle_balance.prepare_world_boss_defence(self)
         # The ones that keep hours instead of the respawn timer (bosses.py):
         # keep_hours brings them in and sends them away.
         self.bosses = [m for m in self.mobs.values()
@@ -3420,6 +3446,7 @@ class RoomCombat:
         window = cover_window(len(covers))
         depth = 2 if weapon.through else 1
         struck = {}                 # body -> [hp, sp, hits, sp left]
+        machinegun_limits = {}      # one impact-vitals snapshot per body/pull
         pairs = []
         scatter_cone, scatter_dist = weapon.cone, dist
         if weapon.hit_cap < 1:
@@ -3487,6 +3514,11 @@ class RoomCombat:
                     dmg = max(1, int(dmg * BUSH_DAMAGE_SHARE)) if dmg > 0 else 0
                     st_dmg = max(1, int(st_dmg * BUSH_DAMAGE_SHARE)) if st_dmg > 0 else 0
                 h, s = self.bullet_damage(shooter, body, weapon, dmg, st_dmg, crit, rec[3])
+                if body not in machinegun_limits:
+                    machinegun_limits[body] = machinegun_burst_limit(shooter, body, weapon)
+                limit = machinegun_limits[body]
+                if limit is not None:
+                    h = min(h, max(0, limit - rec[0]))
                 rec[0] += h
                 rec[1] += s
                 rec[2] += 1
@@ -3574,8 +3606,12 @@ class RoomCombat:
                         self.store.boss_killed(self.boss_spot(mob) + ':respawn', deadline)
                         mob.base_respawn_at = deadline
             mob.capture = holdings.snapshot(self, mob, killer)
-            if mob.capture is not None and holdings.base_for(self.room.loc.id, mob.type_id):
-                holdings.settle(self, mob)
+            base = holdings.base_for(self.room.loc.id, mob.type_id)
+            if base is not None:
+                if mob.capture is None:
+                    holdings.base_capture_unavailable(self, base)
+                else:
+                    holdings.settle(self, mob)
         except Exception:
             mob.capture = None
             log.exception("  !!    mob %d (%s) killed in %s: who killed it not read",
@@ -3622,10 +3658,9 @@ class RoomCombat:
         if mob.stats.role == 'boss' and not include_scanner:
             # Boss ingots are guaranteed by their table, never by a bonus.
             return 1
-        if gap <= -4:
+        reward = mobs.loot_level_factor(gap)
+        if reward <= 0:
             return 0
-        reward = {-3: .25, -2: .5, -1: .75, 0: .95,
-                  1: 1, 2: 1.05, 3: 1.15}.get(gap, 1.25)
         scanner = (effects.multiplier(killer.sess, 'mob_drop')
                    if include_scanner and killer is not None and killer.is_player else 1)
         return reward * scanner
@@ -3955,6 +3990,7 @@ class RoomCombat:
         if mob.alive or mob.away:
             return
         mob.reset()
+        battle_balance.prepare_world_boss_defence(self, mob)
         mob._loot_materialized = False
         mob.cell = movement.get(self.room).free_cell(mob.home, exclude=mob)
         self.room.npcs[mob.eid] = rooms.NPC(mob.cell, mob.type_id, world.MOB)
@@ -3967,13 +4003,12 @@ class RoomCombat:
         """Weekly battle and ordinary occupation reuse distinct death checkpoints."""
         due = {m.eid: bosses.slot_of(m.type_id, t, self.room.loc.id) for m in self.bosses}
         base = holdings.base_for(self.room.loc.id)
-        held = holdings.paid_holder(self.store, base, t) if base is not None else None
         if base is not None and holdings.battle_slot(base, t) is None:
             # The battle's end identifies its occupation phase. Early rent
             # payment must not restore a cleared wave before capture closes.
             slot = holdings.occupation_slot(base, t)
             for mob in self.bosses:
-                if mob.type_id in base.troops or (held is not None and mob.type_id in base.guards):
+                if mob.type_id in base.troops:
                     due[mob.eid] = slot
         return due
 
@@ -4015,10 +4050,6 @@ class RoomCombat:
         for mob in self.bosses:
             due = due_slots[mob.eid]
             base = holdings.base_for(self.room.loc.id, mob.type_id)
-            if base is not None and due is not None and not holdings.guards_cleared(self, base, due):
-                if mob.alive:
-                    self.boss_leaves(mob)
-                continue
             if mob.away:
                 deadline = getattr(mob, 'base_respawn_at', None)
                 if due is not None and (due != mob.slot or deadline is not None and now >= deadline):
@@ -4028,9 +4059,9 @@ class RoomCombat:
             elif due is not None:
                 if due != mob.slot:
                     guard = holdings.guard_site(self.room.loc.id, mob.type_id)
-                    if mob.slot is not None and guard is not None and guard.kind == 'base':
-                        # A new battle must not inherit an occupation guard
-                        # kept wounded/in combat across the five-minute gap.
+                    if mob.slot is not None and (base is not None or guard is not None and guard.kind == 'base'):
+                        # A new battle must not inherit a previous-slot
+                        # defender kept wounded/in combat across the reset.
                         if mob.aim is not None:
                             mob.aim.cancel()
                             mob.aim = None

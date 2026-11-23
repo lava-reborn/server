@@ -89,7 +89,7 @@ class CampLootIntegration(unittest.TestCase):
                 patch.object(mob_equipment_loot, 'roll') as armour, \
                 patch.object(mobs, 'carried') as carried:
             self.assertEqual(mobs.loot_for(stats, FixedRandom(0), {self.a}, loc_id=80,
-                                          killer_level=5, multiplier=3.75), [(self.a, 1)])
+                                          killer_level=6, multiplier=3.75), [(self.a, 1)])
         armour.assert_not_called()
         carried.assert_not_called()
 

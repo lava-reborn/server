@@ -4,10 +4,12 @@ Uses the ordinary character and inventory on an isolated in-memory store.
 No balancing constants or live account state are modified.
 """
 import copy
+import asyncio
 import unittest
 from unittest.mock import patch
 
 import combat
+import battle_balance
 import effects
 import inventory
 import items
@@ -21,6 +23,49 @@ import test_training_ground as fixtures
 class StatPipeline(unittest.IsolatedAsyncioTestCase):
     asyncSetUp = fixtures.TrainingGround.asyncSetUp
     asyncTearDown = fixtures.TrainingGround.asyncTearDown
+
+    async def test_every_released_rifle_mode_aim_uses_small_uniform_followup_without_other_changes(self):
+        import shop_bands
+        guns = []
+        for gun in set(shop_bands.wares()) | set(range(7065, 7070)):
+            if (items.root_of(gun) == items.FIRE_ARM and not items.out_of_game(gun)
+                    and not items.acquisition_blocked(gun)
+                    and 6 <= inventory.item_level(gun) <= 17
+                    and items.params_of(gun)['weapon_type'] == items.RIFLE):
+                guns.append(gun)
+        self.assertGreaterEqual(len(guns), 20)
+        for gun in guns:
+            frozen = copy.deepcopy(items.params_of(gun))
+            for mode, shots in enumerate(frozen['fire_mods']):
+                if not shots:
+                    continue
+                with self.subTest(gun=gun, mode=mode):
+                    prepared = []
+                    for multiplier in (1, .95):
+                        fighter, character, _, _, events, row = attack_fixture(gun)
+                        for spec in character.spec:
+                            spec[0] = 5
+                        row.update(cur_mode=mode, ammo_type=frozen['comp_array'][0], ammo_count=100)
+                        with patch.object(battle_balance, 'RIFLE_SPREAD', multiplier), \
+                                patch.object(combat.pace, 'paced', side_effect=lambda seconds: seconds):
+                            combat.Fighter.use_fire(fighter, dict(obj='weapon', target='000000005'))
+                        try:
+                            self.assertIsNotNone(fighter.aim)
+                            args = fighter.aim._args[-1]
+                            prepared.append(args[3])
+                            delay = fighter.aim.when() - asyncio.get_running_loop().time()
+                            self.assertAlmostEqual(delay, frozen['fire_times'][mode] / 1000, delta=.02)
+                            self.assertEqual(args[4], frozen['fire_costs'][mode])
+                            self.assertEqual(row['ammo_count'], 100)
+                            self.assertEqual(next(p['num_shots'] for n, p in events if n == 'faAim'), shots)
+                        finally:
+                            combat.Fighter.cancel_timers(fighter)
+                    before, after = prepared
+                    self.assertAlmostEqual(after.cone, before.cone * .95)
+                    for field in before._fields:
+                        if field != 'cone':
+                            self.assertEqual(getattr(after, field), getattr(before, field), field)
+            self.assertEqual(items.params_of(gun), frozen)
 
     async def test_every_retail_ammo_calibre_reaches_actual_aim_with_all_its_bonuses(self):
         import shop_bands
@@ -51,6 +96,8 @@ class StatPipeline(unittest.IsolatedAsyncioTestCase):
                                                   ammo['acc_mod'], si['max_range'][mode])
                     if si['weapon_type'] in (items.ASSAULT, items.RIFLE) and si['fire_mods'][mode] == 1:
                         expected_cone *= .8
+                    if si['weapon_type'] == items.RIFLE:
+                        expected_cone *= .95
                     self.assertAlmostEqual(shot.cone, expected_cone)
                     self.assertEqual(shot.hit_cap, .95)
                     power = 1 + .03 * max(0, ch.attr(progression.INTELLECT) - 5)
@@ -293,6 +340,8 @@ class StatPipeline(unittest.IsolatedAsyncioTestCase):
                                                   ammo['acc_mod'], params['max_range'][mode])
                     if params['weapon_type'] in (items.ASSAULT, items.RIFLE) and params['fire_mods'][mode] == 1:
                         expected_cone *= .8
+                    if params['weapon_type'] == items.RIFLE:
+                        expected_cone *= .95
                     self.assertAlmostEqual(shot.cone, expected_cone)
                     intellect = 1 + .03 * max(0, ch.attr(progression.INTELLECT) - 5)
                     self.assertEqual(shot.dmin, max(1, round(params['h_damage_min'][mode] * intellect * ammo['dam_mod'])))

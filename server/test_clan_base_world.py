@@ -71,12 +71,20 @@ class ClanBaseWorldTests(unittest.TestCase):
                 with self.subTest(lid=lid, type_id=type_id):
                     base_medic = type_id == 1013 and lid in (609, 1443)
                     root = world.entity_root(type_id, world.mob_types()[type_id][0])
+                    # Presentation/service identity is checked for an eligible
+                    # clan visitor; live membership gates have separate tests.
+                    entry_allowed = Mock(return_value=True)
                     seat = NS(room=NS(loc=world.location(lid), npc=lambda _eid: (0, type_id, root)),
                               char_id=0, home_here=lambda _type: False,
+                              base_entry_allowed=entry_allowed,
                               combat=NS(mob_info=lambda _eid: {}, after_npc_info=Mock()))
                     frames = []
                     seat.send = lambda command, **params: frames.append((command, params))
                     server.Session.send_npc_info(seat, 123)
+                    if type_id in (688, 5275):
+                        entry_allowed.assert_called_once()
+                    else:
+                        entry_allowed.assert_not_called()
                     command, params = frames[0]
                     self.assertEqual(params['give_quests'], quests.given_by(type_id))
                     self.assertEqual(params['take_quests'], quests.taken_by(type_id))

@@ -18,34 +18,37 @@ from testkit import check, fails
 # --- exact sources and real loot rolls without active quests ---
 for mob in (838, 839, 840, 841):
     sand_chance = 0.75 if mob in (838, 839) else 1.0
-    emerald_chance = 0
+    emerald_chance = 0.7 if mob in (838, 839) else 1.0
     table = mobs.loot_table(mob)
     check('%d: configured sand/emerald chances and tiers' % mob,
           [(t, c, v) for t, c, v in table if t in (2258, 3159)],
-          [(2258, sand_chance, False)])
+          [(3159, emerald_chance, True), (2258, sand_chance, False)])
     # Force just the two new rows through the full loot_for path.
     values = [0 if t in (2258, 3159) else 1 for t, c, v in table if c < 1]
+    values.append(1.0)  # Explicitly fail the following shared equipment draw.
     rolls = iter(values)
     with patch.object(mobs, 'carried', return_value=[]):
         rng = type('Rolls', (), {'random': lambda self: next(rolls)})()
         check('%d: both items actually appear without a quest' % mob,
-              mobs.loot_for(mobs.stats(mob), rng), [(2258, 1)])
+              mobs.loot_for(mobs.stats(mob), rng), [(3159, 1), (2258, 1)])
     if mob in (840, 841):
-        # Guaranteed Peacekeeper sand ignores the random-loot cap.
+        # Guaranteed Peacekeeper sand and emerald ignore the random-loot cap.
         for value in (0.0, 0.999999):
             with patch.object(mobs, 'carried', return_value=[]):
                 rng = type('Fixed', (), {'random': lambda self: value})()
                 drops = mobs.loot_for(mobs.stats(mob), rng)
             check('%d: exactly one guaranteed sand' % mob,
                   [row for row in drops if row[0] == 2258], [(2258, 1)])
+            check('%d: exactly one guaranteed emerald' % mob,
+                  [row for row in drops if row[0] == 3159], [(3159, 1)])
             if value == 0.0:
                 check('%d: sand is outside the random-loot cap' % mob,
-                      len(drops), mobs.MAX_DROPS + 1)
+                      len(drops), mobs.MAX_DROPS + 2)
     else:
         # Fail every unrelated row: assert the exact 75% boundary.
         for value, expected in ((0.749999, [(2258, 1)]), (0.75, [])):
             rolls = iter([value if t == 2258 else 1.0
-                          for t, c, v in table if c < 1])
+                          for t, c, v in table if c < 1] + [1.0])
             with patch.object(mobs, 'carried', return_value=[]):
                 rng = type('Rolls', (), {'random': lambda self: next(rolls)})()
                 check('%d: exact 75 percent sand boundary' % mob,

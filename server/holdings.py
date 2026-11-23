@@ -5,10 +5,12 @@ second ownership system. Their original surfaces/interiors share one site.
 The Saturday 20:00–21:00 Moscow kill grants a payment reservation; the
 winning clan pays 1,500,000 afro from its treasury by 21:15, then owns the
 benefits until next Saturday 19:55, five minutes before the battle. Each week needs a new capture
-and payment. Three bodyguards and ten outer guards must die before the
-master appears. One clan may reserve/lease one base; warehouses do not count.
-Paid bases keep their defenders between battles, immune to their own clan.
-Only the ten ordinary guards return five minutes after death; the existing
+and payment. The master and three bodyguards arrive at the weekly battle
+start, independently of surviving outer guards. One clan may reserve/lease
+one base; warehouses do not count.
+Bases keep ten ordinary guards between battles, immune to the paid clan.
+The master and bodyguards stand only during the weekly battle window.
+The ordinary guards return five minutes after death; the existing
 boss checkpoints also hold that deadline across restarts. Capture waves do
 not respawn, including after an early payment in the same battle window.
 At least three living clan members of the site's minimum level must be in
@@ -84,8 +86,9 @@ What the holders get, in the site's room only:
             The site/day claim is atomic with the grant. The former
             personal ammo/afro quests 765-771 remain closed even in old journals.
 
-What is said. Nothing in the chat (the owner, 2026-10-09: no lines of the
-server's about captures): every outcome -- a capture, a defence, a kill that
+What is said. Warehouses keep the original silent capture policy. A base
+reports its pending winner/payment deadline, or why the squad did not qualify.
+Every outcome -- a capture, a defence, a kill that
 took nothing, the admin's order, a disband -- is a line in the log and a row
 in clan_holding_log. The flag's caption and the site's page carry the news.
 When the holder changes in the game process, the flag's frame goes again to
@@ -263,12 +266,6 @@ def guard_site(loc_id, type_id):
                  and int(type_id) in s.guards + s.troops) else None
 
 
-def guards_cleared(rc, s, slot):
-    """All scheduled defenders must have died in this window, not earlier."""
-    guards = [m for m in rc.mobs.values() if m.type_id in s.guards + s.troops]
-    return bool(guards) and all(not m.alive and m.slot == slot for m in guards)
-
-
 def reset_base(rc):
     """Five minutes before the weekly battle, clear the previous owner.
 
@@ -310,7 +307,7 @@ def battle_slot(s, now=None):
 
 
 def paid_holder(store, s, now=None):
-    """Only a current paid lease owns a base's benefits and public caption."""
+    """Only a current paid lease owns a base's benefits and friendly guards."""
     held = holder(store, s)
     now = bosses.clock() if now is None else now
     if (held is None or held["slot"] is None
@@ -535,7 +532,15 @@ def flag_for(store, loc_id, type_id, char_id):
     s = site_at(loc_id)
     if s is None or int(type_id) != s.flag:
         return None
-    held = paid_holder(store, s) if s.kind == "base" else holder(store, s)
+    held = holder(store, s)
+    if s.kind == "base":
+        paid = paid_holder(store, s)
+        payment_slot = events.table().window(s.payment).slot(bosses.clock())
+        pending = (held is not None and payment_slot is not None
+                   and held['slot'] == payment_slot and float(held['paid_until']) == 0)
+        # Show the reservation immediately after a successful kill. Only
+        # the flag is descriptive: every benefit still uses paid_holder.
+        held = paid if paid is not None else held if pending else None
     return held, s.kind != "base" and member_of(store, held, char_id)
 
 
@@ -608,8 +613,7 @@ def snapshot(rc, mob, killer):
     if s is None:
         return None
     now = bosses.clock()
-    if s.kind == "base" and (mob.slot is None or battle_slot(s, now) != mob.slot
-                             or not guards_cleared(rc, s, mob.slot)):
+    if s.kind == "base" and (mob.slot is None or battle_slot(s, now) != mob.slot):
         return None
     here, local_owners = {}, {}
     for sess in list(rc.room.players):
@@ -688,6 +692,39 @@ def _whose(held):
     return "clan %d «%s»" % (int(held["clan_id"]), held["name"]) if held else "nobody"
 
 
+def base_capture_unavailable(rc, s):
+    """A locally spawned/out-of-window boss is not a silent capture failure."""
+    for sess in list(rc.room.players):
+        sess.answer("База не захвачена: хозяина нужно победить в субботу с 20:00 до 21:00 по Москве.")
+
+
+def _base_capture_message(s, snap, won, member, excluded, status):
+    """Explain the committed outcome using the existing snapshot, not new hits."""
+    if status == 'ok':
+        day = datetime.fromtimestamp(snap['slot'], bosses.ZONE).date()
+        end = next((end for start, end in events.table().window(s.payment).openings(day)
+                    if start == snap['slot']), None)
+        deadline = ("до %s по Москве" % datetime.fromtimestamp(end, bosses.ZONE).strftime('%H:%M')
+                    if end is not None else "до окончания окна оплаты")
+        return ("База захвачена кланом «%s». Оплатите аренду у флага %s: %s афро из казны. "
+                "Бонусы и дружественная охрана действуют после оплаты."
+                % (won[1], deadline, format(s.rent, ',').replace(',', ' ')))
+    clan = int(member['clan_id']) if member is not None else None
+    if clan in excluded:
+        return ("Клан уже владеет другой базой или ещё может оплатить её аренду. "
+                "Одновременно можно владеть одной клановой базой; склады не учитываются.")
+    if status == 'none':
+        qualified = sum(f['clan'] == clan and f['here'] and f['alive']
+                        and f['level'] >= s.min_level and f['harm'] > 0
+                        for f in snap['fighters']) if clan is not None else 0
+        return ("База не захвачена: нужны %d живых соклановца уровня %d+ на этой локации, "
+                "каждый должен нанести урон хозяину. У вашего клана выполнили условия: %d из %d."
+                % (BASE_SQUAD, s.min_level, qualified, BASE_SQUAD))
+    if status == 'same':
+        return "Результат этого захвата уже учтён. Проверьте владельца и задание аренды у флага."
+    return "Захват базы не подтверждён: клан больше не существует или право на базу изменилось."
+
+
 def settle(rc, mob):
     """The holding a site's boss killed settles (combat.RoomCombat.
     corpse_gone, the snapshot taken at the kill): nothing when no clan
@@ -722,9 +759,7 @@ def settle(rc, mob):
             store.boss_killed(rc.boss_spot(mob), snap["slot"])
         for sess in list(rc.room.players):
             member = store.clan_member(sess.char_id) if sess.char_id else None
-            if member is not None and int(member["clan_id"]) in excluded:
-                sess.answer("Клан уже владеет другой базой или ещё может оплатить её аренду."
-                            " Одновременно можно владеть одной клановой базой; склады не учитываются.")
+            sess.answer(_base_capture_message(s, snap, won, member, excluded, status))
         if status == "ok":
             refresh(rc.room, s)
             return "capture"

@@ -235,7 +235,7 @@ class Laborant(unittest.TestCase):
         for type_id in types:
             row = dict(type_id=type_id, root=items.WEAR)
             self.assertEqual(inventory.item_level(type_id), 16)
-            minimum = 13 if type_id == 3726 else 16
+            minimum = 16  # Pouches are outside the weapon/set +3 allowance.
             for level in range(minimum):
                 self.assertFalse(inventory.wearable(row, level), (type_id, level))
             self.assertTrue(inventory.wearable(row, minimum))

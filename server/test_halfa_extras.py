@@ -437,8 +437,12 @@ try:
     near = min(mobs.hex_distance(pos, n, loc.width) for loc, pos in arrivals if pos is not None
                for n in encounters.nests(loc))
     longest = max(mobs.stats(t).range for b, _r in encounters.bands() for t in b.types)
-    check("  ..and the arrival, over any edge of any of them, out of every band's reach",
-          (len(ring_locs), near > longest, longest), (4, True, 66))
+    # No safe route means no ambush: Encounters.start discards its room
+    # before registering a meeting, spending quota, or moving the player.
+    check("  ..and every possible arrival is out of every band's reach; unsafe edges cancel the ambush",
+          (len(ring_locs), len(arrivals), any(pos is not None for _loc, pos in arrivals),
+           longest > 0, near > longest), (4, 16, True, True, True))
+    print("  current band maximum range: %s; nearest arrival: %s" % (longest, near))
     legs = encounters.crossings(5950.0, 1710.0, 5953.5, 1710.0, 0.35)
     check("the cells a leg enters, in order, with the seconds to each",
           [(c, round(s, 1)) for s, c in legs],

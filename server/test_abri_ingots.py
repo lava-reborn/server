@@ -500,9 +500,12 @@ try:
     c.send("selPers;num=0;")
     c.until(lambda f: f[0] == "lcall")
     arrival, pos = enter(c)
-    # Meet the gold minimum through the live session; keep combat skills unchanged.
+    # Meet the gold minimum through the live session.
     c.send("userMsg;entry=@/skill 3 3@;group=0;")
     c.frames()
+    # The admin-weapon scenario checks loot and cashing at this region's
+    # level, not the resistance of level10 guards to a starter character.
+    chat(c, "/skill 1 10")
 
     # --- Мортимер in the port market --------------------------------------------------------
     check("the port market of Абри: the room the player stands in",
@@ -562,7 +565,9 @@ try:
     bag_at = [p["hex"][0] for p in named(got, "ss_loot") if p.get("s_status") == 1]
     check("his bag lies where he fell", len(bag_at), 1)
     if bag_at and boss_ids:
-        placed_now = dict(placed)
+        # A guard can die as collateral while shooting the boss. Use live
+        # scene occupants rather than treating the arrival snapshot as alive.
+        placed_now = {i: cell for i, cell in c.scene_cells.items() if i in infos}
         for n, p in c.seen:
             if n == "userMove" and p.get("id") in placed_now:
                 placed_now[p["id"]] = p["path"][-1]

@@ -807,6 +807,14 @@ def carried(st, rng, multiplier=1):
     return standard_ammunition(out) if out else [(FALLBACK_LOOT, 1)]
 
 
+def loot_level_factor(gap):
+    """Random PvE loot only; XP and PvP death losses have separate rules."""
+    if gap <= -5:
+        return 0
+    return {-4: .25, -3: .5, -2: 1, -1: 1, 0: 1,
+            1: 1, 2: 1.05, 3: 1.15}.get(gap, 1.25)
+
+
 def loot_for(st, rng, wanted=(), *, loc_id=None, ambush_camp=None,
              killer_level=None, multiplier=1, gold_multiplier=1,
              box_player_kill=False, box_weapon_type=None):
@@ -816,7 +824,7 @@ def loot_for(st, rng, wanted=(), *, loc_id=None, ambush_camp=None,
     drop_loot still turns away anything out of the game (items.out_of_game),
     whatever a list says."""
     if st.role != 'object' and (multiplier <= 0 or
-            (killer_level is not None and killer_level - st.level >= 4)):
+            (killer_level is not None and loot_level_factor(st.level - killer_level) <= 0)):
         personal = [t for t in wanted if personal_quest_item(t)]
         out = quest_roll(st.type_id, personal, rng) if personal else []
         if st.role == 'boss':

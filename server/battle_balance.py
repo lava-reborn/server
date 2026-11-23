@@ -31,6 +31,7 @@ GAP_MAX = 3
 ORDINARY_LEVEL_ACCURACY = .05
 PLAYER_HIT_CAP = .95
 SINGLE_SHOT_SPREAD = .8
+RIFLE_SPREAD = .95
 MOB_BALANCE_DIVISOR = 1.5
 
 
@@ -183,6 +184,51 @@ def ordinary_attacker(shooter, target, ordinary):
             and not getattr(shooter, '_holding_prepared', False))
 
 
+def world_boss_defence(target, ordinary=False):
+    """Room-local ceilings only; shared stats and private/site copies stay intact."""
+    if (ordinary and not target.is_player and getattr(target.stats, 'role', None) == 'boss'
+            and not getattr(target, '_holding_prepared', False)
+            and getattr(target, 'training_ground', None) is None):
+        return getattr(target, '_world_boss_defence_ceiling', None)
+    return None
+
+
+def target_defence_level(target, ordinary=False):
+    actual = level(target)
+    if ordinary and not target.is_player and getattr(target.stats, 'role', None) == 'boss':
+        # Preserve the previously reviewed gentle boss equivalence. A local
+        # ceiling may only lower resistance, never make a weaker boss harder.
+        actual -= 2
+        ceiling = world_boss_defence(target, ordinary)
+        if ceiling is not None:
+            actual = min(actual, ceiling[0])
+    return actual
+
+
+def prepare_world_boss_defence(rc, target=None):
+    """Snapshot native ordinary defenders once on room creation/boss arrival.
+
+    The highest ordinary level in this room supplies the armour/antikrit
+    ceilings. Rooms without ordinary inhabitants retain their old rules.
+    Dead/absent ordinary inhabitants still define the room's difficulty.
+    """
+    targets = [mob for mob in (rc.mobs.values() if target is None else (target,))
+               if mob.stats.role == 'boss' and not getattr(mob, '_holding_prepared', False)
+               and getattr(mob, 'training_ground', None) is None
+               and mob.type_id in world_boss_damage_references()]
+    if not targets:
+        return
+    ordinary = [mob.stats for mob in rc.mobs.values()
+                if not getattr(mob, '_holding_prepared', False)
+                and mob.stats.role in ('mob', 'animal', 'turret') and mob.stats.can_attack]
+    highest = max((stats.level for stats in ordinary), default=None)
+    peers = [stats for stats in ordinary if stats.level == highest]
+    ceiling = ((highest, max(stats.armor for stats in peers), max(stats.crit_evade for stats in peers))
+               if peers else None)
+    for mob in targets:
+        mob._world_boss_defence_ceiling = ceiling
+
+
 def split(shooter, target, damage, piercing, critical, stamina_left, stamina_damage=0, melee=False, rifle=False, ordinary=False):
     pressure_stamina = 0
     if ordinary_attacker(shooter, target, ordinary) and not getattr(shooter.stats, 'plain_weapon', False):
@@ -200,7 +246,7 @@ def split(shooter, target, damage, piercing, critical, stamina_left, stamina_dam
         pressure_stamina = int(damage * ratio)
     if shooter.is_player and not target.is_player and getattr(target.stats, 'role', None) != 'object':
         player_level = level(shooter)
-        gap = level(target) - player_level
+        gap = target_defence_level(target, ordinary) - player_level
         camp = (ordinary and getattr(target.stats, 'role', None) in ('mob', 'animal', 'turret')
                 and not getattr(target, '_holding_prepared', False))
         # Ordinary PvE moves the reviewed difficulty steps up one level:
@@ -208,8 +254,6 @@ def split(shooter, target, damage, piercing, critical, stamina_left, stamina_dam
         # The private simulator and player-versus-player formulas stay pinned.
         if ordinary:
             gap -= 1
-        if ordinary and getattr(target.stats, 'role', None) == 'boss':
-            gap -= 2
         factors = coefficients()[1].get(max(1, min(20, player_level)), {})
         factor = factors.get(min(gap, GAP_MAX), 1) if gap >= 1 else 1
         if ordinary and gap == 2:
@@ -243,9 +287,16 @@ def split(shooter, target, damage, piercing, critical, stamina_left, stamina_dam
     if critical:
         stamina = 0 if melee else min(damage, left)
         return damage, stamina + min(pressure_stamina, max(0, left - stamina))
-    armour = max(0, target.armor()) / max(.5, piercing)
+    raw_armour = max(0, target.armor())
+    ceiling = world_boss_defence(target, ordinary) if shooter.is_player else None
+    armour = (min(raw_armour, ceiling[1]) if ceiling is not None else raw_armour) / max(.5, piercing)
     if rifle and not melee:
-        share = min(MAX_ARMOUR_SHARE, armour / (armour + reference_armour(level(target))))
+        previous_armour = raw_armour / max(.5, piercing)
+        share = min(MAX_ARMOUR_SHARE, previous_armour / (previous_armour + reference_armour(level(target))))
+        if ceiling is not None:
+            # Lower reference armour alone would increase rifle absorption.
+            # Keep the better of the old rule and the capped local rule.
+            share = min(share, armour / (armour + reference_armour(target_defence_level(target, ordinary))))
     else:
         share = min(1, armour / max(1, reference_armour(level(shooter) - ARMOUR_LEVEL_GAP)))
     moved = int(damage * share)
@@ -261,10 +312,12 @@ def critical_chance(shooter, target, chance, optimal=True, *, ordinary=False):
     if (ordinary and shooter.is_player and not target.is_player
             and getattr(target.stats, 'role', None) in ('mob', 'animal', 'turret', 'boss')
             and not getattr(target, '_holding_prepared', False)):
-        gap = level(target) - level(shooter)
-        # Keep the agreed boss +4 / ordinary mob +2 equivalence.
-        if target.stats.role == 'boss':
-            gap -= 2
+        gap = target_defence_level(target, ordinary) - level(shooter)
+        ceiling = world_boss_defence(target, ordinary)
+        if ceiling is not None:
+            # Both native Mob evade accessors return this same stat; callers
+            # already subtracted it before entering this shared chance gate.
+            chance += max(0, target.stats.crit_evade - ceiling[2])
         ratio = ordinary_mob_pressure()['player_crit_ratios'][max(-4, min(4, gap)) + 4]
         chance = max(0, chance) * ratio
     if not shooter.is_player and target.is_player:
@@ -329,6 +382,10 @@ def weapon(weapon, character, row, ammo):
         if (weapon.num_shots == 1 and kind in (items.ASSAULT, items.RIFLE)
                 and 0 <= mode < len(modes) and modes[mode] == 1):
             spread *= SINGLE_SHOT_SPREAD
+        # A small uniform correction applies to every ordinary rifle mode.
+        # Item scatter, ammo, specialisation and the accuracy cap stay intact.
+        if kind == items.RIFLE:
+            spread *= RIFLE_SPREAD
     power = 1 + DAMAGE_PER_INTELLECT * intellect(character)
     damage, stamina, reach = (ammo.get(key, 1) for key in ('dam_mod', 'st_mod', 'range_mod'))
     return weapon._replace(dmin=max(1, round(weapon.dmin * power * damage)),
