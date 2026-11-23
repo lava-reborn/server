@@ -38,6 +38,8 @@ class Finisher:
     credit_xp = combat.Fighter.credit_xp
     level = property(lambda self: self.ch.level)
     character = lambda self: self.ch
+    present = combat.Fighter.present
+    preparing = lambda self: False
     stats_changed = lambda *args: None
     hold_stats = lambda *args: None
     release_stats = lambda *args: None
@@ -73,6 +75,7 @@ async def exercise():
                 inv=NS(push_di=lambda row: None, wear_uniq=lambda *a: None))
             room = NS(ws=False, broadcast=lambda frame: None,
                 npcs={2: target, 3: other}, players=[killer.sess], loc=NS(title='test'))
+            killer.sess.room = room
             rc = NS(room=room, within_fire=lambda *a: True,
                 after_hostile=lambda *a: None, hit_landed=lambda *a: None,
                 push_vitals=lambda *a: None, quest_wants=lambda *a: frozenset(),

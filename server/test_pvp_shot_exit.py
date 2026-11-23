@@ -1,4 +1,4 @@
-"""Paid PvP shots engage in range; only actual hits start the exit timer."""
+"""Paid targeted shots engage in range; only hits start the exit timer."""
 import unittest
 from types import SimpleNamespace as NS
 from unittest.mock import patch
@@ -39,6 +39,12 @@ class PvpShotExit(unittest.IsolatedAsyncioTestCase):
 
     def flags(self, seat):
         return [p for name, p in seat.writer.frames if name == 'lch' and 'exit_lock' in p]
+
+    def mob(self, *, type_id=258, cell=None):
+        mob = mobs.Mob(150, type_id, self.b.pos if cell is None else cell)
+        self.rc.mobs[mob.eid] = mob
+        self.room.npcs[mob.eid] = rooms.NPC(mob.cell, mob.type_id, 2)
+        return mob
 
     def assert_no_intent_lock(self):
         for seat in (self.a, self.b):
@@ -209,21 +215,105 @@ class PvpShotExit(unittest.IsolatedAsyncioTestCase):
         with self.case.at(102):
             self.assertFalse(self.a.combat.in_combat())
 
-    async def test_pve_wall_still_prevents_aggro_and_clear_miss_still_provokes(self):
-        mob = mobs.Mob(150, 258, self.b.pos)
-        self.rc.mobs[mob.eid] = mob
-        self.room.npcs[mob.eid] = rooms.NPC(mob.cell, mob.type_id, 2)
-        self.room.loc.obstacles = {45}
-        self.fire(target=mob)
+    async def test_pve_cover_and_clear_miss_provoke_without_damage_or_exit_timer(self):
+        mob = self.mob()
+        for obstacle in (43, 45, 47, None):
+            with self.subTest(obstacle=obstacle):
+                mob.target = None
+                self.room.ws = False
+                self.room.loc.obstacles = set() if obstacle is None else {obstacle}
+                self.clear()
+                before = mob.vitals()
+                self.fire(target=mob)
+                self.assertEqual(mob.vitals(), before)
+                self.assertIs(mob.target, self.a.combat)
+                self.rc.calm(100)
+                self.assertTrue(self.room.ws)
+                self.assertTrue(self.rc.hostilities(100))
+                self.assertTrue(any(name == ('faMiss' if obstacle is None else 'faWall')
+                                    for name, _ in self.a.writer.frames))
+                self.assertFalse(any(name == 'faHit' for name, _ in self.a.writer.frames))
+                self.assertEqual(self.flags(self.a), [])
+                self.assertEqual(self.a.combat.last_hit, -1e9)
+                with self.case.at(100):
+                    self.assertFalse(self.a.combat.refuse_leave())
+
+    async def test_pve_exact_range_engages_but_short_empty_and_absent_shots_do_not(self):
+        mob = self.mob()
+        distance = mobs.hex_distance(self.a.pos, mob.cell, self.room.loc.width)
+        self.fire(target=mob, weapon=self.weapon._replace(max_range=distance - 1e-6))
         self.assertIsNone(mob.target)
-        self.assertEqual(self.flags(self.a), [])
-        self.assertEqual(self.a.combat.last_hit, -1e9)
-        self.room.loc.obstacles = set()
-        self.clear()
+        self.store.update_item(self.gun['uniq'], ammo_count=0)
+        self.fire(101, target=mob)
+        self.assertIsNone(mob.target)
+        self.store.update_item(self.gun['uniq'], ammo_count=7)
+        del self.rc.mobs[mob.eid]
         self.fire(102, target=mob)
+        self.assertIsNone(mob.target)
+        self.rc.mobs[mob.eid] = mob
+        self.fire(103, target=mob, weapon=self.weapon._replace(max_range=distance))
         self.assertIs(mob.target, self.a.combat)
-        self.assertEqual(self.flags(self.a), [])
         self.assertEqual(self.a.combat.last_hit, -1e9)
+
+    async def test_pve_aim_starts_war_then_paid_wall_shot_sustains_it(self):
+        mob = self.mob(cell=self.a.pos + 4)
+        self.room.ws = False
+        self.room.loc.obstacles = {self.a.pos + 2}
+        params = dict(obj=inventory.oid_of(self.gun), target='1%08x' % mob.eid)
+        with self.case.at(100):
+            self.a.combat.use_fire(params)
+            self.assertTrue(self.room.ws)
+            self.assertIsNotNone(self.a.combat.aim)
+            self.assertEqual(self.a.combat.last_hit, -1e9)
+            self.assertTrue(self.rc.hostilities(100))
+            self.assertFalse(self.a.combat.refuse_leave())
+        with patch.object(combat, 'bullet_offset', return_value=100):
+            self.case.finish_aim(self.a)
+        self.assertIs(mob.target, self.a.combat)
+        self.rc.calm(101)
+        self.assertTrue(self.room.ws)
+        self.assertEqual(self.store.item(self.gun['uniq'])['ammo_count'], 7)
+        self.assertEqual(self.a.combat.last_hit, -1e9)
+
+    async def test_pve_cancelled_aim_does_not_provoke_or_consume_a_round(self):
+        mob = self.mob(cell=self.a.pos + 4)
+        self.room.ws = False
+        params = dict(obj=inventory.oid_of(self.gun), target='1%08x' % mob.eid)
+        with self.case.at(100):
+            self.a.combat.use_fire(params)
+            timer = self.a.combat.aim
+            callback, args = timer._callback, timer._args
+            self.a.combat.cancel_pending()
+            callback(*args)
+            self.rc.calm(100)
+        self.assertIsNone(mob.target)
+        self.assertFalse(self.room.ws)
+        self.assertEqual(self.store.item(self.gun['uniq'])['ammo_count'], 8)
+        self.assertEqual(self.a.combat.last_hit, -1e9)
+
+    async def test_pve_objects_and_friendly_guards_do_not_start_persistent_war(self):
+        box = self.mob(type_id=409)
+        self.fire(target=box)
+        self.assertIsNone(box.target)
+        guard = self.mob()
+        with patch.object(combat.holdings, 'defender_friendly', return_value=True):
+            self.fire(101, target=guard)
+        self.assertIsNone(guard.target)
+        self.rc.calm(101)
+        self.assertFalse(self.room.ws)
+
+    async def test_pve_hit_starts_timer_and_wall_shot_does_not_refresh_it(self):
+        mob = self.mob()
+        self.fire(target=mob, offset=0)
+        self.assertEqual(self.a.combat.last_hit, 100)
+        self.room.loc.obstacles = {45}
+        self.fire(110, target=mob)
+        self.assertEqual(self.a.combat.last_hit, 100)
+        with self.case.at(110):
+            self.assertEqual(self.a.combat.exit_timer_left(), 5)
+            self.assertTrue(self.a.combat.refuse_leave())
+        with self.case.at(115):
+            self.assertFalse(self.a.combat.refuse_leave())
 
 
 if __name__ == '__main__':

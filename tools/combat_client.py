@@ -177,6 +177,13 @@ def __bfRemotePrimary(obj):
         return
     return this.__bfRemotePrimaryOrig(obj)
 
+def __bfFirearmInit(obj):
+    # Item.initialize can synchronously publish cached names via itemUpdate.
+    # Char.changeWeapon needs the stance before that first notification;
+    # mobs do not request DI that could otherwise trigger a later refresh.
+    this.weapon_type = obj.weapon_type
+    return this.__bfFirearmInitOrig(obj)
+
 def __bfTrainingClose(obj):
     if obj:
         if obj.target:
@@ -497,6 +504,7 @@ def patches(Asm, undef, *, training=False):
         (('gpui','CharInterface'), 'showKrit', '__bfCritCardOrig', '__bfCritCard'),
         (('gpui','CharInterface'), 'showArmorLevel', '__bfArmorCardOrig', '__bfArmorCard'),
         (('core','player','PersEquip'), 'ss_obj_move', '__bfRemotePrimaryOrig', '__bfRemotePrimary'),
+        (('core','objects','FireArm'), 'initialize', '__bfFirearmInitOrig', '__bfFirearmInit'),
         (('core','player','Training'), 'close', '__bfTrainingCloseOrig', '__bfTrainingClose'),
         (('core','player','Gamer'), 'gotoLoot', '__bfLootGoOrig', '__bfLootGo'),
         (('core','player','Gamer'), 'createLoot', '__bfLootOpenOrig', '__bfLootOpen'),
@@ -518,5 +526,7 @@ def patches(Asm, undef, *, training=False):
     medicine = medicine_patches(Asm, undef)
     from respawn_client import patches as respawn_patches
     respawn = respawn_patches(Asm, undef)
-    return dict(globals=functions + recovery['globals'] + medicine['globals'] + respawn['globals'],
-                wraps=tuple(wraps) + recovery['wraps'] + medicine['wraps'] + respawn['wraps'])
+    from weapon_range_client import patches as range_patches
+    ranges = range_patches(Asm, undef)
+    return dict(globals=functions + recovery['globals'] + medicine['globals'] + respawn['globals'] + ranges['globals'],
+                wraps=tuple(wraps) + recovery['wraps'] + medicine['wraps'] + respawn['wraps'] + ranges['wraps'])

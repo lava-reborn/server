@@ -210,10 +210,10 @@ def modes(ground, gun, distance):
             ammo.get('piercing', 1), combat.cone_of(factor, si['target_size'][mode],
                 ammo.get('acc_mod', 1) or 1, si['max_range'][mode]), 0,
             progression.SHOOTING, spec)
-        weapon = enemy.combat.prepare_weapon(weapon, ammo, gun, mode)
+        weapon = enemy.combat.prepare_weapon(weapon, ammo, dict(gun, cur_mode=mode), mode)
         if distance > weapon.max_range:
             continue
-        hit = combat.hit_probability(weapon.cone, distance)
+        hit = combat.hit_probability(weapon.cone, distance, weapon.hit_cap)
         # Expected HP per time spent aiming/firing; no RNG or simulated shots.
         duration = max(.1, (si['fire_times'][mode] + combat.action_animation.duration_ms(enemy, si, shots)) / 1000)
         score = shots * (weapon.dmin + weapon.dmax) / 2 * hit / duration

@@ -156,7 +156,7 @@ class CombatDefaults(unittest.TestCase):
         weapon = combat.Weapon(1, 100, 120, 3, 10, 20, 7, .1, 25, 1, 2)
         target = NS(is_player=True, character=lambda: character,
                     armor=lambda: 0, crit_evade_ranged=lambda: 3)
-        self.assertEqual(fighter.prepare_weapon(weapon, {}, {}), weapon)
+        self.assertEqual(fighter.prepare_weapon(weapon, {}, {}), weapon._replace(hit_cap=.95))
         self.assertEqual(fighter.prepare_melee((10, 20), None), (10, 20))
         for damage in (0, 1, 55, 200):
             for stamina in (0, 10, 1000):

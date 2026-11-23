@@ -45,9 +45,14 @@ class StatPipeline(unittest.IsolatedAsyncioTestCase):
                     self.assertIsNotNone(f.aim)
                     shot = f.aim._args[-1][3]
                     spec = combat.SPEC_OF_WEAPON[si['weapon_type']]
-                    self.assertAlmostEqual(shot.cone, combat.cone_of(
-                        combat.spread_factor(ch.skill_level(progression.SHOOTING), ch.spec_level(spec)),
-                        si['target_size'][mode], ammo['acc_mod'], si['max_range'][mode]))
+                    factor = max(.1, 1 + (.7 - .65 / 20 * ch.skill_level(progression.SHOOTING))
+                                 + (.8 - .75 / 5 * max(0, ch.spec_level(spec))))
+                    expected_cone = combat.cone_of(factor, si['target_size'][mode],
+                                                  ammo['acc_mod'], si['max_range'][mode])
+                    if si['weapon_type'] in (items.ASSAULT, items.RIFLE) and si['fire_mods'][mode] == 1:
+                        expected_cone *= .8
+                    self.assertAlmostEqual(shot.cone, expected_cone)
+                    self.assertEqual(shot.hit_cap, .95)
                     power = 1 + .03 * max(0, ch.attr(progression.INTELLECT) - 5)
                     self.assertEqual(shot.dmin, max(1, round(si['h_damage_min'][mode] * power * ammo['dam_mod'])))
                     self.assertEqual(shot.sdmin, round(si.get('st_damage_min', [0] * 3)[mode] * power * ammo['st_mod']))
@@ -95,10 +100,11 @@ class StatPipeline(unittest.IsolatedAsyncioTestCase):
                 self.assertEqual((shot.dmin, shot.dmax, shot.sdmin, shot.sdmax), (1100, 2200, 550, 1100))
                 self.assertEqual(self.s.combat.prepare_melee((100, 200), dict(type_id=6240)), (100, 200))
                 for distance in (1, 5, 10, 20):
-                    base = combat.hit_probability(weapon.cone, distance)
-                    actual = combat.hit_probability(shot.cone, distance)
-                    self.assertGreaterEqual(actual + 1e-9, base * ratio)
-                self.assertAlmostEqual(shot.cone, weapon.cone / ratio)
+                    base = combat.hit_probability(weapon.cone * .8, distance, .95)
+                    actual = combat.hit_probability(shot.cone, distance, shot.hit_cap)
+                    self.assertAlmostEqual(actual, base * ratio)
+                self.assertAlmostEqual(shot.cone, weapon.cone * .8 / ratio)
+                self.assertAlmostEqual(shot.hit_cap, .95 * ratio)
         self.assertEqual((weapon.dmin, weapon.dmax, weapon.cone), (1000, 2000, .1))
 
     def manager(self):
@@ -281,8 +287,12 @@ class StatPipeline(unittest.IsolatedAsyncioTestCase):
                     ammo = items.params_of(ammo_type)
                     self.assertEqual(shot.piercing, ammo['piercing'])
                     spec = combat.SPEC_OF_WEAPON[params['weapon_type']]
-                    expected_cone = combat.cone_of(combat.spread_factor(ch.skill_level(progression.SHOOTING),
-                        ch.spec_level(spec)), params['target_size'][mode], ammo['acc_mod'], params['max_range'][mode])
+                    factor = max(.1, 1 + (.7 - .65 / 20 * ch.skill_level(progression.SHOOTING))
+                                 + (.8 - .75 / 5 * max(0, ch.spec_level(spec))))
+                    expected_cone = combat.cone_of(factor, params['target_size'][mode],
+                                                  ammo['acc_mod'], params['max_range'][mode])
+                    if params['weapon_type'] in (items.ASSAULT, items.RIFLE) and params['fire_mods'][mode] == 1:
+                        expected_cone *= .8
                     self.assertAlmostEqual(shot.cone, expected_cone)
                     intellect = 1 + .03 * max(0, ch.attr(progression.INTELLECT) - 5)
                     self.assertEqual(shot.dmin, max(1, round(params['h_damage_min'][mode] * intellect * ammo['dam_mod'])))

@@ -292,17 +292,22 @@ def pull(si, mode, ammo):
 # player it was not aimed at (not with a gun a quest lends, quests.lent).
 # sdmin/sdmax are the gun's independent stamina damage. Creature curves
 # define only health damage, so their extra stamina component stays zero.
+# hit_cap bounds the ordinary player's accuracy through that same scatter;
+# the range's original rules and NPC attacks retain the default of 1.
 Weapon = namedtuple("Weapon", "num_shots dmin dmax opt_lo opt_hi max_range "
-                              "piercing cone crit skill spec through at_players sdmin sdmax",
-                    defaults=(False, True, 0, 0))
+                              "piercing cone crit skill spec through at_players sdmin sdmax hit_cap",
+                    defaults=(False, True, 0, 0, 1.0))
 
 
 def checked_weapon(original, prepared):
     """Validate optional attack preparation before any acceptance side effect."""
-    if prepared is original:
-        return original
     if not isinstance(prepared, Weapon):
         raise ValueError("Weapon preparation must return a Weapon")
+    if (isinstance(prepared.hit_cap, bool) or not isinstance(prepared.hit_cap, (int, float))
+            or not math.isfinite(prepared.hit_cap) or not 0 < prepared.hit_cap <= 1):
+        raise ValueError("Invalid prepared weapon field: hit_cap")
+    if prepared is original:
+        return original
     for field in ('num_shots', 'skill', 'spec', 'through', 'at_players'):
         if getattr(prepared, field) != getattr(original, field):
             raise ValueError("Weapon preparation changed attack identity: " + field)
@@ -622,11 +627,11 @@ def cone_of(factor, target_size, acc_mod, max_range):
     return factor * target_size * acc_mod / float(max_range)
 
 
-def hit_probability(cone, dist):
+def hit_probability(cone, dist, hit_cap=1.0):
     """What the scatter leaves of a shot at this distance, 0..1: the
-    target's width over the cone's, once the cone is wider than it."""
+    target's width over the cone's, limited by the prepared accuracy cap."""
     width = cone * dist
-    return 1.0 if width <= TARGET_SIZE else TARGET_SIZE / width
+    return min(hit_cap, 1.0 if width <= TARGET_SIZE else TARGET_SIZE / width)
 
 
 def bullet_offset(cone, dist, rng=None):
@@ -1452,7 +1457,7 @@ class Fighter:
         as its target keeps you for as long as you stay (mobs.Mob.think),
         and the room at war with it (RoomCombat.hostilities) -- but the way
         out is yours once the timer has run out, the creature still at your
-        heels. A shot at another player in range can keep the room at war
+        heels. A shot at an opponent in range can keep the room at war
         even when it misses or cover stops it, but only a hit given or
         taken restarts this personal countdown.
 
@@ -1864,29 +1869,18 @@ class Fighter:
             rounds = weapon.num_shots
         spent = min(rounds, row["ammo_count"]) if row else 0
         live = weapon.num_shots * spent // rounds if rounds else 0
-        # PvP intent depends on range, not cover. A real, paid shot at
-        # another present opponent engages the pair; only hits hold exits.
-        pvp_shot = (live > 0 and self.is_player and target is not None
-                    and target.is_player and target is not self
-                    and self.sess.room is rc.room and target.sess.room is rc.room
-                    and self.present(rc) and target.present(rc)
+        # Intent depends on range, not cover. Both creatures and players
+        # react to a paid shot at their figure; only actual hits hold exits.
+        shot_in_range = (live > 0 and self.is_player and target is not None
+                         and target is not self and self.sess.room is rc.room
+                         and self.present(rc)
+                         and rc.within_fire(self, target, weapon.max_range))
+        pvp_shot = (shot_in_range and target.is_player
+                    and target.sess.room is rc.room
                     and self.pvp_allowed() and target.pvp_allowed()
                     and not Fighter.same_clan(self, target)
-                    and not Fighter.allied(self, target)
-                    and mobs.hex_distance(self.cell, target.cell, self.sess.loc.width) <= weapon.max_range)
+                    and not Fighter.allied(self, target))
         pool = target.hp if target is not None and not target.is_player else 0
-        # Asked before the burst, which may kill it: whether the rounds could
-        # have got there at all. Only then is a creature provoked. It
-        # walks the line the burst walks (shot_wall), and a fault in it is
-        # no reason to keep the burst back: faAim has announced its pairs,
-        # and raised out of here none of them went and nothing was paid. The
-        # error log has it; the shot provokes nobody.
-        try:
-            reached = rc.within_fire(self, target, weapon.max_range)
-        except Exception:
-            log.exception("  !!    the line of fire of %s failed before its burst: it"
-                          " provokes nobody", self.eid)
-            reached = False
         others = []
         recovery_ms = Fighter.commit_animation(self, items.params_of(row['type_id']), weapon.num_shots)
         h, s, hits, killed = rc.burst(self, target, hexcell, weapon, live, others,
@@ -1922,10 +1916,10 @@ class Fighter:
             for body, oh, os_, _dead, opool in others:
                 if not body.is_player:
                     self.award_xp(weapon.skill, weapon.spec, min(oh, opool) + os_, body)
-            # Creatures still require a clear line. A paid PvP shot in range
-            # engages its intended opponent even when hard cover stopped it.
+            # A paid shot in range engages its intended opponent even when
+            # hard cover stopped it. Objects and friendly guards do not aggro.
             # Only actual hits refresh the native countdown in burst.
-            if pvp_shot or (reached and (target is None or not target.is_player)):
+            if pvp_shot or (shot_in_range and not target.is_player):
                 rc.after_hostile(self, target)
             for body, _h, _s, _dead, _pool in others:
                 rc.after_hostile(self, body)
@@ -3063,15 +3057,15 @@ class RoomCombat:
             mob.ap = mob.ap_max
 
     def within_fire(self, shooter, target, max_range):
-        """Whether a burst from shooter can reach target at all: it is here,
-        no farther than max_range, and no obstacle stands between (shot_wall,
-        the line burst itself flies). Nothing about the scatter: a round that
-        flies past within reach still flew past."""
+        """A present intended target in range, independently of cover/scatter.
+
+        The burst still traces obstacles before applying damage. This check
+        only decides whether the intended opponent reacts to the shot.
+        """
         if target is None or not target.present(self):
             return False
         width = self.room.loc.width
-        return (mobs.hex_distance(shooter.cell, target.cell, width) <= max_range
-                and shot_wall(self.room.loc, shooter.cell, target.cell) is None)
+        return mobs.hex_distance(shooter.cell, target.cell, width) <= max_range
 
     def after_hostile(self, attacker, target):
         """Bookkeeping after any shot or swing: the encounter of two players
@@ -3395,8 +3389,15 @@ class RoomCombat:
         depth = 2 if weapon.through else 1
         struck = {}                 # body -> [hp, sp, hits, sp left]
         pairs = []
+        scatter_cone, scatter_dist = weapon.cone, dist
+        if weapon.hit_cap < 1:
+            # One native scatter draw, widened only where it would otherwise
+            # exceed the cap. At zero distance a virtual metre samples the
+            # same width; range, walls and flight still use the real distance.
+            scatter_dist = dist if dist > 0 else 1.0
+            scatter_cone = max(weapon.cone * dist, TARGET_SIZE / weapon.hit_cap) / scatter_dist
         for k in range(weapon.num_shots):
-            offset = bullet_offset(weapon.cone, dist)
+            offset = bullet_offset(scatter_cone, scatter_dist)
             bush_hits = []
             if k >= live:
                 # An empty chamber: the pair was counted from faAim already.

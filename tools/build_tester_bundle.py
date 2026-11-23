@@ -51,6 +51,8 @@ def main():
     ap.add_argument('--player', type=Path, required=True)
     ap.add_argument('--out', type=Path, required=True)
     ap.add_argument('--training', action='store_true', help='Explicitly enable the private training range in this local kit')
+    ap.add_argument('--combat-arsenal', action='store_true',
+                    help='Add available A firearm classes, compatible ST rounds and required specs to the new accounts')
     args = ap.parse_args()
     out = args.out.resolve()
     if out.exists() or out.with_suffix('.zip').exists():
@@ -131,6 +133,16 @@ def main():
         if [(r['level'], r['afro'], r['gold']) for r in rows] != [
                 (level, 5000000, 100000) for level in range(1, 21)]:
             raise RuntimeError('Seed account totals do not match requested values.')
+        if args.combat_arsenal:
+            import storage
+            from tester_firearms import apply_character, plan_character
+            supplies = []
+            with storage.atomic(store.db):
+                for row in store.db.execute('SELECT id FROM characters ORDER BY id').fetchall():
+                    profile = plan_character(store, row['id'])
+                    apply_character(store, profile)
+                    supplies.append(profile)
+            (out / 'combat-arsenal.json').write_text(json.dumps(supplies, ensure_ascii=False, indent=2), encoding='utf-8')
     finally:
         store.close()
     with (out / 'accounts.csv').open('w', encoding='utf-8-sig', newline='') as target:
@@ -170,6 +182,14 @@ def main():
         'Это сборка текущих незакоммиченных правок. Автотесты и игровая проверка при сборке не запускались.\n'
         'Снятие требований к уровню и новая прогрессия износа, прописка/ВНЖ ещё НЕ реализованы.\n',
         encoding='utf-8-sig')
+    if args.combat_arsenal:
+        guide = out / 'READ_ME.txt'
+        text = guide.read_text(encoding='utf-8-sig')
+        text = text.replace('Другие навыки, специализации и задания исходные; снаряжение не выдано.',
+                            'Выданы доступные классы A-огнестрела своей или ближайшей младшей ступени, '
+                            'по 400 стандартных патронов на совместимый калибр и требуемые специализации. '
+                            'Задания и остальные навыки исходные. Список исключений каталога: combat-arsenal.json.')
+        guide.write_text(text, encoding='utf-8-sig')
     print('Writing checksums and ZIP...', flush=True)
     manifest = {}
     for source in sorted(out.rglob('*')):

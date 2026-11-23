@@ -207,6 +207,28 @@ class CombatClient(unittest.TestCase):
         self.call('__bfRemotePrimary', equip, event)
         self.assertEqual(events, [event])
 
+    def test_firearm_stance_exists_before_native_cached_name_notification(self):
+        # The native weapon_type setter derives pistol/rifle immediately.
+        # Simulate Item.initialize publishing itemUpdate before FireArm's
+        # own assignment; no later DI notification is guaranteed for mobs.
+        for kind in range(6):
+            with self.subTest(kind=kind):
+                weapon, notifications = {}, []
+                static_info = dict(weapon_type=kind, clip_size=30)
+
+                def native(obj):
+                    notifications.append(weapon.get('weapon_type'))
+                    self.assertIs(obj, static_info)
+                    weapon['clip_size'] = obj['clip_size']
+                    return 'initialized'
+
+                weapon['__bfFirearmInitOrig'] = native
+                result = self.call('__bfFirearmInit', weapon, static_info)
+                self.assertEqual(notifications, [kind])
+                self.assertEqual(weapon['clip_size'], 30)
+                self.assertEqual(result, 'initialized')
+                self.assertEqual(static_info, dict(weapon_type=kind, clip_size=30))
+
     def setUp(self):
         self.sent, self.calls, self.applied = [], [], []
         self.reported = []

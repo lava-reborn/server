@@ -29,6 +29,8 @@ LEVEL_DAMAGE = .12
 MIN_LEVEL_DAMAGE = .1
 GAP_MAX = 3
 ORDINARY_LEVEL_ACCURACY = .05
+PLAYER_HIT_CAP = .95
+SINGLE_SHOT_SPREAD = .8
 MOB_BALANCE_DIVISOR = 1.5
 
 
@@ -288,14 +290,37 @@ def equipment_changes():
 def weapon(weapon, character, row, ammo):
     """Ordinary equipment already holds the reviewed base damage and ranges."""
     import inventory
+    import items
+    import combat
     missing = max(0, inventory.item_level(row['type_id']) - character.level) if row else 0
+    accuracy = 1 - ORDINARY_LEVEL_ACCURACY * min(inventory.GEAR_LEVEL_ALLOWANCE, missing)
+    spread = 1
+    if row:
+        params = items.params_of(row['type_id']) or {}
+        kind = params.get('weapon_type')
+        spec_index = combat.SPEC_OF_WEAPON.get(kind)
+        if spec_index is not None:
+            skill = max(0, character.skill_level(progression.SHOOTING))
+            spec = combat.spec_or_zero(character, spec_index)
+            # The native helper caps trained levels. Ordinary gear/effects
+            # may exceed them; preserve their effective bonus without
+            # changing the pinned private-range calculation.
+            effective = max(.1, 1 + (.7 - .65 / 20 * skill) + (.8 - .75 / 5 * spec))
+            spread = effective / combat.spread_factor(skill, spec)
+        modes = params.get('fire_mods', ())
+        mode = row.get('cur_mode', 0)
+        # A nearly empty burst is not a single-shot mode.
+        if (weapon.num_shots == 1 and kind in (items.ASSAULT, items.RIFLE)
+                and 0 <= mode < len(modes) and modes[mode] == 1):
+            spread *= SINGLE_SHOT_SPREAD
     power = 1 + DAMAGE_PER_INTELLECT * intellect(character)
     damage, stamina, reach = (ammo.get(key, 1) for key in ('dam_mod', 'st_mod', 'range_mod'))
     return weapon._replace(dmin=max(1, round(weapon.dmin * power * damage)),
         dmax=max(1, round(weapon.dmax * power * damage)),
         sdmin=round(weapon.sdmin * power * stamina), sdmax=round(weapon.sdmax * power * stamina),
         max_range=math.floor(weapon.max_range * reach + 1e-9),
-        cone=weapon.cone / (1 - ORDINARY_LEVEL_ACCURACY * min(inventory.GEAR_LEVEL_ALLOWANCE, missing)))
+        cone=0 if ammo.get('acc_mod', 1) == 0 else weapon.cone * spread / accuracy,
+        hit_cap=PLAYER_HIT_CAP * accuracy)
 
 
 def melee(bounds, character, row):

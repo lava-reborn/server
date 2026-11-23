@@ -2920,6 +2920,13 @@ class Session:
         # has to follow the userInfo at once, or the bar is drawn against a
         # maximum of 1200 (combat.md 5).
         params.update(self.combat.mob_info(npc_id))
+        if root == world.MOB:
+            rc = self.combat.rc
+            mob = rc.mobs.get(npc_id) if rc is not None else None
+            if mob is not None:
+                # Use the final display type: base soldiers deliberately
+                # share their guard's model, never their actual combat type.
+                params['res'] = mobs.visual_type(params['res'], mob.stats.weapon_type_id)
         self.send(cmd, **params)
         if holder is not None:
             self.send("fellow", id=npc_id, reg=int(holder["clan_id"]),

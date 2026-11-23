@@ -837,6 +837,34 @@ def stats(type_id):
     return st
 
 
+def visual_type(type_id, weapon_type_id):
+    """Existing armed art for the few native bodies without that animation.
+
+    The identity, equipment and fighting stats stay those of the actual mob;
+    only userInfo.res uses the donor. Never substitute unarmed actors or
+    animals. The m7 donor is the same body with a complete animation folder.
+    """
+    info = TYPES.get(str(type_id), {})
+    if info.get('role') not in ('mob', 'boss') or weapon_type_id is None:
+        return type_id
+    root = items.root_of(weapon_type_id)
+    if root == items.COLD_ARM:
+        stance = 'knife'
+    elif root == items.FIRE_ARM:
+        params = items.params_of(weapon_type_id) or {}
+        stance = 'pistol' if params.get('weapon_type') == items.PISTOL else 'rifle'
+    else:
+        return type_id
+    resource = info.get('resource')
+    if resource in ('bich', '120'):
+        return 14
+    if resource in ('band_leader', '82') and stance == 'knife':
+        return 1668
+    if resource == 'm7' and stance in ('pistol', 'rifle'):
+        return 131
+    return type_id
+
+
 def virtual_di(uniq, type_id, root, ammo_type=None):
     """ss_di_* fields for a virtual instance (uniq >= VIRTUAL_BASE): a clean,
     loaded weapon, so the client shows nothing odd about it. None for a

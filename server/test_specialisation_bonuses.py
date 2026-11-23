@@ -40,7 +40,10 @@ class SpecialisationBonuses(unittest.IsolatedAsyncioTestCase):
                     shot = f.aim._args[-1][3]
                     expected = combat.cone_of(combat.spread_factor(13, 4), params['target_size'][mode],
                                               items.params_of(ammo_type)['acc_mod'], params['max_range'][mode])
+                    if params['fire_mods'][mode] == 1:
+                        expected *= .8
                     self.assertAlmostEqual(shot.cone, expected)
+                    self.assertEqual(shot.hit_cap, .95)
                     cones.append(shot.cone)
                     rng = random.Random(25201 + mode)
                     for distance in (2, 5, params['end_opt_range'][mode], shot.max_range):
