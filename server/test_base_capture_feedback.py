@@ -1,7 +1,7 @@
 """Native test-allies shots, weekly capture, pending flag and payment feedback."""
 from datetime import datetime
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import bosses
 import combat
@@ -130,7 +130,8 @@ class BaseCaptureFeedback(unittest.IsolatedAsyncioTestCase):
                 self.assertEqual((frame['can_trade'], frame['can_repair']), (0, 0))
                 self.assertTrue(any(cmd == 'fellow' and p['id'] == eid and p['reg'] == self.clan
                                     for cmd,p in self.frames()))
-                self.assertFalse(holdings.defender_friendly(self.rc, guards[0], self.s.combat))
+                self.assertTrue(holdings.defender_friendly(self.rc, guards[0], self.s.combat))
+                self.assertTrue(all(ally.target() is None for ally in self.allies))
                 self.assertTrue(self.s.quest_available(quests.get(self.base.rent_quest)))
                 self.assertTrue(any('База захвачена' in text and '21:15' in text and '1 500 000' in text
                                     for text in self.answers()))
@@ -171,8 +172,7 @@ class BaseCaptureFeedback(unittest.IsolatedAsyncioTestCase):
                     self.assertIs(ally.target(), self.master)
                     self.shoot(ally.enemy.combat)
                 self.finish()
-                self.assertTrue(all(ally.target().type_id in self.base.guards + self.base.troops
-                                    for ally in self.allies))
+                self.assertTrue(all(ally.target() is None for ally in self.allies))
                 # The flag changes identity so an already present client asks
                 # q_status again, even if it cached the neutral base's refusal.
                 old_flag, _ = self.flag_packet()
@@ -188,6 +188,7 @@ class BaseCaptureFeedback(unittest.IsolatedAsyncioTestCase):
                     info = next(p for cmd, p in reversed(self.frames())
                                 if cmd == 'userInfo' and p['id'] == guard.eid)
                     self.assertEqual(info['clan'], self.clan)
+                    self.assertEqual(info['ally'], 1)
                 self.s.pos = self.s.room.npc(flag).cell
                 self.s.cmd_q_st(dict(mob=flag, q_idx=quests.given_by(self.base.flag).index(self.base.rent_quest)))
                 row = next(r for r in self.store.quests(self.s.char_id) if r['type'] == self.base.rent_quest)
@@ -211,6 +212,35 @@ class BaseCaptureFeedback(unittest.IsolatedAsyncioTestCase):
                     ally.exit()
                 self.store.holding_clear(self.base.key, 'admin')
                 self.store.clan_disband(self.clan)
+
+    async def test_capture_stops_guard_aim_and_rejects_new_owner_attacks_before_payment(self):
+        self.scene('base_dn', 2)
+        guard = next(m for m in self.rc.mobs.values() if m.type_id in self.base.guards)
+        guard.target = self.s.combat
+        pending = guard.aim = Mock()
+        for ally in self.allies:
+            self.shoot(ally.enemy.combat)
+        self.finish()
+        self.assertIsNone(holdings.paid_holder(self.store, self.base))
+        before = guard.vitals()
+        # A shot accepted before the capture cannot land on the new owner.
+        burst = combat.Weapon(1, 100, 100, 1, 10, 20, 0, 0, 0, None, None)
+        with patch.object(self.rc, 'burst') as damage:
+            self.rc.mob_burst(guard, self.s.combat, burst)
+            damage.assert_not_called()
+        guard.aim = pending
+        self.rc._step()
+        pending.cancel.assert_called_once_with()
+        self.assertIsNone(guard.aim)
+        self.assertIsNone(guard.target)
+        gun = self.s.inv.in_slot(inventory.PRIMARY)
+        rounds = gun['ammo_count']
+        self.s.writer.frames.clear()
+        self.s.combat.use_fire(dict(obj=inventory.oid_of(gun), target='1%08x' % guard.eid))
+        self.assertIsNone(self.s.combat.aim)
+        self.assertEqual(self.s.inv.in_slot(inventory.PRIMARY)['ammo_count'], rounds)
+        self.assertEqual(guard.vitals(), before)
+        self.assertEqual(self.frames()[-1], ('cmdAck', dict(res=inventory.RES_REFUSED)))
 
     async def test_failed_base_capture_retries_on_native_corpse_callback_once(self):
         self.scene('base_dn', 2)
@@ -275,6 +305,8 @@ class BaseCaptureFeedback(unittest.IsolatedAsyncioTestCase):
         self.now = SLOT + 75 * 60
         self.assertNotIn('clan', self.flag_packet()[1])
         self.assertIsNone(holdings.paid_holder(self.store, self.base))
+        guard = next(m for m in self.rc.mobs.values() if m.type_id in self.base.guards)
+        self.assertFalse(holdings.defender_friendly(self.rc, guard, self.s.combat))
         self.assertFalse(self.s.quest_available(quests.get(self.base.rent_quest)))
 
 

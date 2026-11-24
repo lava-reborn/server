@@ -266,6 +266,43 @@ class CombatClient(unittest.TestCase):
             self.assertEqual(self.call('__bfNPCInfo', npc, dict(param=dict(res=type_id))), 'native')
             self.assertEqual(npc['__bfBaseFlag'], expected)
 
+    def test_quest_only_base_flags_open_after_native_contact_at_the_same_or_adjacent_cell(self):
+        for type_id in (4427, 4428):
+            for adjacent, same in ((True, False), (False, True)):
+                with self.subTest(flag=type_id, adjacent=adjacent, same=same):
+                    calls = []
+                    cell, other = object(), object()
+                    flag = dict(id=73, playerInfo=dict(ally=True), canTrade=False,
+                                canRepair=False, canTrophy=False, hasAvailableQuests=lambda: True,
+                                __bfNPCInfoOrig=lambda event: None)
+                    self.call('__bfNPCInfo', flag, dict(param=dict(res=type_id)))
+                    self.env['lol']['core']['Master'] = dict(getInstance=lambda: dict(
+                        getPlayer=lambda _id: flag, currentLocation=dict(
+                            getCellFromNumber=lambda _pos: cell, isSiblings=lambda a, b: adjacent)))
+                    self.env['lol']['core']['player']['NPCService'] = dict(
+                        openService=lambda _id: calls.append(('quests', _id)))
+                    gamer = dict(walker=dict(numPos=2002), __bfFlagContactOrig=lambda event: calls.append('native'))
+                    self.call('__bfFlagContact', gamer, dict(id=73, targetCell=cell if same else other))
+                    self.assertEqual(calls, ['native', ('quests', 73)])
+
+    def test_base_flag_contact_respects_reach_availability_and_existing_services(self):
+        for reason in ('far', 'unavailable', 'hostile', 'ordinary', 'trade', 'repair', 'trophy', 'gone'):
+            with self.subTest(reason=reason):
+                calls = []
+                flag = dict(id=73, __bfBaseFlag=reason != 'ordinary',
+                            playerInfo=dict(ally=reason != 'hostile'), canTrade=reason == 'trade',
+                            canRepair=reason == 'repair', canTrophy=reason == 'trophy',
+                            hasAvailableQuests=lambda: reason != 'unavailable')
+                self.env['lol']['core']['Master'] = dict(getInstance=lambda: dict(
+                    getPlayer=lambda _id: None if reason == 'gone' else flag,
+                    currentLocation=dict(getCellFromNumber=lambda _pos: 'here',
+                                         isSiblings=lambda a, b: reason != 'far')))
+                self.env['lol']['core']['player']['NPCService'] = dict(
+                    openService=lambda _id: calls.append('unexpected extra window'))
+                gamer = dict(walker=dict(numPos=2002), __bfFlagContactOrig=lambda event: calls.append('native'))
+                self.call('__bfFlagContact', gamer, dict(id=73, targetCell='there'))
+                self.assertEqual(calls, ['native'])
+
     def test_action_point_effect_changes_ceiling_without_refill_or_timer_reset(self):
         manager = dict(_maxAP=110, currentAP=23, dAP=4, dtAPInterval=91)
         calls = []

@@ -309,16 +309,30 @@ def battle_slot(s, now=None):
     return events.table().window(s.battle).slot(bosses.clock() if now is None else now)
 
 
+def _paid_at(held, now):
+    return (held is not None and held["slot"] is not None
+            and float(held["slot"]) <= now < min(float(held["paid_until"]),
+                                               float(held["slot"]) + 7 * 86400 - BASE_RESET_LEAD)
+            and float(held["paid_until"]) <= float(held["slot"]) + 7 * 86400)
+
+
 def paid_holder(store, s, now=None):
-    """Only a current paid lease owns a base's benefits and friendly guards."""
+    """Only a current paid lease grants bunker entry and services."""
+    held = holder(store, s)
+    return held if _paid_at(held, bosses.clock() if now is None else now) else None
+
+
+def base_holder(store, s, now=None):
+    """The visible owner and friendly clan, including a pending reservation."""
     held = holder(store, s)
     now = bosses.clock() if now is None else now
-    if (held is None or held["slot"] is None
-            or not float(held["slot"]) <= now < min(float(held["paid_until"]),
-                                                    float(held["slot"]) + 7 * 86400 - BASE_RESET_LEAD)
-            or float(held["paid_until"]) > float(held["slot"]) + 7 * 86400):
-        return None
-    return held
+    if _paid_at(held, now):
+        return held
+    if held is not None and float(held['paid_until']) == 0:
+        slot = events.table().window(s.payment).slot(now)
+        if slot is not None and held['slot'] == slot:
+            return held
+    return None
 
 
 def paid_base_for(store, loc_id, char_id, now=None):
@@ -330,7 +344,7 @@ def paid_base_for(store, loc_id, char_id, now=None):
 
 
 def defender_friendly(rc, mob, fighter):
-    """Only a paid base's own defenders spare its current clan members."""
+    """A captured base's defenders immediately spare its current clan."""
     if not getattr(fighter, 'is_player', False) or getattr(mob, 'is_player', False):
         return False
     loc_id = getattr(rc.room.loc, 'id', None)
@@ -345,7 +359,7 @@ def defender_friendly(rc, mob, fighter):
     type_id = getattr(mob, 'type_id', None)
     if type_id != s.boss and (s.loc != loc_id or type_id not in s.guards + s.troops):
         return False
-    return member_of(rc.store, paid_holder(rc.store, s), fighter.sess.char_id)
+    return member_of(rc.store, base_holder(rc.store, s), fighter.sess.char_id)
 
 
 def soldier_respawns(store, loc_id, type_id, now=None):
@@ -536,15 +550,7 @@ def flag_for(store, loc_id, type_id, char_id):
     s = site_at(loc_id)
     if s is None or int(type_id) != s.flag:
         return None
-    held = holder(store, s)
-    if s.kind == "base":
-        paid = paid_holder(store, s)
-        payment_slot = events.table().window(s.payment).slot(bosses.clock())
-        pending = (held is not None and payment_slot is not None
-                   and held['slot'] == payment_slot and float(held['paid_until']) == 0)
-        # Show the reservation immediately after a successful kill. Only
-        # the flag is descriptive: every benefit still uses paid_holder.
-        held = paid if paid is not None else held if pending else None
+    held = base_holder(store, s) if s.kind == "base" else holder(store, s)
     return held, s.kind != "base" and member_of(store, held, char_id)
 
 
@@ -719,7 +725,7 @@ def _base_capture_message(s, snap, won, member, excluded, status):
         deadline = ("до %s по Москве" % datetime.fromtimestamp(end, bosses.ZONE).strftime('%H:%M')
                     if end is not None else "до окончания окна оплаты")
         return ("База захвачена кланом «%s». Оплатите аренду у флага %s: %s афро из казны. "
-                "Бонусы и дружественная охрана действуют после оплаты."
+                "Охрана уже дружественна вашему клану; бункер и его льготы откроются после оплаты."
                 % (won[1], deadline, format(s.rent, ',').replace(',', ' ')))
     clan = int(member['clan_id']) if member is not None else None
     if clan in excluded:

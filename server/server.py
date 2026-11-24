@@ -2907,6 +2907,7 @@ class Session:
                 holder = holdings.flag_for(STORE, base.loc, base.flag, self.char_id)[0]
                 if holder is not None:
                     params.update(clan=int(holder['clan_id']))
+                params['ally'] = int(holdings.member_of(STORE, holder, self.char_id))
         elif root == world.UPGRADER:
             # What its window turns into what, and for how many hundredths
             # of an ounce (upgrader.lists): the recipes a weapons master

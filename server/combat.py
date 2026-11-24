@@ -1748,6 +1748,9 @@ class Fighter:
             if target is None:
                 self.ack(inventory.RES_NOT_FOUND)
                 return
+            if holdings.defender_friendly(rc, target, self):
+                self.ack(inventory.RES_REFUSED)
+                return
             if target.is_player and target.preparing():
                 self.ack(inventory.RES_NOT_READY)
                 return
@@ -3004,6 +3007,10 @@ class RoomCombat:
             self.ap_last = t
         for mob in list(self.mobs.values()):
             if mob.target is not None and holdings.defender_friendly(self, mob, mob.target):
+                if mob.aim is not None:
+                    mob.aim.cancel()
+                    mob.aim = None
+                    self.room.broadcast(('actionCancel', dict(id=mob.eid, stop_aim=1)))
                 self.mob_release(mob)
             # Settle quiet time before a returning player can start a fight.
             if bosses.uses_camp_recovery(self.room.loc.id, mob.type_id):
@@ -3490,7 +3497,7 @@ class RoomCombat:
                 continue
             fates = []
             for n, body in enumerate(chain):
-                # A paid clan's own guard still stops its bullet, but takes
+                # A captured clan's own guard still stops its bullet, but takes
                 # no harm, including free aim and a penetrating round.
                 if holdings.defender_friendly(self, body, shooter):
                     break

@@ -135,6 +135,22 @@ def __bfNPCInfo(obj):
     this.__bfBaseFlag = obj.param.res == 4427 or obj.param.res == 4428
     return this.__bfNPCInfoOrig(obj)
 
+def __bfFlagContact(obj):
+    result = this.__bfFlagContactOrig(obj)
+    master = lol.core.Master.getInstance()
+    npc = master.getPlayer(obj.id)
+    # Native Gamer.proposeContact stops at a Trader with no trade/repair
+    # service. The base flag deliberately has only its treasury quest.
+    if not npc or not npc.__bfBaseFlag or not npc.playerInfo.ally:
+        return result
+    if npc.canTrade or npc.canRepair or npc.canTrophy or not npc.hasAvailableQuests():
+        return result
+    location = master.currentLocation
+    cell = location.getCellFromNumber(this.walker.numPos)
+    if cell == obj.targetCell or location.isSiblings(cell, obj.targetCell):
+        lol.core.player.NPCService.openService(npc.id)
+    return result
+
 def __bfBaseCaption(panel):
     if not panel.player.__bfBaseFlag:
         return
@@ -555,6 +571,7 @@ def patches(Asm, undef, *, training=False):
         (('gpui','Annotation'), 'effectAnnotation', '__bfEffectAnnotationOrig', '__bfEffectAnnotation'),
         (('gpui','Annotation'), 'showEffectsInfo', '__bfEffectsInfoOrig', '__bfEffectsInfo'),
         (('core','player','NPC'), 'userInfo', '__bfNPCInfoOrig', '__bfNPCInfo'),
+        (('core','player','Gamer'), 'proposeContact', '__bfFlagContactOrig', '__bfFlagContact'),
         (('core','location','CharInfo'), 'userInfoUpdate', '__bfInfoUpdateOrig', '__bfInfoUpdate'),
         (('core','location','CharInfo'), 'clanNameUpdate', '__bfClanCaptionOrig', '__bfClanCaption'),
         (('core','player','APManager'), 'syncAPtoServer', '__bfSyncAPOrig', '__bfSyncAP'),
