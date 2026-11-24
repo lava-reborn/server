@@ -37,7 +37,8 @@ class ClientSuiteSelection(unittest.TestCase):
     def test_warehouse_capture_contracts_are_included_in_the_full_release_suites(self):
         required = {'server/test_warehouse_capture_rules.py', 'server/test_holdings.py',
                     'server/test_clan_bases.py', 'server/test_clan_base_access.py',
-                    'server/test_release_integrity.py', 'server/test_boss_hotfix.py'}
+                    'server/test_release_integrity.py', 'server/test_boss_hotfix.py',
+                    'server/test_capture_review_fixes.py', 'server/test_base_capture_feedback.py'}
         selected = {Path(path).relative_to(ROOT).as_posix() for path in suite.suites()}
         self.assertFalse(required - selected, 'Warehouse/base capture regressions must reach CI')
 

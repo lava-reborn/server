@@ -2942,12 +2942,13 @@ class RoomCombat:
         for f in self.fighters():
             if not f.present(self):
                 continue
+            d = mobs.hex_distance(cell, f.cell, width)
+            if d > best_d:
+                continue
             if mob is not None and (holdings.defender_friendly(self, mob, f)
                                     or holdings.warehouse_defender_passive(self, mob, f)):
                 continue
-            d = mobs.hex_distance(cell, f.cell, width)
-            if d <= best_d:
-                best, best_d = f, d
+            best, best_d = f, d
         return best
 
     def push_vitals(self, actor):
@@ -3020,17 +3021,21 @@ class RoomCombat:
                 self.ap_last += ticks * AP_TICK
         else:
             self.ap_last = t
-        for mob in list(self.mobs.values()):
-            if mob.target is not None and holdings.defender_friendly(self, mob, mob.target):
-                if mob.aim is not None:
-                    mob.aim.cancel()
-                    mob.aim = None
-                    self.room.broadcast(('actionCancel', dict(id=mob.eid, stop_aim=1)))
-                self.mob_release(mob)
-            # Settle quiet time before a returning player can start a fight.
-            if bosses.uses_camp_recovery(self.room.loc.id, mob.type_id):
-                self.regen_mob(mob, t)
-            mob.think(self, t)
+        self._defender_cache = {}
+        try:
+            for mob in list(self.mobs.values()):
+                if mob.target is not None and holdings.defender_friendly(self, mob, mob.target):
+                    if mob.aim is not None:
+                        mob.aim.cancel()
+                        mob.aim = None
+                        self.room.broadcast(('actionCancel', dict(id=mob.eid, stop_aim=1)))
+                    self.mob_release(mob)
+                # Settle quiet time before a returning player can start a fight.
+                if bosses.uses_camp_recovery(self.room.loc.id, mob.type_id):
+                    self.regen_mob(mob, t)
+                mob.think(self, t)
+        finally:
+            self._defender_cache = None
         self.calm(t)
         for f in fighters:
             if t >= f.regen_at:

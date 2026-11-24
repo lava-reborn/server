@@ -21,7 +21,7 @@ def reference_winner(snapshot,squad,minimum,excluded):
         return None
     people=[p for p in snapshot['fighters'] if p['clan']==clan and p['here']]
     present={p['char'] for p in people if p['alive'] and p['level']>=minimum and p['harm']>0}
-    if len(present)<squad:
+    if len(present)<squad or snapshot.get('killer_actor',snapshot['killer']) not in present:
         return None
     damage=min(snapshot['pool'],sum(p['harm'] for p in people))
     return clan,people[0]['clan_name'],damage,snapshot['killer']
@@ -41,6 +41,8 @@ class ReleaseIntegrity(unittest.TestCase):
                     person['clan_name']='clan%s'%person['clan']
                 snapshot=dict(fighters=people,pool=1000,killer=people[-1]['char'],
                               killer_clan=people[-1]['clan'])
+                if iteration%2:
+                    snapshot['killer_actor']=rng.choice(people)['char']
                 excluded={2} if iteration%3==0 else set()
                 expected=reference_winner(snapshot,squad,minimum,excluded)
                 self.assertEqual(holdings.winner(snapshot,squad,minimum,excluded),expected)

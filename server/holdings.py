@@ -15,7 +15,7 @@ boss checkpoints also hold that deadline across restarts. Capture waves do
 not respawn, including after an early payment in the same battle window.
 At least three living clan members of the site's minimum level must be in
 the boss's room at the kill, each having hurt him. Only the killing blow's
-clan can win a base. The three contributors include the killer when eligible.
+clan can win a base. The three contributors must include the actual finisher.
 Capture and the weekly boss-death record commit at the kill, before the
 corpse timer. Everything below describes the existing warehouses unless it
 explicitly names a base.
@@ -357,7 +357,9 @@ def warehouse_defender_passive(rc, mob, fighter):
 
 
 def _defender_clanmate(rc, mob, fighter, s, cache=None):
-    # The optional cache belongs to one synchronous burst, never the next one.
+    # Reuse rights only within one synchronous AI pass or one explicit burst.
+    if cache is None:
+        cache = getattr(rc, '_defender_cache', None)
     if s is None:
         return False
     ground = getattr(getattr(fighter, 'sess', None), 'ground', None)
@@ -373,7 +375,13 @@ def _defender_clanmate(rc, mob, fighter, s, cache=None):
     key = (s.key, char_id)
     if cache is not None and key in cache:
         return cache[key]
-    held = base_holder(rc.store, s) if s.kind == 'base' else holder(rc.store, s)
+    holding_key = (s.key,)
+    if cache is not None and holding_key in cache:
+        held = cache[holding_key]
+    else:
+        held = base_holder(rc.store, s) if s.kind == 'base' else holder(rc.store, s)
+        if cache is not None:
+            cache[holding_key] = held
     friendly = member_of(rc.store, held, char_id)
     if cache is not None:
         cache[key] = friendly
@@ -674,22 +682,26 @@ def snapshot(rc, mob, killer):
                          "level": int(f.level) if f is not None else 0,
                          "clan": int(m["clan_id"]) if m is not None else None,
                          "clan_name": m["clan_name"] if m is not None else None})
-    killer_char = killer_clan = None
+    killer_char = killer_clan = killer_actor = None
     ground = getattr(getattr(killer, 'sess', None), 'ground', None)
     if getattr(ground, 'ally', False):
+        killer_actor = ground.capture_char
         killer = ground.owner.combat
     if (killer is not None and killer.is_player and getattr(killer.sess, "char_id", None)
             and getattr(killer, 'store', store) is store):
         killer_char = int(killer.sess.char_id)
+        if killer_actor is None:
+            killer_actor = killer_char
         km = store.clan_member(killer_char)
         killer_clan = int(km["clan_id"]) if km is not None else None
     return {"site": s.key, "slot": mob.slot, "at": now,
             "pool": float(max(1, int(mob.hp_max) + int(mob.sp_max))),
-            "fighters": fighters, "killer": killer_char, "killer_clan": killer_clan}
+            "fighters": fighters, "killer": killer_char, "killer_clan": killer_clan,
+            "killer_actor": killer_actor}
 
 
 def winner(snap, squad, min_level, excluded=()):
-    """The finishing clan qualifies with distinct living local contributors.
+    """The finishing clan qualifies only with an eligible finisher and helpers.
 
     There is no damage-ranking fallback. Damage is still capped for the log;
     the credited character is the finisher (or a test ally's owner).
@@ -698,12 +710,13 @@ def winner(snap, squad, min_level, excluded=()):
     if clan is None or clan in excluded or snap['killer'] is None:
         return None
     members = {f['char']: f for f in snap['fighters'] if f['clan'] == clan and f['here']}
-    qualified = [f for f in members.values()
-                 if f['alive'] and f['level'] >= min_level and f['harm'] > 0]
-    if len(qualified) < squad:
+    qualified = {f['char']: f for f in members.values()
+                 if f['alive'] and f['level'] >= min_level and f['harm'] > 0}
+    finisher = qualified.get(snap.get('killer_actor', snap['killer']))
+    if len(qualified) < squad or finisher is None:
         return None
     harm = min(sum(f['harm'] for f in members.values()), snap['pool'])
-    return clan, qualified[0]['clan_name'], harm, snap['killer']
+    return clan, finisher['clan_name'], harm, snap['killer']
 
 
 def _where(s):
@@ -739,12 +752,14 @@ def _base_capture_message(s, snap, won, member, excluded, status):
         if clan != snap['killer_clan'] or clan is None:
             return ("База не захвачена вашим кланом: право захвата получает только клан "
                     "добившего хозяина, если минимум три его живых участника нужного уровня нанесли урон.")
-        qualified = sum(f['clan'] == clan and f['here'] and f['alive']
-                        and f['level'] >= s.min_level and f['harm'] > 0
-                        for f in snap['fighters']) if clan is not None else 0
+        qualified = [f for f in snap['fighters'] if f['clan'] == clan
+                     and f['here'] and f['alive'] and f['level'] >= s.min_level and f['harm'] > 0]
+        if not any(f['char'] == snap.get('killer_actor', snap['killer']) for f in qualified):
+            return ("База не захвачена: добивший хозяина должен быть живым участником вашего клана "
+                    "уровня %d+ на этой локации и нанести хозяину урон." % s.min_level)
         return ("База не захвачена: нужны %d живых соклановца уровня %d+ на этой локации, "
                 "каждый должен нанести урон хозяину. У вашего клана выполнили условия: %d из %d."
-                % (BASE_SQUAD, s.min_level, qualified, BASE_SQUAD))
+                % (BASE_SQUAD, s.min_level, len(qualified), BASE_SQUAD))
     if status == 'same':
         return "Результат этого захвата уже учтён. Проверьте владельца и задание аренды у флага."
     return "Захват базы не подтверждён: клан больше не существует или право на базу изменилось."

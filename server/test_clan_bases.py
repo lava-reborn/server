@@ -1153,6 +1153,7 @@ class ClanBases(unittest.TestCase):
             boss = NS(type_id=base.boss, slot=SLOT, hp_max=100, sp_max=0,
                       capture_harm={self.cid: 98, -101: 1, -102: 1})
             snap = holdings.snapshot(rc, boss, allies[-1].combat)
+            self.assertEqual(snap['killer_actor'], allies[-1].ground.capture_char)
             won = holdings.winner(snap, 3, base.min_level)
             self.assertEqual((won[0], won[3]), (self.clan, self.cid))
 
