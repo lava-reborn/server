@@ -141,9 +141,12 @@ def __bfBaseCaption(panel):
     member = panel.player.clanMemberInfo
     title = "Незанятая клановая база"
     if member.clanReg and member.clanInfo.clanName:
-        title = "Клановая база — " + member.clanInfo.clanName
+        title = "Клановая база\\r" + member.clanInfo.clanName
     # A clan name is plain text, never markup or a replacement ClanInfo name.
+    panel.info_txt.multiline = True
     panel.info_txt.text = title
+    panel.infoShadow_txt.multiline = True
+    panel.infoShadow_txt.text = title
     anchor = panel.sBar._y
     if panel.hBar._visible:
         anchor = panel.hBar._y - 5

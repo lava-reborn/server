@@ -78,7 +78,7 @@ def __gcSaleUnit(item):
 
 def __gcBuyTotal(price, count, modifier, root, gold):
     total = Math.ceil(price * count * modifier)
-    if gold and root != 3 and modifier > 0 and modifier < 1 and price * count > 1:
+    if modifier > 0 and modifier < 1 and price * count > 1 and root != 3:
         total = Math.max(1, Math.min(total, Math.ceil(price * count) - 1))
     return total
 

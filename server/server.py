@@ -2769,12 +2769,7 @@ class Session:
         if other is None and CHEATS and self.room is not None:
             candidate = self.room.player(pid)
             if candidate is not None and candidate.peer == 'local-test-bot':
-                self.send('userInfo_Player', **rooms.player_info(candidate))
-                self.send('usrUp', **rooms.player_health(candidate))
-                if candidate.ground.ally:
-                    member = candidate.ground.owner.inv.store.clan_member(candidate.ground.owner.char_id)
-                    if member is not None:
-                        self.send('fellow', id=pid, reg=int(member['clan_id']), soc=Str(member['clan_name']))
+                training_ground.local_player_info(self, candidate)
                 return
         if other is None or other.active is None:
             log.info("  ..    getInfo about %d, who is not online", pid)
@@ -2871,6 +2866,8 @@ class Session:
                     STORE, self.room.loc.id, type_id, self.char_id))
             params['base_gold_buyer'] = int(type_id in gold_trade.BASE_GOLD_BUYERS
                 and rates['smod'] == float(gold_trade.BASE_SALE_SHARE))
+            if not holdings.may_serve(STORE, self.room.loc.id, type_id, self.char_id):
+                params.update(can_trade=0, can_repair=0, type_list=[])
             if eden_shop.is_buyer(type_id):
                 params.update(res=eden_shop.ART_TYPE, type_list=[], eden_shop=1)
             if trophies.is_registrar(type_id):
@@ -2898,11 +2895,16 @@ class Session:
                 if holder is not None:
                     params.update(clan=int(holder["clan_id"]))
         elif root == world.MOB:
-            base = holdings.guard_site(self.room.loc.id, type_id)
+            base = (holdings.base_for(self.room.loc.id, type_id)
+                    or holdings.guard_site(self.room.loc.id, type_id))
             if base is not None and base.kind == 'base':
-                # Native name/model and ClanInfo, scoped to this base only.
-                params.update(name=base.guards[0], res=base.guards[0])
-                holder = holdings.paid_holder(STORE, base)
+                # Presentation only: warehouse identities and combat types stay native.
+                if type_id == base.boss:
+                    params['name'] = holdings.BASE_MASTER_NAME
+                else:
+                    params.update(name=(holdings.BASE_BODYGUARD_NAME if type_id in base.guards
+                                        else holdings.BASE_GUARD_NAME), res=base.guards[0])
+                holder = holdings.flag_for(STORE, base.loc, base.flag, self.char_id)[0]
                 if holder is not None:
                     params.update(clan=int(holder['clan_id']))
         elif root == world.UPGRADER:
@@ -3411,6 +3413,10 @@ class Session:
         if not eden.allowed(self, quest):
             return False
         if not self.base_entry_allowed(quest):
+            return False
+        if (quest.type in quests.CLAN_BASE_EXITS
+                and (getattr(self, 'loc', None) is None
+                     or travel.quest_way(self.loc, quest.type) is None)):
             return False
         if quest.type == training_ground.EXIT_QUEST:
             return False

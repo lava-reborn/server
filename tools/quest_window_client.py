@@ -37,9 +37,9 @@ def __qwEdenNPC(obj):
     # Native checkedQuests survives location changes and even relogin.
     # After a release its status=0 can otherwise hide every subsequent
     # quest except the first one of an Eden NPC. Revalidate only this
-    # NPC's Eden offers; keep the read FIFO and pending actions intact.
+    # NPC's Eden/lift offers; keep the read FIFO and pending actions intact.
     res = obj.param.res
-    if res and res >= 1784 and res <= 1789:
+    if res and ((res >= 1784 and res <= 1789) or res == 689):
         inspector = lol.core.quests.QuestInspector.getInstance()
         i = 0
         while i < len(obj.param.give_quests):
@@ -50,6 +50,28 @@ def __qwEdenNPC(obj):
             inspector.checkedQuests[obj.param.take_quests[i]] = None
             i = i + 1
     return this.__qwEdenNPCOrig(obj)
+
+def __qwRefreshNPCs():
+    # Keep one native status scan across overlapping repeatable hand-ins.
+    # The request/ack FIFO is deliberately untouched.
+    clearInterval(this.updateTimerID)
+    this.updateTimerID = None
+    return this.__qwRefreshNPCsOrig()
+
+def __qwLocationKill():
+    inspector = lol.core.quests.QuestInspector.getInstance()
+    clearInterval(inspector.updateTimerID)
+    inspector.updateTimerID = None
+    inspector.updateNPCList = []
+    inspector.quester = None
+    return this.__qwLocationKillOrig()
+
+def __qwStatusChanged():
+    # Replies already in flight still retire normally; their old NPC/window
+    # no longer belongs to a live location and must not be dereferenced.
+    if not this.quester:
+        return
+    return this.__qwStatusChangedOrig()
 '''
 
 
@@ -74,4 +96,10 @@ def {helper}(obj):
         for method, helper in specs)
     wraps += ((('core', 'player', 'NPC'), 'userInfo', '__qwEdenNPCOrig',
                *bodies['__qwEdenNPC']),)
+    wraps += ((('core', 'quests', 'QuestInspector'), 'requestAllNPC', '__qwRefreshNPCsOrig',
+               *bodies['__qwRefreshNPCs']),)
+    wraps += ((('core', 'quests', 'QuestInspector'), 'checkStatusChanged', '__qwStatusChangedOrig',
+               *bodies['__qwStatusChanged']),)
+    wraps += ((('core', 'location', 'Location'), 'kill', '__qwLocationKillOrig',
+               *bodies['__qwLocationKill']),)
     return dict(globals=[], wraps=wraps)

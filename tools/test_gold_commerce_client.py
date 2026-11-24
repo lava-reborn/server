@@ -72,6 +72,8 @@ class GoldCommerceClient(unittest.TestCase):
         cases = (
             (2, True, 4, 1, .03), (2, True, 4, 10, .36), (2, True, 1, 1, .01),
             (2, False, 13, 1, 12), (2, False, 13, 10, 117),
+            (2, False, 9, 1, 8), (2, False, 2, 1, 1), (2, False, 1, 1, 1),
+            (2, True, 2, 1, .01),
             (3, True, 2, 1, .02), (3, True, 2, 100, 1.8),
             (3, True, 1, 1, .01), (3, True, 1, 100, .9),
             (3, False, .65, 1, 1), (3, False, .65, 100, 59),

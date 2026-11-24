@@ -15302,6 +15302,8 @@
       "service": true,
       "level": 0,
       "q_type": 0,
+      "loc": 609,
+      "finish_loc": 609,
       "why": "DESIGNED native passage for the restored clan-base graph, approved 2026-11-22. Existing original service NPC and artwork; no monetary, item or experience reward. The passage is available only at its declared location."
     },
     {

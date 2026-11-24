@@ -27,6 +27,10 @@ both: the server at start, the release at build. The local stand serves
 the same file and icons on its /res/ (bootstrap_http), what a release
 carries.
 
+With own_icon=true the committed data/item_icons/<name>.swf replaces that
+copy. The checked name fixes the filename; no arbitrary path is accepted.
+Build and HTTP use the same bytes. Missing/invalid declared art refuses load.
+
 An objects.xml read with rows in our range is a release's: the launcher
 writes the release's file into the player's client, and the owner's own
 client is one. Those rows are ours, as the release had them, so every
@@ -91,9 +95,28 @@ def parse(doc):
             raise Refused("%s: name %s is %d's too" % (where, name, names[name.lower()]))
         if isinstance(like, bool) or not isinstance(like, int):
             raise Refused("%s: like is the original type it copies, a number" % where)
+        if 'own_icon' in rec and type(rec['own_icon']) is not bool:
+            raise Refused("%s: own_icon must be boolean" % where)
         names[name.lower()] = t
         out[t] = dict(name=name, like=like)
+        if rec.get('own_icon'):
+            out[t]['own_icon'] = True
     return out
+
+
+def custom_icon(rec, data_dir=None):
+    """An explicitly declared native SWF; its filename comes from the checked name."""
+    if not rec.get('own_icon'):
+        return None
+    return os.path.join(data_dir or os.path.dirname(PATH), 'item_icons', rec['name'] + '.swf')
+
+
+def read_icon(path):
+    with open(path, 'rb') as fh:
+        blob = fh.read()
+    if len(blob) < 8 or blob[:3] not in (b'FWS', b'CWS'):
+        raise Refused('invalid native item icon: %s' % path)
+    return blob
 
 
 def load(path=PATH):
@@ -105,7 +128,15 @@ def load(path=PATH):
         return {}
     except (OSError, ValueError) as e:
         raise Refused("%s: %s" % (type(e).__name__, e))
-    return parse(doc)
+    out = parse(doc)
+    for rec in out.values():
+        icon = custom_icon(rec, os.path.dirname(os.path.abspath(path)))
+        if icon is not None:
+            try:
+                read_icon(icon)
+            except (OSError, ValueError) as e:
+                raise Refused('own item icon: %s' % e)
+    return out
 
 
 # A row of database/objects.xml as the client and items.catalogue read it,

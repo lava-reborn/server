@@ -1,6 +1,7 @@
 """Paid clan-base prices: native frames and actual atomic buy/sell/repair."""
 import math
 import unittest
+from datetime import datetime
 from types import SimpleNamespace as NS
 from unittest.mock import patch
 
@@ -22,6 +23,156 @@ class BaseTrade(unittest.TestCase):
     sell = fixtures.GoldCommerce.sell
     quote = fixtures.GoldCommerce.quote
     confirmed = fixtures.GoldCommerce.confirmed
+
+    def foreign_clan(self):
+        aid, _ = self.store.register('base-outsider', 'local-only')
+        head, _ = self.store.create_character(aid, 'BaseOutsider', 0, '1')
+        return self.store.clan_create(head, 'Other base clan', 'other-base-clan', '', None)
+
+    def test_service_access_matrix_for_all_six_npcs_and_lease_boundaries(self):
+        other = self.foreign_clan()
+        slot = datetime(2026, 11, 21, 20, tzinfo=holdings.bosses.ZONE).timestamp()
+        week = 7 * 86400
+        # State, holding slot, paid-until, current time, services, benefits.
+        states = (
+            ('paid', slot, slot + week - 300, slot + 1800, True, True),
+            ('reservation', slot, 0, slot + 1800, True, False),
+            ('neutral', None, 0, slot + 1800, False, False),
+            ('expired', slot, slot + 1799, slot + 1800, False, False),
+            ('expiry-boundary', slot, slot + 1800, slot + 1800, False, False),
+            ('payment-deadline', slot, 0, slot + 4500, False, False),
+            ('old-reservation', slot - week, 0, slot + 1800, False, False),
+            ('future-lease', slot + week, slot + 2 * week - 300, slot + 1800, False, False),
+            ('invalid-lease', slot, slot + week + 1, slot + 1800, False, False),
+            ('weekly-reset', slot, slot + week, slot + week - 300, False, False),
+        )
+        for loc in (609, 1443):
+            self.base_room(loc)
+            for state, held_slot, until, now, services, benefits in states:
+                self.store.holding_clear(self.site.key, 'admin')
+                if held_slot is not None:
+                    self.store.holding_set(self.site.key, self.clan, 'admin', slot=held_slot, when=slot)
+                    self.store.db.execute('UPDATE clan_holdings SET paid_until=? WHERE site=?',
+                                          (until, self.site.key))
+                    self.store.db.commit()
+                for member in ('owner', 'foreign', 'none'):
+                    self.store.db.execute('DELETE FROM clan_members WHERE char_id=?', (self.cid,))
+                    self.store.db.commit()
+                    if member != 'none':
+                        self.store.clan_member_add(self.cid, self.clan if member == 'owner' else other, 0, '')
+                    for trader in self.site.traders:
+                        with self.subTest(location=loc, state=state, member=member, trader=trader), \
+                                patch.object(holdings.bosses, 'clock', return_value=now):
+                            allowed = services and member == 'owner'
+                            self.s.room.npc = lambda n, t=trader: (0, t, world.TRADER) if n == 1 else None
+                            self.frames.clear()
+                            self.s.send_npc_info(1)
+                            info = next(p for cmd, p in self.frames if cmd == 'userInfo_Trader')
+                            self.assertEqual(info['can_trade'], int(allowed))
+                            self.assertEqual(info['can_repair'], int(allowed and trader == 989))
+                            if not allowed:
+                                self.assertEqual(info['type_list'], [])
+                            self.frames.clear()
+                            self.inv.open_trade(dict(target=1))
+                            self.assertEqual(self.frames[-1], ('cmdAck', dict(
+                                res=0 if allowed else inventory.RES_REFUSED)))
+                            if allowed:
+                                rates = self.inv.current_trade_rates()
+                                self.assertIsNotNone(rates)
+                                self.assertEqual(rates['pmod'], .9 if benefits else inventory.PMOD)
+                            else:
+                                self.assertIsNone(self.inv.trade)
+                            self.assertFalse(holdings.may_serve(self.store, loc, trader, None))
+
+    def test_all_mutations_refuse_lost_rights_with_no_money_or_item_changes(self):
+        other = self.foreign_clan()
+        self.inv.carry_limit = lambda: 1_000_000
+        for loc in (609, 1443):
+            for change in ('leave', 'other-clan', 'new-owner', 'neutral', 'expiry'):
+                self.store.db.execute('DELETE FROM clan_members WHERE char_id=?', (self.cid,))
+                self.store.db.commit()
+                self.store.clan_member_add(self.cid, self.clan, 0, '')
+                self.base_room(loc)
+                for trader in self.site.traders:
+                    # Restore rights before opening each real NPC, then revoke
+                    # them after its sale quote, as with an already open client.
+                    self.store.db.execute('DELETE FROM clan_members WHERE char_id=?', (self.cid,))
+                    self.store.db.commit()
+                    self.store.clan_member_add(self.cid, self.clan, 0, '')
+                    self.base_room(loc)
+                    self.open(trader)
+                    gear, ammo, worn = self.give(26075), self.give(6164, 5), self.give(25636)
+                    self.store.update_item(worn['uniq'], brk=0, max_break_cur=worn['max_break_cur'] // 2)
+                    request, quote = self.quote(gear)
+                    self.assertEqual(quote['res'], 0)
+                    if change in ('leave', 'other-clan'):
+                        self.store.db.execute('DELETE FROM clan_members WHERE char_id=?', (self.cid,))
+                        self.store.db.commit()
+                        if change == 'other-clan':
+                            self.store.clan_member_add(self.cid, other, 0, '')
+                    elif change == 'new-owner':
+                        self.store.holding_set(self.site.key, other, 'admin', slot=1000, when=1000)
+                        self.store.db.execute('UPDATE clan_holdings SET paid_until=? WHERE site=?',
+                                              (1000 + 7 * 86400, self.site.key))
+                        self.store.db.commit()
+                    elif change == 'neutral':
+                        self.store.holding_clear(self.site.key, 'admin')
+                    else:
+                        self.store.db.execute('UPDATE clan_holdings SET paid_until=1500 WHERE site=?', (self.site.key,))
+                        self.store.db.commit()
+                    before = (self.store.money(self.cid), list(self.inv.rows()))
+                    operations = [
+                        ('confirmed-sale', lambda: self.confirmed(request, quote)),
+                        ('new-quote', lambda: self.quote(gear)),
+                        ('afro-sale', lambda: self.sell(ammo, 1)),
+                        ('repair-afro', lambda: self.inv.repair(dict(obj=inventory.oid_of(worn)), inventory.UPD_REPAIR)),
+                        ('repair-gold', lambda: self.inv.repair(dict(obj=inventory.oid_of(worn)), inventory.UPD_REPAIR_GOLD)),
+                        ('restore', lambda: self.inv.restore(dict(obj=inventory.oid_of(worn)))),
+                    ]
+                    stock = items.stock_for(trader, loc)
+                    for gold in (False, True):
+                        kind = next((t for t in stock if bool(items.params_of(t).get('g_cost')) == gold), None)
+                        if kind is not None:
+                            operations.append(('buy-gold' if gold else 'buy-afro',
+                                               lambda t=kind, g=gold: self.buy(t, 1, g)))
+                    for operation, call in operations:
+                        with self.subTest(location=loc, trader=trader, change=change, operation=operation):
+                            self.frames.clear()
+                            call()
+                            acks = [p['res'] for cmd, p in self.frames if cmd == 'cmdAck']
+                            self.assertEqual(acks, [inventory.RES_REFUSED])
+                            self.assertEqual((self.store.money(self.cid), list(self.inv.rows())), before)
+
+    def test_all_bunker_services_reject_nonmembers_and_stale_windows_in_both_bases(self):
+        for loc in (609, 1443):
+            self.base_room(loc)
+            for trader in self.site.traders:
+                with self.subTest(location=loc, trader=trader):
+                    self.open(trader)
+                    self.store.db.execute('DELETE FROM clan_members WHERE char_id=?', (self.cid,))
+                    self.store.db.commit()
+                    before = (self.store.money(self.cid), list(self.inv.rows()))
+                    self.assertIsNone(self.inv.current_trade_rates())
+                    self.frames.clear()
+                    self.s.send_npc_info(1)
+                    info = next(p for cmd, p in self.frames if cmd == 'userInfo_Trader')
+                    self.assertEqual((info['can_trade'], info['can_repair'], info['type_list']), (0, 0, []))
+                    self.frames.clear()
+                    self.inv.open_trade(dict(target=1))
+                    self.assertEqual(self.frames[-1], ('cmdAck', dict(res=inventory.RES_REFUSED)))
+                    self.assertIsNone(self.inv.trade)
+                    self.assertEqual((self.store.money(self.cid), list(self.inv.rows())), before)
+                    self.store.clan_member_add(self.cid, self.clan, 0x8000, '')
+                    self.open(trader)
+
+    def test_minimum_purchase_cut_is_one_afro_or_cent_and_never_free(self):
+        for gold in (False, True):
+            for unit, expected in ((1, 1), (2, 1), (4, 3), (9, 8), (10, 9)):
+                si = dict(cost=unit, g_cost=unit, sell_num=1)
+                self.assertEqual(inventory.buy_price(si, items.HEAL, 1, gold, .9), expected)
+            si = dict(cost=2, g_cost=2, sell_num=1)
+            self.assertEqual(inventory.buy_price(si, items.AMMO, 1, gold, .9), 2)
+            self.assertEqual(inventory.buy_price(si, items.AMMO, 2, gold, .9), 4)
 
     def setUp(self):
         fixtures.GoldCommerce.setUp(self)
@@ -104,10 +255,12 @@ class BaseTrade(unittest.TestCase):
         self.assertEqual(self.buy(ammo, 20), [inventory.RES_REFUSED])
         self.assertEqual(self.store.money(self.cid), before)
         self.assertFalse(self.inv.rows())
-        # A new ordinary window can be used at ordinary prices.
-        self.open(714)
-        self.assertEqual(self.inv.trade.rates['pmod'], inventory.PMOD)
-        self.assertEqual(self.buy(ammo, 20), [0])
+        # Reopening must not bypass the owner-only service gate.
+        self.frames.clear()
+        self.inv.open_trade(dict(target=1))
+        self.assertEqual(self.frames[-1], ('cmdAck', dict(res=inventory.RES_REFUSED)))
+        self.assertIsNone(self.inv.trade)
+        self.assertEqual(self.store.money(self.cid), before)
 
     def test_membership_change_cannot_keep_high_quoted_buyback(self):
         row = self.give(26075)
@@ -196,7 +349,7 @@ class BaseTrade(unittest.TestCase):
                             precision = 1 if gold else 1000
                             unit = math.floor(unit * precision + .5) / precision
                         expected = math.ceil(unit * n * .9)
-                        if gold and root != items.AMMO and unit * n > 1:
+                        if unit * n > 1 and root != items.AMMO:
                             expected = max(1, min(expected, math.ceil(unit * n) - 1))
                         before = self.store.money(self.cid)
                         self.frames.clear()
@@ -253,9 +406,9 @@ class BaseTrade(unittest.TestCase):
                 self.assertEqual(before[currency] - self.store.money(self.cid)[currency], expected)
 
     def test_nonowner_base_repair_window_cannot_use_an_absent_or_different_npc(self):
+        self.open(989)
         self.store.db.execute('DELETE FROM clan_members WHERE char_id=?', (self.cid,))
         self.store.db.commit()
-        self.open(989)
         row = self.give(26075)
         self.store.update_item(row['uniq'], brk=0, max_break_cur=row['max_break_cur'] // 2)
         before = (self.store.money(self.cid), self.store.item(row['uniq']))

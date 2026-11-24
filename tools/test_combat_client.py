@@ -247,7 +247,9 @@ class CombatClient(unittest.TestCase):
                      info_txt=dict(textHeight=12), infoShadow_txt={},
                      hBar=dict(_visible=False, _y=30), sBar=dict(_y=20))
         self.call('__bfBaseCaption', None, panel)
-        self.assertEqual(panel['info_txt']['text'], 'Клановая база — <Clan & friends>')
+        self.assertEqual(panel['info_txt']['text'], 'Клановая база\r<Clan & friends>')
+        self.assertTrue(panel['info_txt']['multiline'])
+        self.assertEqual(panel['infoShadow_txt']['text'], panel['info_txt']['text'])
         self.assertEqual((panel['info_txt']['_y'], panel['infoShadow_txt']['_y']), (8, 9))
         member['clanReg'] = 0
         self.call('__bfBaseCaption', None, panel)

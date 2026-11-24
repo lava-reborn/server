@@ -71,8 +71,8 @@ class ClanBaseWorldTests(unittest.TestCase):
                 with self.subTest(lid=lid, type_id=type_id):
                     base_medic = type_id == 1013 and lid in (609, 1443)
                     root = world.entity_root(type_id, world.mob_types()[type_id][0])
-                    # Presentation/service identity is checked for an eligible
-                    # clan visitor; live membership gates have separate tests.
+                    # A clanless observer retains presentation/quest identity,
+                    # but cannot open the bunker's owner-only supply services.
                     entry_allowed = Mock(return_value=True)
                     seat = NS(room=NS(loc=world.location(lid), npc=lambda _eid: (0, type_id, root)),
                               char_id=0, home_here=lambda _type: False,
@@ -92,7 +92,8 @@ class ClanBaseWorldTests(unittest.TestCase):
                     self.assertEqual(params['name'], 8000001 if base_medic else type_id)
                     if type_id == 1013:
                         self.assertEqual(command, 'userInfo_Trader')
-                        self.assertEqual(params['type_list'], items.stock_for(type_id, lid))
+                        self.assertEqual(params['type_list'], [] if base_medic else items.stock_for(type_id, lid))
+                        self.assertEqual(params['can_trade'], 0 if base_medic else 1)
                     else:
                         self.assertEqual(command, 'userInfo_Commoner')
                         self.assertEqual((params['can_trade'], params['can_repair']), (0, 0))
@@ -375,8 +376,10 @@ class ClanBaseWorldTests(unittest.TestCase):
                              for x, y, was, _new in edits if was is not None)
         expected = {(x, y, new) for x, y, _was, new in edits if new is not None}
         for x, y, text in expected:
-            self.assertIn('Минимум 3 живых соклановца ' + ('12+' if (x, y) == BASES[1442] else '16+'), text)
-            self.assertIn('каждый наносил урон хозяину', text)
+            self.assertIn('3 живых соклановца ' + ('12+' if (x, y) == BASES[1442] else '16+'), text)
+            self.assertIn('Каждый ранит хозяина', text)
+            self.assertIn('клан с наибольшим уроном', text)
+            self.assertLessEqual(len(text.split('<br>')), 5)
             for value in ('20:00–21:00', '19:55', '1 500 000', '21:15'):
                 self.assertIn(value, text)
         for raw in (b'<data>' + originals + b'</data>', b'<data></data>'):

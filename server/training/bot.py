@@ -15,6 +15,18 @@ import progression
 PATH_LEGS = 8
 
 
+def player_info(viewer, actor):
+    """Announce a local clone, then its bars, including when its id is reused."""
+    import rooms
+    from protocol import Str
+    viewer.send('userInfo_Player', **rooms.player_info(actor))
+    viewer.send('usrUp', **rooms.player_health(actor))
+    if actor.ground.ally:
+        member = actor.ground.owner.inv.store.clan_member(actor.ground.owner.char_id)
+        if member is not None:
+            viewer.send('fellow', id=actor.pid, reg=int(member['clan_id']), soc=Str(member['clan_name']))
+
+
 def local_equipment(viewer, actor, params):
     """Reuse native appearance replies without granting ownership of the copy."""
     view = SimpleNamespace(char_id=None, character=viewer.character, send=viewer.send,
@@ -88,6 +100,11 @@ class LocalOpponent:
             enemy.pos = movement.get(self.room).free_cell(owner.live_cell())
             enemy.combat.ap = enemy.combat.amax_sent = enemy.char.ap_ceiling
             self.room.enter(enemy)
+            # Cached Player entities do not reliably ask getInfo again after
+            # death/replacement. Send the same bounded introduction explicitly.
+            for viewer in tuple(self.room.players):
+                if viewer is not enemy:
+                    player_info(viewer, enemy)
             if ally:
                 owner.local_test_allies.append(self)
             else:

@@ -122,6 +122,9 @@ HOW = ("capture", "defend", "none", "admin", "disband", "rent", "expire")
 BASE_SQUAD = 3
 BASE_RESET_LEAD = 5 * 60
 BASE_SOLDIER_RESPAWN = 5 * 60
+BASE_MASTER_NAME = 8000002
+BASE_BODYGUARD_NAME = 8000003
+BASE_GUARD_NAME = 8000004
 
 
 class Site(object):
@@ -544,6 +547,15 @@ def flag_for(store, loc_id, type_id, char_id):
     return held, s.kind != "base" and member_of(store, held, char_id)
 
 
+def may_serve(store, loc_id, trader_type, char_id):
+    """Bunker suppliers/repairer serve the current owner, including its reservation."""
+    base = base_for(loc_id)
+    if base is None or trader_type not in base.traders:
+        return True
+    held = flag_for(store, loc_id, base.flag, char_id)[0]
+    return member_of(store, held, char_id)
+
+
 def may_repair(store, loc_id, trader_type, char_id):
     """Whether a repair at this trader may go ahead (inventory.Inventory.
     repair): anywhere but at a site's flag in its room, always; there, for a
@@ -551,7 +563,7 @@ def may_repair(store, loc_id, trader_type, char_id):
     # Bases have one dedicated repair service; the medic and ammunition
     # supplier must not regain it through a direct ss_upd request.
     if base_for(loc_id) is not None:
-        return trader_type == 989
+        return trader_type == 989 and may_serve(store, loc_id, trader_type, char_id)
     got = flag_for(store, loc_id, trader_type, char_id) if trader_type is not None else None
     return got is None or got[1]
 
@@ -827,7 +839,7 @@ def _touch_quests(s):
 
 def _resend_flag(room, s):
     for eid, npc in list(room.npcs.items()):
-        if npc.type_id == s.flag or (s.kind == 'base' and npc.type_id in s.guards + s.troops):
+        if npc.type_id == s.flag or (s.kind == 'base' and npc.type_id in (s.boss,) + s.guards + s.troops):
             for sess in list(room.players):
                 sess.send_npc_info(eid)
 

@@ -974,6 +974,7 @@ REPLACED_WAREHOUSE_REWARDS = frozenset(range(765, 772))
 # Only the downward passages require a clan. The courtyard and the return
 # lifts remain open, including for a character who left the clan inside.
 CLAN_BASE_ENTRIES = frozenset((18201, 18203))
+CLAN_BASE_EXITS = frozenset((18202, 18204))
 
 
 

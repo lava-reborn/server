@@ -1096,13 +1096,15 @@ ADMIN_GUN = 1534
 # Capacity is type metadata, so existing instances get the same limit.
 PMM_CLIP_SIZES = {7055: 10, 7056: 10, 7057: 10, 7058: 10}
 
-# Ordinary collectible KS-12, latest owner decision 2026-10-27:
+# Ordinary collectible KS-12 baseline, owner decision 2026-10-27:
 # Keep x2 of the original AP cost, except level 5 -> 32 and level 9 -> 27.
 # Two shots + one A combat bandage + five steps are a MINIMUM guarantee
 # in a full nearest-lower A set at that weapon level, without AP regen.
 # Only lower a prior cost when that minimum would not fit (levels 4/6/7).
 # Fixed per-type costs, NOT a fee recalculated from each player's gear.
-# Named/clan copies stay separate.
+# Named/clan copies keep their own baseline. The 2026-11-24 reduction
+# applies to every KS-12 below, including the costs sent to the client.
+KS12_FIRE_COST_PERCENT = 95  # All KS-12 copies; nearest integer, halves round up.
 KS12_FIRE_COSTS = {
     7072: 31, 7073: 32, 7074: 33, 7075: 36, 7076: 24,
     7077: 27, 7078: 38, 7079: 38, 7080: 46, 7070: 46, 7081: 46,
@@ -1310,6 +1312,9 @@ def static_info(type_id):
             costs[2] = KS12_FIRE_COSTS[type_id]
             info[1]["fire_costs"] = costs
         if catalogue()[type_id][1].startswith('lamantin_shotgun_'):
+            info[1]['fire_costs'] = [
+                max(1, (value * KS12_FIRE_COST_PERCENT + 50) // 100) if value else 0
+                for value in info[1]['fire_costs']]
             info[1]['fire_mods'] = [min(value, 10) for value in info[1]['fire_mods']]
         import battle_balance
         for field, value in battle_balance.equipment_changes().get(type_id, {}).items():

@@ -1019,7 +1019,7 @@ def buy_price(si, root, n, gold=False, pmod=PMOD):
     else:
         unit = per / float(si.get("sell_num", 1) or 1)
     price = int(math.ceil(unit * n * as_sent(pmod)))
-    if gold and root != items.AMMO and 0 < as_sent(pmod) < 1 and unit * n > 1:
+    if root != items.AMMO and 0 < as_sent(pmod) < 1 and unit * n > 1:
         price = max(1, min(price, math.ceil(unit * n) - 1))
     return price
 
@@ -2130,6 +2130,10 @@ class Inventory:
         if not entry or entry[2] != world.TRADER or not self.char_id:
             self.ack(RES_REFUSED)
             return
+        if not holdings.may_serve(self.store, self.sess.room.loc.id, entry[1], self.char_id):
+            self.trade = None
+            self.ack(RES_REFUSED)
+            return
         self.trade = TradeSession(target, entry[1], self.sess.room.loc.id)
         self.trade.rates = trade_rates(self.store, self.trade.loc_id, entry[1], self.char_id)
         # Ownership or rent can change while the NPC's earlier info is cached.
@@ -2145,7 +2149,8 @@ class Inventory:
         loc_id = room.loc.id if room is not None else None
         rates = trade_rates(self.store, loc_id, getattr(trade, 'trader_type', None), self.char_id)
         if holdings.base_for(loc_id) is not None:
-            if not self.trade_present(room):
+            if (not self.trade_present(room)
+                    or not holdings.may_serve(self.store, loc_id, trade.trader_type, self.char_id)):
                 return None
         if trade is not None and trade.rates is not None and trade.rates != rates:
             return None

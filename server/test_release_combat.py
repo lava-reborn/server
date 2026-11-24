@@ -21,6 +21,42 @@ class TimedItems(unittest.IsolatedAsyncioTestCase):
     asyncSetUp = fixtures.TrainingGround.asyncSetUp
     asyncTearDown = fixtures.TrainingGround.asyncTearDown
 
+    async def test_local_bot_reused_ids_always_receive_info_then_real_bars(self):
+        import server
+        self.location(1442)
+        self.store.clan_create(self.s.char_id, 'Bars clan', 'bars-clan', '', None)
+        frames = []
+        with patch.object(self.s, 'send', side_effect=lambda cmd, **p: frames.append((cmd, p))), \
+                patch.object(server, 'CHEATS', True):
+            for allied in (False, True):
+                previous = None
+                for _ in range(3):
+                    frames.clear()
+                    if allied:
+                        self.s.admin_test_allies(1)
+                        clone = self.s.local_test_allies[0]
+                    else:
+                        self.s.admin_test_bot()
+                        clone = self.s.local_test_bot
+                    self.addCleanup(clone.exit)
+                    actor = clone.enemy
+                    if previous is not None:
+                        self.assertEqual(actor.pid, previous)
+                    previous = actor.pid
+                    for snapshot in (False, True):
+                        if snapshot:
+                            frames.clear()
+                            self.s.room.snapshot_for(self.s)
+                        payloads = [(cmd, p) for cmd, p in frames if p.get('id') == actor.pid]
+                        info = next(i for i, (cmd, p) in enumerate(payloads) if cmd == 'userInfo_Player')
+                        self.assertEqual(payloads[info + 1], ('usrUp', dict(id=actor.pid, **actor.char.vitals())))
+                        self.assertGreater(payloads[info + 1][1]['hmax'], 0)
+                        self.assertGreater(payloads[info + 1][1]['smax'], 0)
+                    actor.combat.die(self.s.combat)
+                    import asyncio
+                    await asyncio.sleep(0)
+                    self.assertTrue(clone.closed)
+
     def location(self, loc_id):
         import rooms
         import world

@@ -137,7 +137,7 @@ for t in sample:
                              and p.get('use_count') == 1 else 1)
     if root == items.HEAL and internal.startswith('Med_Battle_') and (internal.endswith('_A') or '_G' in internal):
         ours['heal_cost'] = p['heal_cost']
-    if t in items.KS12_FIRE_COSTS:
+    if internal.startswith('lamantin_shotgun_'):
         ours['fire_costs'] = p['fire_costs']
     if t in items.PMM_CLIP_SIZES:
         ours['clip_size'] = 10  # accepted PMM magazine overlay, not the old wiki's 3

@@ -250,10 +250,14 @@ try:
     icons = own_items.icons(own_items.table(here))
     if all(os.path.isfile(os.path.join(world.RES, *p.split("/"))) for p in icons.values()):
         served_icons = {}
+        own = own_items.load()
+        by_path = {own_items.icon_path(*row): own[t]
+                   for t, row in own_items.rows(own_items.table(here), own).items()}
         for mine, like in sorted(icons.items()):
-            with open(os.path.join(world.RES, *like.split("/")), "rb") as fh:
+            source = own_items.custom_icon(by_path[mine]) or os.path.join(world.RES, *like.split('/'))
+            with open(source, "rb") as fh:
                 served_icons[mine] = get("/res/" + mine) == fh.read()
-        check("each one's icon served, its original's picture byte for byte:"
+        check("each one's icon served byte for byte from its declared native asset:"
               " classes/WearItem/helm_Bs_U_LVL_12_G_mod00/ico.swf and the four others, and"
               " Тёмное Эхо (G)'s five, and the Eden cleaver",
               served_icons, dict.fromkeys(["classes/WearItem/%s_Bs_U_LVL_%d_G_mod00/ico.swf"

@@ -219,7 +219,7 @@ class ClanBases(unittest.TestCase):
                 guard = next(m for m in rc.mobs.values() if m.type_id in base.troops)
                 server.Session.send_npc_info(s, guard.eid)
                 self.assertEqual((frames[0][1]['name'], frames[0][1]['res']),
-                                 (base.guards[0], base.guards[0]))
+                                 (holdings.BASE_GUARD_NAME, base.guards[0]))
                 self.assertNotIn('clan', frames[0][1])
                 self.assertEqual(len(frames), 1)
                 self.capture(base)
@@ -246,6 +246,38 @@ class ClanBases(unittest.TestCase):
                 server.Session.send_npc_info(s, guard.eid)
                 self.assertEqual(frames[0][1]['name'], guard.type_id)
                 self.assertEqual(frames[0][1]['res'], guard.type_id)
+
+    def test_master_bodyguard_and_guard_have_distinct_base_names_and_native_warehouse_names(self):
+        for base in (self.base, holdings.site('base_dn')):
+            room = rooms.Room(world.location(base.loc), rooms.IdAllocator(), world.mob_types())
+            rc = combat.RoomCombat(room, self.store)
+            frames = []
+            s = NS(room=room, char_id=self.cid, send=lambda cmd, **p: frames.append((cmd, p)),
+                   combat=NS(rc=rc, mob_info=lambda eid: {}, after_npc_info=lambda eid: None))
+            types = {base.boss: holdings.BASE_MASTER_NAME, base.guards[0]: holdings.BASE_BODYGUARD_NAME,
+                     base.troops[0]: holdings.BASE_GUARD_NAME}
+            for stage in ('neutral', 'reserved', 'paid', 'expired'):
+                self.now = SLOT + 10 if stage != 'expired' else SLOT + 7 * 86400 - 300
+                if stage == 'reserved':
+                    self.capture(base)
+                if stage == 'paid':
+                    self.pay(base)
+                for type_id, name in types.items():
+                    target = next(m for m in rc.mobs.values() if m.type_id == type_id)
+                    frames.clear()
+                    server.Session.send_npc_info(s, target.eid)
+                    self.assertEqual(frames[0][1]['name'], name)
+                    self.assertEqual(frames[0][1].get('clan'), self.clan if stage in ('reserved', 'paid') else None)
+                    tags = [p for cmd, p in frames if cmd == 'fellow']
+                    self.assertEqual(len(tags), int(stage in ('reserved', 'paid')))
+                holdings._resend_flag(room, base)
+            self.store.holding_clear(base.key, 'admin')
+            room.loc = world.location(113 if base.key == 'base_dn' else 128)
+            for type_id in (base.boss, base.guards[0]):
+                target = next(m for m in rc.mobs.values() if m.type_id == type_id)
+                frames.clear()
+                server.Session.send_npc_info(s, target.eid)
+                self.assertEqual(frames[0][1]['name'], type_id)
 
     def test_paid_occupation_keeps_only_outer_guards_with_its_own_death_checkpoint(self):
         async def check(base):

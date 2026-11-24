@@ -299,8 +299,73 @@ class ClanBaseAccess(BaseScene):
                     self.assertEqual(frame['take_quests'], quests.taken_by(npc.type_id))
                     self.assertIn(kind, frame['give_quests'])
                     self.assertIn(kind, frame['take_quests'])
+                    for offered in frame['give_quests']:
+                        self.s.cmd_q_status(dict(q_type=offered))
+                    statuses = {p['type']: p['status'] for cmd, p in self.s.frames if cmd == 'q_status'}
+                    self.assertEqual({t for t, status in statuses.items() if status}, {kind})
                     self.s.cmd_q_status(dict(q_type=kind))
                     self.assertEqual(self.s.frames[-1][1]['status'], 1)
+
+    def test_only_local_exit_is_offered_and_each_of_six_lifts_completes_it(self):
+        for joined in (False, True):
+            if joined:
+                self.member()
+            for interior, kind, surface in ((609, 18202, 118), (1443, 18204, 1442)):
+                other = next(t for t in quests.CLAN_BASE_EXITS if t != kind)
+                for eid, npc in self.entry_npcs(interior, kind):
+                    with self.subTest(member=joined, interior=interior, lift=eid):
+                        self.scene(interior)
+                        self.s.pos = npc.cell
+                        self.assertTrue(self.s.quest_available(quests.get(kind)))
+                        self.assertFalse(self.s.quest_available(quests.get(other)))
+                        self.take(other, eid)
+                        self.assertFalse(self.store.has_quest(self.cid, other))
+                        self.take(kind, eid)
+                        row = next(r for r in self.store.quests(self.cid) if r['type'] == kind)
+                        self.s.cmd_q_co(dict(q_id=row['q_id'], mob=eid))
+                        self.assertEqual(self.s.loc.id, surface)
+
+    def test_every_return_lift_remains_usable_when_membership_or_owner_changes(self):
+        account, _ = self.store.register('new-base-head', 'local-only')
+        head, _ = self.store.create_character(account, 'NewBaseHead', 0, '1')
+        other = self.store.clan_create(head, 'New base owner', 'new-base-owner', '', None)
+        for interior, kind, surface in ((609, 18202, 118), (1443, 18204, 1442)):
+            base = holdings.base_for(interior)
+            for change in ('leave', 'foreign', 'new-owner', 'neutral', 'expired'):
+                for index in range(3):
+                    with self.subTest(interior=interior, change=change, lift=index):
+                        self.store.db.execute('DELETE FROM clan_members WHERE char_id=?', (self.cid,))
+                        self.store.db.commit()
+                        self.member()
+                        self.store.holding_clear(base.key, 'admin')
+                        self.store.holding_set(base.key, self.clan, 'admin', slot=1000, when=1000)
+                        self.store.db.execute('UPDATE clan_holdings SET paid_until=2000 WHERE site=?', (base.key,))
+                        self.store.db.commit()
+                        entries = self.entry_npcs(interior, kind)
+                        eid, npc = entries[index]
+                        self.s.pos = npc.cell
+                        self.take(kind, eid)
+                        row = next(r for r in self.store.quests(self.cid) if r['type'] == kind)
+                        if change in ('leave', 'foreign'):
+                            self.store.db.execute('DELETE FROM clan_members WHERE char_id=?', (self.cid,))
+                            self.store.db.commit()
+                            if change == 'foreign':
+                                self.store.clan_member_add(self.cid, other, 0, '')
+                        elif change == 'new-owner':
+                            self.store.holding_set(base.key, other, 'admin', slot=1000, when=1000)
+                        elif change == 'neutral':
+                            self.store.holding_clear(base.key, 'admin')
+                        else:
+                            self.store.db.execute('UPDATE clan_holdings SET paid_until=1 WHERE site=?', (base.key,))
+                            self.store.db.commit()
+                        self.s.frames.clear()
+                        self.assertTrue(self.s.quest_available(quests.get(kind)))
+                        self.s.cmd_q_status(dict(q_type=kind))
+                        self.assertEqual(self.s.frames[-1][1]['status'], 1)
+                        self.s.cmd_q_co(dict(q_id=row['q_id'], mob=eid))
+                        self.assertEqual(self.s.loc.id, surface)
+                        self.assertIsNone(self.store.quest(row['q_id']))
+                        self.assertIn(('cmdAck', dict(res=0)), self.s.frames)
 
 
 class LocalBossSpawning(BaseScene):
@@ -339,17 +404,20 @@ class LocalBossSpawning(BaseScene):
             self.assertEqual(len(cells), len(set(cells)))
 
     def test_alias_restores_warehouse_boss_and_its_two_guards(self):
-        site = holdings.site('wh_sever')
-        rc = self.room_combat(site.loc)
         moment = datetime(2026, 11, 23, 17, 30, tzinfo=bosses.ZONE).timestamp()
-        with patch.object(server, 'CHEATS', True), patch.object(bosses.time, 'time', return_value=moment), \
-                patch.object(bosses, '_OFFSET', 0):
-            rc.keep_hours()
-            self.assertTrue(any('появился рядом' in text for text in self.command()))
-            guards = [m for m in rc.bosses if m.type_id in site.guards]
-            self.assertEqual(len(guards), 2)
-            self.assertTrue(all(m.alive and not m.away for m in guards))
-            self.assertTrue(next(m for m in rc.bosses if m.type_id == site.boss).alive)
+        for site in holdings.sites().values():
+            if site.kind != 'warehouse':
+                continue
+            with self.subTest(site=site.key), patch.object(server, 'CHEATS', True), \
+                    patch.object(bosses.time, 'time', return_value=moment), patch.object(bosses, '_OFFSET', 0):
+                rc = self.room_combat(site.loc)
+                rc.keep_hours()
+                self.assertTrue(all(m.away for m in rc.bosses))
+                self.assertTrue(any('появился рядом' in text for text in self.command()))
+                guards = [m for m in rc.bosses if m.type_id in site.guards]
+                self.assertEqual(len(guards), 2)
+                self.assertTrue(all(m.alive and not m.away for m in guards))
+                self.assertTrue(next(m for m in rc.bosses if m.type_id == site.boss).alive)
 
     def test_alias_advances_to_weekly_timer_and_restores_master_with_living_guards(self):
         moment = datetime(2026, 11, 23, 17, 30, tzinfo=bosses.ZONE).timestamp()
