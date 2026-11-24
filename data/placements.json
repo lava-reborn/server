@@ -16292,10 +16292,10 @@
     {
       "type": 2018,
       "cell": [
-        16,
-        55
+        11,
+        58
       ],
-      "why": "Owner-approved second base medic, two hexes beside the existing supplier; walkable with a free approach."
+      "why": "Owner-marked A-medic counter in front of the kitchen, 2026-11-24; walkable cell with three free approaches. Other suppliers stay in place."
     }
   ],
   "1443": [
@@ -16310,10 +16310,10 @@
     {
       "type": 2018,
       "cell": [
-        16,
-        55
+        11,
+        58
       ],
-      "why": "Owner-approved second base medic, two hexes beside the existing supplier; walkable with a free approach."
+      "why": "Owner-marked A-medic counter in front of the kitchen, 2026-11-24; walkable cell with three free approaches. Other suppliers stay in place."
     }
   ]
  }

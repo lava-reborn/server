@@ -136,13 +136,15 @@ class ClanBaseWorldTests(unittest.TestCase):
                 neighbours = progression.hex_neighbours(cell, loc.width, loc.height)
                 self.assertGreaterEqual(sum(c not in loc.obstacles for c in neighbours), 4)
 
-    def test_paired_medics_have_different_native_medical_models_and_free_approaches(self):
+    def test_base_medics_have_different_models_and_afro_counter_has_free_approach(self):
         for lid in (609, 1443):
             loc = world.location(lid)
             first = next(c for c, t in loc.spawns if t == 1013)
             second = next(r for r in world.placed_in(lid) if r['type'] == 2018)
             x, y = second['cell']
-            self.assertEqual((x, y), (first % loc.width + 2, first // loc.width))
+            self.assertEqual((x, y), (11, 58))
+            self.assertLess(x, first % loc.width)
+            self.assertGreater(y, first // loc.width)
             cell = y * loc.width + x
             self.assertNotIn(cell, loc.obstacles | set(travel.exit_sides(loc)))
             accessible = reachable(loc, next(c for c, t in loc.spawns if t == 689))
@@ -397,9 +399,9 @@ class ClanBaseWorldTests(unittest.TestCase):
         expected = {(x, y, new) for x, y, _was, new in edits if new is not None}
         for x, y, text in expected:
             self.assertIn('3 живых соклановца ' + ('12+' if (x, y) == BASES[1442] else '16+'), text)
-            self.assertIn('Каждый ранит хозяина', text)
-            self.assertIn('клан добившего', text)
-            self.assertLessEqual(len(text.split('<br>')), 5)
+            self.assertNotIn('Каждый ранит хозяина', text)
+            self.assertNotIn('клан добившего', text)
+            self.assertEqual(len(text.split('<br>')), 4)
             for value in ('20:00–21:00', '19:55', '1 500 000', '21:15'):
                 self.assertIn(value, text)
         for raw in (b'<data>' + originals + b'</data>', b'<data></data>'):
