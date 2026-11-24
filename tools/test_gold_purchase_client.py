@@ -152,15 +152,16 @@ class GoldPurchaseClient(unittest.TestCase):
         self.answer()
         self.assertEqual(self.bought, [(25218, 500)])
 
-    def test_base_discount_uses_native_ceil_for_rounds_and_single_medicine(self):
-        for root, price, n in ((3, 2, 1), (3, 2, 20), (3, 2, 5000), (2, 105, 1)):
+    def test_base_discount_is_per_round_and_keeps_the_one_cent_floor(self):
+        for root, price, n, expected in ((3, 2, 1, .01), (3, 2, 20, .2),
+                                         (3, 2, 5000, 50.0), (2, 105, 1, .95),
+                                         (3, 1, 1, .01), (3, 1, 5000, 50.0),
+                                         (3, 3, 20, .4), (2, 1, 1, .01)):
             with self.subTest(root=root, price=price, n=n):
                 self.setUp()
                 self.pan['trader']['pmod'] = 0.9
                 item = self.item(root=root, gold=price)
                 self.methods['buy'].invoke(self.trade, [item, n])
-                expected = (max(1, min(math.ceil(price * n * 0.9), math.ceil(price * n) - 1))
-                            if root != 3 and price * n > 1 else math.ceil(price * n * 0.9)) / 100
                 self.assertIn(str(expected) + ' G', self.trade['__gcBuyDialog']['label'])
                 self.answer()
                 self.assertEqual(self.bought, [(25218, n)])

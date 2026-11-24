@@ -489,6 +489,22 @@ class BaseTrade(unittest.TestCase):
         self.assertEqual(self.store.money(self.cid), before)
         self.assertFalse(self.inv.rows())
 
+    def test_both_base_medics_stock_all_requested_grades_and_exact_discounted_prices(self):
+        expected = set(range(4917, 4957)) | {3789, 3826, 3897, 4181, 4182, 4183, 4184, 4185}
+        for loc in (609, 1443):
+            with self.subTest(location=loc):
+                stock = items.stock_for(1013, loc)
+                self.assertTrue(expected <= set(stock), sorted(expected - set(stock)))
+                self.assertEqual(len(stock), len(set(stock)))
+                self.assertLess(len(stock), 256)
+                for tid, gold, cost in ((3789, True, 45), (4181, False, 2250),
+                                        (4917, False, 450), (4937, False, 450),
+                                        (4919, True, 7), (4939, True, 7),
+                                        (4936, True, 198), (4956, True, 198)):
+                    self.assertEqual(inventory.buy_price(items.params_of(tid), items.HEAL, 1, gold, .9), cost)
+                self.assertNotIn(4917, items.stock_for(1013, 127))
+                self.assertNotIn(4956, items.stock_for(1013, 36))
+
     def test_base_stock_is_city_consumables_only_without_duplicates_or_client_overflow(self):
         for loc, traders in ((609, (714, 1013)), (1443, (1013, 5240))):
             stocks = [items.stock_for(t, loc) for t in traders]

@@ -1262,50 +1262,69 @@ class ClanBases(unittest.TestCase):
                 restored.close()
 
     def test_two_officers_racing_payment_debit_once_and_survive_reload(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            path = os.path.join(tmp, "rent-race.sqlite")
-            setup = accounts.Store(path)
-            aid, _ = setup.register("rent-race", "password")
-            head, _ = setup.create_character(aid, "RentHead", 0, "1")
-            officer, _ = setup.create_character(aid, "RentOfficer", 0, "1")
-            clan = setup.clan_create(head, "Rent clan", "rent-clan", "", None)
-            setup.clan_member_add(officer, clan, 0x400, "")
-            setup.clan_treasury_adjust(clan, 4_500_000, "admin")
-            setup.holding_capture(self.base.key, clan, SLOT, head, SLOT + 10,
-                                  base_sites=holdings.base_keys())
-            setup.close()
-            barrier = threading.Barrier(2)
-            results, errors = [], []
-            def pay(cid):
-                connection = None
-                try:
-                    connection = accounts.Store(path)
-                    barrier.wait(timeout=10)
-                    results.append(holdings.pay_rent(connection, self.base, cid, SLOT + 20))
-                except Exception as exc:
-                    errors.append(repr(exc))
-                finally:
-                    if connection is not None:
-                        connection.close()
-            threads = [threading.Thread(target=pay, args=(cid,)) for cid in (head, officer)]
-            for thread in threads:
-                thread.start()
-            for thread in threads:
-                thread.join(timeout=20)
-            self.assertFalse(any(thread.is_alive() for thread in threads))
-            self.assertEqual(errors, [])
-            self.assertEqual(results.count(None), 1)
-            self.assertEqual(results.count(3_000_000), 1)
-            restored = accounts.Store(path)
-            try:
-                self.assertEqual(restored.clan_treasury(clan), 3_000_000)
-                self.assertEqual(restored.holding(self.base.key)["paid_until"], SLOT + 7 * 86400 - 300)
-                self.assertIs(holdings.paid_base_for(restored, 609, officer, SLOT + 30), self.base)
-                self.assertIsNone(holdings.pay_rent(restored, self.base, head, SLOT + 30))
-                self.assertEqual(len([r for r in restored.clan_ledger_rows(clan)
-                                      if r["source"] == "base_rent"]), 1)
-            finally:
-                restored.close()
+        for self.base in (holdings.site("base_dn"), holdings.site("base_ah")):
+            with self.subTest(base=self.base.key):
+                with tempfile.TemporaryDirectory() as tmp:
+                    path = os.path.join(tmp, "rent-race.sqlite")
+                    setup = accounts.Store(path)
+                    aid, _ = setup.register("rent-race", "password")
+                    head, _ = setup.create_character(aid, "RentHead", 0, "1")
+                    officer, _ = setup.create_character(aid, "RentOfficer", 0, "1")
+                    clan = setup.clan_create(head, "Rent clan", "rent-clan", "", None)
+                    setup.clan_member_add(officer, clan, 0x400, "")
+                    setup.clan_treasury_adjust(clan, 4_500_000, "admin")
+                    setup.holding_capture(self.base.key, clan, SLOT, head, SLOT + 10,
+                                          base_sites=holdings.base_keys())
+                    setup.close()
+                    barrier = threading.Barrier(2)
+                    results, errors = [], []
+                    def pay(cid):
+                        connection = None
+                        try:
+                            connection = accounts.Store(path)
+                            barrier.wait(timeout=10)
+                            results.append(holdings.pay_rent(connection, self.base, cid, SLOT + 20))
+                        except Exception as exc:
+                            errors.append(repr(exc))
+                        finally:
+                            if connection is not None:
+                                connection.close()
+                    threads = [threading.Thread(target=pay, args=(cid,)) for cid in (head, officer)]
+                    for thread in threads:
+                        thread.start()
+                    for thread in threads:
+                        thread.join(timeout=20)
+                    self.assertFalse(any(thread.is_alive() for thread in threads))
+                    self.assertEqual(errors, [])
+                    self.assertEqual(results.count(None), 1)
+                    self.assertEqual(results.count(3_000_000), 1)
+                    restored = accounts.Store(path)
+                    try:
+                        self.assertEqual(restored.clan_treasury(clan), 3_000_000)
+                        self.assertEqual(restored.holding(self.base.key)["paid_until"], SLOT + 7 * 86400 - 300)
+                        self.assertIs(holdings.paid_base_for(restored, self.base.rooms[-1], officer, SLOT + 30), self.base)
+                        self.assertIsNone(holdings.pay_rent(restored, self.base, head, SLOT + 30))
+                        # Fresh rooms and native service packets use only the reopened
+                        # database; no ownership or access cache from the old process.
+                        self.now = SLOT + 30
+                        with patch.object(self, 'store', restored), patch.object(server, 'STORE', restored):
+                            native, frames = self.native(officer)
+                            native.combat = NS(mob_info=lambda _eid: {}, after_npc_info=lambda _eid: None)
+                            interior = next(loc for loc in self.base.rooms if loc != self.base.loc)
+                            native.loc = world.location(interior)
+                            native.room = rooms.Room(native.loc, rooms.IdAllocator(), world.mob_types())
+                            for eid, npc in native.room.npcs.items():
+                                if npc.root == world.TRADER:
+                                    native.send_npc_info(eid)
+                            packets = [p for name,p in frames if name == 'userInfo_Trader']
+                            self.assertTrue(any(p['can_trade'] for p in packets))
+                            self.assertTrue(any(p['can_repair'] for p in packets))
+                            self.assertTrue(all(p['pmod'] == .9 for p in packets if p['can_trade']))
+
+                        self.assertEqual(len([r for r in restored.clan_ledger_rows(clan)
+                                              if r["source"] == "base_rent"]), 1)
+                    finally:
+                        restored.close()
 
 
 class WarehouseGold(unittest.TestCase):

@@ -52,9 +52,12 @@ class MailGoldLootTests(unittest.TestCase):
             with self.subTest(type_id=type_id):
                 self.assertFalse(mail.postable(type_id))
                 self.assertTrue(barter.tradable(type_id))
-        for type_id in (25567, 26075, 4363, 7006, 37679, 6946, 3159):
+        for type_id in (25567, 26075, 4363, 6140, 37679, 6946, 3159):
             with self.subTest(type_id=type_id):
                 self.assertTrue(mail.postable(type_id))
+        self.assertTrue(items.acquisition_blocked(7006))
+        self.assertNotIn(7006, mail.GOLD_LOOT_NOT_POSTABLE)
+        self.assertFalse(mail.postable(7006))
 
     def test_forged_send_is_refused_before_items_postage_or_money_leave(self):
         # These are all supported player parcel types, including express
@@ -105,7 +108,7 @@ class MailGoldLootTests(unittest.TestCase):
     def test_gold_equipment_and_ordinary_loot_still_send_with_each_parcel_type(self):
         self.s.char.gold = 10000
         self.s.char.save(self.store)
-        for type_id in (26075, 6946):
+        for type_id in (26075, 6946, 6140):
             for kind in (mail.LETTER, mail.LETTER_EXPRESS,
                          mail.TRADE, mail.TRADE_EXPRESS):
                 with self.subTest(type_id=type_id, kind=kind):

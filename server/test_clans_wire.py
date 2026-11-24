@@ -35,11 +35,12 @@ for _l in ("alice", "bob", "oneil"):
     _st.register(_l + RUN, "secret")
 _st.close()
 CRED = {l: accounts.credential(l + RUN, "secret") for l in ("alice", "bob", "oneil")}
-ALICE, BOB, ONEIL = "Alice" + RUN, "Bob" + RUN, "O'Neil&50%" + RUN
+ALICE, BOB, ONEIL = "Alice" + RUN, "Bob" + RUN, "O'Neil&50%26" + RUN
 DEAF = 1.5
 
 import testkit  # noqa: E402
-from testkit import check, fails  # noqa: E402
+from testkit import check, fails
+from urllib.parse import quote  # noqa: E402
 
 
 def free_port():
@@ -203,8 +204,8 @@ try:
     a.send("gg_info;det=1;")
     a.frames()
     line = [t for t in a.raw if t.startswith("gg_list;")][0]
-    check("the roster's names on the wire as they are: @%s@, no %%27, %%26 or %%25" % ONEIL,
-          ("@%s@" % ONEIL in line, "%27" in line or "%26" in line), (True, False))
+    check("the roster carries the literal name, including %26; no URL-encoded duplicate",
+          ("@%s@" % ONEIL in line, "@%s@" % quote(ONEIL, safe="") in line), (True, False))
 
     # --- channel 2 ---------------------------------------------------------------------
     b.send("userMsg;entry=@привет, свои@;group=2;")

@@ -32,7 +32,7 @@ class BuffProgression(unittest.TestCase):
             if params.get(currency, 0) > 0:
                 groups[effect['family'], currency].append((tid, effect, params[currency]))
         comparisons = 0
-        for rows in groups.values():
+        for (_family, currency), rows in groups.items():
             for low, old_effect, old_cost in rows:
                 for high, new_effect, new_cost in rows:
                     a, b = potency(old_effect), potency(new_effect)
@@ -40,6 +40,10 @@ class BuffProgression(unittest.TestCase):
                     longer = a == b and new_effect['duration'] > old_effect['duration']
                     if stronger:
                         self.assertGreater(new_cost, old_cost, (low, high))
+                        discounted = [inventory.buy_price(items.params_of(t), items.root_of(t), 1,
+                                                          currency == 'g_cost', .9)
+                                      for t in (low, high)]
+                        self.assertGreater(discounted[1], discounted[0], ('base price', low, high))
                         comparisons += 1
                     elif longer:
                         self.assertGreaterEqual(new_cost, old_cost, (low, high))

@@ -176,6 +176,21 @@ def stimulants(top, currency=None):
     return result
 
 
+def base_stimulants(top):
+    """Base medics also stock every Salus/Anesthetic tier and the requested reagents."""
+    import effects
+    import items
+    chosen = set(stimulants(top))
+    extras = {'item_mob_drop_up', 'item_up_critical_probability_1',
+              'item_up_critical_probability_4', 'item_up_critical_probability_4_gold',
+              'item_up_critical_evade_4', 'item_up_critical_evade_4_gold'}
+    for type_id in effects.definitions():
+        article = items.catalogue()[type_id][1]
+        if article.startswith(('Salus_', 'Anesthetic_')) or article in extras:
+            chosen.add(type_id)
+    return sorted(chosen)
+
+
 @lru_cache(maxsize=1)
 def gold_ammunition_by_calibre():
     """Index immutable retail ammunition once, not once per shop row."""
@@ -668,7 +683,8 @@ def apply(trader_type, loc_id, own):
         which = MED_KINDS
     stock = goods(which, low, top, ONLY.get(trader_type)) if which else []
     if trader_type in BUFF_SELLERS:
-        stock += stimulants(top, stimulant_currency(trader_type, loc_id))
+        stock += (base_stimulants(top) if trader_type == 1013 and loc_id in (609, 1443)
+                  else stimulants(top, stimulant_currency(trader_type, loc_id)))
     stock += [t for t in own if not band_ware(t) or (not which and fits(t, low, top))]
     if any(kind in FIREARM_KINDS for kind in which):
         stock += gold_ammunition(stock)

@@ -104,7 +104,7 @@ check_slice() {
       locations/static/*.xml|locations/deadloc/*.xml|locations/desert/*.xml) ;;
       *) continue ;;
     esac
-    want=$(awk -F'\t' -v p="$rel" 'NF == 3 && $3 == p { print $1 }' "$HERE/client/base.txt")
+    want=$(awk -F'\t' -v p="$rel" 'NF == 3 { sub(/\r$/, "", $3); if ($3 == p) print $1 }' "$HERE/client/base.txt")
     if [ -z "$want" ]; then
       slice_excludes+=(--exclude "/$rel")
       continue
