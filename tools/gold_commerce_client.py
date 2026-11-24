@@ -82,6 +82,39 @@ def __gcBuyTotal(price, count, modifier, root, gold):
         total = Math.max(1, Math.min(total, Math.ceil(price * count) - 1))
     return total
 
+def __gcBaseBuyPrice(item, count):
+    pan = lol.core.SceneShifter._ref.UIPanels.trade.instance.content
+    if lol.gpui.StaffInterface.ssType != "trade" or not pan or not pan.trader:
+        return
+    if not item or item.tradeID == None or pan.trader.type_list[item.tradeID] != item.typeID:
+        return
+    if not (item.rootID == 2 or item.rootID == 3) or item.getProp("bg_p_cost"):
+        return
+    modifier = pan.trader.pmod
+    if not (modifier > 0 and modifier < 1):
+        return
+    gold = item.getProp("g_cost") > 0
+    price = item.getProp("cost")
+    if gold:
+        price = item.getProp("g_cost")
+    if not (price > 0 and count > 0):
+        return
+    total = _global.__gcBuyTotal(price, count, modifier, item.rootID, gold)
+    if gold:
+        return String(total / 100) + " G"
+    return String(total) + " Афро"
+
+def __gcAddCost(rows):
+    this.__gcAddCostOrig(rows)
+    price = _global.__gcBaseBuyPrice(this.item, 1)
+    if price == None:
+        return
+    rows.push(["Цена базы (1 шт.):", price])
+    count = this.item.getProp("size")
+    if count > 1:
+        price = _global.__gcBaseBuyPrice(this.item, count)
+        rows.push(["Цена базы (" + String(count) + " шт.):", price])
+
 def __gcShowCost(item, align):
     this.__gcShowCostOrig(item, align)
     if lol.gpui.StaffInterface.ssType != "trade":
@@ -498,6 +531,7 @@ def patches(Asm, undef):
         (('core', 'objects', 'Item'), 'initialize', '__gcInitializeOrig', '__gcInitialize'),
         (('core', 'objects', 'Item'), 'getProp', '__gcGetPropOrig', '__gcGetProp'),
         (('gpui', 'Annotation'), 'addSell', '__gcAddSellOrig', '__gcAddSell'),
+        (('gpui', 'Annotation'), 'addCost', '__gcAddCostOrig', '__gcAddCost'),
         (('gpui', 'ItemContainer'), 'showCost', '__gcShowCostOrig', '__gcShowCost'),
         (('gpui', 'TradeInterface'), 'askTradeItem', '__gcAskSaleOrig', '__gcAskSale'),
         (('gpui', 'TradeInterface'), 'checkSellItem', '__gcCheckSellOrig', '__gcCheckSell'),
@@ -521,4 +555,5 @@ def patches(Asm, undef):
         wraps.append((('core', 'player', 'Trade'), name, name + 'Orig', params, body))
     return dict(globals=[(name, params, body) for name, params, body in functions
                          if name in ('__gcQuality', '__gcSaleQuality', '__gcSaleUnit', '__gcConfirmInput',
-                                     '__esActive', '__esNominal', '__gcBaseLoot', '__gcBuyTotal')], wraps=tuple(wraps))
+                                     '__esActive', '__esNominal', '__gcBaseLoot', '__gcBuyTotal',
+                                     '__gcBaseBuyPrice')], wraps=tuple(wraps))

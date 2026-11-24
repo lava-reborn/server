@@ -6,6 +6,8 @@ import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'server'))
 import widescreen as w
+import inventory
+import items
 from avm_test import Function, Arr
 from gold_commerce_client import patches
 from protocol import decode
@@ -113,6 +115,63 @@ class GoldCommerceClient(unittest.TestCase):
             exchange['rightNum'] = count
             exchange['countMoney']()
             self.assertEqual(float(exchange['money_mc']['info_txt']['text']), expected)
+
+    def test_base_stock_tooltips_show_local_unit_and_stack_prices_without_changing_nominal(self):
+        self.pan['trader'] = dict(pmod=.9, type_list=Arr([60011]))
+        for root, gold, price, count, unit, stack in (
+                (2, True, 4, 10, .03, .36), (2, False, 13, 10, 12, 117),
+                (3, True, 1, 5000, .01, 45), (3, False, .65, 100, 1, 59)):
+            with self.subTest(root=root, gold=gold):
+                item = self.item(cost=0 if gold else price, g_cost=price if gold else 0, size=count)
+                item.update(rootID=root, typeID=60011, tradeID=0)
+                rows = Arr()
+                panel = dict(item=item, __gcAddCostOrig=lambda arr: arr.push(Arr(['Базовая цена:', price])))
+                self.methods['addCost'].invoke(panel, [rows])
+                self.assertEqual(rows[0][1], price)
+                self.assertEqual(rows[1][0], 'Цена базы (1 шт.):')
+                self.assertEqual(rows[2][0], f'Цена базы ({count} шт.):')
+                self.assertEqual(float(rows[1][1].split()[0]), unit)
+                self.assertEqual(float(rows[2][1].split()[0]), stack)
+                self.assertEqual(item['getProp']('g_cost' if gold else 'cost'), price)
+
+    def test_base_purchase_tooltip_cannot_leak_to_bag_another_shop_or_repair(self):
+        item = self.item(cost=13, size=10)
+        item.update(rootID=2, typeID=6057, tradeID=0)
+        for scene, modifier, index in (('trade', .9, None), ('trade', 1, 0),
+                                        ('repair', .9, 0), ('trade', .9, 1)):
+            with self.subTest(scene=scene, modifier=modifier, index=index):
+                self.env['lol']['gpui']['StaffInterface']['ssType'] = scene
+                self.pan['trader'] = dict(pmod=modifier, type_list=Arr([6057, 6063]))
+                item['tradeID'] = index
+                rows = Arr()
+                panel = dict(item=item, __gcAddCostOrig=lambda arr: arr.push(Arr(['Базовая цена:', 13])))
+                self.methods['addCost'].invoke(panel, [rows])
+                self.assertEqual(len(rows), 1)
+
+    def test_every_base_consumable_tooltip_matches_the_authoritative_purchase_price(self):
+        checked = 0
+        for loc, suppliers in ((609, (714, 1013)), (1443, (5240, 1013))):
+            for supplier in suppliers:
+                stock = items.stock_for(supplier, loc)
+                self.pan['trader'] = dict(pmod=.9, type_list=Arr(stock))
+                for index, tid in enumerate(stock):
+                    root = items.root_of(tid)
+                    if root not in (items.HEAL, items.AMMO):
+                        continue
+                    si = items.params_of(tid)
+                    cost, gold_cost = si['cost'], si['g_cost']
+                    if root == items.AMMO:
+                        cost = inventory.js_round(cost * 1000 / (si['sell_num'] or 1)) / 1000
+                        gold_cost = inventory.js_round(gold_cost / (si['sell_num'] or 1))
+                    item = self.item(cost=cost, g_cost=gold_cost)
+                    item.update(rootID=root, typeID=tid, tradeID=index)
+                    for count in (1, 10, 100) if root == items.AMMO else (1, 10):
+                        with self.subTest(location=loc, supplier=supplier, type=tid, count=count):
+                            shown = self.env['_global']['__gcBaseBuyPrice'].invoke(None, [item, count])
+                            value = float(shown.split()[0]) * (100 if gold_cost else 1)
+                            self.assertAlmostEqual(value, inventory.buy_price(si, root, count, bool(gold_cost), .9))
+                            checked += 1
+        self.assertGreater(checked, 400)
 
     def test_purchase_price_override_keeps_ordinary_cards_gear_and_sale_routes_native(self):
         for root, modifier, scene in ((2, 1, 'trade'), (0, .9, 'trade'), (1, .9, 'trade'), (2, .9, 'repair')):

@@ -2894,6 +2894,10 @@ class Session:
                 params.update(can_trade=0, can_repair=1 if mends else 0)
                 if holder is not None:
                     params.update(clan=int(holder["clan_id"]))
+                    if holder["paid_until"] and holdings.base_for(self.room.loc.id) is not None:
+                        # A paid base has no second rent offer. Keep the flag
+                        # and its open contact alive while the ACK retires.
+                        params.update(give_quests=[], take_quests=[])
         elif root == world.MOB:
             base = (holdings.base_for(self.room.loc.id, type_id)
                     or holdings.guard_site(self.room.loc.id, type_id))
@@ -3971,7 +3975,7 @@ class Session:
         if committed and base is not None and STORE.quest(q_id) is None:
             # Other sessions' frames must follow COMMIT, just like the
             # payer's buffered quest ACK. No stale treasury on rollback.
-            holdings.changed(ONLINE, base)
+            holdings.refresh_paid_services(ONLINE, base)
             held = holdings.holder(STORE, base)
             if held is not None:
                 clans.clan_treasury.tell_balance(CLANS, held["clan_id"])

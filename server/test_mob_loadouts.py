@@ -8,6 +8,7 @@ os.environ.setdefault('LAVA_DB', ':memory:')
 
 import battle_balance
 import camp_loot
+import combat
 import inventory
 import items
 import mob_loadouts
@@ -29,6 +30,52 @@ class FixedRandom:
 
 
 class MobLoadouts(unittest.TestCase):
+    def test_all_live_camp_attacks_retain_damage_through_the_native_player_resolver(self):
+        from types import SimpleNamespace as NS
+        from test_mob_penetration import afro_character
+
+        members = {t for group, _sniper in mob_loadouts.policy()[0].values() for t in group}
+        checked, attacks = set(), 0
+        for type_id in members:
+            attacker = mobs.Mob(1, type_id, 0)
+            stats = attacker.stats
+            if not stats.can_attack:
+                continue
+            character = afro_character(max(1, min(17, stats.level)), 'pistol')
+            target = NS(is_player=True, character=lambda: character, armor=lambda: character.armor)
+            modes = getattr(stats, 'balanced_modes', ())
+            if not modes:
+                modes = (dict(dmin=stats.dmg_min, dmax=stats.dmg_max, shots=stats.shots,
+                              ap=stats.attack_ap, time=stats.attack_time),)
+            for mode in modes:
+                with self.subTest(type_id=type_id, mode=mode):
+                    self.assertGreater(mode['dmin'], 0)
+                    self.assertGreater(mode['shots'], 0)
+                    self.assertGreater(mode['time'], 0)
+                    self.assertTrue(0 < mode['ap'] <= stats.ap_max)
+                    weapon = combat.Weapon(mode['shots'], mode['dmin'], mode['dmax'],
+                                           1, 1, 1, mode.get('piercing', 1), 0, stats.crit,
+                                           None, None)
+                    for raw in (mode['dmin'], mode['dmax']):
+                        stamina = mode.get('sdmin', 0)
+                        if stats.ranged:
+                            full = combat.RoomCombat.bullet_damage(
+                                None, attacker, target, weapon, raw, stamina, False, character.sp_max)
+                            empty = combat.RoomCombat.bullet_damage(
+                                None, attacker, target, weapon, raw, stamina, False, 0)
+                        else:
+                            full = combat.RoomCombat.melee_damage(
+                                None, attacker, target, raw, False, character.sp_max)
+                            empty = combat.RoomCombat.melee_damage(None, attacker, target, raw, False, 0)
+                        self.assertGreater(sum(full), 0)
+                        # The issued A weapon and KS round already contain their
+                        # multipliers. The live resolver must not apply them again.
+                        self.assertEqual(empty, (raw + stamina, 0))
+                    attacks += 1
+            checked.add(type_id)
+        self.assertEqual(checked, members)
+        self.assertGreater(attacks, len(checked))
+
     def test_all_camp_scopes_have_at_most_one_actual_rifle_type(self):
         catalogue = world.mob_types()
         camps, _rifles = mob_loadouts.policy()

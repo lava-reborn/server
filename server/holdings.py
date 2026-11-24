@@ -870,6 +870,20 @@ def changed(sessions, s):
     _touch_quests(s)
 
 
+def refresh_paid_services(sessions, s):
+    """Publish a committed lease without destroying the payer's quest NPC.
+
+    Ownership already changed at capture. Payment only changes offers and
+    service rights; the same flag, lifts and traders can receive fresh info.
+    """
+    for sess in list(sessions):
+        room = getattr(sess, "room", None)
+        if room is not None and room.loc.id in s.rooms:
+            for eid, npc in list(room.npcs.items()):
+                if npc.root != world.MOB:
+                    sess.send_npc_info(eid)
+
+
 # --- from outside the kill -------------------------------------------------------------------
 def order_hold(store, sessions, s, clan_id):
     """The admin's hold (clan_admin.py): the clan holds the site now. Returns

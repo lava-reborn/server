@@ -200,11 +200,25 @@ class BaseCaptureFeedback(unittest.IsolatedAsyncioTestCase):
                 self.assertTrue(any('недостаточно афро' in text for text in self.answers()))
                 self.store.clan_treasury_adjust(self.clan, self.base.rent, 'admin')
                 self.now = SLOT + 74 * 60
-                self.s.cmd_q_co(dict(mob=flag, q_id=row['q_id']))
+                self.s.writer.frames.clear()
+                with patch.object(server, 'ONLINE', {self.s: True}):
+                    self.s.cmd_q_co(dict(mob=flag, q_id=row['q_id']))
                 self.assertIsNone(self.store.quest(row['q_id']))
                 self.assertEqual(self.store.clan_treasury(self.clan), 0)
                 held = holdings.paid_holder(self.store, self.base)
                 self.assertEqual(held['paid_until'], SLOT + 7 * 86400 - holdings.BASE_RESET_LEAD)
+                paid_frames = self.frames()
+                self.assertEqual([p['res'] for cmd,p in paid_frames if cmd == 'cmdAck'], [0])
+                flag_info = next(p for cmd,p in paid_frames if cmd == 'userInfo_Trader' and p['id'] == flag)
+                self.assertEqual((flag_info['give_quests'], flag_info['take_quests']), ([], []))
+                self.assertTrue(any(cmd == 'userInfo_Commoner' and p['give_quests']
+                                    for cmd,p in paid_frames))  # lifts receive paid access
+                self.rc.keep_hours()
+                self.assertEqual(self.flag_packet()[0], flag)
+                self.assertFalse(any(cmd == 'lch' and p.get('lostUser') == flag for cmd,p in self.frames()))
+                before_replay = self.store.clan_treasury(self.clan)
+                self.s.cmd_q_co(dict(mob=flag, q_id=row['q_id']))
+                self.assertEqual(self.store.clan_treasury(self.clan), before_replay)
                 self.assertTrue(all(ally.target() is None for ally in self.allies))
                 self.s.cmd_q_status(dict(q_type=self.base.rent_quest))
                 self.assertEqual(self.frames()[-1][1]['status'], 0)

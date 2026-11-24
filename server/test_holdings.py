@@ -891,6 +891,12 @@ async def main():
            STORE.holding(base.key)["paid_until"],
            holdings.paid_base_for(STORE, 609, payer.char_id) is base),
           ([0], [server.RES_NO_SUCH], treasury + 1_500_000, slot + 7 * 86400 - 300, True))
+    base_room.combat.keep_hours()
+    payer.send_npc_info(base_flag)
+    paid_flag = named(take(payer), 'userInfo_Trader')
+    check("paid rent keeps the same flag and withdraws both rent menus",
+          (base_flag in base_room.npcs, paid_flag[-1]['give_quests'], paid_flag[-1]['take_quests']),
+          (True, [], []))
 
     NOW[0] = at(19, 5, day=51)
     into(dora, CENTER)

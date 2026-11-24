@@ -787,7 +787,7 @@ class ClanBases(unittest.TestCase):
             notices.append(self.store.holding(base.key)["paid_until"])
             self.assertFalse(getattr(self.store.db, "_atomic_depth", 0))
             self.assertTrue(any(n == "cmdAck" and p["res"] == 0 for n, p in frames))
-        with patch.object(holdings, "changed", refreshed), \
+        with patch.object(holdings, "refresh_paid_services", refreshed), \
                 patch.object(server.clans.clan_treasury, "tell_balance"):
             s.cmd_q_co(dict(q_id=qid, mob=1))
             s.cmd_q_co(dict(q_id=qid, mob=1))
@@ -816,7 +816,7 @@ class ClanBases(unittest.TestCase):
                     ids.append(next(r['q_id'] for r in self.store.quests(sess.char_id)
                                     if r['type'] == base.rent_quest))
                 before = self.store.clan_treasury(self.clan)
-                with patch.object(holdings, 'changed'), patch.object(server.clans.clan_treasury, 'tell_balance'):
+                with patch.object(holdings, 'refresh_paid_services'), patch.object(server.clans.clan_treasury, 'tell_balance'):
                     sessions[0][0].cmd_q_co(dict(q_id=ids[0], mob=1))
                     # Another authorized member's already accepted quest cannot pay twice.
                     sessions[1][0].cmd_q_co(dict(q_id=ids[1], mob=1))
@@ -886,7 +886,7 @@ class ClanBases(unittest.TestCase):
         sess.pos = next(c for c, ty in sess.loc.spawns if ty == self.base.flag)
         sess.cmd_q_st(params)
         qid = next(r['q_id'] for r in self.store.quests(self.cid) if r['type'] == self.base.rent_quest)
-        with patch.object(holdings, 'changed'), patch.object(server.clans.clan_treasury, 'tell_balance'):
+        with patch.object(holdings, 'refresh_paid_services'), patch.object(server.clans.clan_treasury, 'tell_balance'):
             sess.cmd_q_co(dict(q_id=qid, mob=1))
         self.assertEqual([p['res'] for n, p in frames if n == 'cmdAck'][-1], 0)
         self.assertEqual(self.store.clan_treasury(self.clan), 3_000_000)
@@ -900,7 +900,7 @@ class ClanBases(unittest.TestCase):
             original(*args, **kwargs)
             raise RuntimeError("failure after history")
         with patch.object(self.store, "finish_quest", fail), \
-                patch.object(holdings, "changed") as changed:
+                patch.object(holdings, "refresh_paid_services") as changed:
             s.cmd_q_co(dict(q_id=qid, mob=1))
         changed.assert_not_called()
         self.assertEqual(self.store.clan_treasury(self.clan), 4_500_000)
@@ -908,6 +908,31 @@ class ClanBases(unittest.TestCase):
         self.assertIsNotNone(self.store.quest(qid))
         self.assertFalse(self.store.quest_done(self.cid, self.base.rent_quest))
         self.assertEqual([p["res"] for n, p in frames if n == "cmdAck"], [1])
+
+    def test_rent_commit_reply_loss_and_relogin_cannot_charge_again(self):
+        self.capture()
+        sess, frames = self.native()
+        sess.close = Mock()
+        qid = self.ready_quest()
+        raw = self.store.db.raw
+        def lost_reply():
+            raw.commit()
+            raise ConnectionError('rent commit reply lost')
+        proxy = NS(commit=lost_reply, rollback=raw.rollback)
+        with patch.object(type(self.store.db), 'raw', property(lambda _db: proxy)):
+            sess.cmd_q_co(dict(q_id=qid, mob=1))
+        sess.close.assert_called_once_with(force=True)
+        self.assertFalse(any(cmd == 'cmdAck' and p['res'] == 0 for cmd,p in frames))
+        rejoined, retry = self.native()
+        self.assertFalse(rejoined.quest_available(quests.get(self.base.rent_quest)))
+        rejoined.cmd_q_co(dict(q_id=qid, mob=1))
+        self.assertEqual(retry[-1], ('cmdAck', dict(res=server.RES_NO_SUCH)))
+        rejoined.cmd_q_st(dict(mob=1, q_idx=quests.given_by(self.base.flag).index(self.base.rent_quest)))
+        self.assertEqual(retry[-1], ('cmdAck', dict(res=server.RES_NOT_AVAILABLE)))
+        self.assertEqual(self.store.clan_treasury(self.clan), 3_000_000)
+        self.assertEqual(self.store.holding(self.base.key)['paid_until'], SLOT + 7 * 86400 - 300)
+        self.assertEqual(len([r for r in self.store.clan_ledger_rows(self.clan)
+                              if r['source'] == 'base_rent']), 1)
 
     def test_native_rent_locks_clan_before_character_and_holding(self):
         self.capture()
@@ -919,7 +944,7 @@ class ClanBases(unittest.TestCase):
             sql.append(statement)
             return original(statement, args)
         with patch.object(self.store.db, "execute", execute), \
-                patch.object(holdings, "changed"), \
+                patch.object(holdings, "refresh_paid_services"), \
                 patch.object(server.clans.clan_treasury, "tell_balance"):
             s.cmd_q_co(dict(q_id=qid, mob=1))
         clan = next(i for i, text in enumerate(sql) if text.startswith("SELECT k.id FROM clans"))
