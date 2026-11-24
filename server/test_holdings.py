@@ -5,7 +5,7 @@ The owner's «сделай так чтобы склады можно было з
 standing in the Северный склад (111), its boss on a clock turned by hand,
 and a real database:
 
-  * the capture: the finishing clan qualifies with three living members at the
+  * the capture: the finishing clan qualifies with two living members at the
     site's level who hurt the boss; other clans' damage cannot win; one member alone, one below the level,
     one dead, one gone from the room take nothing; the holder's own kill is
     a defence; harm banked over a heal, or past the boss's health and
@@ -32,7 +32,7 @@ and a real database:
   * the admin's hold and release (clan_admin.py) through the queue, and
     tools/admin_account.py's holdings, clan-hold and clan-release;
   * Абу-Хамед's Центр (128), the one site whose box keeps its own window
-    (wh_box_ah, 19:00-19:15): taken at 20:00 by three members of level 17 who
+    (wh_box_ah, 19:00-19:15): taken at 20:00 by two members of level 17 who
     kill its master (7454), the flag naming them; its box (6830, row 771)
     refusing the old personal payout and granting shared ingots only once;
     shut at19:20 while the Северный склад's window remains open.
@@ -310,9 +310,9 @@ async def main():
             snap = dict(pool=100, killer=1, killer_clan=wolves, fighters=[
                 dict(char=cid, clan=wolves, clan_name="Волки", here=True,
                      alive=True, level=lvl, harm=20)
-                for cid, lvl in ((1, minimum), (2, second_level), (3, minimum))])
+                for cid, lvl in ((1, minimum), (2, second_level))])
             result = holdings.winner(snap, holdings.table().squad, site.min_level)
-            check("%s: member at %d with member at %d qualifies iff all three reach the minimum"
+            check("%s: member at %d with member at %d qualifies iff both reach the minimum"
                   % (key, minimum, second_level),
                   result is not None, second_level >= minimum)
         row = quests.get(site.quest)
@@ -368,23 +368,22 @@ async def main():
     LINES.take()
     check("one member of a clan alone: nobody takes it, a 'none' row",
           await fight([(alice, 300)], alice), ("none", None))
-    check("  ..and the log says why: the finishing clan needs three living contributors of level 8",
-          [line.startswith("..    warehouse wh_sever (111): its boss killed, and the finishing clan lacked 3"
+    check("  ..and the log says why: the finishing clan needs two living contributors of level 8",
+          [line.startswith("..    warehouse wh_sever (111): its boss killed, and the finishing clan lacked 2"
                            " living members of level 8") for line in LINES.take()], [True])
-    check("three members, one of them a level short (7): nobody takes it",
-          await fight([(alice, 300), (anna, 300), (amir, 300)], alice), ("none", None))
+    check("two members, one of them a level short (7): nobody takes it",
+          await fight([(alice, 300), (anna, 300)], alice), ("none", None))
     amir.combat.dead = True
-    check("three members, one of them lying dead in the room: nobody takes it",
-          await fight([(alice, 300), (amir, 300), (andy, 300)], alice), ("none", None))
+    check("two members, one of them lying dead in the room: nobody takes it",
+          await fight([(alice, 300), (amir, 300)], alice), ("none", None))
     amir.combat.dead = False
     window()
     alice.combat.award_xp(progression.SHOOTING, None, 300, boss)
     andy.combat.award_xp(progression.SHOOTING, None, 300, boss)
-    amir.combat.award_xp(progression.SHOOTING, None, 300, boss)
     into(andy, ELSEWHERE)
     rc.kill(boss, alice.combat)
     await asyncio.sleep(0.3)
-    check("three members hurt it and one leaves the room before the kill: he does not"
+    check("two members hurt it and one leaves the room before the kill: he does not"
           " count, and nobody takes it", (log_rows(1)[0]["how"], holder()), ("none", None))
     into(andy, SEVER)
     for s in everybody:
@@ -397,9 +396,9 @@ async def main():
         take(s)
     LINES.take()
     level(amir, 9)
-    got = await fight([(alice, 200), (amir, 200), (andy, 200)], amir)
+    got = await fight([(alice, 200), (amir, 200)], amir)
     level(amir, 8)
-    check("three members of the Волки at levels 8, 8 and 9 hurt it and kill it: they take it",
+    check("two members of the Волки at levels 8 and 9 hurt it and kill it: they take it",
           got, ("capture", wolves))
     row = log_rows(1)[0]
     check("  ..one 'capture' row: the Волки after, nobody before, the killer credited,"
@@ -411,7 +410,7 @@ async def main():
           (held["clan_id"], held["name"], abs(held["since"] - time.time()) < 60,
            held["slot"]), (wolves, "Волки", True, bosses.slot_of(BOSS, NOW[0])))
     check("  ..and the log line: who takes it, the harm, who is credited",
-          LINES.take(), ["..    warehouse wh_sever (111): clan %d «Волки» takes it, 600 harm,"
+          LINES.take(), ["..    warehouse wh_sever (111): clan %d «Волки» takes it, 400 harm,"
                          " credited char %d, window %d"
                          % (wolves, amir.char_id, bosses.slot_of(BOSS, NOW[0]))])
     frames = {s: take(s) for s in everybody}
@@ -423,7 +422,7 @@ async def main():
           [(wolves, 0)])
     since = held["since"]
     check("the holder kills its own boss: a defence, its since unchanged",
-          (await fight([(alice, 300), (amir, 300), (andy, 300)], alice), STORE.holding("wh_sever")["since"]),
+          (await fight([(alice, 300), (amir, 300)], alice), STORE.holding("wh_sever")["since"]),
           (("defend", wolves), since))
     check("  ..its row: the Волки before and after, the killer credited",
           [(r["how"], r["clan_id"], r["prev"], r["by_char"]) for r in log_rows(1)],
@@ -443,12 +442,12 @@ async def main():
           await fight([(alice, 150), (amir, 150), (andy, 150),
                        (bob, 150), (bill, 150), (ben, 150)], bill), ("capture", jackals))
     order("hold", clan=wolves, site="wh_sever")
-    check("much less damage still wins for the finishing clan with two assistants",
+    check("much less damage still wins for the finishing clan with one assistant",
           await fight([(alice, 300), (amir, 300), (andy, 300), (carl, 400),
-                       (bob, 1), (bill, 1), (ben, 1)], bob), ("capture", jackals))
+                       (bob, 1), (bill, 1)], bob), ("capture", jackals))
     andy.combat.dead = True
     check("a dead assistant cannot qualify the finishing clan; no fallback to the other clan",
-          await fight([(alice, 100), (amir, 100), (andy, 100),
+          await fight([(alice, 100), (andy, 100),
                        (bob, 160), (bill, 130), (ben, 100)], alice), ("none", jackals))
     andy.combat.dead = False
     pool = boss.hp_max + boss.sp_max
@@ -791,12 +790,12 @@ async def main():
     # --- Абу-Хамед's Центр (128): a box of a quarter of an hour ----------------------------------
     # The one site whose box keeps a window of its own, wh_box_ah, the label's
     # «Дележ добычи с 19:00 до 19:15» (L327), a quarter of wh_box's hour: taken
-    # by the kill of its master at 20:00 by three members of level 17, its box
+    # by the kill of its master at 20:00 by two members of level 17, its box
     # paid 19:00-19:15 and not at 19:20, when the Северный склад's still pays.
     falcons = found(dora, "Соколы")
     admit(falcons, dick)
     admit(falcons, dina)
-    for s in (dora, dick, dina):
+    for s in (dora, dick):
         joined(s, 72)
         level(s, 17)
         into(s, CENTER)
@@ -813,13 +812,13 @@ async def main():
     NOW[0] = at(20, 5, day=50)
     ah_rc.keep_hours()
     check("  ..20:05: the master is there", ah_boss.alive and ah_boss.eid in ah_room.npcs, True)
-    for s in (dora, dick, dina):
+    for s in (dora, dick):
         take(s)
         s.combat.award_xp(progression.SHOOTING, None, 300, ah_boss)
     ah_rc.kill(ah_boss, dick.combat)
     await asyncio.sleep(0.3)
     held = STORE.holding("wh_ah_center")
-    check("  ..three Соколы of level 17 hurt him and kill him: they take it, a 'capture' row",
+    check("  ..two Соколы of level 17 hurt him and kill him: they take it, a 'capture' row",
           (held and held["clan_id"], [(r["how"], r["clan_id"], r["by_char"])
                                       for r in STORE.holding_log("wh_ah_center", 1)]),
           (falcons, [("capture", falcons, dick.char_id)]))

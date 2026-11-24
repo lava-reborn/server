@@ -34,7 +34,7 @@ The owner's «сделай так чтобы склады можно было з
 clan flag 1011 and the money box -- and a city added later is a row there.
 
 Who takes it. The killing blow's clan alone may take a warehouse, using
-exactly the base's contribution rule: at least three distinct living members
+the base's last-hit rule but with at least two distinct living members
 in the boss's room at the kill, each at the site's minimum level or above
 and each having hurt the boss since its last full heal. Other clans' total
 damage never determines ownership, and an ineligible or clanless finisher
@@ -168,7 +168,7 @@ class Table(object):
 
     def __init__(self, doc):
         doc = doc if isinstance(doc, dict) else {}
-        self.squad = int(doc.get("squad", 3))
+        self.squad = int(doc.get("squad", 2))
         self.tenure = float(doc.get("box_tenure_hours", 24)) * 3600
         self.one_per_account = bool(doc.get("box_one_per_account", True))
         self.sites = {key: Site(key, rec) for key, rec in (doc.get("sites") or {}).items()

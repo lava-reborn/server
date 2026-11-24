@@ -39,14 +39,15 @@ class WarehouseCaptureRules(unittest.TestCase):
                  capture_harm=harm)
         return rc, mob
 
-    def test_all_seven_warehouses_use_three_contributors_and_the_finishing_clan(self):
+    def test_all_seven_warehouses_use_two_contributors_and_the_finishing_clan(self):
         self.assertEqual(len(self.sites()), 7)
-        self.assertEqual(holdings.table().squad, 3)
-        own = [self.cid] + [p['char'] for p in self.supporters()]
+        self.assertEqual(holdings.table().squad, 2)
+        self.assertEqual(holdings.BASE_SQUAD, 3)
+        own = [self.cid, self.supporters()[0]['char']]
         account, _ = self.store.register('warehouse-rival', 'test-only')
         rival, _ = self.store.create_character(account, 'WarehouseRival', 0, '1')
         rival_clan = self.store.clan_create(rival, 'Rival clan', 'warehouse-rival', '', None)
-        rivals = [rival] + [p['char'] for p in self.supporters(rival_clan)]
+        rivals = [rival, self.supporters(rival_clan)[0]['char']]
         for site in self.sites():
             with self.subTest(site=site.key):
                 seats = self.fighters(own + rivals, site.min_level)
@@ -65,13 +66,13 @@ class WarehouseCaptureRules(unittest.TestCase):
                 self.assertEqual(self.store.holding(site.key)['since'], since)
 
     def test_no_fallback_when_finishing_clan_lacks_a_qualified_squad(self):
-        own = [self.cid] + [p['char'] for p in self.supporters()]
+        own = [self.cid, self.supporters()[0]['char']]
         for site in self.sites():
-            for case in ('two', 'dead', 'away', 'low', 'no_damage', 'clanless', 'no_killer', 'duplicate', 'left_clan'):
+            for case in ('one', 'dead', 'away', 'low', 'no_damage', 'clanless', 'no_killer', 'duplicate', 'left_clan'):
                 with self.subTest(site=site.key, case=case):
                     seats = self.fighters(own, site.min_level)
                     rc, mob = self.capture_scene(site, seats, dict.fromkeys(own, 1))
-                    if case == 'two':
+                    if case == 'one':
                         mob.capture_harm.pop(own[-1])
                     elif case == 'dead':
                         seats[-1].combat.dead = True
@@ -88,11 +89,11 @@ class WarehouseCaptureRules(unittest.TestCase):
                     if case == 'clanless':
                         snap['killer_clan'] = None
                     elif case == 'duplicate':
-                        snap['fighters'] = snap['fighters'][:2] + [snap['fighters'][1]]
+                        snap['fighters'] = snap['fighters'][:1] + [snap['fighters'][0]]
                     # A different clan's complete high-damage squad cannot inherit the kill.
                     snap['fighters'] += [dict(char=10000 + i, clan=999, clan_name='Damage leaders',
                                               here=True, alive=True, level=20, harm=500)
-                                         for i in range(3)]
+                                         for i in range(2)]
                     self.assertIsNone(holdings.winner(snap, holdings.table().squad, site.min_level))
                     mob.capture = snap
                     self.assertEqual(holdings.settle(rc, mob), 'none')

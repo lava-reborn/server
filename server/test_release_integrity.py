@@ -30,7 +30,7 @@ def reference_winner(snapshot,squad,minimum,excluded):
 class ReleaseIntegrity(unittest.TestCase):
     def test_capture_selection_matches_all_eligibility_boundaries_and_is_order_independent(self):
         rng=random.Random(20261124)
-        for squad,minimum in ((3,8),(3,12),(3,16),(3,17)):
+        for squad,minimum in ((2,8),(2,12),(2,16),(2,17),(3,12),(3,16)):
             for iteration in range(400):
                 people=[dict(char=i+1,clan=rng.choice((None,1,2,3)),
                     clan_name='',here=rng.choice((True,True,False)),
@@ -47,20 +47,21 @@ class ReleaseIntegrity(unittest.TestCase):
                 rng.shuffle(people)
                 self.assertEqual(holdings.winner(snapshot,squad,minimum,excluded),expected)
 
-    def test_every_site_requires_three_distinct_present_live_damagers_at_or_above_its_level(self):
+    def test_every_site_requires_its_own_distinct_present_live_damagers_at_or_above_its_level(self):
         for base in holdings.table().sites.values():
+            squad = holdings.BASE_SQUAD if base.kind == 'base' else holdings.table().squad
             people=[dict(char=i+1,clan=1,clan_name='owner',here=True,alive=True,
-                         level=base.min_level,harm=10) for i in range(3)]
+                         level=base.min_level,harm=10) for i in range(squad)]
             snapshot=dict(fighters=people,pool=1000,killer=1,killer_clan=1)
-            self.assertEqual(holdings.winner(snapshot,3,base.min_level)[0],1)
+            self.assertEqual(holdings.winner(snapshot,squad,base.min_level)[0],1)
             for key,value in (('here',False),('alive',False),('harm',0),('level',base.min_level-1)):
                 prior=people[-1][key]
                 people[-1][key]=value
-                self.assertIsNone(holdings.winner(snapshot,3,base.min_level),(base.key,key))
+                self.assertIsNone(holdings.winner(snapshot,squad,base.min_level),(base.key,key))
                 people[-1][key]=prior
             for person in people:
                 person['level']=base.min_level+1
-            self.assertEqual(holdings.winner(snapshot,3,base.min_level)[0],1)
+            self.assertEqual(holdings.winner(snapshot,squad,base.min_level)[0],1)
 
     def test_all_released_retail_types_have_no_purchase_to_base_buyback_profit(self):
         stock=set()

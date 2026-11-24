@@ -241,14 +241,13 @@ pool = master.hp_max + master.sp_max
 fighters = [dict(char=char, clan=clan, clan_name=str(clan), here=True,
                  alive=True, level=8, harm=harm)
             for char, clan, harm in ((1, 1, 5 * pool), (2, 1, 5 * pool),
-                                     (3, 2, pool // 2), (4, 2, pool - pool // 2 - 1),
-                                     (5, 1, 1), (6, 2, 1))]
+                                     (3, 2, pool // 2), (4, 2, pool - pool // 2))]
 snapshot = dict(pool=pool, fighters=fighters, killer=4, killer_clan=2)
 check('warehouse capture logs the actual HP and stamina pool for the finishing clan',
-      holdings.winner(snapshot, squad=3, min_level=8), (2, '2', pool, 4))
+      holdings.winner(snapshot, squad=holdings.table().squad, min_level=8), (2, '2', pool, 4))
 fighters[3]['harm'] -= 1
 check('the finishing clan wins even when another clan has more capped harm',
-      holdings.winner(snapshot, squad=3, min_level=8), (2, '2', pool - 1, 4))
+      holdings.winner(snapshot, squad=holdings.table().squad, min_level=8), (2, '2', pool - 1, 4))
 
 carriers = {int(t) for t in mobs.TYPES
             if any(i in items.GOLD_INGOTS for i, _c, _v in mobs.loot_table(int(t)))}
