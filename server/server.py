@@ -3062,6 +3062,9 @@ class Session:
             if why:
                 self.answer(why)
             return
+        # Pouch specialisations lend attributes only while learned. Recount
+        # on learning as well as forgetting; neither changes the item row.
+        self.inv.refresh_gear()
         if status == progression.UPD_FORGET:
             # Removing gear can remove a bonus supporting another weapon.
             while self.inv.over_level_to_bag(notify=True):

@@ -24,6 +24,45 @@ class StatPipeline(unittest.IsolatedAsyncioTestCase):
     asyncSetUp = fixtures.TrainingGround.asyncSetUp
     asyncTearDown = fixtures.TrainingGround.asyncTearDown
 
+    async def test_learning_and_forgetting_with_pouch_refresh_temporary_attributes_immediately(self):
+        ch = self.s.char
+        ch.set_skill(progression.SHOOTING, 16)
+        self.s.inv.create(5615, slot=inventory.BELT)
+        self.s.inv.refresh_gear(push=False)
+        base = ch.attrib[progression.AGILITY]
+        direct = ch.bonus_attribs[progression.AGILITY]
+        self.assertEqual(ch.spec_level(1), -1)
+        for status, expected in ((progression.UPD_LEARN, direct + 4),
+                                 (progression.UPD_FORGET, direct),
+                                 (progression.UPD_LEARN, direct + 4)):
+            self.s.writer.frames.clear()
+            self.s.training_upd(dict(s_status=status, obj='1'))
+            frames = [decode(frame[:-1]) for frame in self.s.writer.frames]
+            self.assertEqual([f['res'] for cmd, f in frames if cmd == 'cmdAck'], [0])
+            self.assertEqual(ch.bonus_attribs[progression.AGILITY], expected)
+            self.assertEqual(ch.attrib[progression.AGILITY], base)
+            self.assertEqual(ch.level, 16)
+            persisted = progression.Character.load(self.store, self.s.char_id)
+            self.assertEqual(persisted.attrib, ch.attrib)
+            self.assertEqual(persisted.bonus_attribs, [0] * progression.ATTRIBS)
+
+    async def test_login_keeps_weapon_supported_by_a_pouch_without_saving_bonus_levels(self):
+        ch = self.s.char
+        ch.set_skill(progression.SHOOTING, 2)
+        ch.set_skill(progression.MELEE, 2)
+        ch.set_spec(1, 1)
+        self.s.inv.create(5614, slot=inventory.BELT)  # Original pouch: melee +1.
+        weapon = self.s.inv.create(6240, slot=inventory.PRIMARY)  # Tesak, tier 6.
+        self.s.inv.refresh_gear(push=False)
+        self.assertEqual(ch.skill_level(progression.MELEE), 3)
+        self.assertTrue(inventory.wearable(weapon, ch.level, ch))
+        ch.save(self.store)
+        before = ch.rows()
+        self.s.load_character(self.s.char_id)
+        self.assertEqual(self.s.char.rows(), before)
+        self.assertEqual(self.s.char.level, 2)
+        self.assertEqual(self.store.item(weapon['uniq'])['slot'], inventory.PRIMARY)
+
     async def test_every_released_rifle_mode_aim_uses_small_uniform_followup_without_other_changes(self):
         import shop_bands
         guns = []
