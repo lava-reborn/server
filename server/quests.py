@@ -971,7 +971,7 @@ DISABLED_ACADEMY_LESSONS = frozenset(range(12000, 12075))
 # Replaced by one shared ingot payout per warehouse/day. Keep the old
 # definitions and journal ids so cancellation and NPC indices stay valid.
 REPLACED_WAREHOUSE_REWARDS = frozenset(range(765, 772))
-# Only the downward passages require a clan. The courtyard and the return
+# Downward passages require the paid owner. The courtyard and the return
 # lifts remain open, including for a character who left the clan inside.
 CLAN_BASE_ENTRIES = frozenset((18201, 18203))
 CLAN_BASE_EXITS = frozenset((18202, 18204))

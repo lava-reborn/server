@@ -2836,7 +2836,7 @@ class Session:
                       can_set_home=0, can_banking=0, can_trophy=0,
                       can_repair=0, can_trade=0)
         # These lifts offer only the bunker entry. Do not expose that list
-        # to a clanless client: QuestInspector can still hold an earlier
+        # to an unauthorized client: QuestInspector can still hold an earlier
         # positive q_status. Clearing the whole entry-only offer preserves
         # every remaining q_idx; the live take/hand-in checks also remain.
         if (params['give_quests']
@@ -3368,14 +3368,17 @@ class Session:
         return self.character().level
 
     def base_entry_allowed(self, quest):
-        """Ask live membership, including for an old or fight-delayed passage."""
+        """Recheck the paid lease even for an old or fight-delayed passage."""
         if quest.type not in quests.CLAN_BASE_ENTRIES:
             return True
         member = STORE.clan_member(self.char_id) if self.char_id else None
         # 0 and 16777215 are clanless wire sentinels, even if an old import
         # left matching rows. Never trust a cached character/clan label.
+        loc = getattr(self, 'loc', None)
         return bool(member and type(member['clan_id']) is int
-                    and 0 < member['clan_id'] <= accounts.Store.CLAN_MAX_ID)
+                    and 0 < member['clan_id'] <= accounts.Store.CLAN_MAX_ID
+                    and loc is not None and travel.quest_way(loc, quest.type) is not None
+                    and holdings.paid_base_for(STORE, loc.id, self.char_id) is not None)
 
     def quest_available(self, quest, state=None):
         """Whether this player may take or carry the quest right now.
@@ -3870,6 +3873,12 @@ class Session:
         if not self.quest_available(quest):
             self.send("cmdAck", res=RES_NOT_AVAILABLE)
             return
+        if holdings.rent_site(quest.type) is not None:
+            npc = self.room.npc(int(p.get("mob", 0))) if self.room else None
+            if not npc or not progression.within_reach(
+                    self.live_cell(), npc[0], self.loc.width, self.loc.height):
+                self.send("cmdAck", res=progression.ERR_TOO_FAR)
+                return
         # Asked of the whole table, not of this location's rows: a way
         # handed in where the table does not say where it leads could not
         # be handed in at all (cmd_q_co), so given by somebody standing
@@ -4033,7 +4042,7 @@ class Session:
             return
         if not self.base_entry_allowed(quest):
             self.send("cmdAck", res=RES_NOT_AVAILABLE)
-            self.answer("В бункер клановой базы могут входить только участники кланов.")
+            self.answer("В бункер могут входить только участники клана, оплатившего аренду этой базы.")
             return
         if quest.type in eden.QUESTS:
             # Both placement and sentence are checked again under the quest

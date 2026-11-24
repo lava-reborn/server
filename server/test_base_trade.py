@@ -36,7 +36,7 @@ class BaseTrade(unittest.TestCase):
         # State, holding slot, paid-until, current time, services, benefits.
         states = (
             ('paid', slot, slot + week - 300, slot + 1800, True, True),
-            ('reservation', slot, 0, slot + 1800, True, False),
+            ('reservation', slot, 0, slot + 1800, False, False),
             ('neutral', None, 0, slot + 1800, False, False),
             ('expired', slot, slot + 1799, slot + 1800, False, False),
             ('expiry-boundary', slot, slot + 1800, slot + 1800, False, False),

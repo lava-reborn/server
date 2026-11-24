@@ -79,14 +79,15 @@ class ClanBases(unittest.TestCase):
     def pay(self, s=None):
         return holdings.pay_rent(self.store, s or self.base, self.cid, self.now)
 
-    def native(self):
-        s = session(self.store, char_id=self.cid)
-        s.char = progression.Character.load(self.store, self.cid)
+    def native(self, char_id=None):
+        char_id = self.cid if char_id is None else char_id
+        s = session(self.store, char_id=char_id)
+        s.char = progression.Character.load(self.store, char_id)
         for skill in s.char.skill:
             skill[0] = 20
         s.char.recalc()
         s.char.save(self.store)
-        s.active = self.store.character(self.cid)
+        s.active = self.store.character(char_id)
         s.closed = False
         s.loc = world.location(self.base.loc)
         flag_cell = next(c for c, ty in s.loc.spawns if ty == self.base.flag)
@@ -763,6 +764,100 @@ class ClanBases(unittest.TestCase):
         self.assertEqual(self.store.clan_treasury(self.clan), 3_000_000)
         self.assertTrue(self.store.quest_done(self.cid, self.base.rent_quest))
         self.assertFalse(s.quest_available(quests.get(self.base.rent_quest)))
+
+    def test_flag_rent_is_shared_once_per_capture_and_reopens_only_after_recapture(self):
+        aid, _ = self.store.register('rent-delegate', 'local-only')
+        officer, _ = self.store.create_character(aid, 'RentDelegate', 0, '1')
+        self.store.clan_member_add(officer, self.clan, 0x400, '')
+        for base in (self.base, holdings.site('base_dn')):
+            with self.subTest(base=base.key):
+                self.base = base
+                self.now = SLOT + 60
+                self.store.clan_treasury_adjust(self.clan, 4_500_000, 'admin')
+                self.capture()
+                sessions = [self.native(cid) for cid in (self.cid, officer)]
+                ids = []
+                for sess, frames in sessions:
+                    self.assertTrue(sess.quest_available(quests.get(base.rent_quest)))
+                    sess.cmd_q_st(dict(mob=1, q_idx=quests.given_by(base.flag).index(base.rent_quest)))
+                    self.assertIn(('cmdAck', dict(res=0)), frames)
+                    ids.append(next(r['q_id'] for r in self.store.quests(sess.char_id)
+                                    if r['type'] == base.rent_quest))
+                before = self.store.clan_treasury(self.clan)
+                with patch.object(holdings, 'changed'), patch.object(server.clans.clan_treasury, 'tell_balance'):
+                    sessions[0][0].cmd_q_co(dict(q_id=ids[0], mob=1))
+                    # Another authorized member's already accepted quest cannot pay twice.
+                    sessions[1][0].cmd_q_co(dict(q_id=ids[1], mob=1))
+                    sessions[0][0].cmd_q_co(dict(q_id=ids[0], mob=1))
+                self.assertEqual(self.store.clan_treasury(self.clan), before - base.rent)
+                self.assertEqual([p['res'] for n, p in sessions[1][1] if n == 'cmdAck'][-1], server.RES_NOT_AVAILABLE)
+                self.assertIsNotNone(self.store.quest(ids[1]))
+                for sess, _ in sessions:
+                    self.assertFalse(sess.quest_available(quests.get(base.rent_quest)))
+                    self.assertIs(holdings.paid_base_for(self.store, base.rooms[-1], sess.char_id), base)
+                # Expiration does not itself reopen payment or extend access.
+                self.now = SLOT + 7 * 86400 - 300
+                self.assertIsNone(holdings.paid_base_for(self.store, base.rooms[-1], officer))
+                self.assertFalse(sessions[0][0].quest_available(quests.get(base.rent_quest)))
+                self.store.holding_clear(base.key, 'expire', when=self.now)
+                self.now = SLOT + 7 * 86400 + 60
+                self.store.holding_capture(base.key, self.clan, SLOT + 7 * 86400, self.cid,
+                                           self.now, base_sites=holdings.base_keys())
+                self.assertTrue(sessions[0][0].quest_available(quests.get(base.rent_quest)))
+                self.assertIsNone(holdings.paid_base_for(self.store, base.rooms[-1], officer))
+                self.store.drop_quest(ids[1])
+                self.store.holding_clear(base.key, 'admin')
+
+    def test_native_rent_rechecks_treasury_rights_and_deadline_after_acceptance(self):
+        for base in (self.base, holdings.site('base_dn')):
+            self.base = base
+            for refusal in ('money', 'rights', 'deadline'):
+                with self.subTest(base=base.key, refusal=refusal):
+                    self.now = SLOT + 60
+                    self.store.holding_clear(base.key, 'admin')
+                    self.capture()
+                    sess, frames = self.native()
+                    sess.cmd_q_st(dict(mob=1, q_idx=quests.given_by(base.flag).index(base.rent_quest)))
+                    qid = next(r['q_id'] for r in self.store.quests(self.cid) if r['type'] == base.rent_quest)
+                    if refusal == 'money':
+                        self.store.clan_treasury_adjust(self.clan, -self.store.clan_treasury(self.clan), 'admin')
+                    elif refusal == 'rights':
+                        self.store.db.execute('UPDATE clan_members SET perm=0 WHERE char_id=?', (self.cid,))
+                        self.store.db.commit()
+                    else:
+                        self.now = SLOT + 4500
+                    before = self.store.clan_treasury(self.clan)
+                    sess.cmd_q_co(dict(q_id=qid, mob=1))
+                    self.assertNotEqual([p['res'] for n, p in frames if n == 'cmdAck'][-1], 0)
+                    self.assertEqual(self.store.clan_treasury(self.clan), before)
+                    self.assertEqual(self.store.holding(base.key)['paid_until'], 0)
+                    self.assertIsNotNone(self.store.quest(qid))
+                    self.store.drop_quest(qid)
+                    self.store.db.execute('UPDATE clan_members SET perm=? WHERE char_id=?', (0x8000, self.cid))
+                    self.store.db.commit()
+                    if refusal == 'money':
+                        self.store.clan_treasury_adjust(self.clan, 4_500_000, 'admin')
+            self.store.holding_clear(base.key, 'admin')
+
+    def test_treasury_delegate_can_pay_at_flag_without_capture_combat_level(self):
+        self.capture()
+        sess, frames = self.native()
+        for skill in sess.char.skill:
+            skill[0] = 1
+        sess.char.recalc()
+        self.assertTrue(sess.quest_available(quests.get(self.base.rent_quest)))
+        params = dict(mob=1, q_idx=quests.given_by(self.base.flag).index(self.base.rent_quest))
+        sess.pos = 0
+        sess.cmd_q_st(params)
+        self.assertIn(('cmdAck', dict(res=progression.ERR_TOO_FAR)), frames)
+        self.assertFalse(self.store.has_quest(self.cid, self.base.rent_quest))
+        sess.pos = next(c for c, ty in sess.loc.spawns if ty == self.base.flag)
+        sess.cmd_q_st(params)
+        qid = next(r['q_id'] for r in self.store.quests(self.cid) if r['type'] == self.base.rent_quest)
+        with patch.object(holdings, 'changed'), patch.object(server.clans.clan_treasury, 'tell_balance'):
+            sess.cmd_q_co(dict(q_id=qid, mob=1))
+        self.assertEqual([p['res'] for n, p in frames if n == 'cmdAck'][-1], 0)
+        self.assertEqual(self.store.clan_treasury(self.clan), 3_000_000)
 
     def test_native_history_failure_rolls_back_payment_and_success_frames(self):
         self.capture()

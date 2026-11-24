@@ -446,7 +446,7 @@ def problems():
                 except (KeyError, OSError, ValueError):
                     out.append("%s: no base room %d" % (key, loc_id))
             q = quests.get(s.rent_quest)
-            if (q is None or not q.service or not q.repeatable or q.level != s.min_level
+            if (q is None or not q.service or not q.repeatable or q.level != 0
                     or q.give != [s.flag] or q.take != [s.flag] or q.has_fee
                     or q.rew_obj or q.rew_also or q.rew_afro or q.rew_gold
                     or q.rew_xp or q.rew_spec_xp or q.holders):
@@ -548,12 +548,11 @@ def flag_for(store, loc_id, type_id, char_id):
 
 
 def may_serve(store, loc_id, trader_type, char_id):
-    """Bunker suppliers/repairer serve the current owner, including its reservation."""
+    """Bunker services require the current clan's paid lease, like entry."""
     base = base_for(loc_id)
     if base is None or trader_type not in base.traders:
         return True
-    held = flag_for(store, loc_id, base.flag, char_id)[0]
-    return member_of(store, held, char_id)
+    return member_of(store, paid_holder(store, base), char_id)
 
 
 def may_repair(store, loc_id, trader_type, char_id):

@@ -75,6 +75,19 @@ class BaseScene(unittest.TestCase):
 
 
 class ClanBaseAccess(BaseScene):
+    def setUp(self):
+        super().setUp()
+        self.now = datetime(2026, 11, 21, 20, tzinfo=bosses.ZONE).timestamp() + 60
+        self.enterContext(patch.object(bosses, 'clock', lambda: self.now))
+
+    def lease(self, loc_id):
+        base = holdings.base_for(loc_id)
+        slot = self.now - 60
+        self.store.holding_set(base.key, self.clan, 'admin', slot=slot, when=slot)
+        self.store.db.execute('UPDATE clan_holdings SET paid_until=? WHERE site=?',
+                              (slot + 7 * 86400 - 300, base.key))
+        self.store.db.commit()
+
     def test_clanless_can_enter_both_courtyards_from_the_global_map(self):
         for loc_id in (118, 1442):
             with self.subTest(location=loc_id):
@@ -106,12 +119,12 @@ class ClanBaseAccess(BaseScene):
                 self.assertEqual(self.s.loc.id, loc_id)
                 self.assertIn(eid, self.s.room.npcs)  # the courtyard stays usable
 
-    def test_member_of_any_clan_can_complete_both_native_entries(self):
+    def test_paid_owner_can_complete_both_native_entries(self):
         self.member()
         for loc_id, kind, interior in ((118, 18201, 609), (1442, 18203, 1443)):
             with self.subTest(location=loc_id):
                 eid = self.scene(loc_id, kind)
-                self.assertIsNone(holdings.holder(self.store, holdings.base_for(loc_id)))
+                self.lease(loc_id)
                 self.assertTrue(self.s.quest_available(quests.get(kind)))
                 self.take(kind, eid)
                 row = next(r for r in self.store.quests(self.cid) if r['type'] == kind)
@@ -125,6 +138,7 @@ class ClanBaseAccess(BaseScene):
         for loc_id, kind in ((118, 18201), (1442, 18203)):
             with self.subTest(location=loc_id):
                 self.member()
+                self.lease(loc_id)
                 eid = self.scene(loc_id, kind)
                 self.take(kind, eid)
                 row = next(r for r in self.store.quests(self.cid) if r['type'] == kind)
@@ -139,9 +153,78 @@ class ClanBaseAccess(BaseScene):
                 self.assertIn(('cmdAck', dict(res=server.RES_NOT_AVAILABLE)), self.s.frames)
                 self.s.enter_location.assert_not_called()
 
+    def test_all_lifts_recheck_paid_ownership_at_offer_take_and_stale_hand_in(self):
+        self.member()
+        aid, _ = self.store.register('foreign-base', 'local-only')
+        head, _ = self.store.create_character(aid, 'ForeignBase', 0, '1')
+        other = self.store.clan_create(head, 'Foreign clan', 'foreign-base', '', None)
+        slot, week = self.now - 60, 7 * 86400
+        states = (
+            ('neutral', None, slot, 0),
+            ('unpaid-owner', self.clan, slot, 0),
+            ('paid-foreign', other, slot, slot + week - 300),
+            ('expired-owner', self.clan, slot, self.now),
+            ('future-owner', self.clan, slot + week, slot + 2 * week - 300),
+            ('invalid-extension', self.clan, slot, slot + week + 1),
+        )
+        for loc_id, kind in ((118, 18201), (1442, 18203)):
+            base = holdings.base_for(loc_id)
+            for state, clan, captured, until in states:
+                self.store.holding_clear(base.key, 'admin')
+                if clan is not None:
+                    self.store.holding_set(base.key, clan, 'admin', slot=captured, when=slot)
+                    self.store.db.execute('UPDATE clan_holdings SET paid_until=? WHERE site=?', (until, base.key))
+                    self.store.db.commit()
+                for eid, npc in self.entry_npcs(loc_id, kind):
+                    with self.subTest(location=loc_id, state=state, npc=eid):
+                        self.s.pos = npc.cell
+                        self.s.enter_location.reset_mock()
+                        self.s.frames.clear()
+                        frame = self.npc_quest_frame(eid)
+                        self.assertEqual((frame['give_quests'], frame['take_quests']), ([], []))
+                        self.s.cmd_q_status(dict(q_type=kind))
+                        self.assertEqual(self.s.frames[-1][1]['status'], 0)
+                        self.take(kind, eid)
+                        self.assertFalse(self.store.has_quest(self.cid, kind))
+                        qid = self.store.take_quest(self.cid, kind, {}, True)
+                        before = dict(self.store.quest(qid))
+                        self.s.cmd_q_co(dict(q_id=qid, mob=eid))
+                        self.assertEqual(dict(self.store.quest(qid)), before)
+                        self.assertIn(('cmdAck', dict(res=server.RES_NOT_AVAILABLE)), self.s.frames)
+                        self.s.enter_location.assert_not_called()
+                        self.store.drop_quest(qid)
+
+    def test_fight_delayed_entry_loses_access_after_expiry_or_owner_change(self):
+        async def check(loc_id, kind, change):
+            self.lease(loc_id)
+            self.scene(loc_id, kind)
+            quest = quests.get(kind)
+            self.s.hold_line = Mock(return_value=('fight', 'Подождите окончания боя.'))
+            self.s.follow_way(quest, self.s.room)
+            self.assertIsNotNone(self.s.way)
+            self.s.way.cancel()
+            if change == 'expire':
+                self.store.db.execute('UPDATE clan_holdings SET paid_until=? WHERE site=?',
+                                      (self.now, holdings.base_for(loc_id).key))
+                self.store.db.commit()
+            else:
+                self.store.holding_clear(holdings.base_for(loc_id).key, 'admin')
+            with patch.object(self.s, 'refund_way') as refund, \
+                    patch.object(server.travel, 'plan_quest_way') as plan:
+                self.s.take_way(quest, self.s.room, frozenset(('fight',)))
+                refund.assert_called_once_with(quest)
+                plan.assert_not_called()
+            self.assertIsNone(self.s.way)
+        self.member()
+        for loc_id, kind in ((118, 18201), (1442, 18203)):
+            for change in ('expire', 'owner'):
+                with self.subTest(location=loc_id, change=change):
+                    asyncio.run(check(loc_id, kind, change))
+
     def test_fight_delayed_entry_rechecks_live_clan_membership(self):
         async def check(loc_id, kind):
             self.member()
+            self.lease(loc_id)
             self.scene(loc_id, kind)
             quest = quests.get(kind)
             self.s.hold_line = Mock(return_value=('fight', 'Подождите окончания боя.'))
@@ -223,6 +306,7 @@ class ClanBaseAccess(BaseScene):
     def test_all_six_lifts_keep_real_member_indices_and_complete_native_passages(self):
         self.member()
         for loc_id, kind, interior in ((118, 18201, 609), (1442, 18203, 1443)):
+            self.lease(loc_id)
             for index in range(3):
                 entries = self.entry_npcs(loc_id, kind)
                 eid, npc = entries[index]
@@ -242,6 +326,7 @@ class ClanBaseAccess(BaseScene):
     def test_cached_member_status_and_old_active_quest_cannot_open_any_lift_after_leaving(self):
         for loc_id, kind in ((118, 18201), (1442, 18203)):
             self.member()
+            self.lease(loc_id)
             entries = self.entry_npcs(loc_id, kind)
             quest = quests.get(kind)
             q_id = self.store.take_quest(self.cid, kind, quest.fresh_progress(), True)
