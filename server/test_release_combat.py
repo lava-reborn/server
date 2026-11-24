@@ -764,13 +764,13 @@ class ReleaseCatalogue(unittest.TestCase):
                 for field in damage:
                     self.assertEqual(old[field], original[field], (source, field))
 
-    def test_mob_critical_pressure_grows_after_plus_one_and_excludes_sites_and_range(self):
+    def test_mob_critical_pressure_grows_from_plus_one_and_excludes_sites_and_range(self):
         import battle_balance
         player = NS(is_player=True, character=lambda: NS(level=12))
         mob = NS(is_player=False, stats=NS(level=13, role='mob'))
         with patch.object(combat, 'roll', return_value=False) as roll:
-            for gap, floor, ceiling in ((-1, 1, 3), (0, 1, 3), (1, 1, 3),
-                                        (2, 8, 15), (3, 50, 75), (4, 100, 100), (5, 100, 100), (6, 100, 100)):
+            for gap, floor, ceiling in ((-1, 1, 3), (0, 1, 3), (1, 3, 6),
+                                        (2, 12, 20), (3, 50, 75), (4, 100, 100), (5, 100, 100), (6, 100, 100)):
                 mob.stats.level = 12 + gap
                 battle_balance.critical(mob, player, 200, ordinary=True)
                 roll.assert_called_with(ceiling)

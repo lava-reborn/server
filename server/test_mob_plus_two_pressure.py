@@ -25,11 +25,11 @@ class PlusTwoPressure(unittest.TestCase):
     def test_crit_rises_at_plus_two_without_making_every_hit_critical(self):
         player = NS(is_player=True, character=lambda: NS(level=16))
         mob = NS(is_player=False, stats=NS(level=18, role='mob', plain_weapon=True))
-        for raw, expected in ((-100, 8), (10, 10), (100, 15)):
+        for raw, expected in ((-100, 12), (16, 16), (100, 20)):
             self.assertEqual(battle_balance.critical_chance(mob, player, raw, ordinary=True), expected)
             self.assertEqual(battle_balance.critical_chance(mob, player, raw, False, ordinary=True), expected / 2)
         mob.stats.level = 17
-        self.assertEqual(battle_balance.critical_chance(mob, player, 100, ordinary=True), 3)
+        self.assertEqual(battle_balance.critical_chance(mob, player, 100, ordinary=True), 6)
         mob._holding_prepared = True
         self.assertEqual(battle_balance.critical_chance(mob, player, 20, ordinary=True), 20)
 
