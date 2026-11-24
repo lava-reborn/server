@@ -115,21 +115,21 @@ class ClanBaseWorldTests(unittest.TestCase):
             with self.subTest(row=row), self.assertRaises(RuntimeError):
                 npcs._presentation({'presentation': {'609': {'1013': row}}})
 
-    def test_ammunition_suppliers_stand_right_and_in_front_of_red_cylinders(self):
+    def test_ammunition_suppliers_stand_by_tall_cylinders_with_free_approach(self):
         for lid, type_id in ((609, 714), (1443, 5240)):
             with self.subTest(lid=lid):
                 loc = world.location(lid)
                 cell = next(cell for cell, typ in loc.spawns if typ == type_id)
                 x, y = cell % loc.width, cell // loc.width
-                self.assertEqual((x, y), (25, 51))
+                self.assertEqual((x, y), (31, 43))
                 self.assertNotIn(cell, loc.obstacles)
                 self.assertNotIn(cell, travel.exit_sides(loc))
                 root = ET.fromstring(Path(world.overlay_path(lid)).read_bytes())
-                cylinders = root.find("sprite[@id='gasbalon.png']").text
+                cylinders = root.find("sprite[@id='balon.png']").text
                 bx, by = int(cylinders[:2], 16), int(cylinders[2:4], 16)
                 # The native point is (40*x + 20 for odd rows, 15*y).
                 self.assertGreater(40 * x + 20 * (y % 2), 40 * bx + 20 * (by % 2))
-                self.assertGreater(y, by)
+                self.assertLess(y, by)
                 neighbours = progression.hex_neighbours(cell, loc.width, loc.height)
                 self.assertGreaterEqual(sum(c not in loc.obstacles for c in neighbours), 4)
 
