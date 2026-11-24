@@ -475,7 +475,7 @@ class BaseTrade(unittest.TestCase):
             self.assertFalse(set(stocks[0]) & set(stocks[1]))
             for trader, stock in zip(traders, stocks):
                 self.assertTrue(stock)
-                self.assertLessEqual(len(stock), 64)
+                self.assertLess(len(stock), 256)  # Native trader index is one byte.
                 self.assertEqual(len(stock), len(set(stock)))
                 for t in stock:
                     self.assertIn(items.root_of(t), (items.AMMO, items.HEAL))

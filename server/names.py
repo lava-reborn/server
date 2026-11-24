@@ -194,6 +194,21 @@ for _type in items.catalogue():
              else "Только для (" + next(iter(_lines)) + ") оружия.")
     ALL[_did] = (ALL[_did] + "<br>" if ALL.get(_did) else "") + _note
 
+# Keep original/wiki ammunition prose. Missing descriptions use the original
+# quality text, or the cached wiki's «Категория:Боеприпасы» (revision 1640).
+# Built once: both HTTP preloads and the static export carry the same IDs.
+_AMMO_QUALITY_DESCS = {'KS': 6092, 'ST': 6104, 'OT': 6116, 'OT_PS': 6140,
+                       'EK': 6152, 'BB': 6164, 'SB': 6176, 'SHK': 6189}
+_AMMO_GENERIC = ('Боевые припасы — составная часть вооружения, непосредственно '
+                 'предназначенная для поражения живой силы противника.')
+for _type, (_root, _internal_name) in items.catalogue().items():
+    if _root == items.AMMO:
+        _did = items.DESC_ID_OFFSET + _type
+        if not ALL.get(_did):
+            _quality = re.search(r'_(OT_PS|KS|ST|OT|EK|BB|SB|SHK)(?:_G)?$', _internal_name, re.I)
+            _source = _AMMO_QUALITY_DESCS.get(_quality[1].upper()) if _quality else None
+            ALL[_did] = ORIG_ITEM_DESCS.get(items.DESC_ID_OFFSET + _source, _AMMO_GENERIC) if _source else _AMMO_GENERIC
+
 # Battle medicine states its AP cost inside the original HTML description.
 # Use the same final value as ss_si_heal / actual use, without rewriting the
 # text, price or restoration numbers. Built once for both text preloads.

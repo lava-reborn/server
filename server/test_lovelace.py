@@ -198,11 +198,14 @@ check("the stand's /res/database/objects.xml is the release's: a row for each of
 ICONS = own_items.icons(cat)
 if all(os.path.isfile(os.path.join(world.RES, *p.split("/"))) for p in ICONS.values()):
     pictures = {}
+    independent = {own_items.icon_path(*cat[t]): rec for t, rec in own_items.load().items()
+                   if rec.get('own_icon')}
     for mine, like in sorted(ICONS.items()):
-        with open(os.path.join(world.RES, *like.split("/")), "rb") as fh:
+        path = (os.path.join(ROOT, 'data', 'item_icons', independent[mine]['name'] + '.swf')
+                if mine in independent else os.path.join(world.RES, *like.split("/")))
+        with open(path, "rb") as fh:
             pictures[mine] = served("/res/" + mine) == (200, fh.read())
-    check("  ..and each one's icon, its quest piece's picture byte for byte, at the path the client"
-          " builds from that row (Тёмное Эхо's G among them since 2026-10-14)", pictures,
+    check("  ..each copied or independent icon is served byte for byte at its catalogue path", pictures,
           {own_items.icon_path(*cat[t]): True for t in own_items.load()})
 else:
     print("  --  no quest pieces' icons in %s; the stand's icons are not checked" % world.RES)

@@ -218,11 +218,11 @@ class Laborant(unittest.TestCase):
                 self.assertEqual(reloaded.inv.total_weight(), self.s.inv.total_weight())
                 self.assertEqual(self.store.character(self.cid)['loc'], 128)
 
-    def test_large_weapon_stall_can_purchase_last_calibre_row_after_index_sixty_four(self):
+    def test_large_ammunition_stall_can_purchase_last_calibre_row_after_index_sixty_four(self):
         self.store.set_money(self.cid, 1000000, 100000)
         self.s.char.afro, self.s.char.gold = self.store.money(self.cid)
-        self.visit(195, 1229)
-        stock = items.stock_for(1229, 195)
+        self.visit(195, 1230)
+        stock = items.stock_for(1230, 195)
         self.assertGreater(len(stock), 64)
         type_id = stock[-1]
         self.assertEqual(items.root_of(type_id), items.AMMO)

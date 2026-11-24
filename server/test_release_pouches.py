@@ -4,6 +4,7 @@ import unittest
 import inventory
 import items
 import progression as p
+import sets
 from testkit import run_cases
 
 
@@ -92,6 +93,30 @@ class ReleasePouches(unittest.TestCase):
                 self.assertEqual(ch.spec[index][0], 5)
                 self.assertLessEqual(ch.spec[index][1], ch.spec[index][2])
                 self.assertEqual(ch.spec_level(index), 5 + declared[index])
+
+    def test_skill_bonus_helps_matching_weapon_requirements_and_wear_but_not_armour(self):
+        for root, skill in ((items.COLD_ARM, p.MELEE), (items.FIRE_ARM, p.SHOOTING)):
+            ch = p.Character()
+            ch.set_skill(skill, 13)
+            for spec in ch.spec:
+                spec[0] = 5
+            tier = 18 if root == items.COLD_ARM else 17
+            weapon = next(t for t, (r, _) in items.catalogue().items()
+                          if r == root and inventory.item_level(t) == tier
+                          and (t in items.wiki() or t in items.coldarm_manual()))
+            row = dict(type_id=weapon, root=root)
+            before = ch.rows()
+            self.assertFalse(inventory.wearable(row, ch.level, ch))
+            ch.bonus_skills[skill] = tier - ch.level
+            self.assertTrue(inventory.wearable(row, ch.level, ch))
+            self.assertEqual(inventory.wear_multiplier(row, ch), 1)
+            armour = dict(type_id=next(iter(sets.SETS[11002]['members'].values())), root=items.WEAR)
+            self.assertFalse(inventory.wearable(armour, ch.level, ch))
+            self.assertFalse(inventory.wearable(self.row(5615), ch.level, ch))
+            self.assertEqual(ch.level, 13)
+            self.assertEqual(ch.rows(), before)
+            ch.bonus_skills[skill] = 0
+            self.assertFalse(inventory.wearable(row, ch.level, ch))
 
 
 if __name__ == '__main__':

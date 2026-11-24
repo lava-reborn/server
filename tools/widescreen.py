@@ -1633,7 +1633,7 @@ def fn_repair_initialize():
 
 
 def fn_armor_skills():
-    """No armour-level warning; combat weapon warnings use BASE skills.
+    """No armour-level warning; weapon skill warnings include temporary bonuses.
 
     Specialisation/attribute checks stay in their original methods. Other
     skill warnings retain effective levels; item static data is not changed.
@@ -1657,10 +1657,7 @@ def fn_armor_skills():
     a.push("needed").var("arr").var("i").op("getmember").op("definelocal")
     a.var("needed").op("not").iftrue("next")
     a.push("skill").var("attributes").member("skillArray").var("i").op("getmember").op("definelocal")
-    a.var("i").push(2).op("less2").iftrue("base")
     a.push("level").var("skill").member("level").op("definelocal")
-    a.push(True).iftrue("compare")
-    a.label("base").push("level").var("skill").member("value").op("definelocal")
     a.label("compare").var("level").var("needed").op("less2").op("not").iftrue("next")
     a.push("result").var("result").push("<b>").op("add2")
     a.var("titleArr").var("i").op("getmember").op("add2")
@@ -3358,6 +3355,11 @@ def injected(training=None):
     for name, params, body in restoration["globals"]:
         a.var("_global").push(name).function(params, body).op("setmember")
     wraps += restoration["wraps"]
+    from stat_breakdown_client import patches as stat_breakdown_patches
+    breakdown = stat_breakdown_patches(Asm, UNDEF)
+    for name, params, body in breakdown['globals']:
+        a.var('_global').push(name).function(params, body).op('setmember')
+    wraps += breakdown['wraps']
     for method in ("increase_skill_func", "increase_level_func",
                    "increase_spec_func", "increase_spec_level_func"):
         keep = "__progress_" + method

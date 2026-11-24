@@ -119,6 +119,8 @@ BUFF_ASSISTANTS = frozenset((1196, 2015, 2016, 2017, 2018, 5216))
 BUFF_SELLERS = BUFF_ASSISTANTS | {1013, 5215}
 BASE_AMMO_SELLERS = frozenset((714, 5240))
 PRISON_SUPPLIERS = frozenset((2180, 2181, 880))
+# Weapon/ammunition counters share a market, not duplicate inventories.
+OASIS_MARKETS = {76: (1225, 1228), 195: (1229, 1230), 196: (None, 1232)}
 
 
 @lru_cache(maxsize=256)
@@ -219,14 +221,34 @@ def ammunition_order(type_id):
     return type_id, 6
 
 
-def with_weapon_ammunition(stock):
+@lru_cache(maxsize=1)
+def retail_ammunition_by_calibre():
+    """All released retail qualities, indexed once for every ammunition seller."""
+    import items
+    groups = {}
+    for t, (root, name) in items.catalogue().items():
+        if root != items.AMMO or not (_AMMO_LINE.fullmatch(name) or t == 6189):
+            continue
+        # Catalogue placeholders have fallback prices but no ammunition
+        # definition or compatible weapon. They are not released qualities.
+        if t not in items.wiki() and t not in items.loot_manual():
+            continue
+        if items.out_of_game(t) or items.acquisition_blocked(t):
+            continue
+        si = items.params_of(t)
+        if si.get('quest') or not (si.get('cost') or si.get('g_cost')):
+            continue
+        groups.setdefault(ammunition_order(t)[0], []).append(t)
+    return groups
+
+
+def with_weapon_ammunition(stock, trader_type=None):
     """Keep compatible retail rounds at each gun seller, grouped after weapons."""
     import items
     guns = [t for t in stock if items.root_of(t) in (items.FIRE_ARM, items.COLD_ARM)]
     if not any(items.root_of(t) in (items.FIRE_ARM, items.AMMO) for t in stock):
         return stock
     chosen = dict.fromkeys(stock)
-    chosen.update(dict.fromkeys(t for t in gold_ammunition(stock) if t in items.SHOCK_ROUNDS.values()))
     calibres = {}
     for gun in guns:
         if items.root_of(gun) != items.FIRE_ARM:
@@ -246,9 +268,43 @@ def with_weapon_ammunition(stock):
     for type_id in rounds:
         calibre, _ = ammunition_order(type_id)
         calibres.setdefault(calibre, len(calibres))
+    for calibre in calibres:
+        for variant in retail_ammunition_by_calibre().get(calibre, ()):
+            rank = ammunition_order(variant)[1]
+            if trader_type in PRISON_SUPPLIERS and rank == 0:
+                continue
+            if (trader_type in BASE_AMMO_SELLERS
+                    and rank != 2 and not items.params_of(variant).get('g_cost')):
+                continue
+            chosen[variant] = None
+    rounds = [t for t in chosen if items.root_of(t) == items.AMMO]
     rounds.sort(key=lambda t: (calibres[ammunition_order(t)[0]], ammunition_order(t)[1]))
     other = [t for t in chosen if t not in guns and items.root_of(t) != items.AMMO]
     return guns + rounds + other if guns else other + rounds
+
+
+@lru_cache(maxsize=3)
+def oasis_ammunition(loc_id):
+    """Move compatible rounds to the actual ammunition counter, once per oasis."""
+    import items
+    weapon_seller, ammo_seller = OASIS_MARKETS[loc_id]
+    stock = items._shop_stock(ammo_seller, loc_id)
+    if weapon_seller is not None:
+        stock += items._shop_stock(weapon_seller, loc_id)
+    return [t for t in with_weapon_ammunition(stock, ammo_seller)
+            if items.root_of(t) == items.AMMO]
+
+
+def oasis_stock(trader_type, loc_id, stock):
+    market = OASIS_MARKETS.get(loc_id)
+    if market is None:
+        return None
+    import items
+    if trader_type == market[1]:
+        return list(oasis_ammunition(loc_id))
+    if trader_type == market[0]:
+        return [t for t in stock if items.root_of(t) in (items.FIRE_ARM, items.COLD_ARM)]
+    return None
 
 
 @lru_cache(maxsize=256)

@@ -149,7 +149,7 @@ class ReleaseSets(unittest.TestCase):
         self.assertEqual(execute(widescreen.fn_armor_skills().assemble(), env),
                          'weapon requirements')
 
-    def test_weapon_warning_uses_base_combat_skill_and_preserves_noncombat_warnings(self):
+    def test_weapon_warning_counts_effective_combat_skills(self):
         skills=[dict(value=0,level=100),dict(value=16,level=100),dict(value=0,level=5)]
         target=dict(currDDOperation=dict(fromItem=dict(rootID=items.FIRE_ARM)),
                     __armorSkillsOrig=lambda a,t: 'unchanged')
@@ -158,11 +158,16 @@ class ReleaseSets(unittest.TestCase):
         env=dict(this=target,arr=[None,17,3],titleArr=['Melee','Shooting','Medicine'],
                  lol=dict(core=dict(Master=master)))
         code=widescreen.fn_armor_skills().assemble()
+        self.assertEqual(execute(code,env),'')
+        skills[1]['level']=16
         self.assertEqual(execute(code,env),'<b>Shooting не ниже 17</b>\r')
         skills[1]['value']=17
+        skills[1]['level']=17
         self.assertEqual(execute(code,env),'')
         target['currDDOperation']['fromItem']['rootID']=items.COLD_ARM
         env['arr']=[6]
+        self.assertEqual(execute(code,env),'')
+        skills[0]['level']=5
         self.assertEqual(execute(code,env),'<b>Melee не ниже 6</b>\r')
         target['currDDOperation']['fromItem']['rootID']=items.WEAR
         self.assertEqual(execute(code,env),'')

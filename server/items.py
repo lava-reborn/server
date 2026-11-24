@@ -349,7 +349,9 @@ def stock_for(trader_type, loc_id=None):
                   and effects.definition(t) is not None)]
     # Compatible rounds are an intentional exception to location-wide ownership:
     # a gun must not require buying its ammunition from a different seller.
-    return shop_bands.with_weapon_ammunition(chosen)
+    oasis = shop_bands.oasis_stock(trader_type, loc_id, chosen)
+    return (oasis if oasis is not None else
+            shop_bands.with_weapon_ammunition(chosen, trader_type))
 
 
 # Existing coupons still redeem, but selling an unlimited discounted supply
@@ -1378,6 +1380,8 @@ def static_info(type_id):
         info[1]['max_count'] = MEDICINE_STACK if single else 1
     if info:
         info[1].update(equipment_level_fields(type_id, info[1]))
+        if root_of(type_id) == AMMO:
+            info[1]['desc'] = DESC_ID_OFFSET + type_id
     return info
 
 

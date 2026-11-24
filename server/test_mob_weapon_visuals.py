@@ -62,7 +62,8 @@ class MobWeaponVisuals(unittest.TestCase):
         sess = NS(room=NS(npc=lambda _id: (123, type_id, root), loc=NS(id=98)),
                   combat=combat, char_id=1, home_here=lambda _type: False, send=Mock())
         with patch.object(holdings, 'guard_site', return_value=display_guard), \
-                patch.object(holdings, 'paid_holder', return_value=None):
+                patch.object(holdings, 'paid_holder', return_value=None), \
+                patch.object(holdings, 'flag_for', return_value=(None, False)):
             server.Session.send_npc_info(sess, 123)
         self.assertEqual(sess.send.call_count, 1)
         combat.after_npc_info.assert_called_once_with(123)
@@ -75,11 +76,11 @@ class MobWeaponVisuals(unittest.TestCase):
                          (123, 411, 12, 14))
 
     def test_wire_keeps_local_base_guard_model_and_caption(self):
-        guard = NS(kind='base', guards=(4828,))
+        guard = holdings.base_for(118)
         command, fields = self.npc_info(918, mobs.stats(4828).weapon_type_id, display_guard=guard)
         self.assertEqual(command, 'userInfo')
         self.assertEqual((fields['id'], fields['name'], fields['lvl'], fields['res']),
-                         (123, 4828, 12, 4828))
+                         (123, holdings.BASE_GUARD_NAME, 12, guard.guards[0]))
 
     def test_services_never_receive_combat_presentation_fallback(self):
         command, fields = self.npc_info(411, mobs.stats(411).weapon_type_id, root=world.COMMONER)

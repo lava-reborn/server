@@ -1,4 +1,4 @@
-"""Equipment within +3 levels, retained specialisations and base-skill equipment wear.
+"""Equipment allowance, learned specialisations and temporary weapon skill bonuses.
 
 Real SQLite inventories and actual fire/strike completion handlers, no sockets
 or production data. Burst trajectory is stubbed; ammunition/AP/wear are real.
@@ -60,7 +60,7 @@ class LevelWear(unittest.TestCase):
         fields.update(slot=slot, **extra)
         return self.store.create_item(self.sess.char_id, type_id, root, **fields)
 
-    def test_each_difference_uses_base_character_level_without_item_bonuses(self):
+    def test_each_weapon_difference_counts_only_the_matching_combat_bonus(self):
         for type_id, tier in ((7072, 4), (6241, 6)):
             row = dict(type_id=type_id, root=items.root_of(type_id))
             self.assertEqual(inventory.item_level(type_id), tier)
@@ -68,10 +68,13 @@ class LevelWear(unittest.TestCase):
                 for skill in self.ch.skill:
                     skill[0] = 0
                 self.ch.skill[progression.MEDICINE][0] = level
-                self.ch.bonus_skills = [100] * progression.SKILLS
-                difference = tier - level
-                expected = min(4.5, 1.5 * difference) if difference > 0 else 1
-                self.assertEqual(inventory.wear_multiplier(row, self.ch), expected)
+                matching = progression.MELEE if row['root'] == items.COLD_ARM else progression.SHOOTING
+                for bonus in (-2, 0, 2, 5):
+                    self.ch.bonus_skills = [100] * progression.SKILLS
+                    self.ch.bonus_skills[matching] = bonus
+                    difference = tier - max(level, bonus)
+                    expected = min(4.5, 1.5 * difference) if difference > 0 else 1
+                    self.assertEqual(inventory.wear_multiplier(row, self.ch), expected)
 
     def test_penalty_steps_are_exact_and_capped(self):
         for difference, expected in ((-2, 1), (0, 1), (1, 1.5), (2, 3),

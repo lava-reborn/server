@@ -4107,6 +4107,10 @@ class Session:
         # (quests: until_max) takes no fee for nothing: refused, the reason
         # in chat, the quest left in the journal to be dropped.
         ch = self.character()
+        if any(ch.spec[i][0] < 0 for i in quest.requires_spec):
+            self.send("cmdAck", res=RES_NOT_AVAILABLE)
+            self.answer("Для сдачи задания требуется изученная специализация. Задание и предметы сохранены.")
+            return
         if quest.maxed(ch.skill, ch.spec):
             log.info("  ..    quest #%d (%s) not handed in by %s: nothing left to train",
                      q_id, quest.name, self.nick)
@@ -4171,7 +4175,7 @@ class Session:
             self.fee_shown.pop(q_id, None)
             self.skill_shown.pop(q_id, None)
             self._quest_status_snapshot = None
-            self.answer("Аренда клановой базы оплачена из казны до следующей субботы, 20:00 по Москве.")
+            self.answer("Аренда клановой базы оплачена из казны до следующей субботы, 19:55 по Москве.")
             self.send("cmdAck", res=0)
             return
         if not quest.fee_at_take and not self.fee_ready(quest):

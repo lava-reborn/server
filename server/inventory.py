@@ -626,6 +626,7 @@ def card_repeat(rows):
 # differences from the character's level scale wear; specialisation gates
 # remain independent.
 GEAR_LEVEL_ALLOWANCE = 3
+_WEAPON_SKILL = {items.FIRE_ARM: progression.SHOOTING, items.COLD_ARM: progression.MELEE}
 
 
 def gear_level_allowance(type_id):
@@ -636,6 +637,12 @@ def item_level(type_id):
     """The displayed item tier, retained for wear, prices and release rules."""
     si = items.params_of(type_id) or {}
     return max(unpacked(si.get("need_skills_m"), si.get("need_skills"), progression.SKILLS))
+
+
+def equipment_skill_level(row, character):
+    """Temporary combat skills help weapons, never raise character/armour level."""
+    skill = _WEAPON_SKILL.get(row['root'])
+    return character.level if skill is None else max(character.level, character.skill_level(skill))
 
 
 def weapon_requirement_error(row, character):
@@ -651,9 +658,10 @@ def weapon_requirement_error(row, character):
     si = items.params_of(row["type_id"]) or {}
     required = max(unpacked(si.get("need_skills_m"), si.get("need_skills"), progression.SKILLS))
     allowance = gear_level_allowance(row['type_id'])
-    if not item_templates.contains(row['type_id']) and required > character.level + allowance:
+    level = equipment_skill_level(row, character)
+    if not item_templates.contains(row['type_id']) and required > level + allowance:
         return '«%s»: нужен уровень персонажа %d, у вас %d' % (
-            item_title(row["type_id"]), required - allowance, character.level)
+            item_title(row["type_id"]), required - allowance, level)
     for field, size, value, titles in (
             ("skills", progression.SKILLS, character.skill_level, progression.SKILL_TITLES),
             ("specs", progression.SPECS, character.spec_level, progression.SPEC_TITLES)):
@@ -676,10 +684,12 @@ def weapon_requirement_error(row, character):
 
 def wearable(row, level, character=None):
     """The same level allowance with or without a loaded character card."""
+    if character is not None:
+        return weapon_requirement_error(row, character) is None
     if (row["root"] in GEAR_ROOTS and not item_templates.contains(row['type_id'])
             and item_level(row["type_id"]) > level + gear_level_allowance(row['type_id'])):
         return False
-    return character is None or weapon_requirement_error(row, character) is None
+    return True
 
 
 @lru_cache(maxsize=4096)
@@ -768,14 +778,14 @@ def level_wear_penalty(difference):
 
 
 def wear_multiplier(row, character):
-    """Use the same base character level as the +3 equipment gate.
+    """Use the same effective weapon/base armour level as the equipment gate.
 
     Factory durability is retained: multiplying by a durability ratio here
     would exceed the agreed x4.5 ceiling and change the advertised steps.
     """
     if row["root"] not in GEAR_ROOTS:
         return 1.0
-    return level_wear_penalty(item_level(row["type_id"]) - character.level)
+    return level_wear_penalty(item_level(row["type_id"]) - equipment_skill_level(row, character))
 
 
 def item_title(type_id):

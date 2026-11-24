@@ -235,6 +235,8 @@ def deliberate(t):
         p["exchang"] = 1
     if root == items.TRASH and not p.get("desc") and t in items._orig_described():
         p["desc"] = items.DESC_ID_OFFSET + t
+    if root == items.AMMO:
+        p['desc'] = items.DESC_ID_OFFSET + t
     p.update(production.item_numbers(t) or {})
     if t in items.ARTICLE_GOLD_PRICE:
         p["g_cost"] = items.ARTICLE_GOLD_PRICE[t]
