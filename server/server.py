@@ -1930,7 +1930,7 @@ class Session:
         if CHEATS and text.split(" ")[0] in ("/goto", "/give", "/money",
                                              "/skill", "/spec", "/base-respawn", "/boss-now",
                                              "/base-now", "/boss-spawn", "/test-bot", "/test-bot-stop", "/test-time-reset",
-                                             "/test-allies", "/test-allies-stop"):
+                                             "/test-allies", "/test-allies-stop", "/lab-respawn"):
             args = text.split()[1:]
             try:
                 if text.split()[0] in ('/test-allies', '/test-allies-stop'):
@@ -1951,6 +1951,9 @@ class Session:
                             'Тестовые часы возвращены к исходной настройке сервера.')
                     else:
                         out = self.admin_test_bot(stop=command == '/test-bot-stop')
+                elif text.split()[0] == '/lab-respawn':
+                    out = ('Используйте /lab-respawn без аргументов.' if args
+                           else self.admin_laborant_respawn())
                 elif text.startswith("/base-respawn"):
                     out = ("Используйте /base-respawn без аргументов."
                            if args else self.admin_base_respawn())
@@ -2214,6 +2217,26 @@ class Session:
         self.send_player_info()
         return "%s: %s на %d дн., скорость x%s" % (
             self.nick, vehicle["name"], days, vehicle["speed_mod"])
+
+    def admin_laborant_respawn(self):
+        """Local retry of the lab only; real schedules and other progress stay intact."""
+        if not CHEATS or not self.char_id:
+            return 'Команда доступна только в локальном тестовом комплекте.'
+        if self.on_map or self.room is None or self.loc.id != quests.LABORANT_LOC:
+            return 'Войдите в центр Абу-Хамеда: /goto 128.'
+        day = self.day_start()
+        with storage.atomic(STORE.db):
+            if not STORE.lock_quest_character(self.char_id, clan_first=True):
+                return 'Персонаж недоступен; повторите после входа.'
+            STORE.db.execute('DELETE FROM boss_kills WHERE spot = ?', (quests.LABORANT_SPOT,))
+            STORE.db.execute('DELETE FROM char_quests_done WHERE char_id = ? AND type = ?'
+                             ' AND done_at >= ? AND done_at < ?',
+                             (self.char_id, quests.LABORANT_DETAIL, day, day + 86400))
+        STORE.quests_changed(self.char_id)
+        events.touch(quests.LABORANT_NPC)
+        events.keep(combat.room_combat(self.room, STORE))
+        return ('Лаборант возвращён. Тестовые лимиты общей сборки и твоей детали сброшены; '
+                'часы, вещи и владения сохранены. Условия уровня и клана действуют.')
 
     def admin_base_respawn(self):
         """Local cheats only: restore this base's native scheduled wave."""

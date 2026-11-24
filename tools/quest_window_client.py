@@ -1,4 +1,4 @@
-"""Keep passive quest status separate from an explicit NPC interaction."""
+"""Bound quest refreshes by live NPCs and keep retired windows inactive."""
 from avm_codegen import Compiler
 
 SOURCE = '''
@@ -89,6 +89,26 @@ def __qwNPCRemoved(id):
 '''
 
 
+def npc_list(Asm):
+    """Enumerate occupied entity IDs; local allies make playerList sparse."""
+    a = Asm()
+    a.push('result', 0).op('initarray').op('definelocal')
+    a.push('players', 0).var('lol').member('core', 'Master')
+    a.push('getInstance').op('callmethod').member('currentLocation', 'playerList').op('definelocal')
+    a.var('players').op('not').iftrue('done')
+    a.var('players').op('enumerate2').label('next')
+    a.push('key').op('stackswap').op('definelocal')
+    a.var('key').push(None).op('equals2').iftrue('done')
+    a.push('npc').var('players').var('key').op('getmember').op('definelocal')
+    # NPC's constructor sets isNPC for every quest-giver/service subclass.
+    # Deleted entries and ordinary players (including allies) do not qualify.
+    a.var('npc').member('isNPC').op('not').iftrue('skip')
+    a.var('npc').push(1).var('result').push('push').op('callmethod').op('pop')
+    a.label('skip').push(True).iftrue('next')
+    a.label('done').var('result').op('return')
+    return a
+
+
 def patches(Asm, undef):
     source = SOURCE
     specs = [('init', '__qwInit'), ('kill', '__qwKill'),
@@ -118,4 +138,6 @@ def {helper}(obj):
                *bodies['__qwLocationKill']),)
     wraps += ((('core', 'location', 'Location'), 'removePlayer', '__qwNPCRemovedOrig',
                *bodies['__qwNPCRemoved']),)
+    wraps += ((('core', 'quests', 'QuestInspector'), 'getNPCList', '__qwNPCListOrig',
+               (), npc_list(Asm)),)
     return dict(globals=[], wraps=wraps)

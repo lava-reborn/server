@@ -310,8 +310,7 @@ NAME_TYPOS = {
     50315: ("Гейнц Тейлор <Br>", "Гейнц Тейлор<Br>"),
 }
 
-# Lines of a name that offer work the server cut, dropped on the wire by the
-# row's id: the name keeps the lines of what the creature does.
+# Caption lines omitted in the current game, keyed by the original string ID.
 #
 #   49753-49755, three machines of Абри's smelter (766: 2394-2396) -- each
 #        also names a step of the original's diamond line, «Изготовление
@@ -321,6 +320,7 @@ NAME_TYPOS = {
 #        pipe left the map (2026-10-05), so the line is cut (README «Абри»,
 #        «Что вырезано»); the machines smelt, mix and press for 532-538.
 NAME_CUTS = {
+    9616: ("Главный склад",),  # Central Abu warehouse master.
     49753: ("Изготовление ювелирной проволоки",),
     49754: ("Изготовление алмазного инструмента",),
     49755: ("Расколка и распил алмазов",),
