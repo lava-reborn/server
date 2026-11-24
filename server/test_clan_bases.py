@@ -732,6 +732,37 @@ class ClanBases(unittest.TestCase):
         self.assertEqual(self.store.holding(self.base.key), before)
         self.assertEqual(self.store.clan_ledger_rows(self.clan), ledger)
 
+    def test_rent_offer_uses_capturing_clan_and_treasury_rights_not_balance(self):
+        account = self.store.character(self.cid)['account_id']
+        officer, _ = self.store.create_character(account, 'RentDelegate', 0, '1')
+        member, _ = self.store.create_character(account, 'RentMember', 0, '1')
+        outsider_account, _ = self.store.register('rent-outsider', 'test-only')
+        outsider, _ = self.store.create_character(outsider_account, 'RentOutsider', 0, '1')
+        self.store.clan_create(outsider, 'Foreign rent', 'foreign-rent', '', None)
+        self.store.clan_member_add(officer, self.clan, 0x400, '')
+        self.store.clan_member_add(member, self.clan, 0, '')
+        self.store.clan_treasury_adjust(self.clan, -4_500_000, 'admin')
+        for base in (self.base, holdings.site('base_dn')):
+            self.base = base
+            self.capture()
+            for cid, allowed in ((self.cid, True), (officer, True), (member, False), (outsider, False)):
+                with self.subTest(base=base.key, char=cid):
+                    sess, frames = self.native(cid)
+                    self.assertEqual(sess.quest_available(quests.get(base.rent_quest)), allowed)
+                    sess.cmd_q_st(dict(mob=1, q_idx=quests.given_by(base.flag).index(base.rent_quest)))
+                    self.assertEqual([p['res'] for n, p in frames if n == 'cmdAck'][-1] == 0, allowed)
+                    self.assertEqual(self.store.has_quest(cid, base.rent_quest), allowed)
+                    for row in self.store.quests(cid):
+                        if row['type'] == base.rent_quest:
+                            self.store.drop_quest(row['q_id'])
+            self.store.clan_member_update(officer, self.clan, perm=0)
+            sess, _ = self.native(officer)
+            self.assertFalse(sess.quest_available(quests.get(base.rent_quest)))
+            self.store.clan_member_update(officer, self.clan, perm=0x400)
+            self.assertTrue(sess.quest_available(quests.get(base.rent_quest)))
+            self.store.holding_clear(base.key, 'admin')
+        self.assertEqual(self.store.clan_treasury(self.clan), 0)
+
     def test_failed_journal_rolls_back_treasury_and_lease(self):
         self.capture()
         before = self.store.holding(self.base.key)

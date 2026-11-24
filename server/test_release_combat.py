@@ -136,7 +136,7 @@ class TimedItems(unittest.IsolatedAsyncioTestCase):
                 inv.buy(dict(obj=format(stock.index(6055), 'x'), param=n), inventory.UPD_BUY)
                 self.assertEqual(list(self.store.db._db.iterdump()), frozen)
 
-    async def test_clan_test_allies_target_escorts_heal_and_count_for_capture(self):
+    async def test_clan_test_allies_target_master_first_heal_and_count_for_capture(self):
         import asyncio
         import bosses
         import server
@@ -158,11 +158,13 @@ class TimedItems(unittest.IsolatedAsyncioTestCase):
         guards = [m for m in rc.bosses if m.type_id in base.guards + base.troops]
         for guard in guards:
             guard.alive, guard.away = True, False
+        master.alive, master.away = True, True
         self.assertIn(allies[0].target(), guards)
-        for guard in guards:
-            guard.alive = False
         master.alive, master.away = True, False
         self.assertIs(allies[0].target(), master)
+        master.alive = False
+        self.assertIn(allies[0].target(), guards)
+        master.alive = True
         moment = datetime(2026, 11, 21, 20, tzinfo=bosses.ZONE).timestamp()
         master.capture_harm = {self.s.char_id: 10}
         master.slot = moment
@@ -190,6 +192,26 @@ class TimedItems(unittest.IsolatedAsyncioTestCase):
         await asyncio.sleep(0)
         self.assertFalse(self.s.local_test_allies)
         self.assertTrue(all(ally.closed and ally.timer is None for ally in allies))
+
+    async def test_warehouse_and_camp_allies_still_clear_escorts_first(self):
+        from training import bot
+        for loc_id in (128, 133):
+            with self.subTest(loc=loc_id):
+                rc = self.location(loc_id)
+                site = holdings.site_at(loc_id)
+                master = next(m for m in rc.bosses
+                              if m.type_id == site.boss) if site else rc.bosses[0]
+                guard = next(m for m in rc.mobs.values() if m is not master and m.stats.can_attack)
+                for mob in rc.mobs.values():
+                    mob.away = True
+                master.alive, master.away = True, False
+                guard.alive, guard.away = True, False
+                master.cell = self.s.pos
+                ally = bot.LocalOpponent.__new__(bot.LocalOpponent)
+                ally.ally, ally.room, ally.enemy = True, rc.room, self.s
+                self.assertIs(ally.target(), guard)
+                guard.alive = False
+                self.assertIs(ally.target(), master)
 
     async def test_repeated_allied_groups_reuse_ids_and_release_timers_and_stores(self):
         import asyncio

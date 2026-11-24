@@ -3433,7 +3433,7 @@ class Session:
         base = holdings.rent_site(quest.type)
         if base is not None:
             loc = getattr(self, "loc", None)
-            if loc is None or holdings.rent_refusal(STORE, base, self.char_id, loc.id):
+            if loc is None or holdings.rent_refusal(STORE, base, self.char_id, loc.id, check_funds=False):
                 return False
         if (quests.acquisition_blocked(quest) or quest.over_cap(self.skill_level())
                 or quest.level > self.skill_level()):

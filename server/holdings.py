@@ -365,8 +365,8 @@ def occupation_slot(s, now):
                if end <= now)
 
 
-def rent_refusal(store, s, char_id, loc_id=None, now=None):
-    """Rechecked at both native quest offer and hand-in, never a purse fee."""
+def rent_refusal(store, s, char_id, loc_id=None, now=None, *, check_funds=True):
+    """Live lease eligibility; treasury funds gate payment, not the offer."""
     now = bosses.clock() if now is None else now
     slot = events.table().window(s.payment).slot(now)
     if slot is None or (loc_id is not None and int(loc_id) != s.loc):
@@ -383,9 +383,10 @@ def rent_refusal(store, s, char_id, loc_id=None, now=None):
         return "Клан может владеть только одной клановой базой. Склады не учитываются."
     if float(held["paid_until"]) != 0:
         return "Аренда за эту неделю уже оплачена."
-    balance = store.clan_treasury(int(held["clan_id"]))
-    if balance is None or balance < s.rent:
-        return "В казне клана недостаточно афро для аренды базы."
+    if check_funds:
+        balance = store.clan_treasury(int(held["clan_id"]))
+        if balance is None or balance < s.rent:
+            return "В казне клана недостаточно афро для аренды базы."
     return None
 
 

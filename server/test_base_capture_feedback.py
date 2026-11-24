@@ -160,6 +160,58 @@ class BaseCaptureFeedback(unittest.IsolatedAsyncioTestCase):
         guard = next(m for m in self.rc.bosses if m.type_id in self.base.guards)
         self.assertTrue(holdings.defender_friendly(self.rc, guard, self.s.combat))
 
+    async def test_empty_treasury_still_offers_rent_after_native_capture_and_can_be_funded_later(self):
+        for key in ('base_dn', 'base_ah'):
+            with self.subTest(base=key):
+                self.scene(key, 2)
+                self.store.clan_treasury_adjust(self.clan, -4_500_000, 'admin')
+                self.s.cmd_q_status(dict(q_type=self.base.rent_quest))
+                self.assertEqual(self.frames()[-1][1]['status'], 0)
+                for ally in self.allies:
+                    self.assertIs(ally.target(), self.master)
+                    self.shoot(ally.enemy.combat)
+                self.finish()
+                self.assertTrue(all(ally.target().type_id in self.base.guards + self.base.troops
+                                    for ally in self.allies))
+                # The flag changes identity so an already present client asks
+                # q_status again, even if it cached the neutral base's refusal.
+                old_flag, _ = self.flag_packet()
+                self.rc.keep_hours()
+                flag, packet = self.flag_packet()
+                self.assertNotEqual(flag, old_flag)
+                self.assertEqual(packet['clan'], self.clan)
+                self.s.cmd_q_status(dict(q_type=self.base.rent_quest))
+                self.assertEqual(self.frames()[-1][1]['status'], 1)
+                for guard in (m for m in self.rc.mobs.values()
+                              if m.type_id in self.base.guards + self.base.troops):
+                    self.s.send_npc_info(guard.eid)
+                    info = next(p for cmd, p in reversed(self.frames())
+                                if cmd == 'userInfo' and p['id'] == guard.eid)
+                    self.assertEqual(info['clan'], self.clan)
+                self.s.pos = self.s.room.npc(flag).cell
+                self.s.cmd_q_st(dict(mob=flag, q_idx=quests.given_by(self.base.flag).index(self.base.rent_quest)))
+                row = next(r for r in self.store.quests(self.s.char_id) if r['type'] == self.base.rent_quest)
+                self.s.cmd_q_co(dict(mob=flag, q_id=row['q_id']))
+                self.assertIsNotNone(self.store.quest(row['q_id']))
+                self.assertEqual(self.store.clan_treasury(self.clan), 0)
+                self.assertIsNone(holdings.paid_holder(self.store, self.base))
+                self.assertTrue(self.s.quest_available(quests.get(self.base.rent_quest)))
+                self.assertTrue(any('недостаточно афро' in text for text in self.answers()))
+                self.store.clan_treasury_adjust(self.clan, self.base.rent, 'admin')
+                self.now = SLOT + 74 * 60
+                self.s.cmd_q_co(dict(mob=flag, q_id=row['q_id']))
+                self.assertIsNone(self.store.quest(row['q_id']))
+                self.assertEqual(self.store.clan_treasury(self.clan), 0)
+                held = holdings.paid_holder(self.store, self.base)
+                self.assertEqual(held['paid_until'], SLOT + 7 * 86400 - holdings.BASE_RESET_LEAD)
+                self.assertTrue(all(ally.target() is None for ally in self.allies))
+                self.s.cmd_q_status(dict(q_type=self.base.rent_quest))
+                self.assertEqual(self.frames()[-1][1]['status'], 0)
+                for ally in self.allies:
+                    ally.exit()
+                self.store.holding_clear(self.base.key, 'admin')
+                self.store.clan_disband(self.clan)
+
     async def test_failed_base_capture_retries_on_native_corpse_callback_once(self):
         self.scene('base_dn', 2)
         for ally in self.allies:

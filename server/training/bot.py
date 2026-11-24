@@ -137,8 +137,15 @@ class LocalOpponent:
         candidates = [mob for mob in rc.mobs.values()
                       if mob.alive and not mob.away and mob.stats.can_attack
                       and not holdings.defender_friendly(rc, mob, self.enemy.combat)]
-        # Clear escorts first. A hidden master is not a target until the
-        # native schedule exposes him; no timer/clearance is bypassed here.
+        # Clan-base allies attack the capture objective first. The same
+        # visibility and friendship filters above still apply to the master.
+        base = holdings.base_for(self.enemy.loc.id)
+        if base is not None:
+            master = next((mob for mob in candidates if mob.type_id == base.boss), None)
+            if master is not None:
+                return master
+        # Else clear escorts first. A hidden master is not a target until
+        # the native schedule exposes him; no timer/clearance is bypassed.
         masters = {site.boss for site in holdings.table().sites.values()
                    if site.loc == self.enemy.loc.id}
         masters.update(mob.type_id for mob in candidates if mob.stats.role == 'boss'
