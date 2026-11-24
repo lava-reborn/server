@@ -2942,7 +2942,8 @@ class RoomCombat:
         for f in self.fighters():
             if not f.present(self):
                 continue
-            if mob is not None and holdings.defender_friendly(self, mob, f):
+            if mob is not None and (holdings.defender_friendly(self, mob, f)
+                                    or holdings.warehouse_defender_passive(self, mob, f)):
                 continue
             d = mobs.hex_distance(cell, f.cell, width)
             if d <= best_d:
@@ -3170,7 +3171,7 @@ class RoomCombat:
             # war over nothing -- and, standing next to him, "strike" him for
             # 0 (think() attacks whatever is in reach), which the client's
             # AUTO_SHOT answers with another shot at the box, for ever.
-            self.aggro(target, attacker, t)
+            self.aggro(target, attacker, t, retaliation=True)
 
     def mark_foe(self, fighter, foe):
         """A player was shot at or swung at by another: the one attacked is
@@ -3187,11 +3188,12 @@ class RoomCombat:
         fighter.foes.add(foe.eid)
         fighter.sess.send("lch", enemy=foe.eid)
 
-    def aggro(self, mob, fighter, t=None):
+    def aggro(self, mob, fighter, t=None, *, retaliation=False):
         """A mob picks a player: the room goes to war and the player's client
         paints the mob red (lch;enemy -> Location.setEnemy) and remembers it
         for autofire."""
-        if fighter.preparing() or holdings.defender_friendly(self, mob, fighter):
+        if (fighter.preparing() or holdings.defender_friendly(self, mob, fighter)
+                or (not retaliation and holdings.warehouse_defender_passive(self, mob, fighter))):
             return
         t = now() if t is None else t
         mob.target = fighter

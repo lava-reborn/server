@@ -15,33 +15,22 @@ from testkit import run_cases
 
 
 def reference_winner(snapshot,squad,minimum,excluded):
-    """Independent declarative rule, without using the production selector."""
-    groups={}
-    for person in snapshot['fighters']:
-        if person['here'] and person['clan'] is not None and person['clan'] not in excluded:
-            groups.setdefault(person['clan'],[]).append(person)
-    eligible=[]
-    for clan,people in groups.items():
-        present=[p for p in people if p['alive'] and p['level']>=minimum and p['harm']>0]
-        damage=min(snapshot['pool'],sum(p['harm'] for p in people))
-        if len(present)>=squad and damage>0:
-            eligible.append((damage,clan,people))
-    if not eligible:
+    """Independent rule: only the finishing clan can meet the squad condition."""
+    clan=snapshot['killer_clan']
+    if clan is None or clan in excluded or snapshot['killer'] is None:
         return None
-    best_damage=max(p[0] for p in eligible)
-    tied=[p for p in eligible if p[0]==best_damage]
-    winner=next((p for p in tied if p[1]==snapshot['killer_clan']),None)
-    winner=winner or min(tied,key=lambda p:p[1])
-    damage,clan,people=winner
-    best=min(people,key=lambda p:(-p['harm'],p['char']))
-    credited=snapshot['killer'] if snapshot['killer_clan']==clan else best['char']
-    return clan,best['clan_name'],damage,credited
+    people=[p for p in snapshot['fighters'] if p['clan']==clan and p['here']]
+    present={p['char'] for p in people if p['alive'] and p['level']>=minimum and p['harm']>0}
+    if len(present)<squad:
+        return None
+    damage=min(snapshot['pool'],sum(p['harm'] for p in people))
+    return clan,people[0]['clan_name'],damage,snapshot['killer']
 
 
 class ReleaseIntegrity(unittest.TestCase):
     def test_capture_selection_matches_all_eligibility_boundaries_and_is_order_independent(self):
         rng=random.Random(20261124)
-        for squad,minimum in ((2,8),(2,12),(2,16),(3,12),(3,16)):
+        for squad,minimum in ((3,8),(3,12),(3,16),(3,17)):
             for iteration in range(400):
                 people=[dict(char=i+1,clan=rng.choice((None,1,2,3)),
                     clan_name='',here=rng.choice((True,True,False)),
@@ -58,13 +47,11 @@ class ReleaseIntegrity(unittest.TestCase):
                 rng.shuffle(people)
                 self.assertEqual(holdings.winner(snapshot,squad,minimum,excluded),expected)
 
-    def test_every_base_requires_three_distinct_present_live_damagers_at_or_above_its_level(self):
+    def test_every_site_requires_three_distinct_present_live_damagers_at_or_above_its_level(self):
         for base in holdings.table().sites.values():
-            if base.kind!='base':
-                continue
             people=[dict(char=i+1,clan=1,clan_name='owner',here=True,alive=True,
                          level=base.min_level,harm=10) for i in range(3)]
-            snapshot=dict(fighters=people,pool=1000,killer=None,killer_clan=None)
+            snapshot=dict(fighters=people,pool=1000,killer=1,killer_clan=1)
             self.assertEqual(holdings.winner(snapshot,3,base.min_level)[0],1)
             for key,value in (('here',False),('alive',False),('harm',0),('level',base.min_level-1)):
                 prior=people[-1][key]

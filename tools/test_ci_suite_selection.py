@@ -34,6 +34,13 @@ class ClientSuiteSelection(unittest.TestCase):
         self.assertNotRegex(pr.group(1), r'(?m)^    paths(?:-ignore)?:',
                             'A skipped workflow leaves required PR checks pending')
 
+    def test_warehouse_capture_contracts_are_included_in_the_full_release_suites(self):
+        required = {'server/test_warehouse_capture_rules.py', 'server/test_holdings.py',
+                    'server/test_clan_bases.py', 'server/test_clan_base_access.py',
+                    'server/test_release_integrity.py', 'server/test_boss_hotfix.py'}
+        selected = {Path(path).relative_to(ROOT).as_posix() for path in suite.suites()}
+        self.assertFalse(required - selected, 'Warehouse/base capture regressions must reach CI')
+
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory(prefix='lava_ci_selection_')
         self.addCleanup(self.temporary.cleanup)

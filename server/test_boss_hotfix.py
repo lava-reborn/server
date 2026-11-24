@@ -230,7 +230,7 @@ for t in (12, 14, 836, 930, 931):
 check('ordinary mobs and miners never fall below their original HP', ordinary_errors, [])
 
 # Warehouse capture is a separate rule: each clan's harm is capped at the
-# actual boss pool. Increased HP must not turn its tie fixture into a loss.
+# actual boss pool for logging; only the finishing clan may capture.
 for kind in sorted(bosses.WAREHOUSE_MASTERS):
     st = mobs.stats(kind)
     base = mobs.LEVELS[str(max(0, min(mobs.MAX_LEVEL, st.level)))]["hp"]
@@ -241,13 +241,14 @@ pool = master.hp_max + master.sp_max
 fighters = [dict(char=char, clan=clan, clan_name=str(clan), here=True,
                  alive=True, level=8, harm=harm)
             for char, clan, harm in ((1, 1, 5 * pool), (2, 1, 5 * pool),
-                                     (3, 2, pool // 2), (4, 2, pool - pool // 2))]
+                                     (3, 2, pool // 2), (4, 2, pool - pool // 2 - 1),
+                                     (5, 1, 1), (6, 2, 1))]
 snapshot = dict(pool=pool, fighters=fighters, killer=4, killer_clan=2)
-check('warehouse capture tie uses the actual HP and stamina pool',
-      holdings.winner(snapshot, squad=2, min_level=8), (2, '2', pool, 4))
-fighters[-1]['harm'] -= 1
-check('a killing blow cannot beat a clan with more capped harm',
-      holdings.winner(snapshot, squad=2, min_level=8)[:3], (1, '1', pool))
+check('warehouse capture logs the actual HP and stamina pool for the finishing clan',
+      holdings.winner(snapshot, squad=3, min_level=8), (2, '2', pool, 4))
+fighters[3]['harm'] -= 1
+check('the finishing clan wins even when another clan has more capped harm',
+      holdings.winner(snapshot, squad=3, min_level=8), (2, '2', pool - 1, 4))
 
 carriers = {int(t) for t in mobs.TYPES
             if any(i in items.GOLD_INGOTS for i, _c, _v in mobs.loot_table(int(t)))}

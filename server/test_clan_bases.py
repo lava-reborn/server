@@ -1102,7 +1102,7 @@ class ClanBases(unittest.TestCase):
                     else:
                         self.store.clan_leave(last.char_id, self.clan)
                     snap = holdings.snapshot(rc, mob, NS(is_player=True, sess=lead))
-                    self.assertIsNone(holdings.winner(snap, 3, base.min_level, last_hit=True))
+                    self.assertIsNone(holdings.winner(snap, 3, base.min_level))
                     if missing == 'absent':
                         room.players.append(last)
                     elif missing == 'dead':
@@ -1113,18 +1113,18 @@ class ClanBases(unittest.TestCase):
                         self.store.clan_member_add(last.char_id, self.clan, 0, '')
             killer = NS(is_player=True, sess=lead)
             snap = holdings.snapshot(rc, mob, killer)
-            self.assertEqual(holdings.winner(snap, 3, base.min_level, last_hit=True)[0], self.clan)
+            self.assertEqual(holdings.winner(snap, 3, base.min_level)[0], self.clan)
             self.assertEqual(mob.capture_harm, {self.cid: 98, **{f['char']: 1 for f in support}})
             # Presence alone cannot replace the third contributor.
             mob.capture_harm[support[-1]['char']] = 0
-            self.assertIsNone(holdings.winner(holdings.snapshot(rc, mob, killer), 3, base.min_level, last_hit=True))
+            self.assertIsNone(holdings.winner(holdings.snapshot(rc, mob, killer), 3, base.min_level))
             mob.capture_harm[support[-1]['char']] = 1
             # A reconnect cannot turn one character into two supporters.
             room.players[-1] = helpers[0]
-            self.assertIsNone(holdings.winner(holdings.snapshot(rc, mob, killer), 3, base.min_level, last_hit=True))
+            self.assertIsNone(holdings.winner(holdings.snapshot(rc, mob, killer), 3, base.min_level))
             room.players = [lead] + helpers
             mob.capture_harm.clear()
-            self.assertIsNone(holdings.winner(holdings.snapshot(rc, mob, killer), 3, base.min_level, last_hit=True))
+            self.assertIsNone(holdings.winner(holdings.snapshot(rc, mob, killer), 3, base.min_level))
 
     def test_clanless_or_nonplayer_last_hit_cannot_award_a_base_to_damage_leaders(self):
         fighters = self.supporters() + [dict(char=self.cid, clan=self.clan, clan_name='Base clan',
@@ -1153,7 +1153,7 @@ class ClanBases(unittest.TestCase):
             boss = NS(type_id=base.boss, slot=SLOT, hp_max=100, sp_max=0,
                       capture_harm={self.cid: 98, -101: 1, -102: 1})
             snap = holdings.snapshot(rc, boss, allies[-1].combat)
-            won = holdings.winner(snap, 3, base.min_level, last_hit=True)
+            won = holdings.winner(snap, 3, base.min_level)
             self.assertEqual((won[0], won[3]), (self.clan, self.cid))
 
     def test_base_belongs_only_to_last_hit_clan_with_three_eligible_contributors(self):

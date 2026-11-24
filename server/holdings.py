@@ -33,21 +33,16 @@ The owner's «сделай так чтобы склады можно было з
 склады, 111, 110 and 109, each a room with its boss «Хозяин склада», the
 clan flag 1011 and the money box -- and a city added later is a row there.
 
-Who takes it. Only a clan: the map labels' «Захват возможен игроками 8
-уровня при поддержке клана» (12 for the south one; data/holdings.json
-min_level). When the site's boss dies in its room, a clan qualifies if at
-least `squad` (2) of its members stand in the room at the kill, alive, at
-the site's level or above, and hurt the boss since its last full heal; of
-the clans that qualify, the one that did it the most harm takes the site --
-every member in the room counting for it, alive or dead, below the level or
-not, and a clan's harm never more than the boss's health and stamina
-together. A tie goes to the clan of the killing blow if it is among the
-tied, else to the older clan, the lower id. A clanless killer takes
-nothing, nor does a stranger's last shot take a warehouse two members wore
-down. No party is asked for, and diplomacy plays no part (the owner's
-decision 7: war is colours and notices). DESIGNED: the plan's default 16,
-«отряд из 2+ членов клана убивает «Хозяина» в окне; уровень — по подписи»;
-who got the credit in the original is not recorded.
+Who takes it. The killing blow's clan alone may take a warehouse, using
+exactly the base's contribution rule: at least three distinct living members
+in the boss's room at the kill, each at the site's minimum level or above
+and each having hurt the boss since its last full heal. Other clans' total
+damage never determines ownership, and an ineligible or clanless finisher
+has no fallback winner. No party or diplomacy is required.
+
+Warehouse defenders do not initiate attacks against their current holders.
+They remain attackable and retaliate when attacked; base defenders retain
+their existing friendly immunity. Ownership and membership are read live.
 
 The harm is the boss's own capture ledger (mobs.Mob.capture_harm), keyed by
 character so that a reconnect keeps it, and emptied whenever the boss is
@@ -173,7 +168,7 @@ class Table(object):
 
     def __init__(self, doc):
         doc = doc if isinstance(doc, dict) else {}
-        self.squad = int(doc.get("squad", 2))
+        self.squad = int(doc.get("squad", 3))
         self.tenure = float(doc.get("box_tenure_hours", 24)) * 3600
         self.one_per_account = bool(doc.get("box_one_per_account", True))
         self.sites = {key: Site(key, rec) for key, rec in (doc.get("sites") or {}).items()
@@ -346,15 +341,23 @@ def paid_base_for(store, loc_id, char_id, now=None):
 
 
 def defender_friendly(rc, mob, fighter, *, cache=None):
-    """A captured base's defenders immediately spare its current clan.
-
-    An optional cache belongs to one synchronous attack only: all bullets and
-    defenders share its ownership/membership snapshot, never the next attack.
-    """
+    """Base defenders cannot harm, or be harmed by, their current clan."""
     if not getattr(fighter, 'is_player', False) or getattr(mob, 'is_player', False):
         return False
-    loc_id = getattr(rc.room.loc, 'id', None)
-    s = base_for(loc_id)
+    return _defender_clanmate(rc, mob, fighter, base_for(getattr(rc.room.loc, 'id', None)), cache)
+
+
+def warehouse_defender_passive(rc, mob, fighter):
+    """Warehouse owners may approach safely, but can provoke a normal fight."""
+    if not getattr(fighter, 'is_player', False) or getattr(mob, 'is_player', False):
+        return False
+    s = site_at(getattr(rc.room.loc, 'id', None))
+    return (s is not None and s.kind == 'warehouse'
+            and _defender_clanmate(rc, mob, fighter, s))
+
+
+def _defender_clanmate(rc, mob, fighter, s, cache=None):
+    # The optional cache belongs to one synchronous burst, never the next one.
     if s is None:
         return False
     ground = getattr(getattr(fighter, 'sess', None), 'ground', None)
@@ -362,16 +365,19 @@ def defender_friendly(rc, mob, fighter, *, cache=None):
         fighter = ground.owner.combat
     if getattr(fighter, 'store', rc.store) is not rc.store:
         return False
+    loc_id = getattr(rc.room.loc, 'id', None)
     type_id = getattr(mob, 'type_id', None)
     if type_id != s.boss and (s.loc != loc_id or type_id not in s.guards + s.troops):
         return False
     char_id = fighter.sess.char_id
-    if cache is None:
-        return member_of(rc.store, base_holder(rc.store, s), char_id)
     key = (s.key, char_id)
-    if key not in cache:
-        cache[key] = member_of(rc.store, base_holder(rc.store, s), char_id)
-    return cache[key]
+    if cache is not None and key in cache:
+        return cache[key]
+    held = base_holder(rc.store, s) if s.kind == 'base' else holder(rc.store, s)
+    friendly = member_of(rc.store, held, char_id)
+    if cache is not None:
+        cache[key] = friendly
+    return friendly
 
 
 def soldier_respawns(store, loc_id, type_id, now=None):
@@ -682,38 +688,22 @@ def snapshot(rc, mob, killer):
             "fighters": fighters, "killer": killer_char, "killer_clan": killer_clan}
 
 
-def winner(snap, squad, min_level, excluded=(), require_harm=True, last_hit=False):
-    """(clan, its name, the harm counted, the member credited) of the clan
-    that takes the site by this kill, or None (the module's docstring): of
-    the clans with `squad` members in the room, alive, at min_level or
-    above (each with harm unless require_harm is false), the one with the
-    most harm of all its members in the room, capped at the boss's health and stamina; a tie to
-    the killing blow's clan, else the lowest id. Credited is the killer when
-    he is of it, else its member with the most harm. Bases set last_hit:
-    only the killing blow's clan may qualify, with no fallback winner."""
-    totals, squads, names, best_of = {}, {}, {}, {}
-    for f in snap["fighters"]:
-        clan = f["clan"]
-        if (clan is None or clan in excluded or not f["here"]
-                or (last_hit and clan != snap["killer_clan"])):
-            continue
-        totals[clan] = totals.get(clan, 0.0) + f["harm"]
-        names[clan] = f["clan_name"]
-        if f["alive"] and f["level"] >= min_level and (not require_harm or f["harm"] > 0):
-            squads[clan] = squads.get(clan, 0) + 1
-        top = best_of.get(clan)
-        if top is None or (f["harm"], -f["char"]) > (top["harm"], -top["char"]):
-            best_of[clan] = f
-    counted = {c: min(h, snap["pool"]) for c, h in totals.items()
-               if h > 0 and squads.get(c, 0) >= squad}
-    if not counted:
+def winner(snap, squad, min_level, excluded=()):
+    """The finishing clan qualifies with distinct living local contributors.
+
+    There is no damage-ranking fallback. Damage is still capped for the log;
+    the credited character is the finisher (or a test ally's owner).
+    """
+    clan = snap['killer_clan']
+    if clan is None or clan in excluded or snap['killer'] is None:
         return None
-    most = max(counted.values())
-    tied = sorted(c for c, h in counted.items() if h == most)
-    clan = snap["killer_clan"] if snap["killer_clan"] in tied else tied[0]
-    best = best_of[clan]
-    credited = snap["killer"] if snap["killer_clan"] == clan else best.get('credited', best["char"])
-    return clan, names[clan], counted[clan], credited
+    members = {f['char']: f for f in snap['fighters'] if f['clan'] == clan and f['here']}
+    qualified = [f for f in members.values()
+                 if f['alive'] and f['level'] >= min_level and f['harm'] > 0]
+    if len(qualified) < squad:
+        return None
+    harm = min(sum(f['harm'] for f in members.values()), snap['pool'])
+    return clan, qualified[0]['clan_name'], harm, snap['killer']
 
 
 def _where(s):
@@ -775,7 +765,7 @@ def settle(rc, mob):
     if s.kind == "base":
         excluded = {f["clan"] for f in snap["fighters"] if f["clan"] is not None
                     and store.base_reserved(f["clan"], base_keys(), snap["at"], s.key)}
-        won = winner(snap, BASE_SQUAD, s.min_level, excluded, last_hit=True)
+        won = winner(snap, BASE_SQUAD, s.min_level, excluded)
         # A base's capture and the boss's weekly death survive together,
         # before the corpse timer. Warehouses keep their established path.
         with storage.atomic(store.db):
@@ -833,7 +823,7 @@ def settle(rc, mob):
                  _where(s), clan, name, harm, credited, _window(snap["slot"]))
         return "defend"
     store.holding_logged(s.key, "none", prev, slot=snap["slot"])
-    log.info("  ..    %s: its boss killed, and no clan had %d living members of level %d"
+    log.info("  ..    %s: its boss killed, and the finishing clan lacked %d living members of level %d"
              " who hurt it in the room; it stays %s's, window %s", _where(s), table().squad,
              s.min_level, _whose(held), _window(snap["slot"]))
     return "none"
