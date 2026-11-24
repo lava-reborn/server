@@ -144,7 +144,10 @@ def stimulants(top, currency=None):
         name = items.catalogue()[type_id][1]
         rank = re.fullmatch(r'(?:Salus|Anesthetic)_MK_(\d+)(?:_Gold)?', name)
         if rank:
-            selected = low <= int(rank[1]) <= high
+            # Nubia's starter tier exists only in A. Its doctor sells the
+            # lowest existing G pair; later ranks keep their city bands.
+            selected = (low <= int(rank[1]) <= high
+                        or top == 4 and rank[1] == '1' and name.endswith('_Gold'))
         elif name in ('Salus_noob', 'Anesthetic_noob'):
             selected = top == 4
         elif name in ('Salus_Plus', 'Anesthetic_Plus'):

@@ -1439,6 +1439,7 @@ class ReleaseCatalogue(unittest.TestCase):
         self.assertNotIn(1013, residents)
         self.assertEqual(shop_bands.stimulant_currency(5215, 185), 'gold')
         self.assertEqual(shop_bands.stimulant_currency(5216, 185), 'afro')
+        self.assertEqual(items.stock_for(5215, 185), [4919, 4939])
         for t in shop_bands.stimulants(4, 'afro'):
             self.assertIn(t, items.stock_for(5216, 185))
 

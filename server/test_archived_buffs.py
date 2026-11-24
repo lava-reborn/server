@@ -249,6 +249,34 @@ class ArchivedBuffs(unittest.IsolatedAsyncioTestCase):
 
 
 class GofusStock(unittest.TestCase):
+    def test_nubian_doctor_has_lowest_gold_pair_and_keeps_starter_afro_at_assistant(self):
+        import rooms
+        import server
+        import world
+        from test_quest_state import session
+
+        room = rooms.Rooms(world.mob_types()).get(185)
+        doctor = next(eid for eid, npc in room.npcs.items() if npc.type_id == 5215)
+        self.assertFalse(any(npc.type_id == 1013 for npc in room.npcs.values()))
+        self.assertEqual(items.stock_for(5215, 185), [4919, 4939])
+        self.assertEqual(items.stock_for(5216, 185), [4917, 4937])
+        viewer = session(None, level=1)
+        viewer.frames = []
+        viewer.send = lambda cmd, **params: viewer.frames.append((cmd, params))
+        viewer.room, viewer.loc = room, room.loc
+        viewer.combat = type('Presentation', (), dict(mob_info=lambda *_: {}, after_npc_info=lambda *_: None))()
+        viewer.fee_shown, viewer.skill_shown = {}, {}
+        with patch.object(server, 'STORE', None):
+            viewer.send_npc_info(doctor)
+        frame = next(params for cmd, params in viewer.frames if cmd == 'userInfo_Trader')
+        self.assertEqual((frame['can_trade'], frame['type_list']), (1, [4919, 4939]))
+        self.assertTrue(frame['give_quests'])  # Original doctor's quests remain.
+        for tid, bonus in ((4919, ('hp', 75)), (4939, ('sp', 150))):
+            params = items.params_of(tid)
+            self.assertEqual((params['cost'], params['g_cost'], params['buff_level']), (0, 8, 0))
+            definition = effects.definition(tid)
+            self.assertEqual((definition['duration'], definition['bonuses'][bonus[0]]), (1200, bonus[1]))
+
     def test_each_city_offers_its_ranks_scanner_and_ap_at_the_doctor(self):
         for loc, booster, strength, scanner, salus in (
                 (36, 3112, 3474, 3789, {1, 2, 3}),
@@ -339,11 +367,11 @@ class GofusTrade(unittest.TestCase):
 
     def test_actual_purchase_index_charges_catalogue_currency_once_in_each_city(self):
         import world
-        for loc in (36, 188, 197, 127):
+        for trader, loc in ((5215, 185), (1013, 36), (1013, 188), (1013, 197), (1013, 127)):
             self.s.loc.id = loc
-            self.inv.trade = inventory.TradeSession(1, 1013, loc)
-            self.s.room.npc = lambda n: (0, 1013, world.TRADER) if n == 1 else None
-            for index, type_id in enumerate(items.stock_for(1013, loc)):
+            self.inv.trade = inventory.TradeSession(1, trader, loc)
+            self.s.room.npc = lambda n: (0, trader, world.TRADER) if n == 1 else None
+            for index, type_id in enumerate(items.stock_for(trader, loc)):
                 with self.subTest(location=loc, item=type_id):
                     self.store.set_money(self.cid, 5000000, 100000)
                     self.s.char.afro, self.s.char.gold = self.store.money(self.cid)
