@@ -440,6 +440,7 @@ _ROOMS = weakref.WeakKeyDictionary()      # rooms.Room -> [_Entry]
 _SHOWN = weakref.WeakKeyDictionary()      # rooms.Room -> {npc id: what it was shown under}
 _TAKEN = {}                               # NPC type -> takes of its rows under a shut gate
 _TOUCHED = {}                             # NPC type -> changes of who may take its rows (touch)
+_LOCAL_QUEST_WINDOWS = {}                 # local cheat only: quest -> (NPC, wall-clock deadline)
 _NEXT_ID = [FIRST_ID]
 _MOB_TYPES = None
 
@@ -501,6 +502,12 @@ def keep(rc):
     client asks his rows afresh (_remark), a day's task done yesterday
     included. Then the marks over those whose rows a window keeps (_remark).
     """
+    if _LOCAL_QUEST_WINDOWS:
+        wall_now = time.time()
+        for quest_type, (npc_type, deadline) in list(_LOCAL_QUEST_WINDOWS.items()):
+            if wall_now >= deadline:
+                del _LOCAL_QUEST_WINDOWS[quest_type]
+                touch(npc_type)
     t = bosses.clock()
     slots = {}
     for e in _entries(rc.room):
@@ -657,10 +664,19 @@ def touch(npc_type):
 
 
 # --- quests, loot, things --------------------------------------------------------------------
+def open_local_quest(quest_type, npc_type):
+    """A CHEATS command opens one reward for 15 minutes, without moving clocks."""
+    _LOCAL_QUEST_WINDOWS[int(quest_type)] = (int(npc_type), time.time() + 900)
+    touch(npc_type)
+
+
 def quest_open(quest_type, carried=False):
     """Whether a row the schedule keeps (quests) is on offer now: always for
     one it does not keep; for a "hand_in" gate, always to take and only in
     the window to hand in (carried); for "both", in the window only."""
+    local = _LOCAL_QUEST_WINDOWS.get(int(quest_type))
+    if local is not None and time.time() < local[1]:
+        return True
     got = table().gates.get(int(quest_type))
     if got is None:
         return True

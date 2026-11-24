@@ -1930,7 +1930,7 @@ class Session:
         if CHEATS and text.split(" ")[0] in ("/goto", "/give", "/money",
                                              "/skill", "/spec", "/base-respawn", "/boss-now",
                                              "/base-now", "/boss-spawn", "/test-bot", "/test-bot-stop", "/test-time-reset",
-                                             "/test-allies", "/test-allies-stop", "/lab-respawn"):
+                                             "/test-allies", "/test-allies-stop", "/lab-respawn", "/box-now"):
             args = text.split()[1:]
             try:
                 if text.split()[0] in ('/test-allies', '/test-allies-stop'):
@@ -1951,6 +1951,10 @@ class Session:
                             'Тестовые часы возвращены к исходной настройке сервера.')
                     else:
                         out = self.admin_test_bot(stop=command == '/test-bot-stop')
+                elif text.split()[0] == '/box-now':
+                    out = ('Используйте /box-now или /box-now prepare.'
+                           if args and args != ['prepare']
+                           else self.admin_warehouse_reward(prepare=bool(args)))
                 elif text.split()[0] == '/lab-respawn':
                     out = ('Используйте /lab-respawn без аргументов.' if args
                            else self.admin_laborant_respawn())
@@ -2217,6 +2221,38 @@ class Session:
         self.send_player_info()
         return "%s: %s на %d дн., скорость x%s" % (
             self.nick, vehicle["name"], days, vehicle["speed_mod"])
+
+    def admin_warehouse_reward(self, prepare=False):
+        """Prepare a local box test; grant and daily claim remain native."""
+        if not CHEATS or not self.char_id:
+            return 'Команда доступна только в локальном тестовом комплекте.'
+        site = holdings.site_at(self.loc.id) if self.loc and not self.on_map else None
+        if self.room is None or site is None or site.kind != 'warehouse' or not site.gold_quest:
+            return 'Войдите на захватываемый склад; центр Абу-Хамеда: /goto 128.'
+        with storage.atomic(STORE.db):
+            if not STORE.lock_quest_character(self.char_id, clan_first=True):
+                return 'Персонаж недоступен; повторите после входа.'
+            held = holdings.holder(STORE, site)
+            if not holdings.member_of(STORE, held, self.char_id):
+                return 'Склад должен принадлежать твоему текущему клану.'
+            refusal = holdings.gold_refusal(STORE, site, self.char_id, self.day_start())
+            if refusal:
+                return refusal
+            # Only an explicit test preparation changes the join timestamp.
+            # The default command preserves the 24-hour negative scenario.
+            if prepare:
+                joined = int(time.time() - holdings.table().tenure)
+                STORE.db.execute('UPDATE clan_members SET joined_at = ? WHERE char_id = ?'
+                                 ' AND clan_id = ? AND joined_at > ?',
+                                 (joined, self.char_id, held['clan_id'], joined))
+        if prepare:
+            STORE.quests_changed(self.char_id)
+        events.open_local_quest(site.gold_quest, site.box)
+        events.keep(combat.room_combat(self.room, STORE))
+        return ('Тестовое окно золотых слитков у ящика открыто на 15 минут. '
+                + ('Твой стаж подготовлен до 24 часов. ' if prepare else 'Стаж членства сохранён. ')
+                + 'Возьми и сдай задание у ящика; права казны, стаж, вес и суточный лимит действуют. '
+                'Часы и обычное расписание сохранены.')
 
     def admin_laborant_respawn(self):
         """Local retry of the lab only; real schedules and other progress stay intact."""
