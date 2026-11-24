@@ -342,6 +342,40 @@ class ClanBases(unittest.TestCase):
             with patch.object(self.store, 'clan_member', return_value=None):
                 self.assertEqual(rc.resolve(shooter, target, target.cell, weapon, 1)[1][target][:2], [7, 9])
 
+    def test_burst_shares_defender_rights_and_rechecks_ownership_on_next_burst(self):
+        self.capture()
+        self.pay()
+        room = rooms.Room(world.location(self.base.loc), rooms.IdAllocator(), world.mob_types())
+        rc = combat.RoomCombat(room, self.store)
+        guards = [m for m in rc.mobs.values() if m.type_id in self.base.troops][:2]
+        self.assertEqual(len(guards), 2)
+        shooter = NS(is_player=True, store=self.store, sess=NS(char_id=self.cid), cell=guards[0].cell - 1)
+        weapon = combat.Weapon(20, 10, 10, 0, 10, 200, 0, 0, 25, 0, 0, through=True)
+        rc.bodies = lambda *_: {}
+        rc.bullet_damage = Mock(return_value=(7, 9))
+        rc.ranged_critical = Mock(return_value=False)
+        with patch.object(combat, 'shot_wall', return_value=None), \
+                patch.object(combat, 'bodies_between', return_value=[]), \
+                patch.object(combat, 'bullet_offset', return_value=0), \
+                patch.object(combat, 'flight', return_value=(guards, None)), \
+                patch.object(self.store, 'holding', wraps=self.store.holding) as holding, \
+                patch.object(self.store, 'clan_member', wraps=self.store.clan_member) as member:
+            self.assertEqual(rc.resolve(shooter, None, guards[0].cell, weapon, 20)[1], {})
+            self.assertEqual((holding.call_count, member.call_count), (1, 1))
+            holding.reset_mock()
+            member.reset_mock()
+            with patch.object(self.store, 'clan_member', return_value=None) as outsider:
+                struck = rc.resolve(shooter, None, guards[0].cell, weapon, 20)[1]
+                self.assertEqual(set(struck), set(guards))
+                self.assertTrue(all(record[2] == 20 for record in struck.values()))
+                self.assertEqual((holding.call_count, outsider.call_count), (1, 1))
+            holding.reset_mock()
+            member.reset_mock()
+            self.store.holding_clear(self.base.key, 'admin')
+            struck = rc.resolve(shooter, None, guards[0].cell, weapon, 20)[1]
+            self.assertEqual(set(struck), set(guards))
+            self.assertEqual((holding.call_count, member.call_count), (1, 0))
+
     def test_owned_warehouse_masters_remain_hostile_and_can_take_lethal_player_damage(self):
         self.capture()
         self.pay()

@@ -722,7 +722,8 @@ def stray(loc, a, aim, offset, max_range):
     return flight(loc, a, aim, offset, max_range)[1]
 
 
-def flight(loc, a, aim, offset, max_range, bodies=None, past=0.0, *, bush_hits=None, ground=None):
+def flight(loc, a, aim, offset, max_range, bodies=None, past=0.0, *, bush_hits=None, ground=None,
+           body_width=None):
     """A round's way out from hex a: (the bodies it passes through, nearest
     first, and faWall at the first obstacle or else faMiss where it runs out
     at max_range). Its line goes through the point offset sideways at the
@@ -732,6 +733,8 @@ def flight(loc, a, aim, offset, max_range, bodies=None, past=0.0, *, bush_hits=N
 
     bush_hits optionally receives the distance to the first crossed bush.
     ground reuses the burst's obstacle view instead of rebuilding it per pellet.
+    body_width narrows body collisions without changing wall or foliage geometry;
+    None keeps the legacy hex collision used by uncapped weapons.
 
     A mark on the hex the round starts from -- a creature come back on its
     spawn hex under the player, one he walked onto, the ground at his own
@@ -773,8 +776,17 @@ def flight(loc, a, aim, offset, max_range, bodies=None, past=0.0, *, bush_hits=N
         if bush_hits is not None and not bush_hits and c in bushes:
             bush_hits.append(t)
         body = bodies.get(c)
-        if body is not None and body not in crossed                 and mobs.hex_distance(a, c, w) > past:
-            crossed.append(body)
+        if body is None or body in crossed:
+            continue
+        distance = mobs.hex_distance(a, c, w)
+        if distance <= past:
+            continue
+        if body_width is not None:
+            # A crossed hex can be wider than the body or overlap max_range.
+            cx, cy = mobs.real(c, w)
+            if distance > max_range or abs((cx - ax) * by - (cy - ay) * bx) > body_width / 2:
+                continue
+        crossed.append(body)
     return crossed, ("faMiss", dict(x=round(x, 2), y=round(y, 2)))
 
 
@@ -3454,6 +3466,8 @@ class RoomCombat:
         depth = 2 if weapon.through else 1
         struck = {}                 # body -> [hp, sp, hits, sp left]
         machinegun_limits = {}      # one impact-vitals snapshot per body/pull
+        friendly_defenders = {}     # live clan rights once per pull
+        body_width = TARGET_SIZE if weapon.hit_cap < 1 else None
         pairs = []
         scatter_cone, scatter_dist = weapon.cone, dist
         if weapon.hit_cap < 1:
@@ -3474,7 +3488,8 @@ class RoomCombat:
                 continue
             if reach and on_target(offset, window):
                 behind, _end = flight(loc, shooter.cell, aim, offset,
-                                      weapon.max_range, bodies, past=dist, bush_hits=bush_hits, ground=ground)
+                                      weapon.max_range, bodies, past=dist, bush_hits=bush_hits, ground=ground,
+                                      body_width=body_width)
                 chain = [target] + [b for b in behind if b not in covers]
             elif reach and on_target(offset):
                 # It would have hit, and the cover took it; through the
@@ -3489,8 +3504,14 @@ class RoomCombat:
                 # most, and into the first body on the way. Not into a
                 # cover: what it had to give the cover is the window above.
                 passed, _end = flight(loc, shooter.cell, aim, offset,
-                                      weapon.max_range, bodies, bush_hits=bush_hits, ground=ground)
+                                      weapon.max_range, bodies, bush_hits=bush_hits, ground=ground,
+                                      body_width=body_width)
                 chain = [b for b in passed if b not in covers]
+            # The same scatter sample caps every collision, including free aim
+            # and stray rounds. A nearer body must not recover the miss tail
+            # merely because its hex is wider than the intended target.
+            if weapon.hit_cap < 1 and abs(offset) > scatter_cone * scatter_dist * weapon.hit_cap / 2:
+                chain = []
             chain = chain[:depth]
             if not chain:
                 pairs.append((_end, []))
@@ -3499,7 +3520,7 @@ class RoomCombat:
             for n, body in enumerate(chain):
                 # A captured clan's own guard still stops its bullet, but takes
                 # no harm, including free aim and a penetrating round.
-                if holdings.defender_friendly(self, body, shooter):
+                if holdings.defender_friendly(self, body, shooter, cache=friendly_defenders):
                     break
                 rec = struck.setdefault(body, [0, 0, 0, body.sp_now()])
                 d = mobs.hex_distance(shooter.cell, body.cell, width)

@@ -287,7 +287,9 @@ def activate(fighter, uniq, target, ap_cost, peace_damage=None):
                 return
         row = fighter.store.item(uniq)
         if (row is None or row['char_id'] != fighter.sess.char_id
-                or row['slot'] != inventory.BAG or row['use_count'] <= 0):
+                or row['root'] != items.HEAL or row['slot'] not in (inventory.BAG, *inventory.HAND_SLOTS)
+                or row['use_count'] <= 0 or row.get('count', 1) <= 0
+                or uniq in fighter.sess.inv.locked):
             fighter.sess.send('actionCancel', release=1)
             return
         clock = receiver.clock()

@@ -345,8 +345,12 @@ def paid_base_for(store, loc_id, char_id, now=None):
     return s
 
 
-def defender_friendly(rc, mob, fighter):
-    """A captured base's defenders immediately spare its current clan."""
+def defender_friendly(rc, mob, fighter, *, cache=None):
+    """A captured base's defenders immediately spare its current clan.
+
+    An optional cache belongs to one synchronous attack only: all bullets and
+    defenders share its ownership/membership snapshot, never the next attack.
+    """
     if not getattr(fighter, 'is_player', False) or getattr(mob, 'is_player', False):
         return False
     loc_id = getattr(rc.room.loc, 'id', None)
@@ -361,7 +365,13 @@ def defender_friendly(rc, mob, fighter):
     type_id = getattr(mob, 'type_id', None)
     if type_id != s.boss and (s.loc != loc_id or type_id not in s.guards + s.troops):
         return False
-    return member_of(rc.store, base_holder(rc.store, s), fighter.sess.char_id)
+    char_id = fighter.sess.char_id
+    if cache is None:
+        return member_of(rc.store, base_holder(rc.store, s), char_id)
+    key = (s.key, char_id)
+    if key not in cache:
+        cache[key] = member_of(rc.store, base_holder(rc.store, s), char_id)
+    return cache[key]
 
 
 def soldier_respawns(store, loc_id, type_id, now=None):

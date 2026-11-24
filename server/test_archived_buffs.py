@@ -114,6 +114,66 @@ class ArchivedBuffs(unittest.IsolatedAsyncioTestCase):
         self.assertIn(3476, items.stock_for(1013, 609))
         self.assertIn(3897, items.stock_for(1013, 1443))
 
+    async def test_native_buff_action_works_from_bag_and_both_hands_exactly_once(self):
+        manager = self.manager()
+        fighter = self.s.combat
+        self.s.char.skill[p.SHOOTING][0] = 17
+        for type_id in (3476, 4932):
+            for slot in (inventory.BAG, *inventory.HAND_SLOTS):
+                with self.subTest(type_id=type_id, slot=slot):
+                    for active in tuple(manager.active.values()):
+                        with patch.object(manager, 'clock', return_value=active.deadline + 1):
+                            manager.refresh()
+                    row = self.s.inv.create(type_id)
+                    if slot != inventory.BAG:
+                        self.s.inv.ss_move(dict(obj=inventory.oid_of(row), **{'from': inventory.BAG, 'to': slot}))
+                    self.assertEqual(self.store.item(row['uniq'])['slot'], slot)
+                    self.s.writer.frames.clear()
+                    before_hp = self.s.char.hp_max
+                    before_strength = self.s.char.attr(p.STRENGTH)
+                    fighter.ap = fighter.ap_max
+                    fighter.use_heal(dict(obj=inventory.oid_of(row)), inventory.USE_IDLE)
+                    self.assertIsNotNone(fighter.healing)
+                    callback_args = fighter.healing._args[-1]
+                    fighter.healing.cancel()
+                    fighter.heal_now(*callback_args)
+                    self.assertIsNone(self.store.item(row['uniq']))
+                    self.assertEqual(len(manager.active), 1)
+                    if type_id == 3476:
+                        self.assertEqual(self.s.char.attr(p.STRENGTH), before_strength + 5)
+                    else:
+                        self.assertEqual(self.s.char.hp_max, before_hp + 225)
+                    before = dict(manager.active)
+                    before_ap = fighter.ap
+                    fighter.heal_now(*callback_args)
+                    self.assertEqual(manager.active, before)
+                    self.assertEqual(fighter.ap, before_ap)
+                    packets = [decode(frame[:-1]) for frame in self.s.writer.frames]
+                    self.assertTrue(any(cmd == 'ss_obj_status' and data.get('status') == 0
+                                        for cmd, data in packets))
+
+    async def test_buff_completion_rejects_bank_locked_foreign_and_invalid_slots(self):
+        manager = self.manager()
+        fighter = self.s.combat
+        for case in ('bank', 'locked', 'foreign', 'worn', 'empty'):
+            with self.subTest(case=case):
+                row = self.s.inv.create(3476)
+                if case == 'locked':
+                    self.s.inv.locked.add(row['uniq'])
+                else:
+                    changes = {'bank': dict(slot=inventory.BANK),
+                               'foreign': dict(char_id=0),
+                               'worn': dict(slot=inventory.HEAD),
+                               'empty': dict(use_count=0)}[case]
+                    self.store.update_item(row['uniq'], **changes)
+                before_ap = fighter.ap
+                fighter.heal_now(row['uniq'], fighter, ap_cost=1)
+                self.assertIsNotNone(self.store.item(row['uniq']))
+                self.assertFalse(manager.active)
+                self.assertEqual(fighter.ap, before_ap)
+                self.s.inv.locked.discard(row['uniq'])
+                self.store.delete_item(row['uniq'])
+
     async def test_strength_is_consumed_once_persists_and_expires_without_changing_base(self):
         manager = self.manager()
         f = self.s.combat

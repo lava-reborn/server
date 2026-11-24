@@ -514,9 +514,9 @@ for _body in _d.values():
     _damage_target(_body)
 (_h, _s, _hits, _k), _oth = _fire(_rc, _d["mark"], [0.2],
                                 gun=_through._replace(through=False))
-check("a stray pellet carries both components to the body behind its mark",
+check("a capped scatter miss cannot hit a collinear body through its wider hex",
       ((_h, _s, _hits), [(h, s) for _b, h, s, _dead, _pool in _oth]),
-      ((0, 0, 0), [(15, 9)]))
+      ((0, 0, 0), []))
 
 
 check("target BigUINT: one type digit then eight of id", combat.parse_target("10000002a"), (1, 42))

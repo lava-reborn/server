@@ -200,6 +200,84 @@ class SingleShotAccuracy(unittest.TestCase):
         self.assertNotIn(target, struck)
         self.assertEqual(struck[cover][2], 1)
 
+    def test_ground_aim_behind_a_body_cannot_bypass_scatter_or_the_accuracy_cap(self):
+        # Fixed quantiles exercise the actual flight geometry, not model battles.
+        samples = 400
+        for row in (6, 7):
+            for distance in (1, 5, 10):
+                for cone in (0, .04, .2):
+                    for cap in (.95, .8075):
+                        with self.subTest(row=row, distance=distance, cone=cone, cap=cap):
+                            rc = combat.RoomCombat.__new__(combat.RoomCombat)
+                            rc.room = NS(loc=NS(width=64, height=20, obstacles=set()))
+                            shooter = NS(cell=row * 64 + 5, is_player=True)
+                            body = Mock(cell=shooter.cell + distance, is_player=False, sp_now=lambda: 100)
+                            rc.bodies = lambda *_: {body.cell: body}
+                            rc.ranged_critical = lambda *_: False
+                            rc.bullet_damage = lambda *_: (10, 0)
+                            weapon = self.weapon(cone=cone)._replace(max_range=40, hit_cap=cap)
+                            counts = []
+                            for target, aim in ((body, body.cell), (None, shooter.cell + 30)):
+                                draws = iter((i + .5) / samples - .5 for i in range(samples))
+                                def offset(cone, dist):
+                                    return next(draws) * cone * dist
+                                with patch.object(combat, 'bullet_offset', side_effect=offset) as scatter, \
+                                        patch.object(holdings, 'defender_friendly', return_value=False):
+                                    counts.append(sum(body in rc.resolve(shooter, target, aim, weapon, 1)[1]
+                                                      for _ in range(samples)))
+                                self.assertEqual(scatter.call_count, samples)
+                            expected = combat.hit_probability(cone, distance, cap)
+                            for hits in counts:
+                                self.assertLessEqual(hits, math.ceil(samples * cap))
+                                self.assertAlmostEqual(hits / samples, expected, delta=.005)
+                            self.assertLessEqual(abs(counts[0] - counts[1]), 2)
+
+    def test_capped_free_aim_uses_body_width_and_retains_walls_range_and_penetration(self):
+        rc = combat.RoomCombat.__new__(combat.RoomCombat)
+        loc = NS(width=64, height=20, obstacles=set())
+        rc.room = NS(loc=loc)
+        shooter = NS(cell=389, is_player=True)
+        bodies = [Mock(cell=shooter.cell + d, is_player=False, sp_now=lambda: 100) for d in (5, 10, 15)]
+        rc.bodies = lambda *_: {body.cell: body for body in bodies}
+        rc.ranged_critical = lambda *_: False
+        rc.bullet_damage = lambda *_: (10, 0)
+        weapon = self.weapon(cone=.1)._replace(max_range=20, hit_cap=.95, through=True)
+        aim = shooter.cell + 30
+        # At the first body this ray misses the 0.3m body but crosses its hex.
+        with patch.object(combat, 'bullet_offset', return_value=1.2):
+            self.assertEqual(rc.resolve(shooter, None, aim, weapon, 1)[1], {})
+        with patch.object(combat, 'bullet_offset', return_value=0):
+            self.assertEqual(set(rc.resolve(shooter, None, aim, weapon, 1)[1]), set(bodies[:2]))
+            loc.obstacles.add(shooter.cell + 3)
+            self.assertEqual(rc.resolve(shooter, None, aim, weapon, 1)[1], {})
+            loc.obstacles.clear()
+            self.assertEqual(rc.resolve(shooter, None, aim, weapon._replace(max_range=4), 1)[1], {})
+            self.assertEqual(rc.resolve(shooter, None, aim, weapon, 0)[1], {})
+            # A hex can overlap the last flight step while its body is out of range.
+            diagonal = Mock(cell=12 * 64 + 5, is_player=False, sp_now=lambda: 100)
+            rc.bodies = lambda *_: {diagonal.cell: diagonal}
+            self.assertEqual(rc.resolve(shooter, None, diagonal.cell,
+                                        weapon._replace(max_range=5), 1)[1], {})
+
+    def test_valid_capped_stray_still_carries_health_and_stamina_damage(self):
+        rc = combat.RoomCombat.__new__(combat.RoomCombat)
+        rc.room = NS(loc=NS(width=64, height=20, obstacles=set()))
+        shooter = NS(cell=6 * 64 + 5, is_player=True)
+        mark = Mock(cell=6 * 64 + 8, is_player=False, sp_now=lambda: 100)
+        stray = Mock(cell=7 * 64 + 10, is_player=False, sp_now=lambda: 100)
+        rc.bodies = lambda *_: {stray.cell: stray}
+        rc.ranged_critical = lambda *_: False
+        rc.bullet_damage = lambda *_: (15, 9)
+        weapon = self.weapon(cone=.4)._replace(hit_cap=.95)
+        # A ray outside the intended body crosses the actual body on the next row.
+        with patch.object(combat, 'bullet_offset', return_value=.52) as scatter, \
+                patch.object(holdings, 'defender_friendly', return_value=False):
+            pairs, struck = rc.resolve(shooter, mark, mark.cell, weapon, 1)
+        self.assertNotIn(mark, struck)
+        self.assertEqual(struck[stray][:3], [15, 9, 1])
+        self.assertEqual(pairs, [(None, [(stray, 15, 9, False)])])
+        scatter.assert_called_once()
+
     def test_default_private_and_npc_scatter_remain_unchanged(self):
         original = self.weapon(cone=.0001)
         self.assertEqual(original.hit_cap, 1)
