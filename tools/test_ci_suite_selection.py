@@ -6,6 +6,9 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import textwrap
+
+import suite
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -61,6 +64,71 @@ class ClientSuiteSelection(unittest.TestCase):
             'export PATH="$1:$PATH"; shift; exec bash "$@"', '--',
             shell_path(self.tree / 'bin'), shell_path(self.tree / script), *args],
             cwd=self.tree, env=env, capture_output=True, text=True, timeout=30)
+
+    def test_every_repository_test_is_discovered_or_in_the_postgres_job(self):
+        expected = {path.relative_to(ROOT).as_posix()
+                    for folder in ('server', 'data', 'tools', 'client')
+                    for path in (ROOT / folder).rglob('test_*.py')}
+        paths = suite.suites()
+        actual = {suite.rel(path) for path in paths}
+        separate = {'server/' + name + '.py' for name in suite.LEFT_OUT}
+        postgres = (ROOT / 'deploy/ci/pg_suites.sh').read_text(encoding='utf-8')
+        pg_suites = {'server/test_' + name + '.py'
+                     for group in re.findall(r'(?ms)^SUITES\+?=\((.*?)\)', postgres)
+                     for name in group.split()}
+        self.assertEqual(actual, expected - separate)
+        self.assertEqual(len(paths), len({suite.name_of(path) for path in paths}),
+                         'Duplicate suite names overwrite results')
+        self.assertLessEqual(separate, pg_suites)
+        self.assertLessEqual(pg_suites, expected)
+
+    def test_release_branches_select_every_suite_instead_of_the_impact_subset(self):
+        workflow = (ROOT / '.github/workflows/ci.yml').read_text(encoding='utf-8')
+        block = re.search(r'(?ms)^          if \[ "\$PR_BASE_REF".*?^          fi',
+                          workflow)
+        self.assertIsNotNone(block)
+        self.write('bin/python3', '#!/bin/sh\nprintf \'%s\\n\' "$@"\n')
+        for base, head, full in (('main', 'release/combat', True),
+                                 ('feature/base', 'feature/followup', True),
+                                 ('main', 'feature/small-change', False)):
+            with self.subTest(base=base, head=head):
+                env = dict(os.environ, PATH=str(self.tree / 'bin') + os.pathsep + os.environ['PATH'],
+                           PR_BASE_REF=base, PR_HEAD_REF=head,
+                           RUNNER_TEMP=shell_path(self.tree))
+                result = subprocess.run([self.bash, '-c', textwrap.dedent(block.group())],
+                                        cwd=self.tree, env=env, capture_output=True,
+                                        text=True, timeout=15)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                args = (self.tree / 'pick.txt').read_text().splitlines()
+                self.assertEqual(args, ['tools/suite.py', '--list'] if full else
+                                 ['tools/suite.py', '--affected', '--list', '--base', 'origin/main'])
+
+    def test_real_shards_cover_all_roots_once_with_and_without_durations(self):
+        self.write('server/test_halfa_training.py', '')
+        self.write('server/test_storage_pg.py', '')
+        self.write('bin/python3', '#!/bin/sh\nexit 0\n')
+        expected = {Path(path).stem for path in self.suites} | {'test_halfa_training'}
+        for timed in (False, True):
+            with self.subTest(previous_durations=timed):
+                label = 'timed' if timed else 'static'
+                counts = []
+                for shard in range(1, 4):
+                    out = self.tree / label / str(shard)
+                    if timed:
+                        self.write(label + '/' + str(shard) + '/summary.txt',
+                                   ''.join('0 %ds %s\n' % (100 if n == 'test_alpha' else 1, n)
+                                           for n in sorted(expected)))
+                    result = self.shell('tools/run_suite.sh', '--shard', str(shard) + '/3',
+                                        '.', shell_path(out), '2')
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                    counts += [Path(path).stem for path in
+                               (out / 'list.txt').read_text().splitlines()]
+                self.assertEqual(set(counts), expected)
+                self.assertEqual(len(counts), len(expected))
+                result = self.shell('deploy/ci/merge_shards.sh',
+                                    shell_path(self.tree / label),
+                                    shell_path(self.tree / (label + '-merged.txt')))
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_child_database_and_temp_follow_configured_temp_root_with_spaces(self):
         self.write('bin/python3', '#!/bin/sh\ncase "$1" in *suite.py) printf \'%s\\n\' \'server/test_alpha.py\'; exit 0;; test_alpha.py) ;; *) exit 0;; esac\nprintf \'%s\\n\' "$LAVA_DB" "$TMPDIR" > "$LAVA_TEMP_TRACE"\ntest -d "$TMPDIR"\n')

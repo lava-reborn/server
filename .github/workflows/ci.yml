@@ -366,6 +366,7 @@ jobs:
         env:
           LAVA_CI_PART: "1"
           PR_BASE_REF: ${{ github.base_ref }}
+          PR_HEAD_REF: ${{ github.head_ref }}
         run: |
           if [ -s "$HOME/impact/impact_map.json" ]; then
             cp "$HOME/impact/impact_map.json" tools/impact_map.json
@@ -374,7 +375,7 @@ jobs:
           fi
           # A dependent PR must validate the assembled stack, not a partial
           # impact selection. This also covers release-branch acceptance.
-          if [ "$PR_BASE_REF" != "main" ]; then
+          if [ "$PR_BASE_REF" != "main" ] || [[ "$PR_HEAD_REF" == release/* ]]; then
             python3 tools/suite.py --list > "$RUNNER_TEMP/pick.txt"
           else
             python3 tools/suite.py --affected --list --base origin/main > "$RUNNER_TEMP/pick.txt"
