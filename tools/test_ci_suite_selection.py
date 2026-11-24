@@ -21,6 +21,16 @@ def shell_path(path):
 
 
 class ClientSuiteSelection(unittest.TestCase):
+    def test_required_pr_checks_run_after_documentation_only_pushes(self):
+        workflow = (ROOT / '.github/workflows/ci.yml').read_text(encoding='utf-8')
+        triggers = re.search(r'(?ms)^on:\n(.*?)(?=^[a-zA-Z_][\w-]*:|\Z)', workflow)
+        self.assertIsNotNone(triggers)
+        pr = re.search(r'(?ms)^  pull_request:[ \t]*\n(.*?)(?=^  [a-zA-Z_][\w-]*:|\Z)',
+                       triggers.group(1))
+        self.assertIsNotNone(pr, 'Required checks need a pull_request trigger')
+        self.assertNotRegex(pr.group(1), r'(?m)^    paths(?:-ignore)?:',
+                            'A skipped workflow leaves required PR checks pending')
+
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory(prefix='lava_ci_selection_')
         self.addCleanup(self.temporary.cleanup)

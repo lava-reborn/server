@@ -126,15 +126,9 @@ on:
       - PROTOCOL.md
       - recon/**
       - data/quest_layout.json
+  # Required PR checks must report even when the last push changes prose only.
+  # Main keeps its prose filter above, so documentation never triggers deploy.
   pull_request:
-    paths-ignore:
-      - README.md
-      - TASKS.md
-      - UNDONE.md
-      - ROADMAP.md
-      - PROTOCOL.md
-      - recon/**
-      - data/quest_layout.json
 
 # A newer push to a branch makes the run for the older one moot: cancel it,
 # and free the runner. Not on main, where every run may end in a deploy:
