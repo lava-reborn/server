@@ -167,6 +167,10 @@ try:
     ids |= {items.DESC_ID_OFFSET + t for t in items.wiki_descs()}
     import orig_texts                                  # noqa: E402
     ids |= {items.DESC_ID_OFFSET + t for t in orig_texts.item_descs()}
+    # Every ammunition template now has a description, including qualities
+    # absent from both the original table and the cached wiki articles.
+    ids |= {items.DESC_ID_OFFSET + t for t, (root, _) in items.catalogue().items()
+            if root == items.AMMO}
     # The finite PvP quest reward has an explicit description of its own.
     ids.add(items.DESC_ID_OFFSET + items.POISON_SYRINGE)
     # Blueprint applicability descriptions are generated even where the
