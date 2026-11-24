@@ -160,6 +160,24 @@ class BaseCaptureFeedback(unittest.IsolatedAsyncioTestCase):
         guard = next(m for m in self.rc.bosses if m.type_id in self.base.guards)
         self.assertTrue(holdings.defender_friendly(self.rc, guard, self.s.combat))
 
+    async def test_failed_base_capture_retries_on_native_corpse_callback_once(self):
+        self.scene('base_dn', 2)
+        for ally in self.allies:
+            self.shoot(ally.enemy.combat)
+        original = self.store.boss_killed
+        def fail(*args):
+            original(*args)
+            raise RuntimeError('temporary checkpoint failure')
+        with patch.object(self.store, 'boss_killed', fail):
+            self.finish()
+        self.assertIsNotNone(self.master.capture)
+        self.assertIsNone(holdings.holder(self.store, self.base))
+        self.rc.corpse_gone(self.master, [])
+        self.assertIsNone(self.master.capture)
+        self.assertEqual(holdings.holder(self.store, self.base)['clan_id'], self.clan)
+        self.assertEqual(len(self.store.holding_log(self.base.key)), 1)
+        self.assertIsNone(holdings.settle(self.rc, self.master))
+
     async def test_two_damagers_with_third_alive_but_not_hitting_fail_with_exact_count(self):
         self.scene('base_dn', 2)
         self.shoot(self.allies[0].enemy.combat)

@@ -743,7 +743,7 @@ def settle(rc, mob):
     re-sent to the room and the box marked afresh (refresh). Every outcome
     is a line in the log and a row in clan_holding_log. Returns "none",
     "defend" or "capture", or None when the kill was no site's."""
-    snap, mob.capture = getattr(mob, "capture", None), None
+    snap = getattr(mob, "capture", None)
     if snap is None:
         return None
     s = site(snap["site"])
@@ -768,6 +768,10 @@ def settle(rc, mob):
                 prev = int(held["clan_id"]) if held else None
                 store.holding_logged(s.key, "none", prev, slot=snap["slot"], when=snap["at"])
             store.boss_killed(rc.boss_spot(mob), snap["slot"])
+        # Keep a valid snapshot after rollback/uncertain COMMIT so the
+        # existing corpse callback can retry. Consume it before notifications:
+        # a broken recipient must never replay an already committed capture.
+        mob.capture = None
         for sess in list(rc.room.players):
             member = store.clan_member(sess.char_id) if sess.char_id else None
             sess.answer(_base_capture_message(s, snap, won, member, excluded, status))
@@ -775,6 +779,7 @@ def settle(rc, mob):
             refresh(rc.room, s)
             return "capture"
         return status
+    mob.capture = None
     held = holder(store, s)
     prev = int(held["clan_id"]) if held else None
     won = winner(snap, table().squad, s.min_level)

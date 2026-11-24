@@ -1043,6 +1043,34 @@ class ClanBases(unittest.TestCase):
         self.assertIsNone(self.store.holding(self.base.key))
         self.assertEqual(self.store.holding_log(self.base.key), [])
         self.assertEqual(self.store.boss_kills(["base-checkpoint"]), {})
+        self.assertIs(mob.capture, snap)
+        self.assertEqual(holdings.settle(rc, mob), 'capture')
+        self.assertIsNone(mob.capture)
+        self.assertEqual(self.store.holding(self.base.key)['clan_id'], self.clan)
+        self.assertEqual(len(self.store.holding_log(self.base.key)), 1)
+        self.assertIsNone(holdings.settle(rc, mob))
+
+    def test_capture_unknown_commit_reply_retries_without_duplicate_journal(self):
+        snap = dict(site=self.base.key, slot=SLOT, at=self.now, pool=100,
+                    killer=self.cid, killer_clan=self.clan, fighters=self.supporters() + [
+                        dict(char=self.cid, clan=self.clan, clan_name='Base clan',
+                             here=True, alive=True, level=16, harm=100)])
+        rc = NS(store=self.store, room=NS(loc=world.location(118), players=[], npcs={}),
+                boss_spot=lambda _mob: 'base-uncertain')
+        mob = NS(capture=snap)
+        raw = self.store.db.raw
+        def lost_reply():
+            raw.commit()
+            raise ConnectionError('commit reply lost')
+        proxy = NS(commit=lost_reply, rollback=raw.rollback)
+        with patch.object(type(self.store.db), 'raw', property(lambda _db: proxy)), \
+                self.assertRaises(storage.CommitError):
+            holdings.settle(rc, mob)
+        self.assertIs(mob.capture, snap)
+        self.assertEqual(self.store.holding(self.base.key)['clan_id'], self.clan)
+        self.assertEqual(holdings.settle(rc, mob), 'same')
+        self.assertIsNone(mob.capture)
+        self.assertEqual(len(self.store.holding_log(self.base.key)), 1)
 
     def test_ineligible_second_base_clan_cannot_block_another_clan(self):
         self.capture(holdings.site("base_dn"))

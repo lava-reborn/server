@@ -3593,8 +3593,9 @@ class RoomCombat:
         RoomCombat.materialize_loot(self, mob)
         # A warehouse's boss (holdings.py): who brought it down and for which
         # clan, as they stand now; the holding is settled when the corpse
-        # fades (corpse_gone). A database that cannot be read costs the
-        # capture and a line in the log, never the kill.
+        # fades (corpse_gone). A failed base settlement keeps its snapshot
+        # for one retry there; an unreadable snapshot never blocks the kill.
+        mob.capture = None
         try:
             if mob.slot is not None and holdings.guard_site(self.room.loc.id, mob.type_id) is not None:
                 # Reuse the site's boss checkpoint before the corpse timer:
@@ -3613,8 +3614,7 @@ class RoomCombat:
                 else:
                     holdings.settle(self, mob)
         except Exception:
-            mob.capture = None
-            log.exception("  !!    mob %d (%s) killed in %s: who killed it not read",
+            log.exception("  !!    mob %d (%s) killed in %s: capture not recorded",
                           mob.eid, mob.stats.name, self.room.loc.title)
         self.settle_xp(mob)
         # The killer's held rp_info goes out here, before calm() below can
