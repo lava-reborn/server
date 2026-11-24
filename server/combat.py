@@ -784,7 +784,9 @@ def flight(loc, a, aim, offset, max_range, bodies=None, past=0.0, *, bush_hits=N
         if body_width is not None:
             # A crossed hex can be wider than the body or overlap max_range.
             cx, cy = mobs.real(c, w)
-            if distance > max_range or abs((cx - ax) * by - (cy - ay) * bx) > body_width / 2:
+            along = (cx - ax) * ux + (cy - ay) * uy
+            across = (cy - ay) * ux - (cx - ax) * uy
+            if distance > max_range or abs(across - offset * along / d) > body_width / 2:
                 continue
         crossed.append(body)
     return crossed, ("faMiss", dict(x=round(x, 2), y=round(y, 2)))
@@ -3476,8 +3478,13 @@ class RoomCombat:
             # same width; range, walls and flight still use the real distance.
             scatter_dist = dist if dist > 0 else 1.0
             scatter_cone = max(weapon.cone * dist, TARGET_SIZE / weapon.hit_cap) / scatter_dist
+        # Keep the native angular spread for flight. The cap's virtual width
+        # decides accuracy, not the ray's angle: otherwise aiming at nearby
+        # ground widens the ray and unfairly penalizes bodies farther away.
+        flight_scale = weapon.cone * dist / (scatter_cone * scatter_dist) if weapon.hit_cap < 1 else 1
         for k in range(weapon.num_shots):
             offset = bullet_offset(scatter_cone, scatter_dist)
+            flight_offset = offset * flight_scale
             bush_hits = []
             if k >= live:
                 # An empty chamber: the pair was counted from faAim already.
@@ -3487,7 +3494,7 @@ class RoomCombat:
                 pairs.append((("faWall", dict(hex=wall)), []))
                 continue
             if reach and on_target(offset, window):
-                behind, _end = flight(loc, shooter.cell, aim, offset,
+                behind, _end = flight(loc, shooter.cell, aim, flight_offset,
                                       weapon.max_range, bodies, past=dist, bush_hits=bush_hits, ground=ground,
                                       body_width=body_width)
                 chain = [target] + [b for b in behind if b not in covers]
@@ -3497,13 +3504,13 @@ class RoomCombat:
                 chain = covers + [target]
                 _end = None
                 if getattr(loc, 'bushes', None):
-                    flight(loc, shooter.cell, aim, offset, weapon.max_range, bush_hits=bush_hits, ground=ground)
+                    flight(loc, shooter.cell, aim, flight_offset, weapon.max_range, bush_hits=bush_hits, ground=ground)
             else:
                 # Aimed at the ground, at a mark the gun does not reach, or
                 # past the mark: on to where it lands, max_range at the
                 # most, and into the first body on the way. Not into a
                 # cover: what it had to give the cover is the window above.
-                passed, _end = flight(loc, shooter.cell, aim, offset,
+                passed, _end = flight(loc, shooter.cell, aim, flight_offset,
                                       weapon.max_range, bodies, bush_hits=bush_hits, ground=ground,
                                       body_width=body_width)
                 chain = [b for b in passed if b not in covers]

@@ -10,6 +10,7 @@ import combat
 import holdings
 import inventory
 import items
+import mobs
 import progression
 from testkit import run_cases
 from training.arena import TrainingFighter
@@ -200,7 +201,7 @@ class SingleShotAccuracy(unittest.TestCase):
         self.assertNotIn(target, struck)
         self.assertEqual(struck[cover][2], 1)
 
-    def test_ground_aim_behind_a_body_cannot_bypass_scatter_or_the_accuracy_cap(self):
+    def test_free_aim_before_on_and_behind_body_matches_target_accuracy(self):
         # Fixed quantiles exercise the actual flight geometry, not model battles.
         samples = 400
         for row in (6, 7):
@@ -217,7 +218,8 @@ class SingleShotAccuracy(unittest.TestCase):
                             rc.bullet_damage = lambda *_: (10, 0)
                             weapon = self.weapon(cone=cone)._replace(max_range=40, hit_cap=cap)
                             counts = []
-                            for target, aim in ((body, body.cell), (None, shooter.cell + 30)):
+                            for target, aim in ((body, body.cell), (None, shooter.cell + 1),
+                                                (None, body.cell), (None, shooter.cell + 30)):
                                 draws = iter((i + .5) / samples - .5 for i in range(samples))
                                 def offset(cone, dist):
                                     return next(draws) * cone * dist
@@ -230,7 +232,37 @@ class SingleShotAccuracy(unittest.TestCase):
                             for hits in counts:
                                 self.assertLessEqual(hits, math.ceil(samples * cap))
                                 self.assertAlmostEqual(hits / samples, expected, delta=.005)
-                            self.assertLessEqual(abs(counts[0] - counts[1]), 2)
+                            for hits in counts[1:]:
+                                self.assertLessEqual(abs(counts[0] - hits), 2)
+
+    def test_target_and_free_aim_accuracy_match_in_eight_directions(self):
+        samples = 200
+        start = 24 * 64 + 20
+        for step in (1, -1, 128, -128, 129, 127, -127, -129):
+            for cone in (.04, .2):
+                for cap in (.95, .8075):
+                    with self.subTest(step=step, cone=cone, cap=cap):
+                        rc = combat.RoomCombat.__new__(combat.RoomCombat)
+                        rc.room = NS(loc=NS(width=64, height=48, obstacles=set()))
+                        shooter = NS(cell=start, is_player=True)
+                        body = Mock(cell=start + step * 3, is_player=False, sp_now=lambda: 100)
+                        rc.bodies = lambda *_: {body.cell: body}
+                        rc.ranged_critical = lambda *_: False
+                        rc.bullet_damage = lambda *_: (10, 0)
+                        weapon = self.weapon(cone=cone)._replace(max_range=50, hit_cap=cap)
+                        counts = []
+                        for target, aim in ((body, body.cell), (None, start + step),
+                                            (None, body.cell), (None, start + step * 9)):
+                            draws = iter((i + .5) / samples - .5 for i in range(samples))
+                            with patch.object(combat, 'bullet_offset',
+                                              side_effect=lambda cone, dist: next(draws) * cone * dist), \
+                                    patch.object(holdings, 'defender_friendly', return_value=False):
+                                counts.append(sum(body in rc.resolve(shooter, target, aim, weapon, 1)[1]
+                                                  for _ in range(samples)))
+                        expected = combat.hit_probability(cone, mobs.hex_distance(start, body.cell, 64), cap)
+                        for hits in counts:
+                            self.assertAlmostEqual(hits / samples, expected, delta=.01)
+                        self.assertLessEqual(max(counts) - min(counts), 2)
 
     def test_capped_free_aim_uses_body_width_and_retains_walls_range_and_penetration(self):
         rc = combat.RoomCombat.__new__(combat.RoomCombat)
