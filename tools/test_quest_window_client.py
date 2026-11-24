@@ -11,6 +11,32 @@ from testkit import run_cases
 
 
 class QuestWindow(unittest.TestCase):
+    def test_npc_refresh_enumerates_sparse_ids_without_reading_array_length(self):
+        class SparsePlayers(dict):
+            def get(self, key, default=None):
+                if key == 'length':
+                    raise AssertionError('quest refresh must not scan 101 million array holes')
+                return super().get(key, default)
+
+        lab, flag, box = [dict(id=i, isNPC=True) for i in (800001, 73, 6830)]
+        players = SparsePlayers({800001: lab, 73: flag, 6830: box,
+                                 101000008: dict(id=101000008, isNPC=False),
+                                 11: dict(id=11), 101000007: None})
+        master = dict(currentLocation=dict(playerList=players))
+        env = dict(lol=dict(core=dict(Master=dict(getInstance=lambda: master))))
+        row = next(r for r in patches(w.Asm, w.UNDEF)['wraps']
+                   if r[0] == ('core', 'quests', 'QuestInspector') and r[1] == 'getNPCList')
+        callback = Function(row[3], row[4].assemble(), env)
+        # Repeated post-hand-in refreshes must leave native entities intact.
+        for _ in range(10):
+            result = callback.invoke({}, [])
+            self.assertEqual({v['id'] for v in result}, {800001, 73, 6830})
+            self.assertTrue(all(any(v is npc for v in result) for npc in (lab, flag, box)))
+            self.assertEqual(len(players), 6)
+        for location in (None, {}, dict(playerList=None), dict(playerList=Arr())):
+            master['currentLocation'] = location
+            self.assertEqual(list(callback.invoke({}, [])), [])
+
     def test_repeated_handins_keep_one_native_scan_and_preserve_the_queue(self):
         timers, cleared = set(), []
         queue = Arr([dict(q_type=7)])

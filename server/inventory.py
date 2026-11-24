@@ -67,16 +67,13 @@ and are not in the backpack the corpse drops from.
 """
 import asyncio
 import contextlib
-from functools import lru_cache
 import json
 import logging
 import math
 import os
 import random
-import re
 import secrets
 import time
-from statistics import median
 
 import bank_storage
 import craft
@@ -690,86 +687,6 @@ def wearable(row, level, character=None):
             and item_level(row["type_id"]) > level + gear_level_allowance(row['type_id'])):
         return False
     return True
-
-
-@lru_cache(maxsize=4096)
-def armour_durability_ratio(type_id, base):
-    """Compare unmodified pieces of the same slot and A/G variant.
-
-    A missing rung uses the nearest lower set; below the first rung use the
-    first set. Rework keeps its extra life: it is not a level difference.
-    No counterpart (belts and legacy clothing) means no durability correction.
-    Catalogue data is immutable during a server run; no inventory/DB reads.
-    """
-    import mode_extensions
-    mode_extensions.seal()
-    type_id = setcraft.base_of(item_templates.source_type(type_id))
-    current = sets.record_of(sets.set_of(type_id))
-    if current is None:
-        return 1.0
-    slot = sets.slot_of(type_id)
-    candidates = [s for s in sets.records()
-                  if s["variant"] == current["variant"] and slot in s["members"]]
-    if not candidates:
-        return 1.0
-    lower = [s for s in candidates if s["level"] <= base]
-    reference = (max(lower, key=lambda s: s["level"]) if lower
-                 else min(candidates, key=lambda s: s["level"]))
-    durability = sets.item(type_id).get("max_break_abs", 0)
-    reference_durability = sets.item(reference["members"][slot]).get("max_break_abs", 0)
-    return durability / reference_durability if durability > 0 and reference_durability > 0 else 1.0
-
-
-def _weapon_wear_key(type_id, params):
-    root = items.root_of(type_id)
-    group = params.get("weapon_type", 0) if root == items.FIRE_ARM else 0
-    return root, group, bool(params.get("g_cost", 0))
-
-
-@lru_cache(maxsize=1)
-def weapon_wear_references():
-    """Median durability by class, A/G payment and tier, from known stats.
-
-    No generated fallback weapons, modifications, loans or retired/P types
-    in the baseline. Build once, not on each shot, and never consult the DB.
-    """
-    groups = {}
-    standard = re.compile(
-        r"(?:(?:pistols?|shotgun|assault_rifle|rifle|machine_gun|sub_machine_guns)_\d+_lvl_\d+(?:_gold)?"
-        r"|lamantin_(?:pistols|shotgun|assault_rifle|rifle|machine_gun|sub_machine_guns)_\d+"
-        r"|knife_lvl\d+_[AG])")
-    for type_id in sorted(set(items.wiki()) | set(items.coldarm_manual())):
-        if items.root_of(type_id) not in (items.FIRE_ARM, items.COLD_ARM):
-            continue
-        if not standard.fullmatch(items.catalogue()[type_id][1]):
-            continue
-        if items.out_of_game(type_id) or quests.lent(type_id) or craft.mod_of(type_id):
-            continue
-        params = items.params_of(type_id) or {}
-        durability = params.get("max_break_abs", 0)
-        if durability <= 0 or not (params.get("cost", 0) or params.get("g_cost", 0)):
-            continue
-        key = _weapon_wear_key(type_id, params)
-        groups.setdefault(key, {}).setdefault(item_level(type_id), []).append(durability)
-    return {key: {level: median(values) for level, values in levels.items()}
-            for key, levels in groups.items()}
-
-
-@lru_cache(maxsize=4096)
-def weapon_durability_ratio(type_id, base):
-    import mode_extensions
-    mode_extensions.seal()
-    type_id = item_templates.source_type(type_id)
-    mod = craft.mod_of(type_id)
-    type_id = mod[0] if mod else type_id
-    params = items.params_of(type_id) or {}
-    levels = weapon_wear_references().get(_weapon_wear_key(type_id, params), {})
-    if not levels:
-        return 1.0
-    lower = [level for level in levels if level <= base]
-    reference = levels[max(lower) if lower else min(levels)]
-    durability = params.get("max_break_abs", 0)
-    return durability / reference if durability > 0 else 1.0
 
 
 def level_wear_penalty(difference):

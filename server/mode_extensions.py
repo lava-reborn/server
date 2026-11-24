@@ -15,7 +15,7 @@ ladders and combat.gold_item/death_losses are ordinary-only. A private mode
 must own or reject those operations; source_type is not permission to trade,
 repair, craft, drop or redeem a private copy against its real-world source.
 
-All registrations finish before names.document or the first cached wear lookup.
+All registrations finish before names.document serialises the string table.
 The owning mode is responsible for authorising private inventory operations and
 implementing every effect capability it declares. Never import that mode here.
 """

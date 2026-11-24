@@ -659,9 +659,14 @@ class TrainingGround(unittest.IsolatedAsyncioTestCase):
                 self.assertEqual(items.battle_medicine(source), items.battle_medicine(target))
                 self.assertEqual(items.no_combat(source), items.no_combat(target))
             if items.root_of(source) in (items.FIRE_ARM, items.COLD_ARM):
-                for level in (4, 12, 17):
-                    self.assertEqual(inventory.weapon_durability_ratio(source, level),
-                                     inventory.weapon_durability_ratio(target, level))
+                self.assertEqual(items.root_of(target), items.root_of(source))
+                # Range frames deliberately keep their own balance/level rules.
+                # At the trained ceiling neither a source nor its copy gains
+                # a spurious wear penalty from the copy's zero shop price.
+                card = g.clone.character()
+                with patch.object(card, 'skill', [[20, 0, 1] for _ in range(progression.SKILLS)]):
+                    for type_id in (source, target):
+                        self.assertEqual(inventory.wear_multiplier(dict(type_id=type_id, root=items.root_of(type_id)), card), 1)
         self.unchanged()
 
     async def test_next_target_cancels_previous_corpse_cleanup(self):

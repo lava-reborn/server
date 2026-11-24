@@ -17,6 +17,11 @@ import orig_texts as O  # noqa: E402
 from testkit import check, fails  # noqa: E402
 
 
+check("central Abu warehouse master has no redundant storage caption",
+      O.person_names()[7454], "Хозяин склада")
+check("central Abu reward box retains its own original caption",
+      "Главный склад" in O.person_names()[6830], True)
+
 BS = chr(92)
 
 print("names of things -- the variant the wiki way, the level and [A] gone")

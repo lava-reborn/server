@@ -124,6 +124,128 @@ class Laborant(unittest.TestCase):
         self.now = server.Session.day_start(self.now) + 86400
         events.keep(self.rc)
 
+    def test_local_lab_retry_resets_only_own_current_detail_and_shared_craft(self):
+        self.enterContext(patch.object(server, 'CHEATS', True))
+        day = self.s.day_start()
+        records = [(self.cid, quests.LABORANT_DETAIL, day - 1),
+                   (self.cid, quests.LABORANT_DETAIL, day),
+                   (self.cid, quests.LABORANT_DETAIL, day + 86400),
+                   (self.other, quests.LABORANT_DETAIL, day), (self.cid, 18306, day)]
+        self.store.db.executemany('INSERT INTO char_quests_done (char_id,type,done_at) VALUES (?,?,?)', records)
+        self.store.boss_killed(quests.LABORANT_SPOT, day)
+        self.store.boss_killed('unrelated:boss', day)
+        self.store.db.commit()
+        events.keep(self.rc)
+        self.assertFalse(any(n.type_id == 1407 for n in self.room.npcs.values()))
+        before = (self.store.items_of(self.cid), dict(self.store.holding('wh_ah_center')), bosses._OFFSET)
+        self.assertIn('Лаборант возвращён', self.s.admin_laborant_respawn())
+        self.assertTrue(any(n.type_id == 1407 for n in self.room.npcs.values()))
+        remaining = [tuple(row) for row in self.store.db.execute(
+            'SELECT char_id,type,done_at FROM char_quests_done ORDER BY char_id,type,done_at')]
+        self.assertEqual(sorted(remaining), sorted(records[:1] + records[2:]))
+        self.assertEqual(self.store.boss_kills(['unrelated:boss']), {'unrelated:boss': day})
+        self.assertEqual(before, (self.store.items_of(self.cid), dict(self.store.holding('wh_ah_center')), bosses._OFFSET))
+
+    def test_local_lab_retry_still_enforces_owner_and_one_global_craft(self):
+        self.enterContext(patch.object(server, 'CHEATS', True))
+        self.assertEqual(self.finish(self.ready()), [0])
+        self.assertIn('Лаборант возвращён', self.s.admin_laborant_respawn())
+        self.assertEqual(self.finish(self.ready(18307)), [0])
+        self.assertFalse(any(n.type_id == 1407 for n in self.room.npcs.values()))
+        # The ordinary reset must also restore a lab in a newly entered room.
+        self.now = self.s.day_start() + 86400
+        fresh = rooms.Room(self.room.loc, rooms.IdAllocator(), server.world.mob_types())
+        events.keep(combat.room_combat(fresh, self.store))
+        self.assertTrue(any(n.type_id == 1407 for n in fresh.npcs.values()))
+        self.assertTrue(self.s.quest_available(quests.get(18306)))
+
+    def test_local_commands_are_disabled_without_cheats_and_require_local_room(self):
+        with patch.object(server, 'CHEATS', False):
+            self.assertIn('только в локальном', self.s.admin_laborant_respawn())
+            self.assertIn('только в локальном', self.s.admin_warehouse_reward(True))
+        with patch.object(server, 'CHEATS', True), patch.object(self.s, 'on_map', True):
+            self.assertIn('/goto 128', self.s.admin_laborant_respawn())
+            self.assertIn('/goto 128', self.s.admin_warehouse_reward(True))
+        self.assertEqual(self.store.boss_kills([quests.LABORANT_SPOT]), {})
+
+    def test_local_box_default_preserves_tenure_and_native_24_hour_gate(self):
+        self.enterContext(patch.object(server, 'CHEATS', True))
+        self.enterContext(patch.object(events, '_LOCAL_QUEST_WINDOWS', {}))
+        joined = self.now - 86399
+        self.store.db.execute('UPDATE clan_members SET joined_at=? WHERE char_id=?', (joined, self.cid))
+        self.store.db.commit()
+        offset = bosses._OFFSET
+        self.assertIn('Стаж членства сохранён', self.s.admin_warehouse_reward())
+        self.assertEqual(self.store.clan_member(self.cid)['joined_at'], joined)
+        q = quests.get(18226)
+        self.assertTrue(events.quest_open(q.type, carried=True))
+        self.assertFalse(self.s.quest_available(q))
+        self.now += 1
+        self.assertTrue(self.s.quest_available(q))
+        self.assertFalse(self.store.holding_gold_claimed('wh_ah_center', self.s.day_start()))
+        self.assertEqual(bosses._OFFSET, offset)
+
+    def test_local_box_prepare_grants_native_ingots_once_and_preserves_other_members(self):
+        self.enterContext(patch.object(server, 'CHEATS', True))
+        self.enterContext(patch.object(events, '_LOCAL_QUEST_WINDOWS', {}))
+        other_joined = self.store.clan_member(self.other)['joined_at']
+        self.assertIn('стаж подготовлен', self.s.admin_warehouse_reward(True))
+        self.assertEqual(self.store.clan_member(self.cid)['joined_at'], self.now - 86400)
+        self.assertEqual(self.store.clan_member(self.other)['joined_at'], other_joined)
+        self.now += 10
+        self.s.admin_warehouse_reward(True)
+        self.assertEqual(self.store.clan_member(self.cid)['joined_at'], self.now - 86410)
+        box = next(e for e, n in self.room.npcs.items() if n.type_id == 6830)
+        self.s.pos = self.room.npcs[box].cell
+        self.s.frames.clear()
+        self.s.handle('q_st', dict(mob=box, q_idx=quests.given_by(6830).index(18226)))
+        qids = [p['q_id'] for name, p in self.s.frames if name.startswith('q_di_')]
+        self.assertTrue(qids, self.s.frames)
+        before = self.s.inv.bag_pieces()
+        self.s.frames.clear()
+        self.s.handle('q_co', dict(q_id=qids[0], mob=box, obj_idx=0))
+        self.assertEqual([p['res'] for name, p in self.s.frames if name == 'cmdAck'], [0])
+        after = self.s.inv.bag_pieces()
+        self.assertEqual((after.get(4796, 0) - before.get(4796, 0),
+                          after.get(7620, 0) - before.get(7620, 0)), (1, 2))
+        self.assertIn('сегодня уже забрали', self.s.admin_warehouse_reward(True))
+        self.s.handle('q_co', dict(q_id=qids[0], mob=box, obj_idx=0))
+        self.assertEqual(self.s.inv.bag_pieces(), after)
+
+    def test_local_box_refuses_nonowners_and_members_without_treasury_rights(self):
+        self.enterContext(patch.object(server, 'CHEATS', True))
+        self.enterContext(patch.object(events, '_LOCAL_QUEST_WINDOWS', {}))
+        other = self.native(self.other)
+        joined = self.store.clan_member(self.other)['joined_at']
+        for perm in (0, 1, 0x200, 0x800):
+            self.store.db.execute('UPDATE clan_members SET perm=? WHERE char_id=?', (perm, self.other))
+            self.store.db.commit()
+            self.assertIn('правом расходовать', other.admin_warehouse_reward(True))
+            self.assertEqual(self.store.clan_member(self.other)['joined_at'], joined)
+            self.assertEqual(events._LOCAL_QUEST_WINDOWS, {})
+        self.store.db.execute('UPDATE clan_members SET perm=? WHERE char_id=?', (0x400, self.other))
+        self.store.db.commit()
+        self.assertIn('стаж подготовлен', other.admin_warehouse_reward(True))
+        self.store.holding_clear('wh_ah_center', 'test')
+        self.assertIn('должен принадлежать', self.s.admin_warehouse_reward(True))
+
+    def test_local_box_window_expires_without_changing_native_schedule(self):
+        self.enterContext(patch.object(server, 'CHEATS', True))
+        self.enterContext(patch.object(events, '_LOCAL_QUEST_WINDOWS', {}))
+        gate = events.table().gates[18226]
+        self.s.admin_warehouse_reward()
+        self.now += 900
+        self.assertEqual(events.quest_open(18226, carried=True), gate[0].is_open(bosses.clock()))
+        events.keep(self.rc)
+        self.assertEqual(events._LOCAL_QUEST_WINDOWS, {})
+        self.assertIs(events.table().gates[18226], gate)
+
+    def test_local_clock_failure_keeps_running_clock_unchanged(self):
+        with patch.object(server, 'CHEATS', True), patch.object(bosses, 'save_test_offset', side_effect=OSError('disk full')):
+            previous = bosses._OFFSET
+            self.assertIn('время не изменено', self.s.admin_test_clock(previous + 100))
+            self.assertEqual(bosses._OFFSET, previous)
+
     def test_seven_recipes_use_exact_archive_inputs_and_separate_plain_A1(self):
         self.assertEqual(len(quests.LABORANT_RECIPES), 7)
         for kind, (base, output) in quests.LABORANT_RECIPES.items():

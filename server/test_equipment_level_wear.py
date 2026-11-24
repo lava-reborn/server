@@ -102,21 +102,19 @@ class LevelWear(unittest.TestCase):
             self.ch.skill[progression.SHOOTING][0] = 17
             self.assertEqual(inventory.wear_multiplier(dict(root=items.WEAR, type_id=t), self.ch), 1)
 
-    def test_reworked_armour_keeps_durability_advantage(self):
-        mod, (base, _) = next(iter(setcraft.MOD_OF.items()))
-        self.assertEqual(inventory.armour_durability_ratio(mod, 4),
-                         inventory.armour_durability_ratio(base, 4))
-
-    def test_weapon_reference_ignores_event_and_modified_durabilities(self):
-        references = inventory.weapon_wear_references()
-        # Ordinary G knife 2: 300; a damage/AP modification has 600 and
-        # holiday weapons can have 30000. Neither belongs in the baseline.
-        self.assertEqual(references[(items.COLD_ARM, 0, True)][2], 300)
-        self.assertNotIn(0, references[(items.COLD_ARM, 0, True)])
-        mod, base = next((t, m[0]) for t in items.catalogue()
-                         if (m := craft.mod_of(t)) is not None)
-        self.assertEqual(inventory.weapon_durability_ratio(mod, 4),
-                         inventory.weapon_durability_ratio(base, 4))
+    def test_modified_armour_and_weapon_keep_factory_ceiling_after_native_wear(self):
+        weapon = next(t for t in items.catalogue() if craft.mod_of(t) is not None)
+        for type_id in (next(iter(setcraft.MOD_OF)), weapon):
+            with self.subTest(type_id=type_id):
+                tier = inventory.item_level(type_id)
+                self.ch.skill[progression.SHOOTING][0] = tier
+                self.ch.skill[progression.MELEE][0] = tier
+                row = self.make(type_id, inventory.BAG)
+                factory = items.params_of(type_id)['max_break_abs']
+                self.assertEqual((row['brk'], row['max_break_cur']), (factory, factory))
+                self.inv.wear(row, 10)
+                worn = self.store.item(row['uniq'])
+                self.assertEqual((worn['brk'], worn['max_break_cur']), (factory - 10, factory))
 
     def test_fractional_armour_wear_is_not_truncated_or_banked_in_session(self):
         current = next(s for s in sets.SETS.values() if s['level'] == 13 and s['variant'] == 'A')
@@ -130,11 +128,6 @@ class LevelWear(unittest.TestCase):
                     self.inv = self.sess.inv = inventory.Inventory(self.sess, self.store)
                 row = self.inv.wear(row)
         self.assertEqual(self.store.item(row['uniq'])['brk'], 958)
-
-    def test_normalisation_cache_does_not_read_database_or_rebuild_each_hit(self):
-        inventory.weapon_durability_ratio(7072, 2)
-        with patch.object(inventory, 'weapon_wear_references', side_effect=AssertionError('rebuilt')):
-            self.assertGreater(inventory.weapon_durability_ratio(7072, 2), 0)
 
     def test_plus_three_equipment_still_requires_specialisation(self):
         self.ch.skill[progression.MEDICINE][0] = 3

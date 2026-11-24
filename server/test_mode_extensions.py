@@ -368,8 +368,6 @@ class Registry(unittest.TestCase):
         self.enterContext(patch.object(names,'_BLOB',None))
         self.enterContext(patch.object(names,'_SHA',None))
         self.enterContext(patch.dict(names.ALL))
-        inventory.armour_durability_ratio.cache_clear()
-        inventory.weapon_durability_ratio.cache_clear()
 
     def test_atomic_batch_registers_set_member_strings_and_seals_every_registry(self):
         source=next(t for t in sets.SET_OF if items.root_of(t)==items.WEAR)
@@ -408,15 +406,13 @@ class Registry(unittest.TestCase):
         with self.assertRaises(ValueError):item_templates.register(common['frames'],common['sources'],
             catalogue=common['catalogue'],commands=common['commands'])
 
-    def test_non_template_variant_has_durability_reference_and_cached_use_freezes_registry(self):
+    def test_non_template_variant_uses_native_wear_and_shop_order(self):
         doc={'sets':{'99000':dict(name='Extra',variant='V',level=10,members={
             'helm':dict(type=65530,armor_class=10,max_break_abs=100)})}}
         sets.register(doc,variants=sets.VARIANTS+('V',))
-        self.assertEqual(inventory.armour_durability_ratio(65530,10),1)
+        self.assertEqual(inventory.wear_multiplier(dict(type_id=65530, root=items.WEAR), NS(level=10)), 1)
         with patch.object(shop_bands, 'wares', return_value={65530: ('sets', 10, 'extra', 0)}):
             self.assertEqual(shop_bands._order(65530), (10, '99000', 0, 'extra'))
-        with self.assertRaises(RuntimeError):sets.register({'sets':{}})
-        with self.assertRaises(RuntimeError):item_templates.register({}, {},catalogue={},commands={})
 
     def test_isolated_sqlite_uses_its_dialect_for_cyrillic_search_under_pg_default(self):
         db=storage.SqliteDB(':memory:');self.addCleanup(db.close)

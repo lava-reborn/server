@@ -3,7 +3,7 @@
 #   powershell -ExecutionPolicy Bypass -File launcher\test\run.ps1
 #
 # 1. make_fixture.py signs a few releases with client/publish.py's own code
-#    (Python: the Windows one if "python" is a real interpreter, else WSL's);
+#    (Python: POSIX-capable interpreter, otherwise WSL for the publisher);
 # 2. csc compiles TestSync.cs with Release.cs, Sync.cs, TextsCheck.cs and
 #    LocalServer.cs -- the files the launcher is built from, as they are;
 # 3. TestSync.exe serves those releases on 127.0.0.1 and runs the launcher's
@@ -34,7 +34,8 @@ function ToWsl([string]$p) {
 Write-Host "==> fixture"
 $fixture = Join-Path $here "make_fixture.py"
 $winPython = $false
-try { $null = & python -c "import sys; sys.exit(0)" 2>$null; $winPython = ($LASTEXITCODE -eq 0) } catch { $winPython = $false }
+# publish.safe_dir checks POSIX ownership; ordinary Windows Python has no geteuid.
+try { $null = & python -c "import os, sys; sys.exit(0 if hasattr(os, 'geteuid') else 1)" 2>$null; $winPython = ($LASTEXITCODE -eq 0) } catch { $winPython = $false }
 $data = Join-Path $Work "data"
 if ($winPython) { & python $fixture $data } else { & wsl.exe -e python3 (ToWsl $fixture) (ToWsl $data) }
 if ($LASTEXITCODE -ne 0) { throw "make_fixture.py failed" }
