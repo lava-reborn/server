@@ -51,6 +51,48 @@ class QuestWindow(unittest.TestCase):
         self.assertEqual(inspector['currentQuests'], {3: 18202})
         self.assertEqual(list(inspector['updateNPCList']), [])
 
+    def test_removing_contact_closes_quest_window_before_native_npc_destruction(self):
+        for npc_id in (800001, 73, 1407):
+            with self.subTest(npc=npc_id):
+                contact = dict(id=npc_id, playerInfo=dict(ally=True))
+                queue = Arr([dict(q_type=18211)])
+                current = {142: dict(typeID=18211)}
+                inspector = dict(quester=contact, questStatusList=Arr([18211]),
+                                 callStack=queue, callCount=1, currentQuests=current)
+                events = []
+                env = dict(lol=dict(core=dict(quests=dict(QuestInspector=dict(
+                    getInstance=lambda: inspector)), SceneShifter=dict(
+                        closeWindow=lambda *args: events.append(('close', args))))))
+                row = next(r for r in patches(w.Asm, w.UNDEF)['wraps'] if r[1] == 'removePlayer')
+                def remove(entity_id):
+                    self.assertIsNone(inspector['quester'])
+                    self.assertEqual(list(inspector['questStatusList']), [])
+                    events.append(('remove', entity_id))
+                    contact.clear()
+                    return 'native-result'
+                callback = Function(row[3], row[4].assemble(), env)
+                self.assertEqual(callback.invoke(dict(__qwNPCRemovedOrig=remove), [npc_id]),
+                                 'native-result')
+                self.assertEqual(events, [('close', ('quests', 'all')), ('remove', npc_id)])
+                self.assertIs(inspector['callStack'], queue)
+                self.assertEqual(inspector['callCount'], 1)
+                self.assertIs(inspector['currentQuests'], current)
+
+    def test_other_entity_removal_keeps_live_contact_and_pending_quest_replies(self):
+        for contact in (None, dict(id=74)):
+            with self.subTest(contact=contact):
+                inspector = dict(quester=contact, questStatusList=Arr([18211]))
+                events = []
+                env = dict(lol=dict(core=dict(quests=dict(QuestInspector=dict(
+                    getInstance=lambda: inspector)), SceneShifter=dict(
+                        closeWindow=lambda *args: events.append('close')))))
+                row = next(r for r in patches(w.Asm, w.UNDEF)['wraps'] if r[1] == 'removePlayer')
+                callback = Function(row[3], row[4].assemble(), env)
+                callback.invoke(dict(__qwNPCRemovedOrig=lambda eid: events.append(eid)), [73])
+                self.assertEqual(events, [73])
+                self.assertIs(inspector['quester'], contact)
+                self.assertEqual(list(inspector['questStatusList']), [18211])
+
     def setUp(self):
         self.events = []
         self.env = dict(lol=dict(core=dict(quests=dict(QuestEvent=dict(UPDATE='update')))))
@@ -102,6 +144,21 @@ class QuestWindow(unittest.TestCase):
         self.assertEqual([item[0] for item in self.events if isinstance(item,tuple)], ['remove','remove'])
         self.assertEqual(self.events[-1], 'kill')
         self.assertEqual(self.events.count('kill'), 1)
+
+    def test_late_quest_description_cannot_reopen_a_closed_npc_window(self):
+        detached = []
+        reopen = object()
+        self.panel.update(currentQuest=dict(removeEventListener=lambda *args: detached.append(args)),
+                          ReopenDescription=reopen,
+                          __qwReopenDescriptionOrig=lambda obj: self.events.append('description'))
+        self.call('init')
+        self.call('ReopenDescription', dict(quest=1))
+        self.assertIn('description', self.events)
+        self.call('kill')
+        self.assertEqual(detached, [('questLoaded', self.panel, reopen)])
+        before = list(self.events)
+        self.call('ReopenDescription', dict(quest=1))
+        self.assertEqual(self.events, before)
 
     def test_empty_status_keeps_native_close_or_service_window_behavior(self):
         self.call('init')

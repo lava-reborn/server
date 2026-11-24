@@ -29,6 +29,7 @@ import inventory
 import items
 import mobs
 import progression
+import protocol
 import quests
 import server
 import storage
@@ -1286,6 +1287,49 @@ class WarehouseGold(unittest.TestCase):
         self.assertEqual(self.s.inv.bag_pieces(), {7620: 11, 4796: 4})
         self.assertEqual(len(self.claims()), 7)
         self.assertEqual(self.store.clan_treasury(self.clan), 0)
+
+    def test_all_seven_boxes_pay_once_through_real_npc_menus_and_player_commands(self):
+        s = server.Session(NS(write=lambda data: None, get_extra_info=lambda *_: None), 'gold-menu')
+        s.char_id, s.char = self.cid, progression.Character.load(self.store, self.cid)
+        s.active = self.store.character(self.cid)
+        s.account = {'id': s.active['account_id']}
+        frames = []
+        s.send = lambda command, **p: frames.append(protocol.decode(protocol.encode(command, **p)))
+        s.answer = lambda text: s.send('answer', text=text)
+        self.addCleanup(s.combat.cancel_timers)
+
+        def request(command, **params):
+            frames.clear()
+            s.handle(*protocol.decode(protocol.encode(command, **params)))
+            return frames
+
+        for site in holdings.sites().values():
+            if site.kind != 'warehouse':
+                continue
+            with self.subTest(site=site.key):
+                self.store.holding_set(site.key, self.clan, 'admin')
+                s.loc = world.location(site.loc)
+                s.room = rooms.Room(s.loc, rooms.IdAllocator(), world.mob_types())
+                rc = combat.room_combat(s.room, self.store)
+                events.keep(rc)
+                eid, npc = next((eid, n) for eid, n in s.room.npcs.items() if n.type_id == site.box)
+                s.pos = npc.cell
+                info = next(p for name, p in request('getInfo', id=eid) if name.startswith('userInfo_'))
+                self.assertEqual(info['ally'], 1)
+                self.assertIn(site.gold_quest, info['give_quests'])
+                self.assertIn(site.gold_quest, info['take_quests'])
+                self.assertEqual(request('q_status', q_type=site.gold_quest)[-1][1]['status'], 1)
+                si = next(p for name, p in request('q_si', q_type=site.gold_quest) if name.startswith('q_si_'))
+                self.assertEqual(si['type'], site.gold_quest)
+                request('q_st', mob=eid, q_idx=info['give_quests'].index(site.gold_quest))
+                self.assertEqual([p['res'] for name, p in frames if name == 'cmdAck'], [0])
+                qid = next(p['q_id'] for name, p in frames if name.startswith('q_di_'))
+                request('q_co', mob=eid, q_id=qid, obj_idx=0)
+                self.assertEqual([p['res'] for name, p in frames if name == 'cmdAck'], [0])
+                self.assertEqual(request('q_co', mob=eid, q_id=qid)[-1][1]['res'], server.RES_NO_SUCH)
+                self.assertEqual(request('q_status', q_type=site.gold_quest)[-1][1]['status'], 0)
+        self.assertEqual(s.inv.bag_pieces(), {7620: 11, 4796: 4})
+        self.assertEqual(len(self.claims()), 7)
 
     def test_native_claim_and_duplicate_instances_mint_only_three_one_gold_ingots(self):
         self.assertTrue(self.s.quest_available(quests.get(self.site.gold_quest)))

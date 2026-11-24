@@ -26,6 +26,7 @@ import items
 import mail
 import names
 import progression
+import protocol
 import quests
 import rooms
 import server
@@ -396,6 +397,67 @@ class Laborant(unittest.TestCase):
                                  {quests.LABORANT_SPOT: float(self.s.day_start())})
                 self.advance_day()
                 self.assertNotEqual(self.lab(), old_lab)
+
+    def test_player_menu_detail_and_each_recipe_complete_through_advertised_indices(self):
+        def request(command, **params):
+            self.s.frames.clear()
+            self.s.handle(*protocol.decode(protocol.encode(command, **params)))
+            return [protocol.decode(protocol.encode(name, **p)) for name, p in self.s.frames]
+
+        def menu_take(kind):
+            eid = self.lab()
+            frames = request('getInfo', id=eid)
+            info = next(p for name, p in frames if name.startswith('userInfo_'))
+            self.assertEqual(info['ally'], 1)
+            self.assertIn(kind, info['give_quests'])
+            self.assertIn(kind, info['take_quests'])
+            self.assertEqual(request('q_status', q_type=kind)[-1][1]['status'], 1)
+            frames = request('q_si', q_type=kind)
+            si = next(p for name, p in frames if name.startswith('q_si_'))
+            self.assertEqual(si['type'], kind)
+            frames = request('q_st', mob=eid, q_idx=info['give_quests'].index(kind))
+            self.assertEqual([p['res'] for name, p in frames if name == 'cmdAck'], [0])
+            dynamic = next(p for name, p in frames if name.startswith('q_di_'))
+            self.assertEqual(dynamic['complete'], 1)
+            return eid, dynamic['q_id']
+
+        for kind, (_base, output) in quests.LABORANT_RECIPES.items():
+            with self.subTest(recipe=kind):
+                eid, qid = menu_take(quests.LABORANT_DETAIL)
+                frames = request('q_co', mob=eid, q_id=qid, obj_idx=0)
+                self.assertEqual([p['res'] for name, p in frames if name == 'cmdAck'], [0])
+                self.assertEqual(self.s.inv.bag_pieces().get(quests.LABORANT_PART), 1)
+                self.assertEqual(request('q_status', q_type=quests.LABORANT_DETAIL)[-1][1]['status'], 0)
+                for obj, count in quests.get(kind).wants():
+                    self.s.inv.give_pieces(obj, count - (1 if obj == quests.LABORANT_PART else 0))
+                eid, qid = menu_take(kind)
+                frames = request('q_co', mob=eid, q_id=qid, obj_idx=0)
+                self.assertEqual([p['res'] for name, p in frames if name == 'cmdAck'], [0])
+                made = next(r for r in self.s.inv.rows() if r['type_id'] == output)
+                self.assertEqual(made['brk'], items.params_of(output)['max_break_abs'])
+                self.assertIn(('lch', dict(lostUser=eid)), frames)
+                self.assertFalse(any(n.type_id == quests.LABORANT_NPC for n in self.room.npcs.values()))
+                self.assertEqual(request('q_status', q_type=kind)[-1][1]['status'], 0)
+                self.assertEqual(request('q_co', mob=eid, q_id=qid)[-1][1]['res'], server.RES_NO_SUCH)
+                self.advance_day()
+
+    def test_changing_warehouse_owner_cannot_reopen_server_wide_daily_craft(self):
+        qid = self.ready()
+        self.assertEqual(self.finish(qid), [0])
+        claimed = self.store.boss_kills([quests.LABORANT_SPOT])
+        account, _ = self.store.register('new-lab-owner', 'test-only')
+        cid, _ = self.store.create_character(account, 'NewLabOwner', 0, '1')
+        clan = self.store.clan_create(cid, 'New lab clan', 'new-lab-clan', '', None)
+        self.store.holding_capture('wh_ah_center', clan, self.now + 1, cid, self.now + 1)
+        other = self.native(cid)
+        events.keep(self.rc)
+        self.assertFalse(any(n.type_id == quests.LABORANT_NPC for n in self.room.npcs.values()))
+        self.assertFalse(other.quest_available(quests.get(18307)))
+        self.assertEqual(self.store.boss_kills([quests.LABORANT_SPOT]), claimed)
+        self.advance_day()
+        self.assertTrue(other.quest_available(quests.get(18307)))
+        self.assertFalse(self.s.quest_available(quests.get(18307)))
+        self.assertEqual(self.finish(self.ready(18307, other), other), [0])
 
     def test_other_character_competing_recipe_keeps_all_inputs_after_winner(self):
         other = self.native(self.other)

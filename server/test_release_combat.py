@@ -1423,7 +1423,10 @@ class ReleaseCatalogue(unittest.TestCase):
         self.assertEqual(set(items.SHOCK_ROUNDS), standards)
         self.assertEqual(len(set(items.SHOCK_ROUNDS.values())), 17)
         for trader, location in ((714, 609), (5240, 1443)):
-            self.assertTrue(set(items.SHOCK_ROUNDS.values()) <= set(items.stock_for(trader, location)))
+            offered = set(items.stock_for(trader, location))
+            released = set(items.SHOCK_ROUNDS.values()) & items.player_ammunition()
+            self.assertTrue(released <= offered)
+            self.assertFalse((set(items.SHOCK_ROUNDS.values()) - released) & offered)
 
         for standard, shock in items.SHOCK_ROUNDS.items():
             with self.subTest(calibre=standard):

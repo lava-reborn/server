@@ -35,6 +35,7 @@ import logging
 import math
 import re
 import os
+from functools import lru_cache
 
 import blueprint_prices
 import craft
@@ -526,11 +527,14 @@ PLAYER_GEAR_MAX_LEVEL = 17
 def acquisition_blocked(type_id):
     """Ordinary acquisition refuses private templates and unreleased equipment.
 
-    Ordinary medicine, ammunition, blueprints and non-equipment are unaffected.
+    Ammunition also needs a released player firearm that can chamber it.
+    Ordinary medicine, blueprints and other non-equipment are unaffected.
     Keep this separate from out_of_game: it must not trigger confiscation.
     """
     if item_templates.contains(type_id):
         return True
+    if root_of(type_id) == AMMO:
+        return type_id not in player_ammunition()
     if root_of(type_id) not in (FIRE_ARM, COLD_ARM, WEAR):
         return False
     si = params_of(type_id) or {}
@@ -542,6 +546,23 @@ def acquisition_blocked(type_id):
         if declared:
             level = max(level, int(declared.group(1)))
     return level > PLAYER_GEAR_MAX_LEVEL
+
+
+@lru_cache(maxsize=1)
+def player_ammunition():
+    """Qualities of released calibres, including quest and starter weapons."""
+    rounds = set()
+    for type_id, (root, _name) in catalogue().items():
+        if (root == FIRE_ARM and type_id != ADMIN_GUN
+                and not out_of_game(type_id) and not acquisition_blocked(type_id)):
+            rounds.update(params_of(type_id).get('comp_array', ()))
+    def family(type_id):
+        name = re.sub(r'_(?:KS|ST|OT(?:_PS)?|BB_G|EK_G|SHK_G|SB_G|shock)$',
+                      '', catalogue()[type_id][1])
+        return 'Ammo_SP_5_6' if name == 'Ammo_SP_5' else name
+    families = {family(t) for t in rounds if root_of(t) == AMMO}
+    return frozenset(t for t, (root, _name) in catalogue().items()
+                     if root == AMMO and family(t) in families)
 
 
 def upgrade_blueprint_blocked(type_id):
