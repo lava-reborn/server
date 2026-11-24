@@ -111,6 +111,10 @@ PREMIUM_TRANSPORT_REFUSED = "транспорт %d — (P), выведен из 
 SERVER_CHAT = os.environ.get("LAVA_SERVER_CHAT", "").strip().lower() not in (
     "", "0", "no", "off", "false")
 STORE = accounts.Store()
+if CHEATS and not storage.using_postgres(STORE.db):
+    bosses._OFFSET = bosses.restore_test_offset(
+        accounts.DB_PATH, (held["slot"] for held in STORE.holdings()
+                           if held["site"] in holdings.base_keys()))
 
 # Every connection with a Session behind it, so a stop can reach them all.
 # handle_client adds on connect and removes in its finally.
@@ -1943,8 +1947,8 @@ class Session:
                                                        and holdings.base_for(self.loc.id) is not None)
                         out = self.admin_boss_now(base=base)
                     elif command == '/test-time-reset':
-                        bosses._OFFSET = bosses._offset()
-                        out = 'Тестовые часы возвращены к исходной настройке сервера.'
+                        out = self.admin_test_clock(bosses._offset()) or (
+                            'Тестовые часы возвращены к исходной настройке сервера.')
                     else:
                         out = self.admin_test_bot(stop=command == '/test-bot-stop')
                 elif text.startswith("/base-respawn"):
@@ -2237,6 +2241,18 @@ class Session:
         rc.keep_hours()
         return "Охрана восстановлена; хозяин и телохранители появляются по таймеру в окно захвата."
 
+    def admin_test_clock(self, offset):
+        if not CHEATS:
+            return 'Команда доступна только в локальном тестовом комплекте.'
+        try:
+            database = None if storage.using_postgres(STORE.db) else accounts.DB_PATH
+            bosses.save_test_offset(database, offset)
+        except (OSError, ValueError, OverflowError):
+            log.exception('Could not persist local test clock')
+            return 'Не удалось сохранить тестовые часы; время не изменено.'
+        bosses._OFFSET = offset
+        return None
+
     def admin_boss_now(self, base=False):
         """Use the existing local test clock; production schedules are unchanged."""
         if not CHEATS or self.on_map or self.room is None or self.room.combat is None:
@@ -2265,7 +2281,9 @@ class Session:
                      if opens(t := start if minute == 0 else int(start // 60) * 60 + minute * 60)), None)
         if when is None:
             return 'В ближайшую неделю нет доступного окна появления.'
-        bosses._OFFSET += when - now
+        refusal = self.admin_test_clock(bosses._OFFSET + when - now)
+        if refusal:
+            return refusal
         if base:
             return self.admin_base_respawn() + ' Часы тестового сервера переведены к окну захвата.'
         with storage.atomic(STORE.db):

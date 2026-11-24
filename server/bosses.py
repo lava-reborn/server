@@ -61,10 +61,14 @@ to a clan (holdings.py), so a day settles it once.
                                       reads when the server starts; it runs
                                       on from there
 """
+import json
 import logging
+import math
 import os
+import tempfile
 import time
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 import world
 
@@ -192,6 +196,82 @@ def _offset():
 
 
 _OFFSET = _offset()
+
+
+def _test_clock_path(database):
+    if (not database or str(database) == ":memory:"
+            or str(database).startswith("file:") or "://" in str(database)):
+        return None
+    path = Path(database).resolve()
+    return path.with_name(path.name + ".test-clock.json")
+
+
+def _test_offset(value):
+    offset = float(value)
+    if not math.isfinite(offset):
+        raise ValueError("non-finite test clock offset")
+    datetime.fromtimestamp(time.time() + offset, ZONE)
+    return offset
+
+
+def save_test_offset(database, offset):
+    """Persist before changing the local tester's clock; never write game rows."""
+    offset = _test_offset(offset)
+    path = _test_clock_path(database)
+    if path is None:
+        return
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=path.parent,
+                                         prefix=path.name + ".", suffix=".tmp", delete=False) as stream:
+            temporary = Path(stream.name)
+            json.dump({"version": 1, "offset": offset}, stream, allow_nan=False)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary, path)
+    finally:
+        if temporary is not None and temporary.exists():
+            temporary.unlink()
+
+
+def restore_test_offset(database, capture_slots=()):
+    """Local SQLite tester only; an explicit configured clock takes precedence.
+
+    Older kits saved captures after /base-now but lost the process's offset.
+    With no saved clock, recover their latest future capture window once.
+    """
+    path = _test_clock_path(database)
+    if path is None or os.environ.get("LAVA_BOSS_CLOCK", "").strip():
+        return _OFFSET
+    try:
+        saved = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(saved, dict) or saved.get("version") != 1:
+            raise ValueError("unsupported test clock record")
+        return _test_offset(saved["offset"])
+    except FileNotFoundError:
+        pass
+    except (OSError, ValueError, TypeError, KeyError, OverflowError):
+        log.warning("Could not read local test clock %s", path, exc_info=True)
+    now = time.time()
+    latest = now
+    for slot in capture_slots:
+        try:
+            stamp = float(slot)
+            _test_offset(stamp - now)
+        except (OSError, ValueError, TypeError, OverflowError):
+            continue
+        latest = max(latest, stamp)
+    if latest > now:
+        offset = latest + 1 - now
+        try:
+            save_test_offset(database, offset)
+        except (OSError, ValueError, OverflowError):
+            log.warning("Could not save recovered local test clock %s", path, exc_info=True)
+            return _OFFSET
+        log.info("Restored local test clock from the saved base capture: %s",
+                 datetime.fromtimestamp(latest + 1, ZONE).isoformat())
+        return offset
+    return _OFFSET
 
 
 def clock():
