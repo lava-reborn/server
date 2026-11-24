@@ -212,7 +212,10 @@ LEFT_ALONE = sorted((p, t) for p, types in AT.items() for t in types
 LEFT_HOLDING = [(41, 1959), (127, 1968), (255, 1962), (445, 1797), (445, 1965)]
 check("  ..other traders keep their own goods, except duplicates already sold by the"
       " location's configured sellers; flower sellers keep their bouquets",
-      [(p, t) for p, t in LEFT_ALONE if items.stock_for(t, p) != [x for x in items.stock_for(t)
+      # Halfa's oasis counter also receives its weapon seller's calibres;
+      # test_ammunition_shops covers its separated, complete native stock.
+      [(p, t) for p, t in LEFT_ALONE if (p, t) != (62, 1227)
+       and items.stock_for(t, p) != [x for x in items.stock_for(t)
        if items.root_of(x) == items.AMMO or not any(x in items.stock_for(seller, p) for seller in AT[p]
                   if seller in shop_bands.SELLERS)]], [])
 check("  ..not idly: these of them hold a cold arm or a gun of no line, which a cut would take",

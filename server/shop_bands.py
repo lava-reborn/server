@@ -120,7 +120,7 @@ BUFF_SELLERS = BUFF_ASSISTANTS | {1013, 5215}
 BASE_AMMO_SELLERS = frozenset((714, 5240))
 PRISON_SUPPLIERS = frozenset((2180, 2181, 880))
 # Weapon/ammunition counters share a market, not duplicate inventories.
-OASIS_MARKETS = {76: (1225, 1228), 195: (1229, 1230), 196: (None, 1232)}
+OASIS_MARKETS = {62: (1224, 1227), 76: (1225, 1228), 195: (1229, 1230), 196: (None, 1232)}
 
 
 @lru_cache(maxsize=256)
@@ -283,7 +283,7 @@ def with_weapon_ammunition(stock, trader_type=None):
     return guns + rounds + other if guns else other + rounds
 
 
-@lru_cache(maxsize=3)
+@lru_cache(maxsize=4)
 def oasis_ammunition(loc_id):
     """Move compatible rounds to the actual ammunition counter, once per oasis."""
     import items

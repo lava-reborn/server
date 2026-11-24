@@ -347,8 +347,8 @@ def stock_for(trader_type, loc_id=None):
     chosen = [t for t in chosen if owners.get(t, trader_type) == trader_type
               or (trader_type in shop_bands.BUFF_ASSISTANTS
                   and effects.definition(t) is not None)]
-    # Compatible rounds are an intentional exception to location-wide ownership:
-    # a gun must not require buying its ammunition from a different seller.
+    # Ordinary gun counters keep compatible rounds after stock allocation.
+    # Oases have dedicated weapon/ammunition counters within the same market.
     oasis = shop_bands.oasis_stock(trader_type, loc_id, chosen)
     return (oasis if oasis is not None else
             shop_bands.with_weapon_ammunition(chosen, trader_type))

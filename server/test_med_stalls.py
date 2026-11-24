@@ -395,7 +395,8 @@ for _title in _SUPPLY_TITLES:
     for _x in items.resolve_stock_title(_title):
         if _x in cat and items.root_of(_x) == items.AMMO and _x not in ROUNDS:
             ROUNDS.append(_x)
-LIVE_ROUNDS = [t for t in ROUNDS if shop_bands.ammunition_order(t)[1] != 0] + list(range(60011, 60022))
+LIVE_ROUNDS = sorted({t for t in ROUNDS if shop_bands.ammunition_order(t)[1] != 0}
+                     | set(range(6140, 6176)) | set(range(60011, 60022)))
 PINNED = {
     (26, 5225): [6055, 6061, BTR, 7100, 6056, 6062, ROSA, 7101],
     (176, 2180): [6055, 6061, BTR, 7100, 6056, 6062, ROSA, 7101, 6057, 6063, VILKA, 7102]
@@ -438,7 +439,7 @@ check("  ..the supply men's rounds: their own list (data/npcs.json), the same at
       " prison yards, every calibre of the article, 49 types, each with a price",
       ([npcs.stock(t) == ROUNDS for t in (2180, 2181, 880)], len(ROUNDS),
        [x for x in ROUNDS if price(x) == (0, 0)], max(len(STALLS[k]) for k in PINNED)),
-      ([True] * 3, 49, [], 60))
+      ([True] * 3, 49, [], 84))
 check("  ..Донгола's grocer's own list (data/npcs.json) is the sack of beans and, since"
       " 2026-10-13, the Фуль «Старые приятели» and «Фуль ему!» send the player to buy «в местной"
       " лавке»: the «Коробка вяленого мяса» of his article is the food of ten of 12_15 (6901),"

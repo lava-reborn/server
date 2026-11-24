@@ -1359,9 +1359,9 @@ class ReleaseCatalogue(unittest.TestCase):
                 self.assertEqual(len(stock), len(set(stock)), (loc, trader))
                 self.assertLess(len(stock), 256, (loc, trader))
                 rounds = [t for t in stock if items.root_of(t) == items.AMMO]
-                if (loc, trader) in ((76, 1225), (195, 1229)):
+                if (loc, trader) in ((62, 1224), (76, 1225), (195, 1229)):
                     self.assertFalse(rounds)
-                    ammo_trader = {76: 1228, 195: 1230}[loc]
+                    ammo_trader = {62: 1227, 76: 1228, 195: 1230}[loc]
                     ammunition = set(items.stock_for(ammo_trader, loc))
                     for gun in guns:
                         self.assertTrue(ammunition.intersection(items.params_of(gun)['comp_array']))

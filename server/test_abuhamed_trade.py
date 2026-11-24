@@ -122,13 +122,18 @@ OASIS_ROUNDS = [6104, 6105, 6106, 6108, 6107, 6110, 6111, 6115, 6116, 6117, 6118
                 6122, 6123, 6127, 6113, 6125, 6109, 6121, 6114, 6126, 6112, 6124]
 
 # Calibre order on the wire; archive owner list above stays intact.
-ORDERED_OASIS_ROUNDS = [6104, 6116, 6164, 6152, 6189,
-                        6105, 6117, 6165, 6153, 60011, 6106, 6118, 6166, 6154, 60012,
-                        6108, 6120, 6168, 6156, 60014, 6107, 6119, 6167, 6155, 60013,
-                        6110, 6122, 6170, 6158, 60016, 6111, 6123, 6171, 6159, 60017,
-                        6115, 6127, 6175, 6163, 60021, 6113, 6125, 6173, 6161, 60019,
-                        6109, 6121, 6169, 6157, 60015, 6114, 6126, 6174, 6162, 60020,
-                        6112, 6124, 6172, 6160, 60018]
+ORDERED_OASIS_ROUNDS = [6092, 6104, 6116, 6140, 6164, 6152, 6189,
+                        6093, 6105, 6117, 6141, 6165, 6153, 60011,
+                        6094, 6106, 6118, 6142, 6166, 6154, 60012,
+                        6096, 6108, 6120, 6144, 6168, 6156, 60014,
+                        6095, 6107, 6119, 6143, 6167, 6155, 60013,
+                        6098, 6110, 6122, 6146, 6170, 6158, 60016,
+                        6099, 6111, 6123, 6147, 6171, 6159, 60017,
+                        6103, 6115, 6127, 6151, 6175, 6163, 60021,
+                        6101, 6113, 6125, 6149, 6173, 6161, 60019,
+                        6097, 6109, 6121, 6145, 6169, 6157, 60015,
+                        6102, 6114, 6126, 6150, 6174, 6162, 60020,
+                        6100, 6112, 6124, 6148, 6172, 6160, 60018]
 UNLISTED = (749, 753, 4583, 4584, 7344, 7339, 7341, 7342)   # masters with no stall of their own
 # The package WORLD holds the trader 7247, with no row and no role, out of the station
 # (data/schedule.json held_out) and stands the lottery men all year (world.SEASON_KEPT):
@@ -409,9 +414,9 @@ ROUNDS = {x for s in STALLS.values() for x in s if items.root_of(x) == items.AMM
 check("every gun on a stall of Абу-Хамед has a round it chambers on sale in the town",
       sorted({x for s in STALLS.values() for x in s if items.root_of(x) == items.FIRE_ARM
               and not set(items.params_of(x)["comp_array"]) & ROUNDS}), [])
-check("the prison supply man retains 60 rows after makeshift rounds are removed",
+check("the prison supplier has all six released grades plus medicine, without makeshift rounds",
       (max(len(s) for s in STALLS.values()), max(STALLS, key=lambda k: len(STALLS[k]))),
-      (60, (YARD, SUPPLY)))
+      (84, (YARD, SUPPLY)))
 check("the healers' fees: Роуз (728) and the oasis's Лекарь (1270) 500, the prison's"
       " Альфред Петрович (2112) 600 (server/test_healer_fees.py)",
       {t: npcs.healer_price(t, 10) for t in (728, 1270, 2112)}, {728: 500, 1270: 500, 2112: 600})

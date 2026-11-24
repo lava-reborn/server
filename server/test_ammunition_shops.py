@@ -57,7 +57,7 @@ class AmmunitionShops(unittest.TestCase):
             self.assertFalse(any(placeholder in group for group in grades.values()))
 
     def test_oases_have_disjoint_nonempty_weapon_and_ammunition_counters(self):
-        for loc, gun_seller, ammo_seller in ((76, 1225, 1228), (195, 1229, 1230), (196, None, 1232)):
+        for loc, gun_seller, ammo_seller in ((62, 1224, 1227), (76, 1225, 1228), (195, 1229, 1230), (196, None, 1232)):
             room = rooms.Room(world.location(loc), rooms.IdAllocator(), world.mob_types())
             present = {n.type_id for n in room.npcs.values()}
             self.assertIn(ammo_seller, present)
@@ -90,7 +90,7 @@ class AmmunitionPurchases(unittest.TestCase):
 
     def test_native_indices_and_prices_at_all_oasis_and_prison_ammunition_counters(self):
         self.inv.carry_limit = lambda: 1_000_000
-        for loc, trader in ((76, 1228), (195, 1230), (196, 1232), (176, 2180), (159, 2181), (177, 880)):
+        for loc, trader in ((62, 1227), (76, 1228), (195, 1230), (196, 1232), (176, 2180), (159, 2181), (177, 880)):
             self.s.loc = self.s.room.loc = NS(id=loc)
             self.s.room.npc = lambda n, t=trader: (0, t, world.TRADER) if n == 1 else None
             self.inv.trade = inventory.TradeSession(1, trader, loc)
