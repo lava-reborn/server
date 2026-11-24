@@ -16288,6 +16288,14 @@
         48
       ],
       "why": "DESIGNED existing NPC on verified walkable cell; approved 2026-11-22."
+    },
+    {
+      "type": 2018,
+      "cell": [
+        16,
+        55
+      ],
+      "why": "Owner-approved second base medic, two hexes beside the existing supplier; walkable with a free approach."
     }
   ],
   "1443": [
@@ -16298,6 +16306,14 @@
         48
       ],
       "why": "DESIGNED existing NPC on verified walkable cell; approved 2026-11-22."
+    },
+    {
+      "type": 2018,
+      "cell": [
+        16,
+        55
+      ],
+      "why": "Owner-approved second base medic, two hexes beside the existing supplier; walkable with a free approach."
     }
   ]
  }

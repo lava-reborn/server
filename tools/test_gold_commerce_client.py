@@ -115,11 +115,11 @@ class GoldCommerceClient(unittest.TestCase):
             exchange['countMoney']()
             self.assertEqual(float(exchange['money_mc']['info_txt']['text']), expected)
 
-    def test_base_stock_tooltips_show_local_unit_and_stack_prices_without_changing_nominal(self):
+    def test_base_stock_tooltips_show_one_local_unit_price_without_changing_nominal(self):
         self.pan['trader'] = dict(pmod=.9, type_list=Arr([60011]))
-        for root, gold, price, count, unit, stack in (
-                (2, True, 4, 10, .03, .30), (2, False, 13, 10, 12, 120),
-                (3, True, 1, 5000, .01, 50), (3, False, .65, 100, 1, 100)):
+        for root, gold, price, count, unit in (
+                (2, True, 4, 10, .03), (2, False, 13, 10, 12),
+                (3, True, 1, 5000, .01), (3, False, .65, 100, 1)):
             with self.subTest(root=root, gold=gold):
                 item = self.item(cost=0 if gold else price, g_cost=price if gold else 0, size=count)
                 item.update(rootID=root, typeID=60011, tradeID=0)
@@ -127,10 +127,9 @@ class GoldCommerceClient(unittest.TestCase):
                 panel = dict(item=item, __gcAddCostOrig=lambda arr: arr.push(Arr(['Базовая цена:', price])))
                 self.methods['addCost'].invoke(panel, [rows])
                 self.assertEqual(rows[0][1], price)
-                self.assertEqual(rows[1][0], 'Цена базы (1 шт.):')
-                self.assertEqual(rows[2][0], f'Цена базы ({count} шт.):')
+                self.assertEqual(len(rows), 2)
+                self.assertEqual(rows[1][0], 'Цена на клан базе:')
                 self.assertEqual(float(rows[1][1].split()[0]), unit)
-                self.assertEqual(float(rows[2][1].split()[0]), stack)
                 self.assertEqual(item['getProp']('g_cost' if gold else 'cost'), price)
 
     def test_base_purchase_tooltip_cannot_leak_to_bag_another_shop_or_repair(self):
@@ -149,7 +148,7 @@ class GoldCommerceClient(unittest.TestCase):
 
     def test_every_base_consumable_tooltip_matches_the_authoritative_purchase_price(self):
         checked = 0
-        for loc, suppliers in ((609, (714, 1013)), (1443, (5240, 1013))):
+        for loc, suppliers in ((609, (714, 1013, 2018)), (1443, (5240, 1013, 2018))):
             for supplier in suppliers:
                 stock = items.stock_for(supplier, loc)
                 self.pan['trader'] = dict(pmod=.9, type_list=Arr(stock))

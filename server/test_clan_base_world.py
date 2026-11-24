@@ -64,12 +64,13 @@ class ClanBaseWorldTests(unittest.TestCase):
         api.preload_strings()
         texts = {int(row.attrib['id']): row.text or ''
                  for row in ET.fromstring(names.document_bytes())}
-        self.assertEqual(texts[8000001], 'Снабженец базы клана')
+        self.assertEqual(texts[8000001], 'Снабженец базы клана<br>Боевые стимуляторы (G)')
+        self.assertEqual(texts[8000005], 'Снабженец базы клана<br>Боевые стимуляторы (A)')
         self.assertEqual(names.text(1013), names.BASE[1013])
         with closing(accounts.Store(':memory:')) as store, patch.object(server, 'STORE', store):
-            for lid, type_id in ((118, 688), (1442, 5275), (609, 1013), (1443, 1013), (185, 1013)):
+            for lid, type_id in ((118, 688), (1442, 5275), (609, 1013), (1443, 1013), (609, 2018), (1443, 2018), (185, 1013)):
                 with self.subTest(lid=lid, type_id=type_id):
-                    base_medic = type_id == 1013 and lid in (609, 1443)
+                    base_medic = type_id in (1013, 2018) and lid in (609, 1443)
                     root = world.entity_root(type_id, world.mob_types()[type_id][0])
                     # A clanless observer retains presentation/quest identity,
                     # but cannot open the bunker's owner-only supply services.
@@ -88,9 +89,11 @@ class ClanBaseWorldTests(unittest.TestCase):
                     command, params = frames[0]
                     self.assertEqual(params['give_quests'], quests.given_by(type_id))
                     self.assertEqual(params['take_quests'], quests.taken_by(type_id))
-                    self.assertEqual(params['res'], 4443 if base_medic else type_id if type_id == 1013 else 689)
-                    self.assertEqual(params['name'], 8000001 if base_medic else type_id)
-                    if type_id == 1013:
+                    expected_res = (4443 if type_id == 1013 else 728) if base_medic else (type_id if type_id == 1013 else 689)
+                    self.assertEqual(params['res'], expected_res)
+                    expected_name = (8000001 if type_id == 1013 else 8000005) if base_medic else type_id
+                    self.assertEqual(params['name'], expected_name)
+                    if type_id in (1013, 2018):
                         self.assertEqual(command, 'userInfo_Trader')
                         self.assertEqual(params['type_list'], [] if base_medic else items.stock_for(type_id, lid))
                         self.assertEqual(params['can_trade'], 0 if base_medic else 1)
@@ -132,6 +135,23 @@ class ClanBaseWorldTests(unittest.TestCase):
                 self.assertLess(y, by)
                 neighbours = progression.hex_neighbours(cell, loc.width, loc.height)
                 self.assertGreaterEqual(sum(c not in loc.obstacles for c in neighbours), 4)
+
+    def test_paired_medics_have_different_native_medical_models_and_free_approaches(self):
+        for lid in (609, 1443):
+            loc = world.location(lid)
+            first = next(c for c, t in loc.spawns if t == 1013)
+            second = next(r for r in world.placed_in(lid) if r['type'] == 2018)
+            x, y = second['cell']
+            self.assertEqual((x, y), (first % loc.width + 2, first // loc.width))
+            cell = y * loc.width + x
+            self.assertNotIn(cell, loc.obstacles | set(travel.exit_sides(loc)))
+            accessible = reachable(loc, next(c for c, t in loc.spawns if t == 689))
+            self.assertTrue(accessible.intersection(progression.hex_neighbours(cell, loc.width, loc.height)))
+            a = npcs.presentation(2018, lid)
+            g = npcs.presentation(1013, lid)
+            self.assertEqual(world.mob_types()[a['res']][1], 'ah_Healer')
+            self.assertNotEqual(world.mob_types()[a['res']][2], world.mob_types()[g['res']][2])
+        self.assertEqual(npcs.presentation(2018, 127), {})
 
     def test_relocated_bases_retire_both_old_squares_and_reach_dongola(self):
         import map_cells
@@ -252,7 +272,7 @@ class ClanBaseWorldTests(unittest.TestCase):
         placed = {lid: Counter(r['type'] for r in world.placed_in(lid)) for lid in STAFF}
         self.assertEqual(placed, {118: Counter({7454: 1, 4829: 3, 2312: 10}),
                                   1442: Counter({7451: 1, 4828: 3, 918: 10}),
-                                  609: Counter({989: 1}), 1443: Counter({989: 1})})
+                                  609: Counter({989: 1, 2018: 1}), 1443: Counter({989: 1, 2018: 1})})
         self.assertIsNone(rooms.check_placements(world.mob_types()))
 
     def test_site_defenders_have_reachable_spread_out_spawn_cells(self):

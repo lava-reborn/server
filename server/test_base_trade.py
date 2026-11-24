@@ -29,7 +29,7 @@ class BaseTrade(unittest.TestCase):
         head, _ = self.store.create_character(aid, 'BaseOutsider', 0, '1')
         return self.store.clan_create(head, 'Other base clan', 'other-base-clan', '', None)
 
-    def test_service_access_matrix_for_all_six_npcs_and_lease_boundaries(self):
+    def test_service_access_matrix_for_every_base_npc_and_lease_boundaries(self):
         other = self.foreign_clan()
         slot = datetime(2026, 11, 21, 20, tzinfo=holdings.bosses.ZONE).timestamp()
         week = 7 * 86400
@@ -232,7 +232,7 @@ class BaseTrade(unittest.TestCase):
         info = next(p for cmd, p in self.frames if cmd == 'userInfo_Trader')
         self.assertEqual((info['pmod'], info['smod'], info['rmod']), (0.9, 0.85, inventory.RMOD * 0.5))
         self.assertLess(len(protocol.frame('userInfo_Trader', **info)), 4096)
-        for trader, gold in ((714, True), (714, False), (1013, True), (1013, False)):
+        for trader, gold in ((714, True), (714, False), (1013, True), (2018, False)):
             self.open(trader)
             stock = items.stock_for(trader, 609)
             available = [t for t in stock if bool(items.params_of(t).get('g_cost')) == gold]
@@ -347,7 +347,7 @@ class BaseTrade(unittest.TestCase):
             self.base_room(loc)
             self.store.set_money(self.cid, 1_000_000_000, 1_000_000)
             self.s.char.afro, self.s.char.gold = self.store.money(self.cid)
-            for trader in (supplier, 1013):
+            for trader in (supplier, 1013, 2018):
                 self.open(trader)
                 info = next(p for cmd, p in self.frames if cmd == 'userInfo_Trader')
                 stock = items.stock_for(trader, loc)
@@ -385,7 +385,7 @@ class BaseTrade(unittest.TestCase):
                         self.assertEqual(before[int(not gold)], after[int(not gold)])
                         if gold:
                             self.assertGreater(expected, 0)
-                            if root != items.AMMO and unit * n > 1:
+                            if root != items.AMMO and unit > 1:
                                 self.assertLessEqual(expected, math.ceil(unit * n) - 1)
                         for row in self.inv.rows():
                             self.store.delete_item(row['uniq'])
@@ -401,7 +401,7 @@ class BaseTrade(unittest.TestCase):
             self.store.update_item(row['uniq'], brk=0)
             row = self.store.item(row['uniq'])
             before = self.store.money(self.cid)
-            for trader in (supplier, 1013):
+            for trader in (supplier, 1013, 2018):
                 self.open(trader)
                 info = next(p for cmd, p in self.frames if cmd == 'userInfo_Trader')
                 self.assertEqual(info['can_repair'], 0)
@@ -489,11 +489,27 @@ class BaseTrade(unittest.TestCase):
         self.assertEqual(self.store.money(self.cid), before)
         self.assertFalse(self.inv.rows())
 
+    def test_base_medics_split_all_released_buffs_and_every_battle_medicine_tier(self):
+        import shop_bands
+        expected_buffs = set().union(*(shop_bands.stimulants(top) for top in shop_bands.BUFF_RANKS))
+        expected_meds = {t for t, ware in shop_bands.wares().items() if ware[0] == 'combat_meds'}
+        self.assertEqual(len(expected_buffs), 78)
+        for loc in (609, 1443):
+            stocks = {trader: set(items.stock_for(trader, loc)) for trader in (1013, 2018)}
+            self.assertFalse(stocks[1013] & stocks[2018])
+            combined = stocks[1013] | stocks[2018]
+            self.assertEqual({t for t in combined if effects.definition(t)}, expected_buffs)
+            self.assertEqual({t for t in combined if t in expected_meds}, expected_meds)
+            for trader, gold in ((1013, True), (2018, False)):
+                self.assertTrue(all(bool(items.params_of(t).get('g_cost')) == gold
+                                    for t in stocks[trader]))
+            self.assertNotIn(3914, combined)  # Event food is not a released retail stimulant.
+
     def test_both_base_medics_stock_all_requested_grades_and_exact_discounted_prices(self):
         expected = set(range(4917, 4957)) | {3789, 3826, 3897, 4181, 4182, 4183, 4184, 4185}
         for loc in (609, 1443):
             with self.subTest(location=loc):
-                stock = items.stock_for(1013, loc)
+                stock = items.stock_for(1013, loc) + items.stock_for(2018, loc)
                 self.assertTrue(expected <= set(stock), sorted(expected - set(stock)))
                 self.assertEqual(len(stock), len(set(stock)))
                 self.assertLess(len(stock), 256)
@@ -505,10 +521,10 @@ class BaseTrade(unittest.TestCase):
                 self.assertNotIn(4917, items.stock_for(1013, 127))
                 self.assertNotIn(4956, items.stock_for(1013, 36))
 
-    def test_base_stock_is_city_consumables_only_without_duplicates_or_client_overflow(self):
-        for loc, traders in ((609, (714, 1013)), (1443, (1013, 5240))):
+    def test_base_stock_is_consumables_only_without_duplicates_or_client_overflow(self):
+        for loc, traders in ((609, (714, 1013, 2018)), (1443, (1013, 2018, 5240))):
             stocks = [items.stock_for(t, loc) for t in traders]
-            self.assertFalse(set(stocks[0]) & set(stocks[1]))
+            self.assertEqual(sum(map(len, stocks)), len(set().union(*map(set, stocks))))
             for trader, stock in zip(traders, stocks):
                 self.assertTrue(stock)
                 self.assertLess(len(stock), 256)  # Native trader index is one byte.
@@ -521,7 +537,7 @@ class BaseTrade(unittest.TestCase):
     def test_all_base_stock_buy_resale_and_repair_sale_routes_are_unprofitable(self):
         rate = progression.GOLD_TO_AFRO_RATE / progression.GOLD_OUNCE
         checked = 0
-        for loc, traders in ((609, (714, 1013)), (1443, (1013, 5240))):
+        for loc, traders in ((609, (714, 1013, 2018)), (1443, (1013, 2018, 5240))):
             for trader in traders:
                 for t in items.stock_for(trader, loc):
                     p, root = items.params_of(t), items.root_of(t)

@@ -118,6 +118,8 @@ BUFF_RANKS = {4: (0, 0), 8: (1, 3), 12: (3, 5), 16: (5, 7), 20: (7, 9)}
 BUFF_ASSISTANTS = frozenset((1196, 2015, 2016, 2017, 2018, 5216))
 BUFF_SELLERS = BUFF_ASSISTANTS | {1013, 5215}
 BASE_AMMO_SELLERS = frozenset((714, 5240))
+BASE_INTERIORS = frozenset((609, 1443))
+BASE_MEDICS = {1013: "gold", 2018: "afro"}
 PRISON_SUPPLIERS = frozenset((2180, 2181, 880))
 # Weapon/ammunition counters share a market, not duplicate inventories.
 OASIS_MARKETS = {62: (1224, 1227), 76: (1225, 1228), 195: (1229, 1230), 196: (None, 1232)}
@@ -176,19 +178,13 @@ def stimulants(top, currency=None):
     return result
 
 
-def base_stimulants(top):
-    """Base medics also stock every Salus/Anesthetic tier and the requested reagents."""
-    import effects
+@lru_cache(maxsize=2)
+def base_stimulants(currency):
+    """Every released city stimulant, split between the two base counters."""
     import items
-    chosen = set(stimulants(top))
-    extras = {'item_mob_drop_up', 'item_up_critical_probability_1',
-              'item_up_critical_probability_4', 'item_up_critical_probability_4_gold',
-              'item_up_critical_evade_4', 'item_up_critical_evade_4_gold'}
-    for type_id in effects.definitions():
-        article = items.catalogue()[type_id][1]
-        if article.startswith(('Salus_', 'Anesthetic_')) or article in extras:
-            chosen.add(type_id)
-    return sorted(chosen)
+    chosen = set().union(*(stimulants(top) for top in BUFF_RANKS))
+    return sorted(t for t in chosen
+                  if bool(items.params_of(t).get('g_cost')) == (currency == 'gold'))
 
 
 @lru_cache(maxsize=1)
@@ -669,6 +665,11 @@ def apply(trader_type, loc_id, own):
     if which is None or b is None:
         return list(own)
     low, top = b
+    if loc_id in BASE_INTERIORS and trader_type in BASE_MEDICS:
+        currency = BASE_MEDICS[trader_type]
+        return (goods(("combat_meds",), 0, TOP_LEVEL, currency)
+                + goods(("peace_meds",), low, top, currency)
+                + base_stimulants(currency))
     # Halfa's knife merchant also serves players arriving at level one.
     # Keep every other seller and city band unchanged.
     if trader_type == 1152 and loc_id == 102:
@@ -679,12 +680,9 @@ def apply(trader_type, loc_id, own):
         own = [t for t in own if items.root_of(t) == items.AMMO
                and (items.params_of(t).get('g_cost') or ammunition_order(t)[1] == 2)]
         own += items.SHOCK_ROUNDS.values()
-    if trader_type == 1013 and loc_id in (609, 1443):
-        which = MED_KINDS
     stock = goods(which, low, top, ONLY.get(trader_type)) if which else []
     if trader_type in BUFF_SELLERS:
-        stock += (base_stimulants(top) if trader_type == 1013 and loc_id in (609, 1443)
-                  else stimulants(top, stimulant_currency(trader_type, loc_id)))
+        stock += stimulants(top, stimulant_currency(trader_type, loc_id))
     stock += [t for t in own if not band_ware(t) or (not which and fits(t, low, top))]
     if any(kind in FIREARM_KINDS for kind in which):
         stock += gold_ammunition(stock)

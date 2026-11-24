@@ -463,6 +463,8 @@ print("coverage")
 COVERED_CITIES = tuple(c[0] for c in shop_bands.CITIES)
 on_sale = {}
 for (p, t), stall in STALLS.items():
+    if p in (609, 1443):
+        continue  # Base-wide battle tiers are checked in test_base_trade.
     for x in stall:
         if x in OF:
             on_sale.setdefault(PLACE_CITY[p][0], set()).add(x)
@@ -512,11 +514,13 @@ print()
 print("nothing out of the tiers")
 check("no medicine of the two lines on any stall of a city's place out of its city's tiers",
       sorted((p, t, x) for (p, t), s in STALLS.items() for x in s if line_med(x)
-             and (x not in OF or OF[x][1] not in tiers_of(*PLACE_CITY[p][1:]))), [])
+             and (x not in OF or OF[x][1] not in tiers_of(*PLACE_CITY[p][1:]))
+             and not (p in (609, 1443) and t in (1013, 2018)
+                      and x in OF and OF[x][0] == 'combat_meds')), [])
 check("  ..none on the stall of a trader of a city's place that is no medicine seller: Марат's"
       " and Шрам's at Абу-Хамед's station, whose lists the wiki's shifted links gave Киплер's"
       " and Курт's medicine, and Серхио's machine guns at Донгола's black market among them",
-      sorted((p, t) for (p, t), s in STALLS.items() if t not in MEDICS and (p, t) not in ((609, 1013), (1443, 1013))
+      sorted((p, t) for (p, t), s in STALLS.items() if t not in MEDICS and (p, t) not in ((609, 1013), (1443, 1013), (609, 2018), (1443, 2018))
              and any(line_med(x) for x in s)), [])
 check("  ..nor the May «Перевязочный Пакет» (26590) the name of Киплер's article tied to Марат"
       " (1219): his own list his pouches alone (2026-10-14, server/test_abuhamed_trade.py), his"

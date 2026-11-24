@@ -109,11 +109,7 @@ def __gcAddCost(rows):
     price = _global.__gcBaseBuyPrice(this.item, 1)
     if price == None:
         return
-    rows.push(["Цена базы (1 шт.):", price])
-    count = this.item.getProp("size")
-    if count > 1:
-        price = _global.__gcBaseBuyPrice(this.item, count)
-        rows.push(["Цена базы (" + String(count) + " шт.):", price])
+    rows.push(["Цена на клан базе:", price])
 
 def __gcShowCost(item, align):
     this.__gcShowCostOrig(item, align)

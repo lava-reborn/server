@@ -1,10 +1,11 @@
 {
  "_": "Имена жителей и их ассортимент, выбранные вручную. server/npcs.py читает это при старте: names.py берёт отсюда имя поверх вики, items.stock_for — список товаров поверх неё же. Ключ — тип существа из mobs.xml, не локация: два рынка с одним типом торговца ставят одного и того же торговца. Пишется tools/npc_editor.py.",
  "presentation_names": {
-  "8000001": "Снабженец базы клана",
+  "8000001": "Снабженец базы клана<br>Боевые стимуляторы (G)",
   "8000002": "Хозяин клан базы",
   "8000003": "Телохранитель",
-  "8000004": "Охранник"
+  "8000004": "Охранник",
+  "8000005": "Снабженец базы клана<br>Боевые стимуляторы (A)"
  },
  "presentation": {
   "118": {
@@ -24,6 +25,11 @@
     "res": 4443,
     "name": 8000001,
     "why": "Owner-approved clan-base supply medic uses the native clan_healer_afrobase medical model, with a local caption. City Doctor Gofus and all stock bindings stay unchanged."
+   },
+   "2018": {
+    "res": 728,
+    "name": 8000005,
+    "why": "Owner-approved A-only base medic uses the native Abu healer model; city assistants keep their appearance and inventories."
    }
   },
   "1443": {
@@ -31,6 +37,11 @@
     "res": 4443,
     "name": 8000001,
     "why": "Owner-approved clan-base supply medic uses the native clan_healer_afrobase medical model, with a local caption. City Doctor Gofus and all stock bindings stay unchanged."
+   },
+   "2018": {
+    "res": 728,
+    "name": 8000005,
+    "why": "Owner-approved A-only base medic uses the native Abu healer model; city assistants keep their appearance and inventories."
    }
   }
  },
