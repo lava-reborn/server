@@ -44,12 +44,27 @@ class ClientSuiteSelection(unittest.TestCase):
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(value, encoding='utf-8', newline='\n')
 
-    def shell(self, script, *args):
+    def shell(self, script, *args, env_extra=None):
         env = dict(os.environ, LAVA_RES=shell_path(self.tree / 'res'), LAVA_CI_PART='1')
+        env.update(env_extra or {})
         return subprocess.run([self.bash, '-c',
             'export PATH="$1:$PATH"; shift; exec bash "$@"', '--',
             shell_path(self.tree / 'bin'), shell_path(self.tree / script), *args],
             cwd=self.tree, env=env, capture_output=True, text=True, timeout=30)
+
+    def test_child_database_and_temp_follow_configured_temp_root_with_spaces(self):
+        self.write('bin/python3', '#!/bin/sh\ncase "$1" in *suite.py) printf \'%s\\n\' \'server/test_alpha.py\'; exit 0;; test_alpha.py) ;; *) exit 0;; esac\nprintf \'%s\\n\' "$LAVA_DB" "$TMPDIR" > "$LAVA_TEMP_TRACE"\ntest -d "$TMPDIR"\n')
+        (self.tree / 'temp with spaces').mkdir()
+        temporary = shell_path(self.tree / 'temp with spaces')
+        result = self.shell('tools/run_suite.sh', '--only', 'test_alpha',
+                            '.', shell_path(self.tree / 'out'), '1',
+                            env_extra=dict(TMPDIR=temporary,
+                                           LAVA_TEMP_TRACE=shell_path(self.tree / 'trace.txt')))
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        database, child_tmp = (self.tree / 'trace.txt').read_text().splitlines()
+        self.assertTrue(database.startswith(temporary + '/lava_suite_tmp.'), database)
+        self.assertTrue(database.endswith('/test_alpha/lava.db'), database)
+        self.assertEqual(child_tmp, database.rsplit('/', 1)[0] + '/tmp')
 
     def test_selected_client_suite_is_not_dropped_by_shell_runner(self):
         result = self.shell('tools/run_suite.sh', '--only', 'test_client_contract',
