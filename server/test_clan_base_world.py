@@ -378,7 +378,7 @@ class ClanBaseWorldTests(unittest.TestCase):
         for x, y, text in expected:
             self.assertIn('3 живых соклановца ' + ('12+' if (x, y) == BASES[1442] else '16+'), text)
             self.assertIn('Каждый ранит хозяина', text)
-            self.assertIn('клан с наибольшим уроном', text)
+            self.assertIn('клан добившего', text)
             self.assertLessEqual(len(text.split('<br>')), 5)
             for value in ('20:00–21:00', '19:55', '1 500 000', '21:15'):
                 self.assertIn(value, text)

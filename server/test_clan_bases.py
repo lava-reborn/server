@@ -342,6 +342,45 @@ class ClanBases(unittest.TestCase):
             with patch.object(self.store, 'clan_member', return_value=None):
                 self.assertEqual(rc.resolve(shooter, target, target.cell, weapon, 1)[1][target][:2], [7, 9])
 
+    def test_owned_warehouse_masters_remain_hostile_and_can_take_lethal_player_damage(self):
+        self.capture()
+        self.pay()
+        for site in holdings.sites().values():
+            if site.kind != 'warehouse':
+                continue
+            with self.subTest(site=site.key):
+                self.store.holding_set(site.key, self.clan, 'admin')
+                room = rooms.Room(world.location(site.loc), rooms.IdAllocator(), world.mob_types())
+                rc = combat.RoomCombat(room, self.store)
+                rc.keep_hours()
+                target = next(m for m in rc.mobs.values() if m.type_id == site.boss)
+                self.assertTrue(target.alive and not target.away)
+                frames = []
+                viewer = NS(room=room, char_id=self.cid,
+                            combat=NS(rc=rc, mob_info=lambda _eid: dict(lvl=target.level),
+                                      after_npc_info=lambda _eid: None),
+                            send=lambda cmd, **params: frames.append((cmd, params)))
+                server.Session.send_npc_info(viewer, target.eid)
+                info = next(params for cmd, params in frames if cmd == world.USERINFO[world.MOB])
+                self.assertEqual(info['ally'], 0)
+                self.assertNotIn('clan', info)
+                shooter = NS(is_player=True, store=self.store, sess=NS(char_id=self.cid), cell=target.cell - 1)
+                self.assertFalse(holdings.defender_friendly(rc, target, shooter))
+                weapon = combat.Weapon(1, 10, 10, 0, 10, 20, 0, 0, 25, 0, 0)
+                rc.bodies = lambda *args: {}
+                with patch.object(combat, 'shot_wall', return_value=None), \
+                        patch.object(combat, 'bodies_between', return_value=[]), \
+                        patch.object(combat, 'bullet_offset', return_value=0), \
+                        patch.object(combat, 'flight', return_value=([target], None)), \
+                        patch.object(rc, 'bullet_damage', return_value=(7, 9)), \
+                        patch.object(rc, 'ranged_critical', return_value=False):
+                    for aim in (target, None):
+                        self.assertEqual(rc.resolve(shooter, aim, target.cell, weapon, 1)[1][target][:2], [7, 9])
+                target.hp, target.sp = 1, 0
+                self.assertTrue(target.apply_damage(1, 0))
+                self.assertEqual(target.hp, 0)
+                self.assertEqual(self.store.holding(site.key)['clan_id'], self.clan)
+
     def test_new_battle_resets_a_wounded_occupation_soldier_and_cancels_old_attack(self):
         self.capture()
         self.pay()
@@ -992,7 +1031,7 @@ class ClanBases(unittest.TestCase):
                 snap = holdings.snapshot(rc, mob, None)
                 self.assertIsNone(holdings.winner(snap, 3, base.min_level))
                 sess.combat.level += 1
-                mob.capture = holdings.snapshot(rc, mob, None)
+                mob.capture = holdings.snapshot(rc, mob, NS(is_player=True, sess=sess))
                 self.assertEqual(holdings.settle(rc, mob), 'capture')
                 self.assertTrue(all('База захвачена' in text and '21:15' in text for text in messages))
                 self.assertEqual(len(messages), len(helpers))
@@ -1028,8 +1067,8 @@ class ClanBases(unittest.TestCase):
                         last.combat.level -= 1
                     else:
                         self.store.clan_leave(last.char_id, self.clan)
-                    snap = holdings.snapshot(rc, mob, None)
-                    self.assertIsNone(holdings.winner(snap, 3, base.min_level))
+                    snap = holdings.snapshot(rc, mob, NS(is_player=True, sess=lead))
+                    self.assertIsNone(holdings.winner(snap, 3, base.min_level, last_hit=True))
                     if missing == 'absent':
                         room.players.append(last)
                     elif missing == 'dead':
@@ -1038,21 +1077,52 @@ class ClanBases(unittest.TestCase):
                         last.combat.level += 1
                     else:
                         self.store.clan_member_add(last.char_id, self.clan, 0, '')
-            snap = holdings.snapshot(rc, mob, None)
-            self.assertEqual(holdings.winner(snap, 3, base.min_level)[0], self.clan)
+            killer = NS(is_player=True, sess=lead)
+            snap = holdings.snapshot(rc, mob, killer)
+            self.assertEqual(holdings.winner(snap, 3, base.min_level, last_hit=True)[0], self.clan)
             self.assertEqual(mob.capture_harm, {self.cid: 98, **{f['char']: 1 for f in support}})
             # Presence alone cannot replace the third contributor.
             mob.capture_harm[support[-1]['char']] = 0
-            self.assertIsNone(holdings.winner(holdings.snapshot(rc, mob, None), 3, base.min_level))
+            self.assertIsNone(holdings.winner(holdings.snapshot(rc, mob, killer), 3, base.min_level, last_hit=True))
             mob.capture_harm[support[-1]['char']] = 1
             # A reconnect cannot turn one character into two supporters.
             room.players[-1] = helpers[0]
-            self.assertIsNone(holdings.winner(holdings.snapshot(rc, mob, None), 3, base.min_level))
+            self.assertIsNone(holdings.winner(holdings.snapshot(rc, mob, killer), 3, base.min_level, last_hit=True))
             room.players = [lead] + helpers
             mob.capture_harm.clear()
-            self.assertIsNone(holdings.winner(holdings.snapshot(rc, mob, None), 3, base.min_level))
+            self.assertIsNone(holdings.winner(holdings.snapshot(rc, mob, killer), 3, base.min_level, last_hit=True))
 
-    def test_foreign_last_hit_with_fewer_than_three_members_cannot_neutralise_base(self):
+    def test_clanless_or_nonplayer_last_hit_cannot_award_a_base_to_damage_leaders(self):
+        fighters = self.supporters() + [dict(char=self.cid, clan=self.clan, clan_name='Base clan',
+                                            here=True, alive=True, level=16, harm=100)]
+        for base in (self.base, holdings.site('base_dn')):
+            snap = dict(site=base.key, slot=SLOT, at=self.now, pool=102,
+                        killer=None, killer_clan=None, fighters=fighters)
+            rc = NS(store=self.store, room=NS(loc=world.location(base.loc), players=[], npcs={}),
+                    boss_spot=lambda _mob: 'clanless-' + base.key)
+            self.assertEqual(holdings.settle(rc, NS(capture=snap)), 'none')
+            self.assertIsNone(self.store.holding(base.key))
+
+    def test_test_ally_last_hit_is_credited_to_its_owners_clan(self):
+        for base in (self.base, holdings.site('base_dn')):
+            owner = NS(char_id=self.cid, inv=NS(store=self.store))
+            owner.combat = NS(is_player=True, store=self.store, dead=False,
+                              level=base.min_level, sess=owner)
+            allies = []
+            for char in (-101, -102):
+                ally = NS(ground=NS(ally=True, owner=owner, capture_char=char))
+                ally.combat = NS(is_player=True, dead=False, level=base.min_level, sess=ally)
+                allies.append(ally)
+            room = NS(loc=world.location(base.loc), players=[owner] + allies)
+            owner.room = room
+            rc = NS(store=self.store, room=room)
+            boss = NS(type_id=base.boss, slot=SLOT, hp_max=100, sp_max=0,
+                      capture_harm={self.cid: 98, -101: 1, -102: 1})
+            snap = holdings.snapshot(rc, boss, allies[-1].combat)
+            won = holdings.winner(snap, 3, base.min_level, last_hit=True)
+            self.assertEqual((won[0], won[3]), (self.clan, self.cid))
+
+    def test_base_belongs_only_to_last_hit_clan_with_three_eligible_contributors(self):
         support = self.supporters()
         account, _ = self.store.register('foreign-last-hit', 'local-password')
         outsider, _ = self.store.create_character(account, 'ForeignLastHit', 0, '1')
@@ -1077,11 +1147,14 @@ class ClanBases(unittest.TestCase):
                               home=100, capture_harm=harm)
                     killer = NS(is_player=True, sess=NS(char_id=outsider))
                     boss.capture = holdings.snapshot(rc, boss, killer)
-                    self.assertEqual(holdings.settle(rc, boss), 'capture')
+                    self.assertEqual(holdings.settle(rc, boss), 'capture' if foreign_count == 3 else 'none')
                     held = self.store.holding(base.key)
-                    self.assertEqual(held['clan_id'], self.clan)
-                    self.assertEqual(held['by_char'], self.cid)
-                    self.store.holding_clear(base.key, 'admin')
+                    if foreign_count == 3:
+                        self.assertEqual(held['clan_id'], foreign_clan)
+                        self.assertEqual(held['by_char'], outsider)
+                        self.store.holding_clear(base.key, 'admin')
+                    else:
+                        self.assertIsNone(held)
 
     def test_capture_and_boss_death_roll_back_together(self):
         snap = dict(site=self.base.key, slot=SLOT, at=self.now, pool=100,
@@ -1129,7 +1202,7 @@ class ClanBases(unittest.TestCase):
         self.assertIsNone(mob.capture)
         self.assertEqual(len(self.store.holding_log(self.base.key)), 1)
 
-    def test_ineligible_second_base_clan_cannot_block_another_clan(self):
+    def test_last_hit_clan_with_another_base_does_not_pass_capture_to_another_clan(self):
         self.capture(holdings.site("base_dn"))
         aid, _ = self.store.register("other-base-clan", "password")
         cid, _ = self.store.create_character(aid, "OtherOwner", 0, "1")
@@ -1142,8 +1215,8 @@ class ClanBases(unittest.TestCase):
                               killer=self.cid, killer_clan=self.clan, fighters=fighters))
         rc = NS(store=self.store, room=NS(loc=world.location(118), players=[], npcs={}),
                 boss_spot=lambda _mob: "other-base")
-        self.assertEqual(holdings.settle(rc, mob), "capture")
-        self.assertEqual(self.store.holding(self.base.key)["clan_id"], other)
+        self.assertEqual(holdings.settle(rc, mob), "none")
+        self.assertIsNone(self.store.holding(self.base.key))
 
     def test_legacy_schema_migration_adds_unpaid_default(self):
         self.capture()

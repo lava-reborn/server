@@ -553,8 +553,16 @@ class TrainingGround(unittest.IsolatedAsyncioTestCase):
                     with self.assertRaises(ValueError):
                         self.s.inv.create(t)
                 elif items.acquisition_blocked(t):
-                    self.assertGreater(row[1], 17)
-                    self.assertLessEqual(inventory.item_level(t), 20)
+                    if items.root_of(t) == items.AMMO:
+                        # Range-only crossbow/flare copies retain their own
+                        # rounds; these never become obtainable public items.
+                        from training import ammo as range_ammo
+                        self.assertIn(t, range_ammo.EXTRA_SOURCES)
+                        with self.assertRaises(ValueError):
+                            self.s.inv.create(t)
+                    else:
+                        self.assertGreater(row[1], 17)
+                        self.assertLessEqual(inventory.item_level(t), 20)
                 self.assertFalse(items.retired(t))
         self.unchanged()
 

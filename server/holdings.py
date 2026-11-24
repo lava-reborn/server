@@ -8,15 +8,17 @@ benefits until next Saturday 19:55, five minutes before the battle. Each week ne
 and payment. The master and three bodyguards arrive at the weekly battle
 start, independently of surviving outer guards. One clan may reserve/lease
 one base; warehouses do not count.
-Bases keep ten ordinary guards between battles, immune to the paid clan.
+Bases keep ten ordinary guards between battles, immune to the captured clan.
 The master and bodyguards stand only during the weekly battle window.
 The ordinary guards return five minutes after death; the existing
 boss checkpoints also hold that deadline across restarts. Capture waves do
 not respawn, including after an early payment in the same battle window.
 At least three living clan members of the site's minimum level must be in
-the boss's room at the kill, each having hurt him. Capture and weekly
-boss-death record commit at the kill, before the corpse timer. Everything
-below describes the existing warehouses unless it explicitly names a base.
+the boss's room at the kill, each having hurt him. Only the killing blow's
+clan can win a base. The three contributors include the killer when eligible.
+Capture and the weekly boss-death record commit at the kill, before the
+corpse timer. Everything below describes the existing warehouses unless it
+explicitly names a base.
 
 Warehouse gold is a separate native box service: existing 1/5 G ingots,
 3 G in Halfa, 5 G in Dongola, 7 G in Abu. The same ownership, 24-hour
@@ -670,18 +672,20 @@ def snapshot(rc, mob, killer):
             "fighters": fighters, "killer": killer_char, "killer_clan": killer_clan}
 
 
-def winner(snap, squad, min_level, excluded=(), require_harm=True):
+def winner(snap, squad, min_level, excluded=(), require_harm=True, last_hit=False):
     """(clan, its name, the harm counted, the member credited) of the clan
     that takes the site by this kill, or None (the module's docstring): of
     the clans with `squad` members in the room, alive, at min_level or
     above (each with harm unless require_harm is false), the one with the
     most harm of all its members in the room, capped at the boss's health and stamina; a tie to
     the killing blow's clan, else the lowest id. Credited is the killer when
-    he is of it, else its member with the most harm."""
+    he is of it, else its member with the most harm. Bases set last_hit:
+    only the killing blow's clan may qualify, with no fallback winner."""
     totals, squads, names, best_of = {}, {}, {}, {}
     for f in snap["fighters"]:
         clan = f["clan"]
-        if clan is None or clan in excluded or not f["here"]:
+        if (clan is None or clan in excluded or not f["here"]
+                or (last_hit and clan != snap["killer_clan"])):
             continue
         totals[clan] = totals.get(clan, 0.0) + f["harm"]
         names[clan] = f["clan_name"]
@@ -732,6 +736,9 @@ def _base_capture_message(s, snap, won, member, excluded, status):
         return ("Клан уже владеет другой базой или ещё может оплатить её аренду. "
                 "Одновременно можно владеть одной клановой базой; склады не учитываются.")
     if status == 'none':
+        if clan != snap['killer_clan'] or clan is None:
+            return ("База не захвачена вашим кланом: право захвата получает только клан "
+                    "добившего хозяина, если минимум три его живых участника нужного уровня нанесли урон.")
         qualified = sum(f['clan'] == clan and f['here'] and f['alive']
                         and f['level'] >= s.min_level and f['harm'] > 0
                         for f in snap['fighters']) if clan is not None else 0
@@ -758,7 +765,7 @@ def settle(rc, mob):
     if s.kind == "base":
         excluded = {f["clan"] for f in snap["fighters"] if f["clan"] is not None
                     and store.base_reserved(f["clan"], base_keys(), snap["at"], s.key)}
-        won = winner(snap, BASE_SQUAD, s.min_level, excluded)
+        won = winner(snap, BASE_SQUAD, s.min_level, excluded, last_hit=True)
         # A base's capture and the boss's weekly death survive together,
         # before the corpse timer. Warehouses keep their established path.
         with storage.atomic(store.db):

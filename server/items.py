@@ -986,6 +986,9 @@ ARTICLE_GOLD_PRICE = {2649: 200, 2650: 250,           # DnLoteryKey_g_9_10, _g_1
                       2651: 300,                      # DnLoteryKey_g_13_14
                       2654: 300, 2655: 350, 3575: 450,  # AhLoteryKey_g_15_16, _17_18, _19_19
                       1567: 25, 1639: 10,             # ah_ticket, ah_dongola_ticket_g
+                      # Plus is the stronger dose above MK IX. Scale its
+                      # price by the bonus, rounded up to the next 0.05 G.
+                      4935: 200, 4936: 220, 4956: 220,  # Salus MK IX/+, Anesthetic +
                       6294: 10, 6295: 100, 6296: 1000}  # kupon_ammo_20, _300, _5000
 GOLD_PRICE_ONLY = frozenset({1333}) | GOLD_LINE_BLUEPRINTS | frozenset(ARTICLE_GOLD_PRICE)
 
@@ -1050,6 +1053,7 @@ def gold_round(p):
 # RECOVERED.
 CRAT_TOOLS = (7025, 7026, 7027, 7028, 7029, 7036, 7037, 7038, 7039, 7040, 7041, 7042)
 OWN_ARTICLE_PRICE = {1307: 500,
+                     4934: 84000,                   # Salus MK IX above MK VIII
                      6544: 100, 6545: 150,          # ticket_WH_to_Abri, ticket_Abri_to_WH
                      6546: 100, 6547: 110,          # ticket_Abri_to_DN, ticket_DN_to_Abri
                      2646: 1000, 2647: 1700,        # DnLoteryKey_9_10, _11_12

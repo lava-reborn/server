@@ -167,12 +167,34 @@ class BaseTrade(unittest.TestCase):
 
     def test_minimum_purchase_cut_is_one_afro_or_cent_and_never_free(self):
         for gold in (False, True):
-            for unit, expected in ((1, 1), (2, 1), (4, 3), (9, 8), (10, 9)):
-                si = dict(cost=unit, g_cost=unit, sell_num=1)
-                self.assertEqual(inventory.buy_price(si, items.HEAL, 1, gold, .9), expected)
-            si = dict(cost=2, g_cost=2, sell_num=1)
-            self.assertEqual(inventory.buy_price(si, items.AMMO, 1, gold, .9), 2)
-            self.assertEqual(inventory.buy_price(si, items.AMMO, 2, gold, .9), 4)
+            for root in (items.AMMO, items.HEAL):
+                for unit, expected in ((1, 1), (2, 1), (4, 3), (9, 8), (10, 9), (13, 12), (100, 90)):
+                    si = dict(cost=unit, g_cost=unit, sell_num=1)
+                    for count in (1, 2, 10, 5000):
+                        self.assertEqual(inventory.buy_price(si, root, count, gold, .9), expected * count)
+                        self.assertEqual(inventory.buy_price(si, root, count, gold), unit * count)
+
+    def test_minimum_unit_discounts_cannot_fund_resale_at_any_buyer(self):
+        rate = progression.GOLD_TO_AFRO_RATE / progression.GOLD_OUNCE
+        for tid, gold in ((6116, False), (6164, True), (6055, False), (7100, True)):
+            params = dict(items.params_of(tid), cost=0 if gold else 2,
+                          g_cost=2 if gold else 0, sell_num=1, sell_mod=1)
+            prices = []
+            for share in (gold_trade.NPC_SALE_SHARE, gold_trade.BASE_SALE_SHARE):
+                unit = (gold_trade.sale_unit(tid, params, share) if gold else
+                        gold_trade.afro_sale_unit(tid, params, share))
+                prices.append(unit)
+                for count in (1, 2, 10, 5000):
+                    paid = inventory.buy_price(params, items.root_of(tid), count, gold, .9)
+                    paid *= rate if gold else 1
+                    self.assertLessEqual(max(1, math.floor(unit * count)), paid)
+                    self.assertLessEqual(count * max(1, math.floor(unit)), paid)
+            self.assertGreaterEqual(prices[1], prices[0])
+
+    def test_safe_resale_below_the_discounted_purchase_price_is_unchanged(self):
+        params = dict(items.params_of(6116), cost=6, g_cost=0, sell_num=1, sell_mod=1)
+        self.assertEqual(gold_trade.afro_sale_unit(6116, params), 4.2)
+        self.assertEqual(gold_trade.afro_sale_unit(6116, params, gold_trade.BASE_SALE_SHARE), 5)
 
     def setUp(self):
         fixtures.GoldCommerce.setUp(self)
@@ -348,9 +370,7 @@ class BaseTrade(unittest.TestCase):
                         if root == items.AMMO:
                             precision = 1 if gold else 1000
                             unit = math.floor(unit * precision + .5) / precision
-                        expected = math.ceil(unit * n * .9)
-                        if unit * n > 1 and root != items.AMMO:
-                            expected = max(1, min(expected, math.ceil(unit * n) - 1))
+                        expected = max(1, min(math.ceil(unit * .9), math.ceil(unit) - 1)) * n
                         before = self.store.money(self.cid)
                         self.frames.clear()
                         command, request = protocol.decode(protocol.encode('ss_upd',
@@ -493,7 +513,7 @@ class BaseTrade(unittest.TestCase):
                     if gold_trade.gold_priced(t, p):
                         unit = gold_trade.sale_unit(t, p, gold_trade.BASE_SALE_SHARE)
                     else:
-                        unit = p['cost'] * 0.85 * p.get('sell_mod', 1) / (p.get('sell_num') or 1)
+                        unit = gold_trade.afro_sale_unit(t, p, gold_trade.BASE_SALE_SHARE)
                     for n in ns:
                         for gold, key in ((False, 'cost'), (True, 'g_cost')):
                             if p.get(key, 0) <= 0:
@@ -526,7 +546,10 @@ class BaseTrade(unittest.TestCase):
         rate = progression.GOLD_TO_AFRO_RATE / progression.GOLD_OUNCE
         for trader, gold in ((714, False), (714, True)):
             self.open(trader)
-            t = next(t for t in items.stock_for(trader, 609) if items.root_of(t) == items.AMMO and bool(items.params_of(t).get('g_cost')) == gold)
+            candidates = [t for t in items.stock_for(trader, 609) if items.root_of(t) == items.AMMO
+                          and bool(items.params_of(t).get('g_cost')) == gold]
+            t = max(candidates, key=lambda t: inventory.buy_price(items.params_of(t), items.AMMO, 1, gold)
+                    / inventory.buy_price(items.params_of(t), items.AMMO, 1, gold, .9))
             for _ in range(3):
                 before = self.store.money(self.cid)
                 self.assertEqual(self.buy(t, 20, gold), [0])

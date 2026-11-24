@@ -72,13 +72,13 @@ class GoldCommerceClient(unittest.TestCase):
 
     def test_discounted_a_g_consumable_cards_show_exact_purchase_total(self):
         cases = (
-            (2, True, 4, 1, .03), (2, True, 4, 10, .36), (2, True, 1, 1, .01),
-            (2, False, 13, 1, 12), (2, False, 13, 10, 117),
+            (2, True, 4, 1, .03), (2, True, 4, 10, .30), (2, True, 1, 1, .01),
+            (2, False, 13, 1, 12), (2, False, 13, 10, 120),
             (2, False, 9, 1, 8), (2, False, 2, 1, 1), (2, False, 1, 1, 1),
             (2, True, 2, 1, .01),
-            (3, True, 2, 1, .02), (3, True, 2, 100, 1.8),
-            (3, True, 1, 1, .01), (3, True, 1, 100, .9),
-            (3, False, .65, 1, 1), (3, False, .65, 100, 59),
+            (3, True, 2, 1, .01), (3, True, 2, 100, 1),
+            (3, True, 1, 1, .01), (3, True, 1, 100, 1),
+            (3, False, .65, 1, 1), (3, False, .65, 100, 100),
         )
         for root, gold, price, count, expected in cases:
             with self.subTest(root=root, gold=gold, price=price, count=count):
@@ -103,15 +103,14 @@ class GoldCommerceClient(unittest.TestCase):
         item['rootID'] = 2
         self.methods['createExchangePan'].invoke(ui, [item, '', .9, True, False])
         self.assertEqual(float(exchange['money_mc']['info_txt']['text']), .03)
-        for count, expected in ((2, .07), (10, .36)):
+        for count, expected in ((2, .06), (10, .30)):
             exchange['rightNum'] = count
             exchange['countMoney']()
             self.assertEqual(float(exchange['money_mc']['info_txt']['text']), expected)
-        # The same cheap ammunition cannot gain the minimum-cent cut:
-        # a single 0.02 G round stays 0.02 G; 100 cost 1.80 G.
+        # The minimum cut applies to each cartridge, including bulk buys.
         exchange['__gcBuyRoot'] = 3
         exchange['cost_num'] = 2
-        for count, expected in ((1, .02), (100, 1.8)):
+        for count, expected in ((1, .01), (100, 1)):
             exchange['rightNum'] = count
             exchange['countMoney']()
             self.assertEqual(float(exchange['money_mc']['info_txt']['text']), expected)
@@ -119,8 +118,8 @@ class GoldCommerceClient(unittest.TestCase):
     def test_base_stock_tooltips_show_local_unit_and_stack_prices_without_changing_nominal(self):
         self.pan['trader'] = dict(pmod=.9, type_list=Arr([60011]))
         for root, gold, price, count, unit, stack in (
-                (2, True, 4, 10, .03, .36), (2, False, 13, 10, 12, 117),
-                (3, True, 1, 5000, .01, 45), (3, False, .65, 100, 1, 59)):
+                (2, True, 4, 10, .03, .30), (2, False, 13, 10, 12, 120),
+                (3, True, 1, 5000, .01, 50), (3, False, .65, 100, 1, 100)):
             with self.subTest(root=root, gold=gold):
                 item = self.item(cost=0 if gold else price, g_cost=price if gold else 0, size=count)
                 item.update(rootID=root, typeID=60011, tradeID=0)

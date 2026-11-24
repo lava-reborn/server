@@ -10,6 +10,7 @@ import progression
 import quests
 import repair_policy
 import restore_policy
+import shop_prices
 
 
 # The legacy-blueprint ceiling is a pricing decision, independent of future level caps.
@@ -111,15 +112,42 @@ def _sent_unit(value):
     return int(value) if value.denominator == 1 else float('%.6g' % float(value))
 
 
+def cap_consumable_sale(type_id, params, share, unit):
+    """No buy/sell profit after the base's minimum per-piece discount.
+
+    Preserve safe prices; cap profitable routes using the ordinary/base ratio.
+    Ammo uses the same rounded unit as its native purchase window.
+    """
+    root = items.root_of(type_id)
+    if root not in (items.AMMO, items.HEAL):
+        return unit
+    prices = []
+    for key, conversion in (('cost', 1), ('g_cost', Fraction(
+            progression.GOLD_TO_AFRO_RATE, progression.GOLD_OUNCE))):
+        cost = params.get(key, 0) or 0
+        if cost <= 0:
+            continue
+        purchase_unit = Fraction(str(cost)) / Fraction(str(params.get('sell_num') or 1))
+        if root == items.AMMO:
+            precision = 1 if key == 'g_cost' else 1000
+            purchase_unit = Fraction(math.floor(purchase_unit * precision + Fraction(1, 2)), precision)
+        cheapest = shop_prices.discounted_unit(float(purchase_unit))
+        prices.append(Fraction(cheapest) * conversion)
+    if not prices or unit <= min(prices):
+        return unit
+    return min(unit, min(prices) * share / BASE_SALE_SHARE)
+
+
 def afro_sale_unit(type_id, params, share=NPC_SALE_SHARE):
-    """Healthy A-gear payout; purchase/repair prices retain their own fields."""
-    if (items.root_of(type_id) not in items.BREAKABLE_ROOTS
+    """Healthy A-gear/consumable payout; purchase and repair fields stay separate."""
+    if (items.root_of(type_id) not in (*items.BREAKABLE_ROOTS, items.HEAL, items.AMMO)
             or params.get("quest") or gold_priced(type_id, params)
             or params.get("cost", 0) <= 0):
         return 0
     unit = (Fraction(str(params['cost'])) * share
             * Fraction(str(params.get('sell_mod', 1)))
             / Fraction(str(params.get('sell_num') or 1)))
+    unit = cap_consumable_sale(type_id, params, share, unit)
     return _sent_unit(max(Fraction(0), unit))
 
 
@@ -131,11 +159,6 @@ def sale_unit(type_id, params, share=NPC_SALE_SHARE):
     if protected(type_id, params) or not gold_priced(type_id, params):
         return 0
     nominal = Fraction(str(params['g_cost']))
-    # The base's minimum one-cent medicine discount must not fund resale.
-    # This caps buyback, without changing any catalogue purchase price.
-    if items.root_of(type_id) == items.HEAL and nominal > 1:
-        cheapest = max(1, min(math.ceil(nominal * Fraction(9, 10)), math.ceil(nominal) - 1))
-        nominal = min(nominal, Fraction(cheapest) / BASE_SALE_SHARE)
     # Buying a finished lab pouch skips five personal daily parts. That
     # convenience premium must not become cash when crafting it instead.
     # Keep ordinary/base buyback tied to the two wearable ingredients.
@@ -155,6 +178,7 @@ def sale_unit(type_id, params, share=NPC_SALE_SHARE):
         unit = min(unit, Fraction(str(params['cost'])) * share)
     sell_mod = min(Fraction(1), Fraction(str(params.get('sell_mod', 1))))
     unit *= sell_mod / Fraction(str(params.get('sell_num') or 1))
+    unit = cap_consumable_sale(type_id, params, share, unit)
     level = blueprint_level(type_id)
     if level is not None:
         if level > BLUEPRINT_SALE_MAX_LEVEL:

@@ -1020,7 +1020,9 @@ def buy_price(si, root, n, gold=False, pmod=PMOD):
     doubles in the same order here, so 5000 rounds cost what the window
     printed; cost * n / sell_num worked out in one go would part from it by
     the rounding of the unit and, over thousands, by a float's last bit.
-    Anything else goes one at a time at its own price times pmod.
+    Paid-base consumables have a discounted whole-currency UNIT price;
+    buying a stack or separate pieces costs the same. Other stalls retain
+    their native pack/quantity rounding.
     """
     per = as_sent(si["g_cost"] if gold else si["cost"])
     if root == items.AMMO:
@@ -1028,10 +1030,10 @@ def buy_price(si, root, n, gold=False, pmod=PMOD):
         unit = js_round(per / sell) if gold else js_round(per * 1000 / sell) / 1000
     else:
         unit = per / float(si.get("sell_num", 1) or 1)
-    price = int(math.ceil(unit * n * as_sent(pmod)))
-    if root != items.AMMO and 0 < as_sent(pmod) < 1 and unit * n > 1:
-        price = max(1, min(price, math.ceil(unit * n) - 1))
-    return price
+    if root in (items.AMMO, items.HEAL) and 0 < as_sent(pmod) < 1:
+        import shop_prices
+        return shop_prices.discounted_unit(unit, as_sent(pmod)) * n
+    return int(math.ceil(unit * n * as_sent(pmod)))
 
 
 class TradeSession:

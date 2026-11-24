@@ -94,10 +94,12 @@ class BuffEconomy(unittest.TestCase):
         self.s.room.loc = self.s.loc
         self.inv.trade = inventory.TradeSession(1, 123, 36)
         request, quote = self.quote(ammo, 5000)
-        self.assertEqual(quote['price'], 3500000)
+        # Minimum one-cent base rounds must not be bought and resold for
+        # more; historical coupons keep the reward, using the same buyback.
+        self.assertEqual(quote['price'], 2058825)
         self.assertEqual(self.confirmed(request, quote), 0)
         self.assertNotEqual(self.confirmed(request, quote), 0)
-        self.assertEqual(self.store.money(self.cid), (3500000, 10000))
+        self.assertEqual(self.store.money(self.cid), (2058825, 10000))
 
     def test_small_existing_coupons_keep_their_exact_redemption_quantities(self):
         for coupon, count in ((6294, 20), (6295, 300)):

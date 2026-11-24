@@ -21,6 +21,29 @@ class ArchivedBuffs(unittest.IsolatedAsyncioTestCase):
     asyncTearDown = fixtures.TrainingGround.asyncTearDown
     manager = TimedItems.manager
 
+    async def test_salus_eight_bonus_duration_consumption_and_tooltip_agree(self):
+        manager = self.manager()
+        fighter = self.s.combat
+        self.s.char.skill[p.SHOOTING][0] = 17
+        baseline = self.s.char.hp_max
+        self.s.writer.frames.clear()
+        self.assertTrue(manager.static(effects.FIRST + 4932))
+        card = next(data for cmd, data in (decode(frame[:-1]) for frame in self.s.writer.frames)
+                    if cmd == 'e_si')
+        self.assertEqual((card['max_hp'], card['work_time']), (225, 4800 * 1000))
+        row = self.s.inv.create(4932)
+        effects.activate(fighter, row['uniq'], fighter, 0)
+        self.assertIsNone(self.store.item(row['uniq']))
+        self.assertEqual(self.s.char.hp_max, baseline + 225)
+        active = next(iter(manager.active.values()))
+        self.assertEqual(active.deadline - active.started, 4800)
+        manager.close()
+        manager.load()
+        self.assertEqual(self.s.char.hp_max, baseline + 225)
+        with patch.object(manager, 'clock', return_value=active.deadline + 1):
+            manager.refresh()
+        self.assertEqual(self.s.char.hp_max, baseline)
+
     async def test_alpha_changes_only_crit_and_omega_only_anticrit_in_real_fights(self):
         manager = self.manager()
         f = self.s.combat

@@ -77,10 +77,10 @@ def __gcSaleUnit(item):
     return unit
 
 def __gcBuyTotal(price, count, modifier, root, gold):
-    total = Math.ceil(price * count * modifier)
-    if modifier > 0 and modifier < 1 and price * count > 1 and root != 3:
-        total = Math.max(1, Math.min(total, Math.ceil(price * count) - 1))
-    return total
+    if modifier > 0 and modifier < 1 and (root == 2 or root == 3):
+        unit = Math.max(1, Math.min(Math.ceil(price * modifier), Math.ceil(price) - 1))
+        return unit * count
+    return Math.ceil(price * count * modifier)
 
 def __gcBaseBuyPrice(item, count):
     pan = lol.core.SceneShifter._ref.UIPanels.trade.instance.content
