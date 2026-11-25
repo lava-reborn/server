@@ -3,6 +3,7 @@
 The sequence and the frame shapes come from lol/core/Session.as,
 lol/core/player/PersGenerator.as and lol/core/Master.as.
 """
+import math
 import os
 import threading
 import socket
@@ -339,7 +340,9 @@ try:
     # marks frame, empty or not.
     check("leaving for the map", [f.split(";")[0] for f in got],
           ["cmdAck", "gmap", "marks"])
-    check("map position sent", "x=5970;y=1730;" in got[1], True)
+    point = decode(got[1])[1]
+    check("map position sent", (math.floor(point["x"]), math.floor(point["y"])),
+          (5970, 1730))
     check("marks initialised", got[2], "marks;dxdy=|;title=|;info=|;")
 
     # The same command goes both ways: the client's map and location screens
@@ -353,7 +356,7 @@ try:
     c.send("lenter;accept=1;")
     c.frames(wait=2)
     c.send("chWorld;")
-    c.frames()
+    point = decode(c.frames()[1])[1]
 
     # Offsets there are hundredths of a cell. moveAck only sets a velocity, so
     # the client extrapolates and the server has to time the arrival itself and
@@ -366,7 +369,9 @@ try:
     got = c.frames(wait=5)
     check("arrival confirmed", got and got[0].split(";")[0] == "userMove", True)
     check("stopped on arrival", "vx=0;vy=0;" in got[0], True)
-    check("moved one cell west", "dx=5969;" in got[0], True)
+    stopped = decode(got[0])[1]
+    check("moved one cell west", (stopped["dx"], stopped["dy"]),
+          (round(point["x"] - 1, 2), point["y"]))
 
     # Coming back onto the settlement must NOT pull the player in: a cell is
     # wide enough that any short hop near one would land inside it, and the
@@ -415,8 +420,9 @@ try:
     # Leaving goes back to that cell, not to wherever the session started.
     c.send("chWorld;")
     got = c.frames()
+    point = decode(got[1])[1]
     check("leaving returns to the cell walked in from",
-          "x=5969;y=1730;" in got[1], True)
+          (math.floor(point["x"]), math.floor(point["y"])), (5969, 1730))
 
     # --- travel by name ---------------------------------------------------
     # Most of the 1381 locations are interiors the map cannot reach: an

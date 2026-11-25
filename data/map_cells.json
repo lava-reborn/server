@@ -56,87 +56,1602 @@
   "6220,1947": "The owner's cut of Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»: the cut of Абри's and Донгола's kinds), decision 10 of its plan (the clan bases go as Liberty, Blackwater, KKND and Донгола's three did): the dark red square with a white centre of «База Доктора \"Д\"» (see 6219,1947). Tile 15554.",
   "6111,2002": "The owner's cut of Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»: the cut of Абри's and Донгола's kinds), decision 10 of its plan (the clan bases go as Liberty, Blackwater, KKND and Донгола's three did): a clan base's pair of squares with no name and no letters, by the Nile south-west of Абу-Хамед: this one dark red with a white centre, as every base's. No file of it is known. Tile 16062.",
   "6112,2002": "The owner's cut of Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»: the cut of Абри's and Донгола's kinds), decision 10 of its plan (the clan bases go as Liberty, Blackwater, KKND and Донгола's three did): the green square with a black centre of the same nameless pair (see 6111,2002). Tile 16063.",
-  "6137,1879": "The owner's cut of Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»: the cut of Абри's and Донгола's kinds), decision 10 of its plan: a green mark with no name over it in the desert north of the town, as Абри's green mark the owner had taken off (2026-10-12, «зеленая метка, её тоже убрать»). No file stands on the cell. Tile 15039."
+  "6137,1879": "The owner's cut of Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»: the cut of Абри's and Донгола's kinds), decision 10 of its plan: a green mark with no name over it in the desert north of the town, as Абри's green mark the owner had taken off (2026-10-12, «зеленая метка, её тоже убрать»). No file stands on the cell. Tile 15039.",
+  "6032,1957": "Owner correction, 2026-11-22: erase both historical NeutralClan squares.",
+  "6033,1957": "Owner correction, 2026-11-22: erase both historical NeutralClan squares."
  },
  "captions": [
-  {"was": "Кланбаза KKND", "boxes": [[47879, 14049, 47920, 14057], [47879, 14058, 47910, 14067]],
-   "why": "The owner's cut of Вади-Хальфа, 2026-10-09 («а также кланбазу KKND»): the two lines of letters «Кланбаза / KKND» painted above the base's square at 5984,1759 (cells 5984..5989, 1756..1758), tile 14011, a box a line with its light rim. The dark stone right of the first line's end (47918..47922, 14058..14061) is the photograph's and stays."},
-  {"was": "База Liberty", "boxes": [[49996, 15833, 50048, 15841], [50041, 15842, 50046, 15843]],
-   "why": "The owner's cut of Абри, 2026-10-12 («убери кланбазу Либерти»): the letters «База Liberty» painted right of the base's squares at 6248,1979-1980 by Абу-Хамед (cells 6249..6256, 1979..1980), tile 15811: the line with its light rim, and the tail of its «y» below. Measured on the luminance of the tile; the dark stone under the tail (50040..50042, 15845..15849) is the photograph's and stays. Абри's own mark of the base (5906,1888-1889) has no letters."},
-  {"was": "Лагерь", "boxes": [[47553, 13785, 47583, 13793], [47572, 13794, 47575, 13795]],
-   "why": "The owner's cut of the camps across the river, 2026-10-12 («убери во всех городах лагеря за рекой»): the letters «Лагерь» painted right of the green square of Вади-Хальфа's resistance camp 429 on 5943,1723 (cells 5944..5947, 1723), tile 13753: the line with its light rim, and the tail of its «р» below. Measured on the luminance of the tile."},
-  {"was": "Лагерь", "boxes": [[46809, 14807, 46839, 14815], [46828, 14816, 46831, 14817]],
-   "why": "The same order: the letters «Лагерь» right of the green square of Абри's resistance camp 430 on 5850,1851 (cells 5851..5854, 1851), on the island's shore, tile 14774: the line with its light rim, and the tail of its «р». The river's dark bank right of the last letter (46840 on) is the photograph's and stays."},
-  {"was": "Лагерь", "boxes": [[46921, 16016, 46951, 16024], [46940, 16025, 46944, 16026]],
-   "why": "The same order: the letters «Лагерь» right of the green square of Донгола's resistance camp 431 on 5864,2002 (cells 5865..5868, 2002), over the river's red bank, tile 16055: the line with its light rim, and the tail of its «р». The square's dotted outline left of the first letter goes with the square."},
-  {"was": "Поселок", "boxes": [[47489, 13687, 47525, 13697]],
-   "why": "The owner's cut of everything across the river, 2026-10-13 («все локации за рекой не нужны»): the letters «Поселок» painted right of the village's dark red square on 5935,1711 (the hidden «Штаб Север»), across the lake from Вади-Хальфа, tile 13753: the line with its light rim and a pixel of ground round it; the tail of the zone 429's second arrow under the end of the letters goes with them. The zone leaves these letters (its 'letters'), and they are painted over after it, on the picture without the zone. Measured on the luminance of the tile."},
-  {"was": "Поселок", "boxes": [[46732, 14710, 46771, 14720]],
-   "why": "The owner's cut of everything across the river, 2026-10-13 («все локации за рекой не нужны»): the letters «Поселок» right of the village's dark red square on 5840,1839 (the hidden «Штаб Северо-Запад»), on the far bank opposite Абри, tile 14774: the line with its light rim and a pixel of ground round it, with the bit of the zone 430's arrow under its «к». The zone leaves these letters, and they are painted over after it."},
-  {"was": "Поселок", "boxes": [[46809, 15991, 46845, 16001]],
-   "why": "The owner's cut of everything across the river, 2026-10-13 («все локации за рекой не нужны»): the letters «Поселок» right of the village's dark red square on 5850,1999 (the hidden «Штаб Центр»), across the Nile from Донгола, tile 16054 (the zone's seam where the tiles meet, 46847-46848, is past their end): the line with its light rim and a pixel of ground round it, over the red bank."},
-  {"was": "Частный остров / Господина ПэЖэ", "boxes": [[46962, 16002, 47031, 16011], [46961, 16011, 47034, 16020]],
-   "why": "The owner's cut of everything across the river, 2026-10-13 («все локации за рекой не нужны»): the two lines of letters «Частный остров / Господина ПэЖэ» painted over the island in the Nile by Донгола and the banks either side of it, above the clan base Le_Mon's two squares on 5871,2003-2004 (cells), tile 16055: a box a line with its light rim. The base's files are out of the game (data/retired.json places); the green pair right below the second line's end (5876,2004 and 5877,2004, «Памятник Воину-Освободителю» and «Место падения спутника») is on Донгола's bank and stays. Measured on the luminance of the tile; the river's dark water left of the first letters (46961 and west) is the photograph's and stays. The boxes run across the island's channels and strips, so they are painted in strips from the ground straight above and below them (server/map_cells.py, paint_strips)."},
-  {"was": "База Хогвартс", "boxes": [[47436, 15796, 47456, 15804], [47436, 15804, 47475, 15812], [47460, 15812, 47463, 15814]],
-   "why": "The owner's cut of Донгола, 2026-10-13 («и потом сделай донголу тоже»: the cut of Абри's kinds), decision 10 of its plan (the clan bases go as Абри's Liberty and Blackwater did): the two lines of letters «База / Хогвартс» painted right of the base's squares at 5927-5928,1976 (cells 5929..5934, 1974..1976), tile 15801: a box a line, with its light rim, and the tail of the «р». Measured on the picture (pixels of the letters 47437-47474 by 15797-15813)."},
-  {"was": "База Врачи без границ", "boxes": [[47511, 16024, 47531, 16032], [47510, 16032, 47584, 16040], [47516, 16040, 47519, 16042], [47556, 16040, 47559, 16042]],
-   "why": "The owner's cut of Донгола, 2026-10-13 («и потом сделай донголу тоже»: the cut of Абри's kinds), decision 10 of its plan (the clan bases go as Абри's Liberty and Blackwater did): the two lines of letters «База / Врачи без границ» painted right of the base's squares at 5936-5937,2004 (cells 5938..5948, 2003..2005), tile 16057: a box a line, with its light rim, and the tails of the «р» and the «ц». Measured on the picture (pixels of the letters 47511-47583 by 16025-16041)."},
-  {"was": "База Delta Force", "boxes": [[47661, 16246, 47681, 16254], [47661, 16254, 47707, 16262]],
-   "why": "The owner's cut of Донгола, 2026-10-13 («и потом сделай донголу тоже»: the cut of Абри's kinds), decision 10 of its plan (the clan bases go as Абри's Liberty and Blackwater did): the two lines of letters «База / Delta Force» painted right of the base's squares at 5955-5956,2030-2032 (cells 5957..5963, 2030..2032), tile 16314: a box a line, with its light rim. Measured on the picture (pixels of the letters 47662-47706 by 16247-16261)."},
-  {"was": "База Смерш", "boxes": [[49023, 15841, 49076, 15849], [49060, 15849, 49064, 15851]],
-   "why": "The owner's cut of Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»: the cut of Абри's and Донгола's kinds), decision 10 of its plan (the clan bases go as Liberty, Blackwater, KKND and Донгола's three did): the letters «База Смерш» painted right of the base's squares at 6126,1980-1981 (cells 6127..6134, 1980), tile 15807: the line with its light rim, and the tail of its «р» below. Measured on the picture (pixels of the letters 49024-49074 by 15842-15850); the dark stone right of the line's end (49100..49102, 15839..15843) is the photograph's and stays."},
-  {"was": "База ВЭС", "boxes": [[49412, 15564, 49432, 15572], [49412, 15572, 49432, 15581]],
-   "why": "The owner's cut of Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»: the cut of Абри's and Донгола's kinds), decision 10 of its plan (the clan bases go as Liberty, Blackwater, KKND and Донгола's three did): the two lines of letters «База / ВЭС» painted right of the base's squares at 6174-6175,1946 (cells 6176..6178, 1945..1947), tile 15553: a box a line, with its light rim. Measured on the picture (pixels of the letters 49413-49431 by 15565-15579)."},
-  {"was": "База Zeon", "boxes": [[48648, 15811, 48690, 15819]],
-   "why": "The owner's cut of Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»: the cut of Абри's and Донгола's kinds), decision 10 of its plan (the clan bases go as Liberty, Blackwater, KKND and Донгола's three did): the letters «База Zeon» painted below the base's squares at 6081-6082,1975 (cells 6081..6086, 1976), tile 15806: the line with its light rim. The plan named the base's squares and missed its letters. Measured on the picture (pixels of the letters 48649-48688 by 15812-15818); the dark streak of ground left of the first letter (48644-48647) is the photograph's and stays."},
-  {"was": "Заброшенная база - бункер", "boxes": [[49248, 15698, 49303, 15707], [49248, 15707, 49301, 15715], [49276, 15715, 49280, 15717], [49293, 15715, 49298, 15717]],
-   "why": "The owner's cut of Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»: the cut of Абри's and Донгола's kinds), decision 11 of its plan: the two lines of letters «Заброшенная / база - бункер» painted right of the abandoned clan base's square at 6154,1963 (which goes with the retired cell of 118), cells 6156..6162, 1962..1964, tile 15808: a box a line, with its light rim, and the tails of the «у» and the «р». The plan named the base's square and missed its letters. Measured on the picture (pixels of the letters 49249-49302 by 15699-15716)."},
-  {"was": "База Доктора \"Д\"", "boxes": [[49773, 15576, 49845, 15584], [49793, 15584, 49799, 15586], [49818, 15584, 49822, 15586], [49831, 15584, 49840, 15586]],
-   "why": "The owner's cut of Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»: the cut of Абри's and Донгола's kinds), decision 10 of its plan (the clan bases go as Liberty, Blackwater, KKND and Донгола's three did): the letters «База Доктора \"Д\"» painted right of the base's squares at 6219-6220,1947 (cells 6221..6230, 1947), tile 15554: the line with its light rim, and the feet of its two «Д» and the tail of its «р» below. Measured on the picture (pixels of the letters 49774-49844 by 15577-15585); the «Горные тропы» left of the squares stay."}
+  {
+   "was": "Кланбаза KKND",
+   "boxes": [
+    [
+     47879,
+     14049,
+     47920,
+     14057
+    ],
+    [
+     47879,
+     14058,
+     47910,
+     14067
+    ]
+   ],
+   "why": "The owner's cut of Вади-Хальфа, 2026-10-09 («а также кланбазу KKND»): the two lines of letters «Кланбаза / KKND» painted above the base's square at 5984,1759 (cells 5984..5989, 1756..1758), tile 14011, a box a line with its light rim. The dark stone right of the first line's end (47918..47922, 14058..14061) is the photograph's and stays."
+  },
+  {
+   "was": "База Liberty",
+   "boxes": [
+    [
+     49996,
+     15833,
+     50048,
+     15841
+    ],
+    [
+     50041,
+     15842,
+     50046,
+     15843
+    ]
+   ],
+   "why": "The owner's cut of Абри, 2026-10-12 («убери кланбазу Либерти»): the letters «База Liberty» painted right of the base's squares at 6248,1979-1980 by Абу-Хамед (cells 6249..6256, 1979..1980), tile 15811: the line with its light rim, and the tail of its «y» below. Measured on the luminance of the tile; the dark stone under the tail (50040..50042, 15845..15849) is the photograph's and stays. Абри's own mark of the base (5906,1888-1889) has no letters."
+  },
+  {
+   "was": "Лагерь",
+   "boxes": [
+    [
+     47553,
+     13785,
+     47583,
+     13793
+    ],
+    [
+     47572,
+     13794,
+     47575,
+     13795
+    ]
+   ],
+   "why": "The owner's cut of the camps across the river, 2026-10-12 («убери во всех городах лагеря за рекой»): the letters «Лагерь» painted right of the green square of Вади-Хальфа's resistance camp 429 on 5943,1723 (cells 5944..5947, 1723), tile 13753: the line with its light rim, and the tail of its «р» below. Measured on the luminance of the tile."
+  },
+  {
+   "was": "Лагерь",
+   "boxes": [
+    [
+     46809,
+     14807,
+     46839,
+     14815
+    ],
+    [
+     46828,
+     14816,
+     46831,
+     14817
+    ]
+   ],
+   "why": "The same order: the letters «Лагерь» right of the green square of Абри's resistance camp 430 on 5850,1851 (cells 5851..5854, 1851), on the island's shore, tile 14774: the line with its light rim, and the tail of its «р». The river's dark bank right of the last letter (46840 on) is the photograph's and stays."
+  },
+  {
+   "was": "Лагерь",
+   "boxes": [
+    [
+     46921,
+     16016,
+     46951,
+     16024
+    ],
+    [
+     46940,
+     16025,
+     46944,
+     16026
+    ]
+   ],
+   "why": "The same order: the letters «Лагерь» right of the green square of Донгола's resistance camp 431 on 5864,2002 (cells 5865..5868, 2002), over the river's red bank, tile 16055: the line with its light rim, and the tail of its «р». The square's dotted outline left of the first letter goes with the square."
+  },
+  {
+   "was": "Поселок",
+   "boxes": [
+    [
+     47489,
+     13687,
+     47525,
+     13697
+    ]
+   ],
+   "why": "The owner's cut of everything across the river, 2026-10-13 («все локации за рекой не нужны»): the letters «Поселок» painted right of the village's dark red square on 5935,1711 (the hidden «Штаб Север»), across the lake from Вади-Хальфа, tile 13753: the line with its light rim and a pixel of ground round it; the tail of the zone 429's second arrow under the end of the letters goes with them. The zone leaves these letters (its 'letters'), and they are painted over after it, on the picture without the zone. Measured on the luminance of the tile."
+  },
+  {
+   "was": "Поселок",
+   "boxes": [
+    [
+     46732,
+     14710,
+     46771,
+     14720
+    ]
+   ],
+   "why": "The owner's cut of everything across the river, 2026-10-13 («все локации за рекой не нужны»): the letters «Поселок» right of the village's dark red square on 5840,1839 (the hidden «Штаб Северо-Запад»), on the far bank opposite Абри, tile 14774: the line with its light rim and a pixel of ground round it, with the bit of the zone 430's arrow under its «к». The zone leaves these letters, and they are painted over after it."
+  },
+  {
+   "was": "Поселок",
+   "boxes": [
+    [
+     46809,
+     15991,
+     46845,
+     16001
+    ]
+   ],
+   "why": "The owner's cut of everything across the river, 2026-10-13 («все локации за рекой не нужны»): the letters «Поселок» right of the village's dark red square on 5850,1999 (the hidden «Штаб Центр»), across the Nile from Донгола, tile 16054 (the zone's seam where the tiles meet, 46847-46848, is past their end): the line with its light rim and a pixel of ground round it, over the red bank."
+  },
+  {
+   "was": "Частный остров / Господина ПэЖэ",
+   "boxes": [
+    [
+     46962,
+     16002,
+     47031,
+     16011
+    ],
+    [
+     46961,
+     16011,
+     47034,
+     16020
+    ]
+   ],
+   "why": "The owner's cut of everything across the river, 2026-10-13 («все локации за рекой не нужны»): the two lines of letters «Частный остров / Господина ПэЖэ» painted over the island in the Nile by Донгола and the banks either side of it, above the clan base Le_Mon's two squares on 5871,2003-2004 (cells), tile 16055: a box a line with its light rim. The base's files are out of the game (data/retired.json places); the green pair right below the second line's end (5876,2004 and 5877,2004, «Памятник Воину-Освободителю» and «Место падения спутника») is on Донгола's bank and stays. Measured on the luminance of the tile; the river's dark water left of the first letters (46961 and west) is the photograph's and stays. The boxes run across the island's channels and strips, so they are painted in strips from the ground straight above and below them (server/map_cells.py, paint_strips)."
+  },
+  {
+   "was": "База Хогвартс",
+   "boxes": [
+    [
+     47436,
+     15796,
+     47456,
+     15804
+    ],
+    [
+     47436,
+     15804,
+     47475,
+     15812
+    ],
+    [
+     47460,
+     15812,
+     47463,
+     15814
+    ]
+   ],
+   "why": "The owner's cut of Донгола, 2026-10-13 («и потом сделай донголу тоже»: the cut of Абри's kinds), decision 10 of its plan (the clan bases go as Абри's Liberty and Blackwater did): the two lines of letters «База / Хогвартс» painted right of the base's squares at 5927-5928,1976 (cells 5929..5934, 1974..1976), tile 15801: a box a line, with its light rim, and the tail of the «р». Measured on the picture (pixels of the letters 47437-47474 by 15797-15813)."
+  },
+  {
+   "was": "База Врачи без границ",
+   "boxes": [
+    [
+     47511,
+     16024,
+     47531,
+     16032
+    ],
+    [
+     47510,
+     16032,
+     47584,
+     16040
+    ],
+    [
+     47516,
+     16040,
+     47519,
+     16042
+    ],
+    [
+     47556,
+     16040,
+     47559,
+     16042
+    ]
+   ],
+   "why": "The owner's cut of Донгола, 2026-10-13 («и потом сделай донголу тоже»: the cut of Абри's kinds), decision 10 of its plan (the clan bases go as Абри's Liberty and Blackwater did): the two lines of letters «База / Врачи без границ» painted right of the base's squares at 5936-5937,2004 (cells 5938..5948, 2003..2005), tile 16057: a box a line, with its light rim, and the tails of the «р» and the «ц». Measured on the picture (pixels of the letters 47511-47583 by 16025-16041)."
+  },
+  {
+   "was": "База Delta Force",
+   "boxes": [
+    [
+     47661,
+     16246,
+     47681,
+     16254
+    ],
+    [
+     47661,
+     16254,
+     47707,
+     16262
+    ]
+   ],
+   "why": "The owner's cut of Донгола, 2026-10-13 («и потом сделай донголу тоже»: the cut of Абри's kinds), decision 10 of its plan (the clan bases go as Абри's Liberty and Blackwater did): the two lines of letters «База / Delta Force» painted right of the base's squares at 5955-5956,2030-2032 (cells 5957..5963, 2030..2032), tile 16314: a box a line, with its light rim. Measured on the picture (pixels of the letters 47662-47706 by 16247-16261)."
+  },
+  {
+   "was": "База Смерш",
+   "boxes": [
+    [
+     49023,
+     15841,
+     49076,
+     15849
+    ],
+    [
+     49060,
+     15849,
+     49064,
+     15851
+    ]
+   ],
+   "why": "The owner's cut of Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»: the cut of Абри's and Донгола's kinds), decision 10 of its plan (the clan bases go as Liberty, Blackwater, KKND and Донгола's three did): the letters «База Смерш» painted right of the base's squares at 6126,1980-1981 (cells 6127..6134, 1980), tile 15807: the line with its light rim, and the tail of its «р» below. Measured on the picture (pixels of the letters 49024-49074 by 15842-15850); the dark stone right of the line's end (49100..49102, 15839..15843) is the photograph's and stays."
+  },
+  {
+   "was": "База ВЭС",
+   "boxes": [
+    [
+     49412,
+     15564,
+     49432,
+     15572
+    ],
+    [
+     49412,
+     15572,
+     49432,
+     15581
+    ]
+   ],
+   "why": "The owner's cut of Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»: the cut of Абри's and Донгола's kinds), decision 10 of its plan (the clan bases go as Liberty, Blackwater, KKND and Донгола's three did): the two lines of letters «База / ВЭС» painted right of the base's squares at 6174-6175,1946 (cells 6176..6178, 1945..1947), tile 15553: a box a line, with its light rim. Measured on the picture (pixels of the letters 49413-49431 by 15565-15579)."
+  },
+  {
+   "was": "База Zeon",
+   "boxes": [
+    [
+     48648,
+     15811,
+     48690,
+     15819
+    ]
+   ],
+   "why": "The owner's cut of Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»: the cut of Абри's and Донгола's kinds), decision 10 of its plan (the clan bases go as Liberty, Blackwater, KKND and Донгола's three did): the letters «База Zeon» painted below the base's squares at 6081-6082,1975 (cells 6081..6086, 1976), tile 15806: the line with its light rim. The plan named the base's squares and missed its letters. Measured on the picture (pixels of the letters 48649-48688 by 15812-15818); the dark streak of ground left of the first letter (48644-48647) is the photograph's and stays."
+  },
+  {
+   "was": "База Доктора \"Д\"",
+   "boxes": [
+    [
+     49773,
+     15576,
+     49845,
+     15584
+    ],
+    [
+     49793,
+     15584,
+     49799,
+     15586
+    ],
+    [
+     49818,
+     15584,
+     49822,
+     15586
+    ],
+    [
+     49831,
+     15584,
+     49840,
+     15586
+    ]
+   ],
+   "why": "The owner's cut of Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»: the cut of Абри's and Донгола's kinds), decision 10 of its plan (the clan bases go as Liberty, Blackwater, KKND and Донгола's three did): the letters «База Доктора \"Д\"» painted right of the base's squares at 6219-6220,1947 (cells 6221..6230, 1947), tile 15554: the line with its light rim, and the feet of its two «Д» and the tail of its «р» below. Measured on the picture (pixels of the letters 49774-49844 by 15577-15585); the «Горные тропы» left of the squares stay."
+  },
+  {
+    "was": "Заброшенная база - бункер",
+    "boxes": [
+      [
+        49248,
+        15698,
+        49303,
+        15707
+      ],
+      [
+        49248,
+        15707,
+        49301,
+        15715
+      ],
+      [
+        49276,
+        15715,
+        49280,
+        15717
+      ],
+      [
+        49293,
+        15715,
+        49298,
+        15717
+      ]
+    ],
+    "why": "The owner's cut of Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»: the cut of Абри's and Донгола's kinds), decision 11 of its plan: the two lines of letters «Заброшенная / база - бункер» painted right of the abandoned clan base's square at 6154,1963 (which goes with the retired cell of 118), cells 6156..6162, 1962..1964, tile 15808: a box a line, with its light rim, and the tails of the «у» and the «р». The plan named the base's square and missed its letters. Measured on the picture (pixels of the letters 49249-49302 by 15699-15716)."
+  },
+  {
+    "was": "База НейтралКлана",
+    "boxes": [
+      [
+        48274,
+        15651,
+        48306,
+        15668
+      ],
+      [
+        48307,
+        15651,
+        48339,
+        15668
+      ]
+    ],
+    "why": "Relocated/unified clan bases: remove baked old caption, actual current name is in locations.xml."
+  }
  ],
- "tint": {"rgb": [255, 0, 0], "alpha": 0.094, "clear": 61, "full": 108, "edge": 2.0,
-  "why": "Measured on the four circles (server/map_cells.py clear_zones): pure red laid over the photograph at an alpha that is nothing within 61 pixels of the centre, rises evenly to its whole at 108 and so stays to the rim, the circle 245 pixels across, its edge 2 pixels soft. A pixel just inside the rim is its neighbour outside moved towards (255, 0, 0) by that alpha, on sand (dR +3, dG -18, dB -11) and on dark rock (dR +17, dG -3) alike, as laying a colour over does: a step added to every pixel would darken the rock as much as the sand, a colour multiplied in would leave the rock as it was. Each zone has its own alpha, 0.09-0.10, from its own rim; this one is for a zone without. The rim also carries a thin line, yellowish (blue down by up to 8) and darker to the lower right, light and greener to the upper left (luma up by up to 40, red down by up to 15), as if lit from there: map_cells measures it along the rim, against the ground either side of it (on the next tile where a circle comes to its tile's edge), and takes it off where it is."},
+ "tint": {
+  "rgb": [
+   255,
+   0,
+   0
+  ],
+  "alpha": 0.094,
+  "clear": 61,
+  "full": 108,
+  "edge": 2.0,
+  "why": "Measured on the four circles (server/map_cells.py clear_zones): pure red laid over the photograph at an alpha that is nothing within 61 pixels of the centre, rises evenly to its whole at 108 and so stays to the rim, the circle 245 pixels across, its edge 2 pixels soft. A pixel just inside the rim is its neighbour outside moved towards (255, 0, 0) by that alpha, on sand (dR +3, dG -18, dB -11) and on dark rock (dR +17, dG -3) alike, as laying a colour over does: a step added to every pixel would darken the rock as much as the sand, a colour multiplied in would leave the rock as it was. Each zone has its own alpha, 0.09-0.10, from its own rim; this one is for a zone without. The rim also carries a thin line, yellowish (blue down by up to 8) and darker to the lower right, light and greener to the upper left (luma up by up to 40, red down by up to 15), as if lit from there: map_cells measures it along the rim, against the ground either side of it (on the next tile where a circle comes to its tile's edge), and takes it off where it is."
+ },
  "zones": [
-  {"was": "429 Вади-Хальфа", "tiles": [13753], "centre": [47485.23, 13689.34], "radius": 122.35, "alpha": 0.092,
+  {
+   "was": "429 Вади-Хальфа",
+   "tiles": [
+    13753
+   ],
+   "centre": [
+    47485.23,
+    13689.34
+   ],
+   "radius": 122.35,
+   "alpha": 0.092,
    "why": "The owner, 2026-10-12, after the cut of the camps across the river («убери во всех городах лагеря за рекой»): «ты с карты не убрал лагеря за рекой» -- round each camp the picture still had its war zone, a big translucent red circle with dark blue arrows into it, painted over the photograph with the camp. Вади-Хальфа's camp 429 (5943,1723) on the west bank: the circle round the village «Поселок» (its dark red square 5935,1711 and its letters stay), three arrows -- from the north-west onto the village, and two from it down onto the camp's square; tile 13753 alone, where it was painted (the tint stops at the tile's top row: the row above, in 13497, has none). The squares over it -- the tan ones on 5941,1703, 5944,1712, 5948,1707, the dig 433's on 5943,1722, the village's -- were painted over the tint and stay as they are; the tail of the second arrow lies under the end of the letters «Поселок», painted over it: in their box (letters) the letters and the pixels round them stay, the arrow round them goes. Since the owner's cut of everything across the river (2026-10-13) the squares over the zone, the village's letters «Поселок» and the star go too, after it (cells and captions).",
-   "letters": [[47489, 13688, 47525, 13696]],
-   "arrows": [
-   [[47364,13568],[47364,13572],[47369,13589],[47372,13605],[47375,13610],[47390,13614],[47395,13618],[47399,13618],[47406,13624],[47408,13624],[47421,13632],[47433,13641],[47460,13669],[47460,13672],[47464,13676],[47479,13686],[47481,13686],[47483,13684],[47483,13681],[47479,13673],[47478,13663],[47476,13661],[47471,13662],[47453,13639],[47425,13609],[47388,13578],[47371,13568]],
-   [[47519,13670],[47516,13674],[47510,13700],[47517,13704],[47522,13709],[47522,13715],[47525,13719],[47534,13738],[47540,13761],[47539,13765],[47543,13771],[47544,13775],[47550,13775],[47553,13761],[47549,13751],[47541,13711],[47529,13682],[47524,13673],[47521,13670]],
-   [[47493,13720],[47491,13722],[47492,13729],[47495,13734],[47496,13740],[47505,13761],[47516,13779],[47521,13785],[47522,13791],[47528,13796],[47534,13798],[47536,13796],[47534,13785],[47529,13781],[47517,13753],[47516,13741],[47514,13735],[47495,13720]]
+   "letters": [
+    [
+     47489,
+     13688,
+     47525,
+     13696
+    ]
    ],
-   "seams": []},
-  {"was": "430 Абри", "tiles": [14774], "centre": [46724.21, 14715.22], "radius": 122.45, "alpha": 0.099,
+   "arrows": [
+    [
+     [
+      47364,
+      13568
+     ],
+     [
+      47364,
+      13572
+     ],
+     [
+      47369,
+      13589
+     ],
+     [
+      47372,
+      13605
+     ],
+     [
+      47375,
+      13610
+     ],
+     [
+      47390,
+      13614
+     ],
+     [
+      47395,
+      13618
+     ],
+     [
+      47399,
+      13618
+     ],
+     [
+      47406,
+      13624
+     ],
+     [
+      47408,
+      13624
+     ],
+     [
+      47421,
+      13632
+     ],
+     [
+      47433,
+      13641
+     ],
+     [
+      47460,
+      13669
+     ],
+     [
+      47460,
+      13672
+     ],
+     [
+      47464,
+      13676
+     ],
+     [
+      47479,
+      13686
+     ],
+     [
+      47481,
+      13686
+     ],
+     [
+      47483,
+      13684
+     ],
+     [
+      47483,
+      13681
+     ],
+     [
+      47479,
+      13673
+     ],
+     [
+      47478,
+      13663
+     ],
+     [
+      47476,
+      13661
+     ],
+     [
+      47471,
+      13662
+     ],
+     [
+      47453,
+      13639
+     ],
+     [
+      47425,
+      13609
+     ],
+     [
+      47388,
+      13578
+     ],
+     [
+      47371,
+      13568
+     ]
+    ],
+    [
+     [
+      47519,
+      13670
+     ],
+     [
+      47516,
+      13674
+     ],
+     [
+      47510,
+      13700
+     ],
+     [
+      47517,
+      13704
+     ],
+     [
+      47522,
+      13709
+     ],
+     [
+      47522,
+      13715
+     ],
+     [
+      47525,
+      13719
+     ],
+     [
+      47534,
+      13738
+     ],
+     [
+      47540,
+      13761
+     ],
+     [
+      47539,
+      13765
+     ],
+     [
+      47543,
+      13771
+     ],
+     [
+      47544,
+      13775
+     ],
+     [
+      47550,
+      13775
+     ],
+     [
+      47553,
+      13761
+     ],
+     [
+      47549,
+      13751
+     ],
+     [
+      47541,
+      13711
+     ],
+     [
+      47529,
+      13682
+     ],
+     [
+      47524,
+      13673
+     ],
+     [
+      47521,
+      13670
+     ]
+    ],
+    [
+     [
+      47493,
+      13720
+     ],
+     [
+      47491,
+      13722
+     ],
+     [
+      47492,
+      13729
+     ],
+     [
+      47495,
+      13734
+     ],
+     [
+      47496,
+      13740
+     ],
+     [
+      47505,
+      13761
+     ],
+     [
+      47516,
+      13779
+     ],
+     [
+      47521,
+      13785
+     ],
+     [
+      47522,
+      13791
+     ],
+     [
+      47528,
+      13796
+     ],
+     [
+      47534,
+      13798
+     ],
+     [
+      47536,
+      13796
+     ],
+     [
+      47534,
+      13785
+     ],
+     [
+      47529,
+      13781
+     ],
+     [
+      47517,
+      13753
+     ],
+     [
+      47516,
+      13741
+     ],
+     [
+      47514,
+      13735
+     ],
+     [
+      47495,
+      13720
+     ]
+    ]
+   ],
+   "seams": []
+  },
+  {
+   "was": "430 Абри",
+   "tiles": [
+    14774
+   ],
+   "centre": [
+    46724.21,
+    14715.22
+   ],
+   "radius": 122.45,
+   "alpha": 0.099,
    "why": "The owner, 2026-10-12, after the cut of the camps across the river («убери во всех городах лагеря за рекой»): «ты с карты не убрал лагеря за рекой» -- round each camp the picture still had its war zone, a big translucent red circle with dark blue arrows into it, painted over the photograph with the camp. Абри's camp 430 on the island across the river (its square on 5850,1851): the circle round the village «Поселок» (5840,1839), the arrow from the north-west onto the village and two onto the camp's square; tile 14774 alone. The squares over it (the tan ones on 5844,1832 and 5849,1830, the dig 434's on 5850,1850, the base НИЛ-2's on 5849,1851, the village's) stay; the second arrow's tail passes under the end of the letters «Поселок», which stay (letters), with the bit of its stroke under their «к». Since the owner's cut of everything across the river (2026-10-13) the squares over the zone and the village's letters «Поселок» go too, after it (cells and captions).",
-   "letters": [[46732, 14713, 46768, 14718]],
-   "arrows": [
-   [[46597,14594],[46595,14596],[46595,14598],[46601,14609],[46602,14635],[46605,14638],[46622,14644],[46626,14647],[46636,14651],[46639,14654],[46662,14668],[46690,14692],[46691,14701],[46707,14713],[46711,14714],[46713,14712],[46713,14709],[46710,14702],[46709,14691],[46707,14689],[46704,14690],[46683,14663],[46648,14629],[46599,14594]],
-   [[46759,14702],[46757,14704],[46757,14729],[46779,14754],[46792,14775],[46793,14780],[46795,14783],[46794,14785],[46795,14789],[46802,14797],[46804,14797],[46806,14795],[46806,14783],[46801,14776],[46798,14765],[46793,14756],[46790,14747],[46769,14710],[46761,14702]],
-   [[46697,14769],[46697,14771],[46706,14777],[46710,14781],[46744,14801],[46757,14806],[46760,14806],[46763,14809],[46770,14809],[46774,14808],[46776,14806],[46776,14804],[46767,14797],[46760,14797],[46746,14789],[46729,14775],[46721,14765],[46709,14766],[46708,14767],[46699,14767]]
+   "letters": [
+    [
+     46732,
+     14713,
+     46768,
+     14718
+    ]
    ],
-   "seams": []},
-  {"was": "431 Донгола", "tiles": [16054, 16055], "centre": [46803.3, 16000.3], "radius": 122.51, "alpha": 0.096,
+   "arrows": [
+    [
+     [
+      46597,
+      14594
+     ],
+     [
+      46595,
+      14596
+     ],
+     [
+      46595,
+      14598
+     ],
+     [
+      46601,
+      14609
+     ],
+     [
+      46602,
+      14635
+     ],
+     [
+      46605,
+      14638
+     ],
+     [
+      46622,
+      14644
+     ],
+     [
+      46626,
+      14647
+     ],
+     [
+      46636,
+      14651
+     ],
+     [
+      46639,
+      14654
+     ],
+     [
+      46662,
+      14668
+     ],
+     [
+      46690,
+      14692
+     ],
+     [
+      46691,
+      14701
+     ],
+     [
+      46707,
+      14713
+     ],
+     [
+      46711,
+      14714
+     ],
+     [
+      46713,
+      14712
+     ],
+     [
+      46713,
+      14709
+     ],
+     [
+      46710,
+      14702
+     ],
+     [
+      46709,
+      14691
+     ],
+     [
+      46707,
+      14689
+     ],
+     [
+      46704,
+      14690
+     ],
+     [
+      46683,
+      14663
+     ],
+     [
+      46648,
+      14629
+     ],
+     [
+      46599,
+      14594
+     ]
+    ],
+    [
+     [
+      46759,
+      14702
+     ],
+     [
+      46757,
+      14704
+     ],
+     [
+      46757,
+      14729
+     ],
+     [
+      46779,
+      14754
+     ],
+     [
+      46792,
+      14775
+     ],
+     [
+      46793,
+      14780
+     ],
+     [
+      46795,
+      14783
+     ],
+     [
+      46794,
+      14785
+     ],
+     [
+      46795,
+      14789
+     ],
+     [
+      46802,
+      14797
+     ],
+     [
+      46804,
+      14797
+     ],
+     [
+      46806,
+      14795
+     ],
+     [
+      46806,
+      14783
+     ],
+     [
+      46801,
+      14776
+     ],
+     [
+      46798,
+      14765
+     ],
+     [
+      46793,
+      14756
+     ],
+     [
+      46790,
+      14747
+     ],
+     [
+      46769,
+      14710
+     ],
+     [
+      46761,
+      14702
+     ]
+    ],
+    [
+     [
+      46697,
+      14769
+     ],
+     [
+      46697,
+      14771
+     ],
+     [
+      46706,
+      14777
+     ],
+     [
+      46710,
+      14781
+     ],
+     [
+      46744,
+      14801
+     ],
+     [
+      46757,
+      14806
+     ],
+     [
+      46760,
+      14806
+     ],
+     [
+      46763,
+      14809
+     ],
+     [
+      46770,
+      14809
+     ],
+     [
+      46774,
+      14808
+     ],
+     [
+      46776,
+      14806
+     ],
+     [
+      46776,
+      14804
+     ],
+     [
+      46767,
+      14797
+     ],
+     [
+      46760,
+      14797
+     ],
+     [
+      46746,
+      14789
+     ],
+     [
+      46729,
+      14775
+     ],
+     [
+      46721,
+      14765
+     ],
+     [
+      46709,
+      14766
+     ],
+     [
+      46708,
+      14767
+     ],
+     [
+      46699,
+      14767
+     ]
+    ]
+   ],
+   "seams": []
+  },
+  {
+   "was": "431 Донгола",
+   "tiles": [
+    16054,
+    16055
+   ],
+   "centre": [
+    46803.3,
+    16000.3
+   ],
+   "radius": 122.51,
+   "alpha": 0.096,
    "why": "The owner, 2026-10-12, after the cut of the camps across the river («убери во всех городах лагеря за рекой»): «ты с карты не убрал лагеря за рекой» -- round each camp the picture still had its war zone, a big translucent red circle with dark blue arrows into it, painted over the photograph with the camp. Донгола's camp 431 (5864,2002) on the west bank: the circle round the village «Поселок» (5850,1999), two arrows from the west onto the village and one from it east onto the camp's square; painted on the two tiles 16054 and 16055 one at a time, which left a dark red line two pixels wide down the circle where they meet (46847 and 46848, with the JPEG's ringing beside it): that seam is painted over with the arrows. The squares over it (the tan ones on 5851,1992 and 5850,2008, the dig 435's on 5864,2001, the base НИЛ-3's on 5863,2002, the village's) and the letters «Поселок» stay. Since the owner's cut of everything across the river (2026-10-13) the squares over the zone and the village's letters «Поселок» go too, after it (cells and captions).",
    "arrows": [
-   [[46646,15922],[46646,15924],[46677,15948],[46700,15962],[46708,15965],[46718,15971],[46721,15971],[46723,15973],[46750,15984],[46772,15991],[46773,15992],[46772,15995],[46774,15997],[46794,15995],[46796,15993],[46796,15991],[46792,15987],[46779,15978],[46769,15978],[46761,15975],[46755,15971],[46753,15971],[46750,15968],[46748,15968],[46739,15961],[46737,15961],[46709,15939],[46689,15916],[46668,15918],[46667,15919],[46658,15919],[46657,15920],[46648,15920]],
-   [[46781,16007],[46776,16004],[46772,16005],[46759,16004],[46756,16009],[46746,16011],[46731,16017],[46723,16022],[46691,16037],[46662,16057],[46649,16069],[46636,16079],[46636,16081],[46638,16083],[46641,16082],[46681,16082],[46690,16071],[46712,16050],[46747,16028],[46760,16022],[46765,16022],[46771,16016],[46781,16009]],
-   [[46817,16026],[46819,16028],[46829,16028],[46838,16030],[46868,16029],[46889,16025],[46891,16027],[46893,16027],[46902,16021],[46902,16019],[46899,16016],[46895,16016],[46891,16014],[46882,16017],[46856,16017],[46855,16016],[46842,16015],[46835,16011],[46833,16011],[46817,16024]]
+    [
+     [
+      46646,
+      15922
+     ],
+     [
+      46646,
+      15924
+     ],
+     [
+      46677,
+      15948
+     ],
+     [
+      46700,
+      15962
+     ],
+     [
+      46708,
+      15965
+     ],
+     [
+      46718,
+      15971
+     ],
+     [
+      46721,
+      15971
+     ],
+     [
+      46723,
+      15973
+     ],
+     [
+      46750,
+      15984
+     ],
+     [
+      46772,
+      15991
+     ],
+     [
+      46773,
+      15992
+     ],
+     [
+      46772,
+      15995
+     ],
+     [
+      46774,
+      15997
+     ],
+     [
+      46794,
+      15995
+     ],
+     [
+      46796,
+      15993
+     ],
+     [
+      46796,
+      15991
+     ],
+     [
+      46792,
+      15987
+     ],
+     [
+      46779,
+      15978
+     ],
+     [
+      46769,
+      15978
+     ],
+     [
+      46761,
+      15975
+     ],
+     [
+      46755,
+      15971
+     ],
+     [
+      46753,
+      15971
+     ],
+     [
+      46750,
+      15968
+     ],
+     [
+      46748,
+      15968
+     ],
+     [
+      46739,
+      15961
+     ],
+     [
+      46737,
+      15961
+     ],
+     [
+      46709,
+      15939
+     ],
+     [
+      46689,
+      15916
+     ],
+     [
+      46668,
+      15918
+     ],
+     [
+      46667,
+      15919
+     ],
+     [
+      46658,
+      15919
+     ],
+     [
+      46657,
+      15920
+     ],
+     [
+      46648,
+      15920
+     ]
+    ],
+    [
+     [
+      46781,
+      16007
+     ],
+     [
+      46776,
+      16004
+     ],
+     [
+      46772,
+      16005
+     ],
+     [
+      46759,
+      16004
+     ],
+     [
+      46756,
+      16009
+     ],
+     [
+      46746,
+      16011
+     ],
+     [
+      46731,
+      16017
+     ],
+     [
+      46723,
+      16022
+     ],
+     [
+      46691,
+      16037
+     ],
+     [
+      46662,
+      16057
+     ],
+     [
+      46649,
+      16069
+     ],
+     [
+      46636,
+      16079
+     ],
+     [
+      46636,
+      16081
+     ],
+     [
+      46638,
+      16083
+     ],
+     [
+      46641,
+      16082
+     ],
+     [
+      46681,
+      16082
+     ],
+     [
+      46690,
+      16071
+     ],
+     [
+      46712,
+      16050
+     ],
+     [
+      46747,
+      16028
+     ],
+     [
+      46760,
+      16022
+     ],
+     [
+      46765,
+      16022
+     ],
+     [
+      46771,
+      16016
+     ],
+     [
+      46781,
+      16009
+     ]
+    ],
+    [
+     [
+      46817,
+      16026
+     ],
+     [
+      46819,
+      16028
+     ],
+     [
+      46829,
+      16028
+     ],
+     [
+      46838,
+      16030
+     ],
+     [
+      46868,
+      16029
+     ],
+     [
+      46889,
+      16025
+     ],
+     [
+      46891,
+      16027
+     ],
+     [
+      46893,
+      16027
+     ],
+     [
+      46902,
+      16021
+     ],
+     [
+      46902,
+      16019
+     ],
+     [
+      46899,
+      16016
+     ],
+     [
+      46895,
+      16016
+     ],
+     [
+      46891,
+      16014
+     ],
+     [
+      46882,
+      16017
+     ],
+     [
+      46856,
+      16017
+     ],
+     [
+      46855,
+      16016
+     ],
+     [
+      46842,
+      16015
+     ],
+     [
+      46835,
+      16011
+     ],
+     [
+      46833,
+      16011
+     ],
+     [
+      46817,
+      16024
+     ]
+    ]
    ],
    "seams": [
-   [[46846,15884],[46850,15884],[46850,16117],[46846,16117]]
-   ]},
-  {"was": "432 Абу-Хамед", "tiles": [16064], "centre": [49281.1, 16002.83], "radius": 122.34, "alpha": 0.093,
+    [
+     [
+      46846,
+      15884
+     ],
+     [
+      46850,
+      15884
+     ],
+     [
+      46850,
+      16117
+     ],
+     [
+      46846,
+      16117
+     ]
+    ]
+   ]
+  },
+  {
+   "was": "432 Абу-Хамед",
+   "tiles": [
+    16064
+   ],
+   "centre": [
+    49281.1,
+    16002.83
+   ],
+   "radius": 122.34,
+   "alpha": 0.093,
    "why": "The owner, 2026-10-12, after the cut of the camps across the river («убери во всех городах лагеря за рекой»): «ты с карты не убрал лагеря за рекой» -- round each camp the picture still had its war zone, a big translucent red circle with dark blue arrows into it, painted over the photograph with the camp. Абу-Хамед's camp 432 across the river (its own square on 6168,1989): the circle round the village (its dark red square 6158,2000), two arrows from the south onto the village and one from it north onto the camp's square; tile 16064 alone. The squares over it -- the tan ones on 6153,1994, 6145,1999 and 6149,2009 (the last over the south-west arrow), the dig 436's on 6168,1988, the base НИЛ-4's on 6167,1989, the village's -- stay; the dark rock on 6146,1994, which passes for a dark red square by its colour, is ground and loses its tint. Since the owner's cut of everything across the river (2026-10-13) the squares over the zone and the white cross by Доктор «Д»'s column go too, after it (cells and captions).",
    "arrows": [
-   [[49348,15921],[49346,15921],[49340,15925],[49333,15936],[49324,15945],[49309,15957],[49303,15960],[49297,15966],[49292,15985],[49292,15989],[49294,15991],[49296,15991],[49322,15967],[49335,15949],[49349,15933],[49350,15923]],
-   [[49268,16009],[49263,16009],[49250,16018],[49247,16021],[49249,16026],[49246,16030],[49222,16051],[49190,16071],[49175,16076],[49161,16085],[49155,16117],[49155,16121],[49157,16123],[49159,16123],[49170,16115],[49175,16114],[49199,16096],[49224,16072],[49235,16059],[49256,16040],[49259,16034],[49265,16028],[49265,16023],[49269,16013]],
-   [[49270,16012],[49271,16017],[49276,16026],[49277,16032],[49279,16034],[49282,16033],[49285,16034],[49303,16051],[49333,16076],[49340,16080],[49348,16087],[49350,16087],[49370,16100],[49372,16100],[49376,16103],[49381,16103],[49400,16114],[49402,16114],[49404,16112],[49404,16109],[49395,16089],[49391,16077],[49387,16071],[49363,16066],[49330,16051],[49292,16025],[49294,16023],[49294,16021],[49292,16019],[49274,16010],[49272,16010]]
+    [
+     [
+      49348,
+      15921
+     ],
+     [
+      49346,
+      15921
+     ],
+     [
+      49340,
+      15925
+     ],
+     [
+      49333,
+      15936
+     ],
+     [
+      49324,
+      15945
+     ],
+     [
+      49309,
+      15957
+     ],
+     [
+      49303,
+      15960
+     ],
+     [
+      49297,
+      15966
+     ],
+     [
+      49292,
+      15985
+     ],
+     [
+      49292,
+      15989
+     ],
+     [
+      49294,
+      15991
+     ],
+     [
+      49296,
+      15991
+     ],
+     [
+      49322,
+      15967
+     ],
+     [
+      49335,
+      15949
+     ],
+     [
+      49349,
+      15933
+     ],
+     [
+      49350,
+      15923
+     ]
+    ],
+    [
+     [
+      49268,
+      16009
+     ],
+     [
+      49263,
+      16009
+     ],
+     [
+      49250,
+      16018
+     ],
+     [
+      49247,
+      16021
+     ],
+     [
+      49249,
+      16026
+     ],
+     [
+      49246,
+      16030
+     ],
+     [
+      49222,
+      16051
+     ],
+     [
+      49190,
+      16071
+     ],
+     [
+      49175,
+      16076
+     ],
+     [
+      49161,
+      16085
+     ],
+     [
+      49155,
+      16117
+     ],
+     [
+      49155,
+      16121
+     ],
+     [
+      49157,
+      16123
+     ],
+     [
+      49159,
+      16123
+     ],
+     [
+      49170,
+      16115
+     ],
+     [
+      49175,
+      16114
+     ],
+     [
+      49199,
+      16096
+     ],
+     [
+      49224,
+      16072
+     ],
+     [
+      49235,
+      16059
+     ],
+     [
+      49256,
+      16040
+     ],
+     [
+      49259,
+      16034
+     ],
+     [
+      49265,
+      16028
+     ],
+     [
+      49265,
+      16023
+     ],
+     [
+      49269,
+      16013
+     ]
+    ],
+    [
+     [
+      49270,
+      16012
+     ],
+     [
+      49271,
+      16017
+     ],
+     [
+      49276,
+      16026
+     ],
+     [
+      49277,
+      16032
+     ],
+     [
+      49279,
+      16034
+     ],
+     [
+      49282,
+      16033
+     ],
+     [
+      49285,
+      16034
+     ],
+     [
+      49303,
+      16051
+     ],
+     [
+      49333,
+      16076
+     ],
+     [
+      49340,
+      16080
+     ],
+     [
+      49348,
+      16087
+     ],
+     [
+      49350,
+      16087
+     ],
+     [
+      49370,
+      16100
+     ],
+     [
+      49372,
+      16100
+     ],
+     [
+      49376,
+      16103
+     ],
+     [
+      49381,
+      16103
+     ],
+     [
+      49400,
+      16114
+     ],
+     [
+      49402,
+      16114
+     ],
+     [
+      49404,
+      16112
+     ],
+     [
+      49404,
+      16109
+     ],
+     [
+      49395,
+      16089
+     ],
+     [
+      49391,
+      16077
+     ],
+     [
+      49387,
+      16071
+     ],
+     [
+      49363,
+      16066
+     ],
+     [
+      49330,
+      16051
+     ],
+     [
+      49292,
+      16025
+     ],
+     [
+      49294,
+      16023
+     ],
+     [
+      49294,
+      16021
+     ],
+     [
+      49292,
+      16019
+     ],
+     [
+      49274,
+      16010
+     ],
+     [
+      49272,
+      16010
+     ]
+    ]
    ],
-   "seams": []}
+   "seams": []
+  }
  ],
  "keep": {},
  "paint": {
-  "5858,1929": {"colour": "green", "why": "The owner's Eden update, 2026-11-16: mark only the recovered town with the standard green settlement square; all sixty-one work cells retain the original photograph."}
+  "5858,1929": {
+   "colour": "green",
+   "why": "The owner's Eden update, 2026-11-16: mark only the recovered town with the standard green settlement square; all sixty-one work cells retain the original photograph."
+  },
+  "6083,1957": {
+    "colour": "clan",
+    "why": "DESIGNED one visible yard marker per base, 2026-11-22."
+  },
+  "5926,2068": {
+    "colour": "clan",
+    "why": "Approved Dongola base on open ground between warehouses."
+  }
  },
  "bare": {
   "5941,1696": "The owner's cut of everything across the river, 2026-10-13 («все локации за рекой не нужны»): «Бункер Доктора \"Д\"» in Доктор «Д»'s column of names on the far bank by Вади-Хальфа, hidden with the column; no place under it, no square in the picture.",

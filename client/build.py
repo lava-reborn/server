@@ -455,8 +455,12 @@ class Build:
                 if path.lower() in low:
                     raise SystemExit("data/own_items.json: the icon of %d, %s, is a file of the "
                                      "original or of extra.txt already" % (t, path))
-                out[path] = self.original(own_items.icon_path(*cat[like]))
-                lines.append("own item:  %d %s, the picture of %d %s" % (t, name, like, cat[like][1]))
+                custom = own_items.custom_icon(mine[t], os.path.join(self.tree, 'data'))
+                out[path] = (own_items.read_icon(custom) if custom is not None
+                             else self.original(own_items.icon_path(*cat[like])))
+                lines.append("own item:  %d %s, %s" % (t, name,
+                             "custom icon " + custom if custom is not None else
+                             "the picture of %d %s" % (like, cat[like][1])))
             return out, lines
         finally:
             sys.path.pop(0)

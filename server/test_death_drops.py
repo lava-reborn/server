@@ -1,8 +1,8 @@
 """What a dead player loses: the owner's rules of 2026-09-25, for every death.
 
   * «С персонажей должны падать случайные предметы из одежды с вероятностью
-    10%, если оно афро; если голд-предметы, то они не падают» -- each piece
-    in the six clothing slots falls with 10 per cent, unless it is a gold
+    5%, если оно афро; если голд-предметы, то они не падают» -- each piece
+    in the six clothing slots falls with 5 per cent, unless it is a gold
     thing (combat.gold_item);
   * «при смерти падает часть лута из рюкзака», «Каждая вещь с шансом 30%» --
     each thing in the backpack falls with 30 per cent, and a stack of three
@@ -40,6 +40,7 @@ import sys
 import tempfile
 import threading
 import time
+from unittest.mock import patch
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ENC = "utf-8"
@@ -95,15 +96,19 @@ flags = {}
 for rec in wiki.values():
     key = rec.get("drop_on_death", "none")
     flags[key] = flags.get(key, 0) + 1
-check("the wiki's column, as it reached items_wiki.json: 88 да, 557 нет, 1416 silent"
+check("the wiki's column, as it reached items_wiki.json: 88 да, 557 нет, 1421 silent"
       " (with the belts and the gun stalls' lines of 2026-09-28, the 595 records of the"
       " 48 gun articles of 9-20 linked for the stalls by city level, 2026-10-10, and the"
       " six of the three belts linked for the gold pouches, 2026-10-11, none of which"
-      " states the column)",
-      (flags.get(1), flags.get(0), flags.get("none")), (88, 557, 1416))
-check("the owner's numbers: clothing 10 per cent, the backpack 30",
+      " states the column; restored Репарин I–III, Кориобелаодор and MOD A1 add five"
+      " more records without this column)",
+      (flags.get(1), flags.get(0), flags.get("none")), (88, 557, 1421))
+check("the five restored items do not invent a wiki death-drop rule",
+      [(t, wiki[t].get("drop_on_death", "none")) for t in (3474, 3475, 3476, 3726, 3897)],
+      [(3474, "none"), (3475, "none"), (3476, "none"), (3726, "none"), (3897, "none")])
+check("the owner's numbers: clothing 5 per cent, the backpack 30",
       (getattr(combat, "WEAR_DROP_CHANCE", None), getattr(combat, "BAG_DROP_CHANCE", None)),
-      (10, 30))
+      (5, 30))
 check("a gold thing is known by its price, by the original's [G], and where no"
       " table prices it by the gold mark of its name",
       [gold_item(t) if gold_item else None for t in
@@ -166,15 +171,15 @@ if death_losses:
     two = row_of(4, SAND, BAG, 2)
     # One roll per row and death, so each row gets a stub of its own.
     lost = [losses_over([r], 100, Cycle())[r["uniq"]] for r in (worn, single, one, two)]
-    check("a hundred deaths, every roll once: the clothing falls 10 times,"
+    check("a hundred deaths, every roll once: the clothing falls 5 times,"
           " a single thing 30, a stack of one and of two 30 each and whole",
           [(len(n), sorted(set(n))) for n in lost],
-          [(10, [1]), (30, [1]), (30, [1]), (30, [2])])
+          [(5, [1]), (30, [1]), (30, [1]), (30, [2])])
     lost = losses_over([worn, single, one, two], 100, Cycle())
     check("and one body holding all four rolls once per row, in the rows' order:"
           " a hundred deaths are four hundred rolls",
           sum(len(n) for n in lost.values()),
-          sum(1 for i in range(400) if i % 100 + 1 <= (10 if i % 4 == 0 else 30)))
+          sum(1 for i in range(400) if i % 100 + 1 <= (5 if i % 4 == 0 else 30)))
     stacks = [row_of(10 + i, ROUNDS, BAG, n) for i, n in enumerate((3, 4, 5, 20, 200))]
     lost = losses_over(stacks, 100, Cycle())
     check("a stack of three and more loses a third, round(n/3), every time",
@@ -189,6 +194,22 @@ if death_losses:
     check("nothing ever falls that is gold, a quest's, in the hand,"
           " in the bank or on a barter's table", sum(len(v) for v in lost.values()), 0)
 
+    full = [row_of(i + 100, KOLONIST_A[part], SLOT[part])
+            for i, part in enumerate(("helm", "shirt", "armor", "pants", "boots"))]
+    # Force all rolls to pass: armour is capped, belt and bag stay separate.
+    belt_row = row_of(110, 3577, BELT)
+    bag_armour = row_of(111, KOLONIST_A["helm"], BAG)
+    with patch.object(combat, 'roll', return_value=True):
+        samples = [death_losses(full + [belt_row, bag_armour], rng=random.Random(seed))
+                   for seed in range(1000)]
+    check("five successful armour rolls lose exactly one worn piece, plus belt and backpack armour",
+          {(sum(r["slot"] in inventory.SET_SLOTS for r, _n in sample),
+            sum(r["slot"] == BELT for r, _n in sample),
+            sum(r["slot"] == BAG for r, _n in sample)) for sample in samples}, {(1, 1, 1)})
+    chosen = {r["slot"] for sample in samples for r, _n in sample if r["slot"] in inventory.SET_SLOTS}
+    check("all five armour slots can be selected; serial order gives no fixed priority",
+          chosen, set(inventory.SET_SLOTS))
+
     # A real generator, seeded: the rates hold over many deaths, and the
     # same seed gives the same losses thing for thing.
     body = [row_of(1, KOLONIST_A["helm"], HEAD), row_of(2, AFRO_GUN, BAG)]
@@ -197,8 +218,8 @@ if death_losses:
     rates = (len(lost[1]) / float(N), len(lost[2]) / float(N))
     print("       seed 20260925, %d deaths: clothing %d (%.4f), backpack %d (%.4f)"
           % (N, len(lost[1]), rates[0], len(lost[2]), rates[1]))
-    check("seeded, forty thousand deaths: 10 and 30 per cent within half a point",
-          (abs(rates[0] - 0.10) < 0.005, abs(rates[1] - 0.30) < 0.005), (True, True))
+    check("seeded, forty thousand deaths: 5 and 30 per cent within half a point",
+          (abs(rates[0] - 0.05) < 0.005, abs(rates[1] - 0.30) < 0.005), (True, True))
     mixed = body + stacks + kept[:3]
     combat.RNG.seed(5)
     first = [[(r["uniq"], n) for r, n in death_losses(mixed)] for _ in range(50)]
@@ -500,6 +521,19 @@ try:
     got = v.until(lambda f: f[0] == "lch" and f[1].get("dead") == 0, 40)
     got += v.frames(0.8)
     check("bitten to death", [p for n, p in got if n == "lch" and "dead" in p], [{"dead": 0}])
+    # The forced 100% rolls still may remove only one worn armour piece.
+    fallen_wear = [r for r in body.values() if oid(r) in removed(got)]
+    check("a full afro set loses exactly one piece even when every roll passes", len(fallen_wear), 1)
+    retained_wear = [r for r in body.values() if r not in fallen_wear]
+    FALL_WHOLE = fallen_wear + [sand, ticket, afro_gun]
+    KEPT += retained_wear
+    wear_after = ["0" if value in {oid(r) for r in fallen_wear} else value for value in wear_before]
+    st = accounts.Store(DB)
+    after_ch = progression.Character.load(st, V)
+    after_rows = st.items_of(V)
+    after_ch.set_gear(inventory.gear_bonus(after_rows, after_ch), inventory.card_repeat(after_rows))
+    AFTER_HP, AFTER_SP = after_ch.hp_max, after_ch.sp_max
+    st.close()
     after_dead = got[[i for i, (n, p) in enumerate(got)
                       if n == "lch" and p.get("dead") == 0][0]:]
     check("the victim is told each thing that left whole -- off the body and out"
@@ -511,17 +545,16 @@ try:
     check("and says so in the chat",
           [t.startswith("При гибели выпало:") and "(7 шт.)" in t for t in lines], [True])
     ups = [p for p in named(after_dead, "usrUp") if p.get("id") in (0, VP)]
-    check("the set and its pieces are gone from the bars: 5 health (the set),"
-          " 51 stamina (the pieces)",
-          [(HMAX - p["hmax"], SMAX - p["smax"]) for p in ups][-1:], [(5, 51)])
+    check("the bars reflect the four remaining pieces and their partial set bonuses",
+          [(HMAX - p["hmax"], SMAX - p["smax"]) for p in ups][-1:], [(HMAX - AFTER_HP, SMAX - AFTER_SP)])
 
     seen = w.frames(1.5)
     check("the witness sees one bag where the body fell",
           [(p["s_status"], p["hex"]) for p in named(seen, "ss_loot")], [(1, [step])])
     moves = [p for p in named(seen, "ss_obj_move") if p.get("id") == VP]
-    check("and the figure taken off: the five counted slots, each empty now",
+    check("and the figure taken off: all five armour slots, with four pieces retained",
           sorted((p["to"], str(p["obj"])) for p in moves),
-          sorted((s, "0") for s in inventory.SET_SLOTS))
+          sorted((slot, wear_after[inventory.WEAR_SLOTS.index(slot)]) for slot in inventory.SET_SLOTS))
 
     now_v = rows(V)
     st = accounts.Store(DB)
@@ -550,12 +583,12 @@ try:
     got = come_back(v, CRED["victim"])
     check("back in, still dead", [p["death"] for p in named(got, "persInfo")], [1])
     wear, hands, bag, look = carried(v)
-    check("the relog shows the same: only the gold belt on the body, the pistol"
+    check("the relog shows the same: four set pieces and the gold belt on the body, the pistol"
           " in hand, the rest of the backpack, no set figure",
           (wear, hands, bag, look),
-          (["0", "0", "0", oid(belt), "0", "0"], [oid(pistol), "0"],
+          (wear_after, [oid(pistol), "0"],
            sorted(oid(r) for r in (rounds, gold_gun, gold_rounds, quest)), None))
-    check("and the bars without the set", vitals(v), (HMAX - 5, SMAX - 51))
+    check("and the bars without the set", vitals(v), (AFTER_HP, AFTER_SP))
     v.send("resurrect;res_type=0;")
     v.until(lambda f: f[0] == "lcall", 3)
     leave(v)

@@ -101,19 +101,46 @@ UCHET, ZAKAZ, KAK_SLYSHNO, PORYADOK = (5970, 1725), (5977, 1727), (5974, 1738), 
 # Президента Крюгера» in Абу-Хамед's camps, with the outpost's treasurer (the
 # owner's Абу-Хамед, 2026-10-14).
 HAND = {184: [(1135, [56, 88], False)],
-        31: [(566, [34, 61], True), (566, [30, 70], True), (566, [39, 70], True)],
-        102: [(1188, [40, 59], False)],
-        187: [(1188, [40, 72], False)],
-        103: [(1208, [36, 79], False)],
-        88: [(1563, [40, 36], False)],
-        92: [(1564, [39, 40], False)],
-        93: [(1565, [38, 53], False)],
-        132: [(1750, [31, 45], False)],
-        168: [(1749, [45, 32], False), (1024, [26, 37], False)],
-        263: [(1751, [39, 40], False), (2170, [40, 62], False)],
-        289: [(2367, [28, 69], False), (2368, [14, 95], False), (2369, [20, 13], False),
-              (2370, [20, 85], False), (2371, [36, 114], False), (2372, [23, 9], False),
-              (2373, [24, 80], False), (2374, [41, 38], False)]}
+ 31: [(566, [34, 61], True), (566, [30, 70], True), (566, [39, 70], True)],
+ 102: [(1188, [40, 59], False)],
+ 187: [(1188, [40, 72], False)],
+ 103: [(1208, [36, 79], False)],
+ 88: [(1563, [40, 36], False)],
+ 92: [(1564, [39, 40], False)],
+ 93: [(1565, [38, 53], False)],
+ 132: [(1750, [31, 45], False)],
+ 168: [(1749, [45, 32], False), (1024, [26, 37], False)],
+ 263: [(1751, [39, 40], False), (2170, [40, 62], False)],
+ 289: [(2367, [28, 69], False),
+       (2368, [14, 95], False),
+       (2369, [20, 13], False),
+       (2370, [20, 85], False),
+       (2371, [36, 114], False),
+       (2372, [23, 9], False),
+       (2373, [24, 80], False),
+       (2374, [41, 38], False)],
+ 118: [(7454, [32, 26], False),
+       (4829, [24, 25], False),
+       (4829, [40, 21], False),
+       (4829, [39, 32], False),
+       (2312, [35, 31], False),
+       (2312, [35, 43], False),
+       (2312, [26, 49], False),
+       (2312, [5, 55], False),
+       (2312, [52, 64], False),
+       (2312, [12, 71], False),
+       (2312, [38, 70], False),
+       (2312, [24, 85], False),
+       (2312, [11, 105], False),
+       (2312, [51, 105], False)],
+ 609: [(989, [39, 48], False), (2018, [11, 58], False)],
+ 111: [(1040, [26, 47], False), (1040, [40, 54], False)],
+ 110: [(1040, [22, 43], False), (1040, [36, 53], False)],
+ 109: [(4828, [27, 47], False), (4828, [41, 56], False)],
+ 113: [(4828, [23, 43], False), (4828, [37, 53], False)],
+ 114: [(4828, [23, 42], False), (4828, [37, 52], False)],
+ 112: [(4828, [27, 47], False), (4828, [41, 57], False)],
+ 128: [(4829, [25, 72], False), (4829, [37, 82], False)]}
 # The approved plantation restores these four original IDs through overlays.
 # Keep them explicit: new or changed ordinary-world hand rows still fail.
 for _lid, _cells in {
@@ -288,7 +315,8 @@ try:
     # hand rows of the original's places.
     OURS = set(world.overlay_ids())
     check("the hand rows of 184, 31 and 102 are as they were, and Абри's of 187, 88, 92 and 289,"
-          " Донгола's of 103 and 93, Абу-Хамед's of 132, 168 and 263 and Eden's restored 264..267"
+          " Донгола's of 103 and 93, Абу-Хамед's of 132, 168 and 263, Eden's restored 264..267"
+          " and the approved Abu base, its repairer and Abri doctor"
           " are the only others (the places"
           " of ours aside)",
           {lid: [(r["type"], r["cell"], bool(r.get("escort"))) for r in recs if "patrol" not in r]

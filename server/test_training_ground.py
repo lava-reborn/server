@@ -553,8 +553,16 @@ class TrainingGround(unittest.IsolatedAsyncioTestCase):
                     with self.assertRaises(ValueError):
                         self.s.inv.create(t)
                 elif items.acquisition_blocked(t):
-                    self.assertGreater(row[1], 17)
-                    self.assertLessEqual(inventory.item_level(t), 20)
+                    if items.root_of(t) == items.AMMO:
+                        # Range-only crossbow/flare copies retain their own
+                        # rounds; these never become obtainable public items.
+                        from training import ammo as range_ammo
+                        self.assertIn(t, range_ammo.EXTRA_SOURCES)
+                        with self.assertRaises(ValueError):
+                            self.s.inv.create(t)
+                    else:
+                        self.assertGreater(row[1], 17)
+                        self.assertLessEqual(inventory.item_level(t), 20)
                 self.assertFalse(items.retired(t))
         self.unchanged()
 
@@ -651,9 +659,14 @@ class TrainingGround(unittest.IsolatedAsyncioTestCase):
                 self.assertEqual(items.battle_medicine(source), items.battle_medicine(target))
                 self.assertEqual(items.no_combat(source), items.no_combat(target))
             if items.root_of(source) in (items.FIRE_ARM, items.COLD_ARM):
-                for level in (4, 12, 17):
-                    self.assertEqual(inventory.weapon_durability_ratio(source, level),
-                                     inventory.weapon_durability_ratio(target, level))
+                self.assertEqual(items.root_of(target), items.root_of(source))
+                # Range frames deliberately keep their own balance/level rules.
+                # At the trained ceiling neither a source nor its copy gains
+                # a spurious wear penalty from the copy's zero shop price.
+                card = g.clone.character()
+                with patch.object(card, 'skill', [[20, 0, 1] for _ in range(progression.SKILLS)]):
+                    for type_id in (source, target):
+                        self.assertEqual(inventory.wear_multiplier(dict(type_id=type_id, root=items.root_of(type_id)), card), 1)
         self.unchanged()
 
     async def test_next_target_cancels_previous_corpse_cleanup(self):
@@ -864,8 +877,9 @@ class TrainingGround(unittest.IsolatedAsyncioTestCase):
         g.start('mob')
         spawned=g.room.combat.mobs[g.mob_eid]
         self.assertIsNot(spawned.stats,original)
-        self.assertEqual(spawned.hp,hp*2)
-        self.assertEqual(spawned.stats.dmg_min,round(damage*1.5))
+        legacy=mobs.MobStats(g.mob_type, balanced=False)
+        self.assertEqual(spawned.hp,legacy.hp_max*2)
+        self.assertEqual(spawned.stats.dmg_min,round(legacy.dmg_min*1.5))
         self.assertEqual(original.hp_max,hp)
         self.assertEqual(original.dmg_min,damage)
         self.unchanged()

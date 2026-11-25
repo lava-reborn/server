@@ -58,6 +58,7 @@ not start the game.
 import json
 import logging
 import os
+import time
 import weakref
 from datetime import date, datetime, timedelta
 
@@ -79,6 +80,14 @@ HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FIRST_ID = 800_000
 GATES = ("both", "hand_in")
 DAY = 24 * 60                   # minutes
+DAILY_RESET_TIME = 0             # minutes past UTC midnight, the quest journal's reset
+
+
+def day_start(now, reset_time=DAILY_RESET_TIME):
+    """The ordinary quest reset, shared by the journal and daily NPC claims."""
+    now = int(now)
+    reset = now - now % 86400 + reset_time * 60
+    return reset - 86400 if reset > now else reset
 
 
 def schedule_path():
@@ -411,6 +420,9 @@ def owns(loc_id, type_id):
     and not the room's (world.belongs_here)."""
     if loc_id is None:
         return False
+    import quests                       # late: world and quests import each other
+    if (int(loc_id), int(type_id)) == (quests.LABORANT_LOC, quests.LABORANT_NPC):
+        return True
     return (int(loc_id), int(type_id)) in table().owned
 
 
@@ -428,6 +440,7 @@ _ROOMS = weakref.WeakKeyDictionary()      # rooms.Room -> [_Entry]
 _SHOWN = weakref.WeakKeyDictionary()      # rooms.Room -> {npc id: what it was shown under}
 _TAKEN = {}                               # NPC type -> takes of its rows under a shut gate
 _TOUCHED = {}                             # NPC type -> changes of who may take its rows (touch)
+_LOCAL_QUEST_WINDOWS = {}                 # local cheat only: quest -> (NPC, wall-clock deadline)
 _NEXT_ID = [FIRST_ID]
 _MOB_TYPES = None
 
@@ -451,14 +464,16 @@ def _entries(room):
     got = _ROOMS.get(room)
     if got is None:
         import names                    # late: see the imports
+        import quests                   # the lab keeps the native reset, not boss hours
         got = []
         sched = table()
         mt = _mob_types()
         for cell, t in room.loc.spawns:
             w = sched.owned.get((room.loc.id, t))
+            daily_lab = (room.loc.id, t) == (quests.LABORANT_LOC, quests.LABORANT_NPC)
             # Held out, or none of the schedule's; one the client cannot draw
             # or name is left out, as the room leaves it (rooms.Room).
-            if w is None or t not in mt or not names.known(t):
+            if (w is None and not daily_lab) or t not in mt or not names.known(t):
                 continue
             got.append(_Entry(w, cell, t, world.entity_root(t, mt[t][0]), _new_id()))
         _ROOMS[room] = got
@@ -487,9 +502,20 @@ def keep(rc):
     client asks his rows afresh (_remark), a day's task done yesterday
     included. Then the marks over those whose rows a window keeps (_remark).
     """
+    if _LOCAL_QUEST_WINDOWS:
+        wall_now = time.time()
+        for quest_type, (npc_type, deadline) in list(_LOCAL_QUEST_WINDOWS.items()):
+            if wall_now >= deadline:
+                del _LOCAL_QUEST_WINDOWS[quest_type]
+                touch(npc_type)
     t = bosses.clock()
     slots = {}
     for e in _entries(rc.room):
+        if e.window is None:
+            import quests
+            reset = day_start(time.time())
+            _keep_npc(rc.room, e, reset if quests.laborant_available(rc.store, reset) else None)
+            continue
         if e.window.name not in slots:
             slots[e.window.name] = e.window.slot(t)
         due = slots[e.window.name]
@@ -498,6 +524,15 @@ def keep(rc):
         else:
             _keep_npc(rc.room, e, due)
     _remark(rc.room, t)
+
+
+def laborant_finished(rc):
+    """After the quest COMMIT, use the native death and NPC lifecycle frames."""
+    import quests
+    for eid, npc in list(rc.room.npcs.items()):
+        if npc.type_id == quests.LABORANT_NPC:
+            rc.room.broadcast(("lch", dict(dead=eid)))
+    keep(rc)
 
 
 def _keep_mob(rc, e, due):
@@ -534,6 +569,7 @@ def _keep_mob(rc, e, due):
 def _keep_npc(room, e, due):
     import rooms                        # late: see the imports
     here = e.eid in room.npcs
+    window_name = e.window.name if e.window is not None else "quest daily reset"
     if due is not None and not here:
         e.eid = _new_id()
         room.npcs[e.eid] = rooms.NPC(e.cell, e.type_id, e.root)
@@ -541,13 +577,13 @@ def _keep_npc(room, e, due):
             sess.send("lch", newUser=e.eid, pos=e.cell, rtype=e.root)
             sess.send_npc_info(e.eid)
         log.info("  ..    %d (type %d) comes to %s for window %s", e.eid, e.type_id,
-                 room.loc.title, e.window.name)
+                 room.loc.title, window_name)
     elif due is None and here:
         room.npcs.pop(e.eid, None)
         _SHOWN.get(room, {}).pop(e.eid, None)
         room.broadcast(("lch", dict(lostUser=e.eid)))
         log.info("  ..    %d (type %d) leaves %s: window %s shut", e.eid, e.type_id,
-                 room.loc.title, e.window.name)
+                 room.loc.title, window_name)
 
 
 def _remark(room, t):
@@ -572,16 +608,19 @@ def _remark(room, t):
     refuses. And so is one whose rows changed hands outside the clock
     (touch): a warehouse's box when its holders change.
     """
+    import quests                       # the lab's daily offer uses the same refresh
     marked = table().marked()
-    if not marked:
+    if not marked and room.loc.id != quests.LABORANT_LOC:
         return
     shown = _SHOWN.setdefault(room, {})
     for eid, npc in list(room.npcs.items()):
-        windows = marked.get(npc.type_id)
-        if not windows or npc.root == world.MOB:
+        windows = marked.get(npc.type_id, ())
+        daily_lab = (room.loc.id, npc.type_id) == (quests.LABORANT_LOC, quests.LABORANT_NPC)
+        if (not windows and not daily_lab) or npc.root == world.MOB:
             continue
-        now = tuple(w.slot(t) for w in windows) + (_TAKEN.get(npc.type_id, 0),
-                                                   _TOUCHED.get(npc.type_id, 0))
+        now = (tuple(w.slot(t) for w in windows)
+               + ((day_start(time.time()),) if daily_lab else ())
+               + (_TAKEN.get(npc.type_id, 0), _TOUCHED.get(npc.type_id, 0)))
         if shown.setdefault(eid, now) == now:
             continue
         new = _new_id()
@@ -625,10 +664,19 @@ def touch(npc_type):
 
 
 # --- quests, loot, things --------------------------------------------------------------------
+def open_local_quest(quest_type, npc_type):
+    """A CHEATS command opens one reward for 15 minutes, without moving clocks."""
+    _LOCAL_QUEST_WINDOWS[int(quest_type)] = (int(npc_type), time.time() + 900)
+    touch(npc_type)
+
+
 def quest_open(quest_type, carried=False):
     """Whether a row the schedule keeps (quests) is on offer now: always for
     one it does not keep; for a "hand_in" gate, always to take and only in
     the window to hand in (carried); for "both", in the window only."""
+    local = _LOCAL_QUEST_WINDOWS.get(int(quest_type))
+    if local is not None and time.time() < local[1]:
+        return True
     got = table().gates.get(int(quest_type))
     if got is None:
         return True

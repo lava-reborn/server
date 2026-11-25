@@ -425,7 +425,7 @@ class Ground:
         clone.training_effects.send_list()
         combat.Fighter.send_medicine_cooldown(clone.combat, 0)
         clone.combat.ap = clone.combat.amax_sent = fresh.ap_ceiling
-        clone.combat.c_ap()
+        clone.combat.c_ap(amax=True)
         self.room.combat.push_vitals(clone.combat)
         self.state(message)
 
@@ -636,7 +636,7 @@ class Ground:
             self.room.npcs[eid] = rooms.NPC(enemy_cell, self.mob_type, world.MOB)
             mob = mobs.Mob(eid, self.mob_type, enemy_cell)
             mob.training_ground = self
-            mob.stats = copy.copy(mob.stats)
+            mob.stats = mobs.MobStats(self.mob_type, balanced=False)
             if self.rules.simulator_formulas and str(self.mob_type) in training_formulas.data()['mobs']:
                 training_formulas.configure_mob(mob, self)
             elif not self.rules.simulator_formulas and 1 <= mob.stats.level <= MAX_LEVEL:

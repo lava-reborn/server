@@ -8,9 +8,8 @@ class TrainingRules(unittest.TestCase):
     def weapon(self):
         return combat.Weapon(1, 100, 120, 3, 10, 20, 5, 0.1, 7, 1, 2, sdmin=20, sdmax=40)
 
-    def test_normal_room_and_baseline_keep_exact_weapon(self):
+    def test_baseline_training_keeps_exact_weapon(self):
         weapon = self.weapon()
-        self.assertIs(combat.Fighter.prepare_weapon(None, weapon, {'dam_mod': 2}, None), weapon)
         self.assertIs(Rules().weapon(weapon, {'dam_mod': 2}), weapon)
 
     def test_ammunition_damage_stamina_range_and_spread_are_independent(self):

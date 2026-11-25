@@ -1,4 +1,4 @@
-"""Equipment has descriptive levels, retained specialisations and 5000-round stacks.
+"""Equipment permits up to three extra levels, retains specialisations and 5000-round stacks.
 
 Real moves and displaced hand swaps at skill zero, persisted outfits after
 login and level gain. Ammo prices, stack ceilings, money and overload rules
@@ -77,10 +77,10 @@ check("a medicine asks Медицина 6 and is wearable at 0: not gear",
       (inventory.item_level(MEDKIT), inventory.wearable(row(MEDKIT), 0)), (6, True))
 check("the refusal's line names the thing and both levels",
       inventory.level_line(row(NAGAN), 0),
-      "«Наган 1895»: взять в руки можно с 1-го уровня, у вас 0-й")
+      "«Наган 1895»: взять в руки можно с 0-го уровня, у вас 0-й")
 check("  ..and says «надеть» for clothes",
       inventory.level_line(row(KOL["helm"]), 1),
-      "«%s»: надеть можно с 2-го уровня, у вас 1-й" % inventory.item_title(KOL["helm"]))
+      "«%s»: надеть можно с 0-го уровня, у вас 1-й" % inventory.item_title(KOL["helm"]))
 
 # --- rounds: the stack and the price ------------------------------------------------
 print()
@@ -179,22 +179,25 @@ def move(r, dst):
     return [p.get("res") for n, p in stand.frames if n == "cmdAck"], stand.said
 
 
+stand.char.set_skill(progression.SHOOTING, 2)
 res, said = move(kit, SECONDARY)
-check("level-zero hand swap permits a displaced higher-tier weapon",
-      (res,said,store.item(kit["uniq"])["slot"],store.item(eagle["uniq"])["slot"]),
-      ([0],[],SECONDARY,PRIMARY))
+check("hand swap cannot equip a displaced weapon four levels above the character",
+      (res, bool(said), store.item(eagle['uniq'])['slot']), ([inventory.RES_LEVEL], True, SECONDARY))
+before = dict(store.item(eagle['uniq']))
+moved = inv.over_level_to_bag()
+check("login cleanup moves the over-level weapon into the bag",
+      (moved, store.item(eagle['uniq'])['slot']), ([eagle['uniq']], BAG))
+check("cleanup preserves ammunition and durability",
+      {k:v for k,v in dict(store.item(eagle['uniq'])).items() if k != 'slot'},
+      {k:v for k,v in before.items() if k != 'slot'})
 res, said = move(nagan, PRIMARY)
-check("level-zero Nagan replaces the held higher-tier weapon",
-      (res,said,store.item(nagan["uniq"])["slot"],store.item(eagle["uniq"])["slot"]),
-      ([0],[],PRIMARY,BAG))
-stand.char.gain_xp(progression.SHOOTING, progression.skill_xp_max(0))
-check("one shooting level gained in play", stand.char.level, 1)
+check("qualified low-tier weapon can still replace primary", (res, said), ([0], []))
+stand.char.gain_xp(progression.SHOOTING, progression.skill_xp_max(2))
+check("one shooting level gained in play", stand.char.level, 3)
 res, said = move(eagle, SECONDARY)
-check("higher-tier firearm equips after skill gain without relog",
-      (res,said,store.item(eagle["uniq"])["slot"]),([0],[],SECONDARY))
-check("login cleanup leaves allowed high-tier equipment in place",
-      (inv.over_level_to_bag(),store.item(eagle["uniq"])["slot"],inv.taken_off_lines()),
-      ([],SECONDARY,[]))
+check("plus-three weapon equips immediately after level gain",
+      (res, said, store.item(eagle['uniq'])['slot']), ([0], [], SECONDARY))
+check("allowed equipment survives subsequent login cleanup", inv.over_level_to_bag(), [])
 store.close()
 
 
@@ -351,6 +354,7 @@ try:
     worn_helm = seed(NAL["helm"], HEAD)
     worn_tesak = seed(TESAK, SECONDARY)
     ch=progression.Character.load(st,wid)
+    ch.set_skill(progression.SHOOTING,5)
     ch.set_spec(1,1)
     ch.set_spec(2,2)  # Qualified for Desert Eagle even at base shooting zero.
     ch.save(st)
@@ -361,7 +365,7 @@ try:
 
     c = Client(connect())
     after = enter(c, "wearer")
-    check("level-zero login keeps qualified high-tier clothes and knife",chat(after),[])
+    check("level-five login keeps qualified high-tier clothes and knife",chat(after),[])
     lst=slots(c)
     check("helmet and both hands remain equipped after login",
           (lst[0],lst[6],lst[7]),
@@ -372,7 +376,7 @@ try:
              ("Desert Eagle",goods["eagle"],PRIMARY)]
     for label,r,dst in allowed:
         res,said,moved=ss_move(c,r,dst)
-        check("level zero permits "+label,(res,said,moved),([0],[],["ss_obj_move"]))
+        check("level five permits "+label,(res,said,moved),([0],[],["ss_obj_move"]))
     res,said,moved=ss_move(c,goods["medkit"],SECONDARY)
     check("medicine may still be carried without its use skill",(res,said,moved),([0],[],["ss_obj_move"]))
     ss_move(c,goods["medkit"],BAG)
@@ -381,10 +385,10 @@ try:
             check("already equipped Kolonist piece: "+name,r["slot"],SLOT[name])
             continue
         res,said,moved=ss_move(c,r,SLOT[name])
-        check("full Kolonist at base skill zero: "+name,(res,said,moved),([0],[],["ss_obj_move"]))
+        check("full Kolonist at level five: "+name,(res,said,moved),([0],[],["ss_obj_move"]))
     ss_move(c,goods["kitchen"],SECONDARY)
     before=slots(c)
-    check("complete higher-tier outfit and weapons are on at level zero",
+    check("complete higher-tier outfit and weapons are on at level five",
           (before[:6],before[6:8]),
           ([inventory.oid_of(kol[n]) for n in ("helm","shirt","armor")]+["0"]+
            [inventory.oid_of(kol[n]) for n in ("pants","boots")],
@@ -397,7 +401,7 @@ try:
     st=accounts.Store(DB)
     check("all inventory rows survive moves and relogin",sorted(r["uniq"] for r in st.items_of(wid)),everything)
     ch=progression.Character.load(st,wid)
-    ch.set_skill(progression.SHOOTING,2)
+    ch.set_skill(progression.SHOOTING,7)
     ch.save(st)
     st.close()
     c=Client(connect())

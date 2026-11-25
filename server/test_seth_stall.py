@@ -71,19 +71,24 @@ SETH, ARENA, ARENA_CELL = 1187, 167, (6270, 1831)
 WALTHER, KS, ST = 25636, 6092, 6104
 HELM, SHIRT, ARMOR, PANTS, BOOTS = 10179, 10180, 10181, 10182, 10183
 ALPHA, OMEGA = 4181, 3208
-STALL = [WALTHER, KS, ST, SHIRT, PANTS, BOOTS, HELM, ARMOR, ALPHA, OMEGA]
+ARCHIVE_STALL = [WALTHER, KS, ST, SHIRT, PANTS, BOOTS, HELM, ARMOR, ALPHA, OMEGA]
+STALL = ARCHIVE_STALL[:-2]  # Reagents now belong to Gofus and assistants.
+# The combat release adds the other four qualities of his pistol's calibre.
+# Keep the original shopping basket independent of the live wire indices.
+LIVE_STALL = [WALTHER, KS, ST, 6116, 6140, 6164, 6152, 6189,
+              SHIRT, PANTS, BOOTS, HELM, ARMOR]
 # Rounds are bought by the number, anything else one at a time.
 ROUNDS = 20
 # What each costs, worked out by hand from the frames (pmod 1): the pistol
 # and the clothes at their price, 20 rounds of a pack of 20 at 20 and at 60
 # afro, the reagents at 2500.
 PRICES = {WALTHER: 2800, KS: 20, ST: 60, SHIRT: 600, PANTS: 800, BOOTS: 400,
-          HELM: 1000, ARMOR: 1200, ALPHA: 2500, OMEGA: 2500}
+          HELM: 1000, ARMOR: 1200}
 START_AFRO = 20000
 # The pieces of clothing and the article each one's numbers are.
 ARTICLE = {HELM: "Каска строителя", SHIRT: "Рубашка", ARMOR: "Кусковая броня",
            PANTS: "Джинсы", BOOTS: "Старые ботинки"}
-# The level each thing asks (inventory.item_level): its Стрельба.
+# Equipment's Shooting level; reagents now have a separate character gate.
 LEVEL = {WALTHER: 4, SHIRT: 2, PANTS: 2, BOOTS: 2, HELM: 2, ARMOR: 2,
          KS: 0, ST: 0, ALPHA: 0, OMEGA: 0}
 cat = items.catalogue()
@@ -98,9 +103,9 @@ check("  ..standing in «Арена Нубии» (167), the cell 6270x1831",
       (world.location_at(*ARENA_CELL), [t for _c, t in world.location(ARENA).spawns]),
       (ARENA, [SETH]))
 check("his stall is the wiki page's list, in its order: the data/npcs.json entry",
-      (npcs.stock(SETH), items.stock_for(SETH)), (STALL, STALL))
+      (npcs.stock(SETH), items.stock_for(SETH)), (ARCHIVE_STALL, LIVE_STALL))
 check("  ..each by the name the player reads",
-      [names.text(items.STRING_ID_OFFSET + t) for t in STALL],
+      [names.text(items.STRING_ID_OFFSET + t) for t in ARCHIVE_STALL],
       ["Walther P99$Пистолет", "9мм НАТО $КС", "9мм НАТО $СТ", "Рубашка", "Джинсы",
        "Старые ботинки", "Гоглы с фильтром", "Кусковая броня", "Альфа-реагент I",
        "Омега-реагент I"])
@@ -108,8 +113,11 @@ check("  ..priced in afro, nothing premium, nothing gold",
       [(t, items.params_of(t)["g_cost"], items.premium(t)) for t in STALL
        if items.params_of(t)["g_cost"] or items.premium(t) or items.params_of(t)["cost"] <= 0],
       [])
-check("  ..and asking the levels of their Стрельба", {t: inventory.item_level(t) for t in STALL},
+check("  ..and asking the levels of their Стрельба", {t: inventory.item_level(t) for t in ARCHIVE_STALL},
       LEVEL)
+check("  ..reagents require character level two without a Shooting skill gate",
+      {t: (items.params_of(t)['buff_level'], items.params_of(t)['need_skills_m'])
+       for t in (ALPHA, OMEGA)}, {ALPHA: (2, 0), OMEGA: (2, 0)})
 
 # Every trader of the client, as the stall would be without this change: the
 # same data with Сет's entry taken out again.
@@ -170,6 +178,11 @@ check("the articles, as read: Каска строителя 5 armour, 750 wear, 
       WANT[HELM], dict(armor_class=5, max_break_abs=750, weight=1500, bonus_st=7, bonus_cp=1,
                        cost=1000, g_cost=0, slot_type=0, exchang=1, premium=0,
                        need_attribs_m=4, need_attribs=[6], need_skills_m=2, need_skills=[2]))
+# The accepted simulator changes only armour/stamina of these starter pieces.
+for t, armour, stamina in ((10179, 4, 11), (10180, 2, 28), (10181, 16, 11), (10182, 2, 21), (10183, 1, 9)):
+    if 'armor_class' in WANT[t] and t in (10179, 10181):
+        WANT[t]['armor_class'] = armour
+    WANT[t]['bonus_st'] = stamina
 check("each piece of clothing on the stall carries its article's (A) column",
       {t: {k: (items.params_of(t).get(k), v) for k, v in WANT[t].items()
            if items.params_of(t).get(k) != v} for t in ARTICLE if
@@ -285,19 +298,20 @@ try:
     info = stalls[0] if stalls else {}
     check("  ..trading his list, in its order, and mending (the page's «Ремонт»)",
           (as_list(info.get("type_list")), info.get("can_trade"), info.get("can_repair")),
-          (STALL, 1, 1))
+          (LIVE_STALL, 1, 1))
     npc = info.get("id")
 
     # What the window asks for each thing on the stall.
     frames = {}
-    for t in STALL:
+    for t in LIVE_STALL:
         c.send("ss_get_si;type=%d;" % t)
         cmd = FRAME[items.root_of(t)]
         got = named(c.until(cmd), cmd)
         frames[t] = got[0] if got else {}
     check("every thing on the stall answers its window, under its own name and price",
           {t: (p.get("type"), p.get("name"), p.get("cost"), p.get("g_cost")) for t, p in frames.items()},
-          {t: (t, items.STRING_ID_OFFSET + t, items.params_of(t)["cost"], 0) for t in STALL})
+          {t: (t, items.STRING_ID_OFFSET + t, items.params_of(t)["cost"],
+               items.params_of(t)["g_cost"]) for t in LIVE_STALL})
     off = {}
     for t in ARTICLE:
         p = frames[t]
@@ -323,7 +337,8 @@ try:
     afro = purse()
     check("the purse starts at LAVA_START_AFRO", afro, START_AFRO)
     bought, charged = {}, {}
-    for idx, t in enumerate(STALL):
+    for t in STALL:
+        idx = LIVE_STALL.index(t)
         n = ROUNDS if items.root_of(t) == items.AMMO else 1
         c.send("ss_upd;param=%d;obj=x%x;s_status=1;" % (n, idx))
         got = c.frames(0.8)
@@ -354,7 +369,8 @@ try:
         if len(bought[t]) > 2:
             c.send("ss_move;obj=x%s;to=%d;from=%d;" % (bought[t][2], dst, BAG))
             got = [p.get("res") for p in named(c.frames(0.8), "cmdAck")]
-        check("level 0: %s accepted without a level gate" % label, got, [inventory.RES_OK])
+        check("level 0: %s respects the +3 equipment cap" % label, got,
+              [inventory.RES_LEVEL if t == WALTHER else inventory.RES_OK])
     c.send("ss_upd;obj=x0;s_status=0;")
     leave(c)
 
@@ -363,9 +379,9 @@ try:
     all_rows = st.items_of(cid)
     rows = [r for r in all_rows if r["slot"] == BAG]
     st.close()
-    check("the helmet and pistol remain equipped in their exact slots after logout",
+    check("the helmet stays equipped and the refused +4 pistol remains in the bag after logout",
           {r["type_id"]: r["slot"] for r in all_rows if r["type_id"] in (HELM, WALTHER)},
-          {HELM: HEAD, WALTHER: PRIMARY})
+          {HELM: HEAD, WALTHER: BAG})
     check("the other purchases remain in the bag, the rounds %d each" % ROUNDS,
           ([t for t in STALL if t not in (HELM, WALTHER) and t not in {r["type_id"] for r in rows}],
            sorted(r["count"] for r in rows if r["type_id"] in (KS, ST))),

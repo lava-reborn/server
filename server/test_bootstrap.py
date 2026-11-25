@@ -159,7 +159,7 @@ try:
     everything = get('/res/database/texts.xml?all=1')
     check('all=1 is not empty', len(everything) > 100000, True)
     sys.path.insert(0, HERE)
-    import world, items, quests, transport, names
+    import world, items, quests, transport, names, npcs
     ids = set(world.mob_types())
     ids |= {items.STRING_ID_OFFSET + t for t in items.catalogue()}
     # item descriptions, the id ss_si_* puts in desc: the wiki's, and the
@@ -167,6 +167,12 @@ try:
     ids |= {items.DESC_ID_OFFSET + t for t in items.wiki_descs()}
     import orig_texts                                  # noqa: E402
     ids |= {items.DESC_ID_OFFSET + t for t in orig_texts.item_descs()}
+    # Every ammunition template now has a description, including qualities
+    # absent from both the original table and the cached wiki articles.
+    ids |= {items.DESC_ID_OFFSET + t for t, (root, _) in items.catalogue().items()
+            if root == items.AMMO}
+    # The finite PvP quest reward has an explicit description of its own.
+    ids.add(items.DESC_ID_OFFSET + items.POISON_SYRINGE)
     # Blueprint applicability descriptions are generated even where the
     # original client had no bonus description for that type.
     import craft
@@ -176,6 +182,8 @@ try:
     ids |= set(quests.strings())
     # vehicle names and descriptions, the ids ts_si puts in name and desc
     ids |= set(transport.strings())
+    # Location-scoped NPC captions are preloaded independently of mob IDs.
+    ids |= set(npcs.PRESENTATION_NAMES)
     # clothing set names and descriptions, the ids ss_si_set puts in name and desc
     import sets                                        # noqa: E402
     ids |= set(sets.strings())
@@ -185,6 +193,10 @@ try:
     # and the reworked pieces' and the clothing cheques' words (setcraft.py)
     import setcraft                                    # noqa: E402
     ids |= set(setcraft.strings())
+    # Equipment also preloads its exact allowance and wear-level note,
+    # including articles without an original/wiki description.
+    ids |= {items.DESC_ID_OFFSET + t for t in items.catalogue()
+            if items.equipment_level_text(t)}
     have = {int(i) for i in re.findall(rb"id='(\d+)'", everything)}
     check('every name the server sends is preloaded', ids - have, set())
     check('creature, item, description, quest, transport and set ids do not collide',
@@ -242,16 +254,22 @@ try:
     icons = own_items.icons(own_items.table(here))
     if all(os.path.isfile(os.path.join(world.RES, *p.split("/"))) for p in icons.values()):
         served_icons = {}
+        own = own_items.load()
+        by_path = {own_items.icon_path(*row): own[t]
+                   for t, row in own_items.rows(own_items.table(here), own).items()}
         for mine, like in sorted(icons.items()):
-            with open(os.path.join(world.RES, *like.split("/")), "rb") as fh:
+            source = own_items.custom_icon(by_path[mine]) or os.path.join(world.RES, *like.split('/'))
+            with open(source, "rb") as fh:
                 served_icons[mine] = get("/res/" + mine) == fh.read()
-        check("each one's icon served, its original's picture byte for byte:"
+        check("each one's icon served byte for byte from its declared native asset:"
               " classes/WearItem/helm_Bs_U_LVL_12_G_mod00/ico.swf and the four others, and"
               " Тёмное Эхо (G)'s five, and the Eden cleaver",
               served_icons, dict.fromkeys(["classes/WearItem/%s_Bs_U_LVL_%d_G_mod00/ico.swf"
                                            % (s, lvl) for lvl in (12, 16)
                                            for s in ("helm", "shirt", "armor", "pants", "boots")]
-                                          + ["classes/ColdArm/eden_banana_cleaver/ico.swf"],
+                                          + ["classes/ColdArm/eden_banana_cleaver/ico.swf"]
+                                          + [own_items.icon_path(*own_items.rows(own_items.table(here))[t])
+                                             for t in range(60011, 60027)],
                                           True))
     else:
         print("  --  no quest pieces' icons in %s; the check of ours is skipped" % world.RES)

@@ -159,6 +159,17 @@ class EdenQuestClient(unittest.TestCase):
         self.assertEqual(self.reads, [])
         self.assertEqual(len(self.original_calls), 5)
 
+    def test_bunker_lifts_revalidate_both_locations_without_reindexing_quests(self):
+        self.catalogue[689] = (quests.given_by(689), quests.taken_by(689))
+        self.inspector['checkedQuests'].update({18202: True, 18204: True})
+        for entity in (50, 60, 50):
+            self.reads.clear()
+            target, frame = self.npc(689, entity)
+            self.wrapper.invoke(target, [frame])
+            self.assertEqual(self.reads, [18202, 18204])
+            self.assertEqual(list(frame['param']['give_quests']), [18202, 18204])
+            self.assertEqual(self.inspector['callCount'], 1)
+
     def test_subsequent_eden_contact_revalidates_but_does_not_duplicate_take_list(self):
         target, frame = self.npc(1789)
         self.wrapper.invoke(target, [frame])

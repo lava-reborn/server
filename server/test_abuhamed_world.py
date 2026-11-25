@@ -143,11 +143,12 @@ try:
           sorted(c for c in list(CELLS) + list(WALL) if c not in walked), [])
     check("  ..the same land as a walk from the station: the town is on Вади-Хальфа's side of the wall",
           test_borders.walk_from(STATION_CELL) == walked, True)
-    check("  ..and every place on a cell round the town that walk reaches is one this suite looks at"
-          " (a place left out would show its people unchecked; the places of ours aside)",
+    check("  ..the only additional reachable place is the approved clan base, checked by test_clan_base_world"
+          " (the places of ours aside)",
           sorted((i, c) for c, i in world.settlements().items()
                  if BOX[0] <= c[0] <= BOX[1] and BOX[2] <= c[1] <= BOX[3] and c in walked
-                 and i not in PLACES and not (i >= world.FIRST_NEW_ID and i in world.overlay_ids())), [])
+                 and i not in PLACES and not (i >= world.FIRST_NEW_ID and i in world.overlay_ids())),
+          [(118, (6083, 1957))])
     check("each place's way out of its file is open: the pirates' camp's three (the river south of it),"
           " the works' three, the crash's three, the others' four",
           {i: sorted({s for s in travel.exit_sides(world.location(i)).values() if s in travel.SIDES})
@@ -216,11 +217,11 @@ try:
     check("the captains and colonels are rank and file (DESIGNED_KINDS): no hours, no boss's slot",
           {t: (world.creature_role(t), bosses.keeps_hours(t)) for t in (767, 771, 775, 1730, 2318)},
           {t: ("mob", False) for t in (767, 771, 775, 1730, 2318)})
-    check("the five bosses keep the hours, at the levels of their files; the treasurers and the"
+    check("the five bosses keep the hours at release level 18; the treasurers and the"
           " bookkeeper stand all day (bosses.ALL_DAY)",
           ({t: (bosses.keeps_hours(t), mobs.stats(t).level) for t in BOSSES},
            {t: (world.creature_role(t), bosses.keeps_hours(t), t in bosses.ALL_DAY) for t in TREASURERS}),
-          ({777: (True, 32), 778: (True, 30), 8620: (True, 33), 1037: (True, 32), 1038: (True, 30)},
+          ({t: (True, 18) for t in BOSSES},
            {t: ("boss", False, True) for t in TREASURERS}))
     placed = {lid: sorted(int(r["type"]) for r in world.placed_in(lid)) for lid in (132, 168, 263)}
     check("the named men stand by their camps by hand (data/placements.json), Кленз in the Dark Mine's"

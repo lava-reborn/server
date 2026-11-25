@@ -208,7 +208,14 @@ check("kill quest does not", quests.get(5).is_complete(
 # for them by name.
 env = dict(os.environ, LAVA_PORT=str(PORT), LAVA_HOST="127.0.0.1",
            LAVA_DB=DB, LAVA_CHEATS="1", LAVA_GX="5970", LAVA_GY="1730")
-srv = subprocess.Popen([sys.executable, "server.py"], cwd=HERE, env=env,
+# This replay counts hand-ins within one day. Pin just the counter's start,
+# so a run crossing UTC midnight does not legitimately reset it mid-scene.
+# The real day boundary is covered independently in test_halfa_fixups.
+day_start = int(time.time()) // 86400 * 86400
+server_code = ("import asyncio,server; "
+               "server.Session.day_start=staticmethod(lambda now=None: %d); "
+               "asyncio.run(server.main())") % day_start
+srv = subprocess.Popen([sys.executable, "-c", server_code], cwd=HERE, env=env,
                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 
 # The server logs every frame, and this replay enters three locations, so its

@@ -195,9 +195,9 @@ class Format(unittest.TestCase):
         # name has one, the hand rows' and the matcher's alike: person_name
         # drops a leading [N] from every name (server/orig_texts.py, the
         # owner's 2026-10-12), while this file keeps the original's text.
-        hand = set(json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                               "orig_names_manual.json"),
-                                  encoding="utf-8"))["types"])
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               "orig_names_manual.json"), encoding="utf-8") as source:
+            hand = set(json.load(source)["types"])
         mobs = [v["name"] for k, v in self.npcs.items() if v["kind"] == "mob" and k not in hand]
         self.assertTrue(mobs and all(re.match(r"\[\d+\] ?", n) for n in mobs))
         self.assertFalse(any("&lt;" in n or "&gt;" in n or "&quot;" in n for n in names))

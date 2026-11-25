@@ -151,8 +151,7 @@ except Exception:
 # --- 2. no way in --------------------------------------------------------------------------
 print("no way in")
 try:
-    files = sorted(int(os.path.basename(p)[:-4])
-                   for p in glob.glob(os.path.join(world.RES, "locations", "static", "*.xml")))
+    files = sorted(world.static_ids())
     followed, any_door = [], []
     for lid in files:
         for side in "ab":
@@ -306,7 +305,7 @@ try:
           {t: sorted({sets.SETS[sets.set_of(i)]["name"] for i in items.stock_for(t, place)
                       if sets.set_of(i) in sets.SETS}) for t, place in ((1204, 102), (1205, 102),
                                                                         (650, 52))},
-          {1204: town, 1205: town, 650: town})
+          {1204: [], 1205: town, 650: town})
     check("Генри, Генри ст and Тиль keep their other quests",
           (sorted({119, 132} - set(quests.given_by(93))),
            sorted({105, 119, 132} - set(quests.given_by(5104))), 104 in quests.taken_by(5104),
@@ -564,8 +563,7 @@ try:
           [(5863, 1946), None, None, None, None, None])
 
     # no way in, and none out through them
-    fsc_files = sorted(int(os.path.basename(p)[:-4])
-                       for p in glob.glob(os.path.join(world.RES, "locations", "static", "*.xml")))
+    fsc_files = sorted(world.static_ids())
     doors_in = []
     for lid in fsc_files:
         for side in "ab":

@@ -120,6 +120,20 @@ DARK_A = tuple(range(36056, 36061))             # Тёмное Эхо[17]: the q
 DARK_G = tuple(range(60005, 60010))             # ..and its G, types of our own
 OASIS_ROUNDS = [6104, 6105, 6106, 6108, 6107, 6110, 6111, 6115, 6116, 6117, 6118, 6120, 6119,
                 6122, 6123, 6127, 6113, 6125, 6109, 6121, 6114, 6126, 6112, 6124]
+
+# Calibre order on the wire; archive owner list above stays intact.
+ORDERED_OASIS_ROUNDS = [6092, 6104, 6116, 6140, 6164, 6152, 6189,
+                        6093, 6105, 6117, 6141, 6165, 6153, 60011,
+                        6094, 6106, 6118, 6142, 6166, 6154, 60012,
+                        6096, 6108, 6120, 6144, 6168, 6156, 60014,
+                        6095, 6107, 6119, 6143, 6167, 6155, 60013,
+                        6098, 6110, 6122, 6146, 6170, 6158, 60016,
+                        6099, 6111, 6123, 6147, 6171, 6159, 60017,
+                        6103, 6115, 6127, 6151, 6175, 6163, 60021,
+                        6101, 6113, 6125, 6149, 6173, 6161, 60019,
+                        6097, 6109, 6121, 6145, 6169, 6157, 60015,
+                        6102, 6114, 6126, 6150, 6174, 6162, 60020,
+                        6100, 6112, 6124, 6148, 6172, 6160, 60018]
 UNLISTED = (749, 753, 4583, 4584, 7344, 7339, 7341, 7342)   # masters with no stall of their own
 # The package WORLD holds the trader 7247, with no row and no role, out of the station
 # (data/schedule.json held_out) and stands the lottery men all year (world.SEASON_KEPT):
@@ -141,10 +155,9 @@ WORLD_PUTS = {PORT: {LOTTERY, GOLD_LOTTERY}}
 BAND, OWN_, WIKI, NONE = "band", "own", "wiki", "none"
 DECIDED = {
     STATION: {SCAR: BAND, VELASQUEZ: OWN_, RIFLE_TRADER: BAND, MG_TRADER: BAND,
-              ASSAULT_TRADER: BAND, MARAT: BAND, SIMONA: BAND, KIPLER: BAND, KURT: BAND,
-              PILOT: OWN_},
+              ASSAULT_TRADER: BAND, MARAT: BAND, SIMONA: BAND, KIPLER: BAND, KURT: BAND},
     QUARTER: {7344: OWN_, 7341: OWN_, 753: OWN_, 752: OWN_, 749: OWN_, 748: OWN_, 751: OWN_,
-              ANWAR: OWN_, GOFUS: WIKI, SAMUEL: NONE, BERNARD: WIKI, JUNIOR: WIKI},
+              ANWAR: OWN_, GOFUS: BAND, SAMUEL: NONE, BERNARD: BAND, JUNIOR: BAND},
     CENTRE: {FLAG: NONE},
     ROAD: {KODOGO: OWN_},
     MASTERS_CAMP: {7342: OWN_, 7339: OWN_, 4583: OWN_, 4584: OWN_},
@@ -157,7 +170,7 @@ DECIDED = {
 OWN = {
     NUR: [TICKET_TO_ABRI, TICKET_FROM_DONGOLA, TICKET_TO_DONGOLA],
     VELASQUEZ: [TICKET_TO_DONGOLA],
-    MARAT: POUCHES,
+    MARAT: POUCHES + [3735, 3736, 3737, 3738, 3739, 3740, 5615, 3722, 3723, 3724, 3725, 3726],
     LOTTERY: list(KEYS),
     GOLD_LOTTERY: list(GOLD_KEYS),
     ANWAR: list(GIFTS),
@@ -332,7 +345,7 @@ STALLS = {(p, t): items.stock_for(t, p) for p in ABUHAMED_PLACES for t in AT[p]}
 STALLS.update({(p, t): items.stock_for(t, p) for p, ts in WORLD_PUTS.items() for t in ts})
 check("Абу-Хамед is the band 16-20 of data/shop_bands.json, its places these",
       [(c[0], c[1], c[2], sorted(c[3])) for c in shop_bands.CITIES if c[0] == "Абу-Хамед"],
-      [("Абу-Хамед", LO, HI, [126, 127, 128, 129, 131, 177, 196, 446, 467])])
+      [("Абу-Хамед", LO, HI, [126, 127, 128, 129, 131, 177, 196, 446, 467, 609])])
 check("no gun, knife or set piece out of 16-20 on a seller's stall of Абу-Хамед, no medicine out"
       " of its tiers 12_15-20; every one of a seller's band both ways, the ordinary for afro and"
       " the (G) for gold, but the apothecary Джут's gold alone",
@@ -364,10 +377,11 @@ check("  ..named as the ladder names them, the quest pieces without their «(Q)�
        [(own_items.load()[t]["like"], items.own(t)) for t in DARK_G]),
       (["Шлем Тёмного Эха", "Шлем Тёмного Эха (G)"], [11125], [60005], [],
        [(a, True) for a in DARK_A]))
-check("Симона: only level-16/17 sets; Марат: ten pouches, each followed by its G",
+check("Симона: only level-16/17 sets; Марат: ten base pouches, seven cross MOD A1, four A0 and plain A1",
       (STALLS[(STATION, SIMONA)] == shop_bands.goods(("sets",), LO, 17),
-       STALLS[(STATION, MARAT)][-10:], len(STALLS[(STATION, MARAT)])),
-      (True, [3577, 3599, 3580, 3602, 5613, 5614, 3578, 3600, 3579, 3601], 10))
+       STALLS[(STATION, MARAT)], len(STALLS[(STATION, MARAT)])),
+      (True, [3577, 3599, 3580, 3602, 5613, 5614, 3578, 3600, 3579, 3601,
+              3735, 3736, 3737, 3738, 3739, 3740, 5615, 3722, 3723, 3724, 3725, 3726], 22))
 check("  ..the pouches at their articles' prices: автоматчика 50 000 / 10 G, пулемётчика"
       " 100 000 / 20 G, рукопашника 40 000 / 8 G, снайпера 20 000 / 4 G, спецназовца 40 000 / 8 G",
       [(price(t), price(items.GOLD_POUCHES[t])) for t in POUCHES],
@@ -376,7 +390,7 @@ check("  ..the pouches at their articles' prices: автоматчика 50 000 
 check("Шрам: released knives remain, level-18/20 blueprints are hidden",
       STALLS[(STATION, SCAR)], shop_bands.goods(("knives",), LO, 17))
 check("the oasis's «Торговец патронами» (1232): every СТ and ОТ of his list, nothing cut",
-      STALLS[(OASIS, AMMO_OASIS)], OASIS_ROUNDS)
+      STALLS[(OASIS, AMMO_OASIS)], ORDERED_OASIS_ROUNDS)
 check("the lottery men at the port: Муамар the tickets [16], [18], [19], the gold lottery"
       " their [G]",
       (STALLS[(PORT, LOTTERY)], STALLS[(PORT, GOLD_LOTTERY)]), (list(KEYS), list(GOLD_KEYS)))
@@ -400,9 +414,9 @@ ROUNDS = {x for s in STALLS.values() for x in s if items.root_of(x) == items.AMM
 check("every gun on a stall of Абу-Хамед has a round it chambers on sale in the town",
       sorted({x for s in STALLS.values() for x in s if items.root_of(x) == items.FIRE_ARM
               and not set(items.params_of(x)["comp_array"]) & ROUNDS}), [])
-check("the stalls' sizes: none longer than 64 (the prison's supply man's 61 the longest)",
+check("the prison supplier has all six released grades plus medicine, without makeshift rounds",
       (max(len(s) for s in STALLS.values()), max(STALLS, key=lambda k: len(STALLS[k]))),
-      (61, (YARD, SUPPLY)))
+      (84, (YARD, SUPPLY)))
 check("the healers' fees: Роуз (728) and the oasis's Лекарь (1270) 500, the prison's"
       " Альфред Петрович (2112) 600 (server/test_healer_fees.py)",
       {t: npcs.healer_price(t, 10) for t in (728, 1270, 2112)}, {728: 500, 1270: 500, 2112: 600})
@@ -432,12 +446,12 @@ def fam(name):
 
 
 ups = fam("upgrade")
-check("Абу-Хамед's rows: repeatable services of the band 17-20 (the owner's decision 34), every"
+check("Абу-Хамед's rows: repeatable services with item-level minus three for blueprints, every"
       " family, loaded (quests.get)",
       (sorted({(r["repeatable"], r["service"], r["level"], r["max_level"]) for r in AH_ROWS}),
        sorted({r["craft"]["family"] for r in AH_ROWS}),
        [r["type"] for r in AH_ROWS if quests.get(r["type"]) is None]),
-      ([(1, True, 16, 20), (1, True, 17, 20)], ["assembly", "decode", "knife", "salvage", "upgrade"], []))
+      ([(1, True, n, 20) for n in range(14, 18)], ["assembly", "decode", "knife", "salvage", "upgrade"], []))
 check("the masters stand where the labels put them: (A) in the masters' camp 131, (G) in the"
       " living quarter 127",
       ({t: t in standing(MASTERS_CAMP) for t in (755, 758, 759, 4583, 4584)},
@@ -825,7 +839,7 @@ async def main():
     stall, opened = open_stall(sess, OASIS, AMMO_OASIS)
     check("the oasis's «Торговец патронами»: 7.62x54R СТ for 160 afro a pack of 20",
           (stall, opened, buy(sess, stall, 6111, BUY, 20)),
-          (OASIS_ROUNDS, [0], ([0], [6111], 160, 0)))
+          (ORDERED_OASIS_ROUNDS, [0], ([0], [6111], 160, 0)))
     close_stall(sess)
 
     stall, opened = open_stall(sess, QUARTER, ANWAR)

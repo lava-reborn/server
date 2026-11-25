@@ -227,6 +227,192 @@ class Lifecycle(unittest.TestCase):
         self.call('__lcLoaderClear', loader)
         self.assertEqual(calls, ['cleared'])
 
+    def test_timeout_constructor_preserves_bootstrap_registry(self):
+        old = dict(_intervals=Arr([17]))
+        self.env['lol']['utils'] = dict(Timeout=old)
+        replacement = self.functions['__lcTimeout']
+        replacement.prototype = {}
+        self.call('__lcInstallTimeout')
+        self.assertIs(self.env['lol']['utils']['Timeout'], replacement)
+        self.assertIs(replacement._intervals, old['_intervals'])
+        self.assertIs(replacement.prototype['Clear'], self.functions['__lcTimeoutClear'])
+        self.call('__lcInstallTimeout')
+        self.assertIs(self.env['lol']['utils']['Timeout'], replacement)
+
+    def test_effect_panel_releases_original_source_and_timer(self):
+        source, replacement = Publisher(), Publisher()
+        self.gamer['effects'] = source
+        self.env['lol']['events']['PlayerEvent'].update(UPDATE_EFFECTS='effects', UPDATE_ONE_EFFECT='oneEffect')
+        calls = []
+        panel = dict(master=self.master, effectsUpdate=lambda: None, oneEffectUpdate=lambda: None,
+                     __lcEffectsKillOrig=lambda: calls.append('killed'))
+        def init():
+            panel['effectsTimer'] = self.timer(panel)
+            source.addEventListener('effects', panel, panel['effectsUpdate'])
+            source.addEventListener('oneEffect', panel, panel['oneEffectUpdate'])
+        panel['__lcEffectsInitOrig'] = init
+        self.call('__lcEffectsInit', panel)
+        self.gamer['effects'] = replacement
+        replacement.addEventListener('effects', panel, panel['effectsUpdate'])
+        self.call('__lcEffectsKill', panel)
+        self.call('__lcEffectsKill', panel)
+        self.assertFalse(self.timers)
+        self.assertFalse(source.listeners)
+        self.assertEqual(len(replacement.listeners), 1)
+        self.assertEqual(calls, ['killed'])
+
+    def info_panel(self, party, player):
+        events = dict(JOIN_TO_PARTY='join', DISBAND_PARTY='disband',
+                      KICKED_FROM_PARTY='kick', LEAVE_PARTY='leave',
+                      PARTY_LIST_REFRESH='refresh')
+        self.env['lol']['core']['party'] = dict(
+            PartyManager=dict(getInstance=lambda: party), PartyEvent=events)
+        self.env['lol']['events']['PlayerEvent']['UPDATE_INFO'] = 'info'
+        panel = dict(player=player, native_kills=0,
+                     partyColorUpdate=lambda: None, partyColorUpdate_pause=lambda: None,
+                     userInfoUpdate=lambda: None)
+
+        def init(entity_id):
+            panel['entity_id'] = entity_id
+            for event in events.values():
+                party.addEventListener(event, panel, panel['partyColorUpdate'])
+            player.addEventListener('info', panel, panel['userInfoUpdate'])
+            panel['timer'] = self.timer(panel)
+            panel['removePhraseInterval'] = self.timer(panel)
+
+        def native_kill():
+            # Exact native mismatch: these are not the subscribed functions.
+            for event in events.values():
+                party.removeEventListener(event, panel, panel['partyColorUpdate_pause'])
+            panel['native_kills'] += 1
+
+        panel.update(__lcInfoNickOrig=init, __lcInfoKillOrig=native_kill)
+        panel['kill'] = lambda: self.call('__lcInfoKill', panel)
+        return panel
+
+    def test_native_name_panel_retains_party_info_and_timers_after_kill(self):
+        party, player = Publisher(), Publisher()
+        panel = self.info_panel(party, player)
+        panel['__lcInfoNickOrig'](800001)
+        panel['__lcInfoKillOrig']()
+        self.assertEqual(len(party.listeners), 5)
+        self.assertEqual(len(player.listeners), 1)
+        self.assertEqual(len(self.timers), 2)
+
+    def test_name_panel_cleanup_keeps_other_live_panel_and_original_publishers(self):
+        party, player = Publisher(), Publisher()
+        retired = self.info_panel(party, player)
+        live = self.info_panel(party, player)
+        self.call('__lcInfoNick', retired, 800001)
+        self.call('__lcInfoNick', live, 0)
+        replacement = Publisher()
+        retired['player'] = replacement
+        replacement.addEventListener('info', retired, retired['userInfoUpdate'])
+        self.call('__lcInfoKill', retired)
+        self.call('__lcInfoKill', retired)
+        self.assertEqual(retired['native_kills'], 1)
+        self.assertEqual(len(self.timers), 2)
+        self.assertEqual(len(party.listeners), 5)
+        self.assertTrue(all(owner is live for _event, owner, _handler in party.listeners))
+        self.assertEqual(len(player.listeners), 1)
+        self.assertIs(player.listeners[0][1], live)
+        self.assertEqual(len(replacement.listeners), 1)
+        self.assertIsNone(retired['__lcInfoParty'])
+        self.assertIsNone(retired['__lcInfoPlayer'])
+
+    def test_hundred_ten_player_scenes_release_sparse_name_panels(self):
+        party, player = Publisher(), Publisher()
+        for _ in range(100):
+            scene = self.scene()
+            self.call('__lcSceneInit', scene)
+            panels = [self.info_panel(party, player) for _ in range(10)]
+            for index, panel in enumerate(panels):
+                self.call('__lcInfoNick', panel, 800001 + index)
+            # Native helperObjects is sparse, keyed by possibly huge entity IDs.
+            scene['helperObjects'] = {str(800000001 + i): panel for i, panel in enumerate(panels)}
+            scene['helperObjects']['0'] = None
+            self.call('__lcSceneKill', scene)
+            self.call('__lcSceneKill', scene)
+            self.assertEqual([p['native_kills'] for p in panels], [1] * 10)
+            self.assertFalse(party.listeners)
+            self.assertFalse(player.listeners)
+            self.assertFalse(self.timers)
+
+    def test_preparation_display_expires_after_delayed_frame_without_early_release(self):
+        clock, calls = [1000], []
+        self.functions['__lcPrepareTimer'].closure['getTimer'] = lambda: clock[0]
+        panel = dict(startTimer=1000, timerFlag=True, prepare_txt=dict(text='15'),
+                     __lcPrepareTimerOrig=lambda seconds: calls.append(seconds))
+        panel['timer'] = self.timer(panel)
+        clock[0] = 15999
+        self.call('__lcPrepareTimer', panel, 15)
+        self.assertEqual(calls, [15])
+        self.assertTrue(panel['timerFlag'])
+        self.assertEqual(len(self.timers), 1)
+        # Native count == seconds misses this second after a pause/slow frame.
+        clock[0] = 18000
+        self.call('__lcPrepareTimer', panel, 15)
+        self.assertEqual(calls, [15])
+        self.assertFalse(panel['timerFlag'])
+        self.assertIsNone(panel['timer'])
+        self.assertFalse(self.timers)
+        self.assertEqual(panel['prepare_txt']['text'], '')
+        panel['timerFlag'] = True
+        panel['timer'] = self.timer(panel)
+        clock[0] = 16000
+        self.call('__lcPrepareTimer', panel, 15)
+        self.assertFalse(self.timers)
+        self.assertFalse(panel['timerFlag'])
+
+    def test_ten_shooters_thirty_thousand_timeouts_release_every_reference(self):
+        pending, delivered = {}, []
+        counter = 0
+        def schedule(callback, delay, owner):
+            nonlocal counter
+            counter += 1
+            pending[counter] = (callback, owner)
+            return counter
+        self.functions['__lcTimeout'].closure['setInterval'] = schedule
+        self.functions['__lcStopTimer'].closure['clearInterval'] = lambda key: pending.pop(key, None)
+        peak = 0
+        for volley in range(500):
+            batch = []
+            for player in range(10):
+                for pellet in range(6):
+                    timer = {}
+                    self.call('__lcTimeout', timer, dict(player=player),
+                              lambda value: delivered.append(value), 50, (volley, player, pellet))
+                    batch.append(timer)
+            peak = max(peak, len(pending))
+            for timer in batch:
+                self.call('__lcTimeoutFire', None, timer)
+                self.assertIsNone(timer['id'])
+                self.assertIsNone(timer['target'])
+                self.assertIsNone(timer['callback'])
+                self.assertIsNone(timer['args'])
+            self.assertEqual(len(pending), 0)
+        self.assertEqual(peak, 60)
+        self.assertEqual(len(delivered), 30000)
+        self.assertEqual(len(set(delivered)), 30000)
+
+    def test_timeout_clears_before_callback_and_clear_is_idempotent(self):
+        pending = {}
+        def schedule(callback, delay, owner):
+            pending[0] = owner
+            return 0
+        self.functions['__lcTimeout'].closure['setInterval'] = schedule
+        self.functions['__lcStopTimer'].closure['clearInterval'] = lambda key: pending.pop(key, None)
+        def failure():
+            self.assertFalse(pending)
+            raise ValueError('callback failed')
+        timer = {}
+        self.call('__lcTimeout', timer, {}, failure, 50)
+        with self.assertRaisesRegex(ValueError, 'callback failed'):
+            self.call('__lcTimeoutFire', None, timer)
+        self.call('__lcTimeoutClear', timer)
+        self.assertFalse(pending)
+        self.call('__lcTimeoutFire', None, timer)
+
 
 if __name__ == '__main__':
     run_cases(Lifecycle)

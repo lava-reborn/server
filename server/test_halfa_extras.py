@@ -283,7 +283,7 @@ try:
                    int((way or {}).get("target_loc_id", 0)), q.rew_loc, bool(q.repeatable),
                    q.level, (q.cost_afro, q.cost_gold) != (0, 0) if t not in TICKETS
                    else [o for o, _n, _m in q.objs]),
-                  ([RIDES[t][0]], [RIDES[t][0]], True, True, RIDES[t][2], 1, True, 0,
+                  ([RIDES[t][0]], [RIDES[t][0]], True, True, RIDES[t][2], 1, True, 16 if t in (276, 283) else 0,
                    True if t not in TICKETS else [TICKETS[t]]))
             continue
         check("ride %d «%s» from %d to %d: %s, a way with an end the regions do not reach,"
@@ -380,7 +380,7 @@ try:
           " house wins: Зубери's 0,11 G, Дирижер's 0,10 G a dig for 0,20 G",
           ({t: v < rows[250].cost_gold for t, v in worth.items()}, worth[251], worth[263],
            gold_worth(6156, 20), gold_worth(10649, 1), gold_worth(6905, 1)),
-          ({t: True for t in worth}, 11.4, 9.7, 20, 625, 6))
+          ({t: True for t in worth}, 11.8, 10.2, 40, 625, 6))
     shares = {}
     for o, _n, w in rows[270].rew_random:
         kind = "teacher" if 4312 <= o <= 4322 else "journal" if 416 <= o <= 419 else o
@@ -431,12 +431,18 @@ try:
     for rx, ry in ring:
         loc = world.location(world.pack(rx, ry))
         ring_locs.setdefault(loc.file, loc)
-    near = min(mobs.hex_distance(travel.arrival_cell(loc, side), n, loc.width)
-               for loc in ring_locs.values() for side in (travel.N, travel.S, travel.E, travel.W)
+    longest_type = max((t for band, _reach in encounters.bands() for t in band.types), key=lambda t: mobs.stats(t).range)
+    arrivals = [(loc, encounters.arrival_cell(loc, side, [(n, longest_type) for n in encounters.nests(loc)]))
+                for loc in ring_locs.values() for side in (travel.N, travel.S, travel.E, travel.W)]
+    near = min(mobs.hex_distance(pos, n, loc.width) for loc, pos in arrivals if pos is not None
                for n in encounters.nests(loc))
     longest = max(mobs.stats(t).range for b, _r in encounters.bands() for t in b.types)
-    check("  ..and the arrival, over any edge of any of them, out of every band's reach",
-          (len(ring_locs), near > longest, longest), (4, True, 10))
+    # No safe route means no ambush: Encounters.start discards its room
+    # before registering a meeting, spending quota, or moving the player.
+    check("  ..and every possible arrival is out of every band's reach; unsafe edges cancel the ambush",
+          (len(ring_locs), len(arrivals), any(pos is not None for _loc, pos in arrivals),
+           longest > 0, near > longest), (4, 16, True, True, True))
+    print("  current band maximum range: %s; nearest arrival: %s" % (longest, near))
     legs = encounters.crossings(5950.0, 1710.0, 5953.5, 1710.0, 0.35)
     check("the cells a leg enters, in order, with the seconds to each",
           [(c, round(s, 1)) for s, c in legs],
@@ -747,7 +753,7 @@ def owned(name):
     out = {}
     for r in st.items_of(char_id(name)):
         out[r["type_id"]] = out.get(r["type_id"], 0) + (
-            r["count"] if r["root"] in items.HEAPABLE_ROOTS else 1)
+            r["count"] if items.heapable(r["type_id"]) else 1)
     st.close()
     return out
 

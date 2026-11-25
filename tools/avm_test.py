@@ -60,7 +60,7 @@ class Function:
         self.params, self.body, self.closure = params, body, closure.copy()
 
     def invoke(self, target, args):
-        scope = dict(self.closure, this=target)
+        scope = dict(self.closure, this=target, arguments=Arr(args))
         scope.update(zip(self.params,args))
         return execute(self.body,scope)
 

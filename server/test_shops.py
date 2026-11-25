@@ -39,6 +39,7 @@ import items  # noqa: E402
 import names  # noqa: E402
 import npcs  # noqa: E402
 import orig_texts  # noqa: E402
+import own_items  # noqa: E402
 import sets  # noqa: E402
 import shop_bands  # noqa: E402
 import world  # noqa: E402
@@ -65,8 +66,9 @@ ICON_FOLDER = {items.FIRE_ARM: "FireArm", items.WEAR: "WearItem", items.HEAL: "H
 
 def icon(t):
     root, internal = cat[t]
-    return os.path.isfile(os.path.join(world.RES, "classes", ICON_FOLDER[root],
-                                       internal, "ico.swf"))
+    path = own_items.icon_path(root, internal)
+    path = own_items.icons(cat).get(path, path)
+    return os.path.isfile(os.path.join(world.RES, path))
 
 
 def unservable(t):
@@ -166,7 +168,7 @@ def food_or_water(t):
     Not bandages and injectors (Med_Battle_), energy drinks
     (Med_Battle_Rest_) or kits (Med_Pacific_HR_)."""
     internal = cat[t][1]
-    return internal.startswith(FOOD) or not internal.startswith("Med_")
+    return internal.startswith(FOOD) or (not internal.startswith("Med_") and not items.params_of(t).get("bonus_act_time"))
 
 
 HASANI_STALL = items.stock_for(HASANI, PLACE[HASANI])
@@ -203,6 +205,7 @@ def rounds_rule():
         out += [a for a in own if a in calibre and a not in out]
         out += [a for a in calibre if a not in own and a not in out
                 and items.root_of(a) == items.AMMO and not items.premium(a)
+                and a not in set(items.SHOCK_ROUNDS.values()) - {6189}
                 and not unservable(a) and priced_once(a)]
     return out
 
@@ -467,8 +470,22 @@ for trader, who in sorted(LISTS.items()):
     wire = items.stock_for(trader, PLACE[trader])
     kinds = shop_bands.kinds(trader)
     band = shop_bands.goods(kinds, 0, 4, shop_bands.only(trader)) if kinds else []
+    expected = band + goods
+    if trader in (BORIS, SCHULZ):
+        expected = band + [6188, 6094, 6106, 6118, 6142, 6166, 6154, 60012,
+                           6092, 6104, 6116, 6140, 6164, 6152, 6189,
+                           6093, 6105, 6117, 6141, 6165, 6153, 60011,
+                           6103, 6115, 6127, 6151, 6175, 6163, 60021]
+    elif trader == SETH:
+        expected = [25636, 6092, 6104, 6116, 6140, 6164, 6152, 6189] + [t for t in goods[3:] if t not in (4181, 3208)]
+    elif trader in (BOMANI, RO_A_KIM):
+        expected = [6188, 6092, 6104, 6116, 6140, 6164, 6152, 6189,
+                    6093, 6105, 6117, 6141, 6165, 6153, 60011,
+                    6094, 6106, 6118, 6142, 6166, 6154, 60012,
+                    6103, 6115, 6127, 6151, 6175, 6163, 60021]
     check("%s (%d): %d types, on the wire as written (a seller's band first)" % (
-        who, trader, len(wire)), wire, band + goods)
+        who, trader, len(wire)), wire,
+        expected)
     check("  ..none twice", len(set(wire)), len(wire))
     check("  ..none premium", [t for t in wire if items.premium(t)], [])
     check("  ..every one servable",

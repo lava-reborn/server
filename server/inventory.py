@@ -67,16 +67,13 @@ and are not in the backpack the corpse drops from.
 """
 import asyncio
 import contextlib
-from functools import lru_cache
 import json
 import logging
 import math
 import os
 import random
-import re
 import secrets
 import time
-from statistics import median
 
 import bank_storage
 import craft
@@ -355,10 +352,11 @@ def di_params(row, store=None):
     """
     root = row["root"]
     p = {"obj": BigUInt(oid_of(row))}
-    if root in items.HEAPABLE_ROOTS:
-        p["size"] = row["count"]
-    elif root == items.HEAL:
+    if root == items.HEAL:
         p["use_count"] = row["use_count"]
+        p['size'] = row['count']
+    elif items.heapable(row["type_id"]):
+        p["size"] = row["count"]
     elif root == items.TROPHY:
         p["count"] = row["count"]
         if store is not None:
@@ -378,9 +376,9 @@ def new_fields(type_id, count=1):
     root = items.root_of(type_id)
     si = items.params_of(type_id) or {}
     f = {"root": root, "slot": BAG, "count": 1}
-    if root in items.HEAPABLE_ROOTS:
+    if items.heapable(type_id):
         f["count"] = max(1, min(int(count), si.get("max_count", 1)))
-    elif root == items.HEAL:
+    if root == items.HEAL:
         f["use_count"] = si.get("use_count", 1)
     elif root in items.BREAKABLE_ROOTS:
         f["brk"] = f["max_break_cur"] = si.get("max_break_abs", 100)
@@ -466,7 +464,7 @@ def weight_of(row):
     """Grams, the way WeightPan reads it: per piece, times the stack."""
     si = items.params_of(row["type_id"]) or {}
     w = si.get("weight", 0)
-    return w * row["count"] if row["root"] in items.HEAPABLE_ROOTS else w
+    return w * row["count"] if items.heapable(row["type_id"]) else w
 
 
 def fits(row, slot):
@@ -621,9 +619,16 @@ def card_repeat(rows):
 
 # --- the level: who may wear what --------------------------------------------
 #
-# Item levels remain in static data and tooltips, but no longer block gear.
-# Combat skill differences instead scale equipment wear. Specialisation gates
-# still apply, including an unlearned (-1) spec whose requirement is zero.
+# Gear may be at most three levels above the character. Combat skill
+# differences from the character's level scale wear; specialisation gates
+# remain independent.
+GEAR_LEVEL_ALLOWANCE = 3
+_WEAPON_SKILL = {items.FIRE_ARM: progression.SHOOTING, items.COLD_ARM: progression.MELEE}
+
+
+def gear_level_allowance(type_id):
+    return items.equipment_level_allowance(type_id)
+
 
 def item_level(type_id):
     """The displayed item tier, retained for wear, prices and release rules."""
@@ -631,15 +636,29 @@ def item_level(type_id):
     return max(unpacked(si.get("need_skills_m"), si.get("need_skills"), progression.SKILLS))
 
 
+def equipment_skill_level(row, character):
+    """Temporary combat skills help weapons, never raise character/armour level."""
+    skill = _WEAPON_SKILL.get(row['root'])
+    return character.level if skill is None else max(character.level, character.skill_level(skill))
+
+
 def weapon_requirement_error(row, character):
-    """Gear requirements shared by equipping and attacking; levels are descriptive.
+    """Gear requirements shared by equipping and attacking.
 
     Use effective skills, as on the character card; an unlearned spec is -1,
     so even a declared requirement of zero requires learning that spec.
     """
     if row["root"] not in GEAR_ROOTS:
         return None
+    # Reuse this frame for the tier and masks; rebuilding it for item_level
+    # on every shot repeats all catalogue/craft/set overlays.
     si = items.params_of(row["type_id"]) or {}
+    required = max(unpacked(si.get("need_skills_m"), si.get("need_skills"), progression.SKILLS))
+    allowance = gear_level_allowance(row['type_id'])
+    level = equipment_skill_level(row, character)
+    if not item_templates.contains(row['type_id']) and required > level + allowance:
+        return '«%s»: нужен уровень персонажа %d, у вас %d' % (
+            item_title(row["type_id"]), required - allowance, level)
     for field, size, value, titles in (
             ("skills", progression.SKILLS, character.skill_level, progression.SKILL_TITLES),
             ("specs", progression.SPECS, character.spec_level, progression.SPEC_TITLES)):
@@ -661,113 +680,29 @@ def weapon_requirement_error(row, character):
 
 
 def wearable(row, level, character=None):
-    """No character-level gate; retain declared spec and noncombat skill gates."""
-    return character is None or weapon_requirement_error(row, character) is None
-
-
-@lru_cache(maxsize=4096)
-def armour_durability_ratio(type_id, base):
-    """Compare unmodified pieces of the same slot and A/G variant.
-
-    A missing rung uses the nearest lower set; below the first rung use the
-    first set. Rework keeps its extra life: it is not a level difference.
-    No counterpart (belts and legacy clothing) means no durability correction.
-    Catalogue data is immutable during a server run; no inventory/DB reads.
-    """
-    import mode_extensions
-    mode_extensions.seal()
-    type_id = setcraft.base_of(item_templates.source_type(type_id))
-    current = sets.record_of(sets.set_of(type_id))
-    if current is None:
-        return 1.0
-    slot = sets.slot_of(type_id)
-    candidates = [s for s in sets.records()
-                  if s["variant"] == current["variant"] and slot in s["members"]]
-    if not candidates:
-        return 1.0
-    lower = [s for s in candidates if s["level"] <= base]
-    reference = (max(lower, key=lambda s: s["level"]) if lower
-                 else min(candidates, key=lambda s: s["level"]))
-    durability = sets.item(type_id).get("max_break_abs", 0)
-    reference_durability = sets.item(reference["members"][slot]).get("max_break_abs", 0)
-    return durability / reference_durability if durability > 0 and reference_durability > 0 else 1.0
-
-
-def _weapon_wear_key(type_id, params):
-    root = items.root_of(type_id)
-    group = params.get("weapon_type", 0) if root == items.FIRE_ARM else 0
-    return root, group, bool(params.get("g_cost", 0))
-
-
-@lru_cache(maxsize=1)
-def weapon_wear_references():
-    """Median durability by class, A/G payment and tier, from known stats.
-
-    No generated fallback weapons, modifications, loans or retired/P types
-    in the baseline. Build once, not on each shot, and never consult the DB.
-    """
-    groups = {}
-    standard = re.compile(
-        r"(?:(?:pistols?|shotgun|assault_rifle|rifle|machine_gun|sub_machine_guns)_\d+_lvl_\d+(?:_gold)?"
-        r"|lamantin_(?:pistols|shotgun|assault_rifle|rifle|machine_gun|sub_machine_guns)_\d+"
-        r"|knife_lvl\d+_[AG])")
-    for type_id in sorted(set(items.wiki()) | set(items.coldarm_manual())):
-        if items.root_of(type_id) not in (items.FIRE_ARM, items.COLD_ARM):
-            continue
-        if not standard.fullmatch(items.catalogue()[type_id][1]):
-            continue
-        if items.out_of_game(type_id) or quests.lent(type_id) or craft.mod_of(type_id):
-            continue
-        params = items.params_of(type_id) or {}
-        durability = params.get("max_break_abs", 0)
-        if durability <= 0 or not (params.get("cost", 0) or params.get("g_cost", 0)):
-            continue
-        key = _weapon_wear_key(type_id, params)
-        groups.setdefault(key, {}).setdefault(item_level(type_id), []).append(durability)
-    return {key: {level: median(values) for level, values in levels.items()}
-            for key, levels in groups.items()}
-
-
-@lru_cache(maxsize=4096)
-def weapon_durability_ratio(type_id, base):
-    import mode_extensions
-    mode_extensions.seal()
-    type_id = item_templates.source_type(type_id)
-    mod = craft.mod_of(type_id)
-    type_id = mod[0] if mod else type_id
-    params = items.params_of(type_id) or {}
-    levels = weapon_wear_references().get(_weapon_wear_key(type_id, params), {})
-    if not levels:
-        return 1.0
-    lower = [level for level in levels if level <= base]
-    reference = levels[max(lower) if lower else min(levels)]
-    durability = params.get("max_break_abs", 0)
-    return durability / reference if durability > 0 else 1.0
+    """The same level allowance with or without a loaded character card."""
+    if character is not None:
+        return weapon_requirement_error(row, character) is None
+    if (row["root"] in GEAR_ROOTS and not item_templates.contains(row['type_id'])
+            and item_level(row["type_id"]) > level + gear_level_allowance(row['type_id'])):
+        return False
+    return True
 
 
 def level_wear_penalty(difference):
-    """Extra tiers add 0.15, not compound interest on the previous tier."""
-    return 1.5 + .15 * (difference - 1) if difference > 0 else 1.0
+    """One to three extra levels wear x1.5, x3 and x4.5; never above x4.5."""
+    return min(4.5, 1.5 * difference) if difference > 0 else 1.0
 
 
 def wear_multiplier(row, character):
-    """Equalise durability, then x1.50 + 0.15 per extra tier; base skills only."""
-    if row["root"] == items.WEAR:
-        base = max(character.skill[progression.SHOOTING][0],
-                   character.skill[progression.MELEE][0])
-        difference = item_level(row["type_id"]) - base
-        if difference <= 0:
-            return 1.0
-        return armour_durability_ratio(row["type_id"], base) * level_wear_penalty(difference)
-    skill = {items.FIRE_ARM: progression.SHOOTING,
-             items.COLD_ARM: progression.MELEE}.get(row["root"])
-    if skill is None:
-        return 1
-    base = character.skill[skill][0]
-    difference = item_level(row["type_id"]) - base
-    if difference <= 0:
+    """Use the same effective weapon/base armour level as the equipment gate.
+
+    Factory durability is retained: multiplying by a durability ratio here
+    would exceed the agreed x4.5 ceiling and change the advertised steps.
+    """
+    if row["root"] not in GEAR_ROOTS:
         return 1.0
-    return weapon_durability_ratio(row["type_id"], base) * level_wear_penalty(difference)
+    return level_wear_penalty(item_level(row["type_id"]) - equipment_skill_level(row, character))
 
 
 def item_title(type_id):
@@ -781,7 +716,8 @@ def level_line(row, level):
     «Наган 1895»: взять в руки можно с 1-го уровня, у вас 0-й."""
     verb = "надеть" if row["root"] == items.WEAR else "взять в руки"
     return "«%s»: %s можно с %d-го уровня, у вас %d-й" % (
-        item_title(row["type_id"]), verb, item_level(row["type_id"]), level)
+        item_title(row["type_id"]), verb,
+        max(0, item_level(row["type_id"]) - gear_level_allowance(row['type_id'])), level)
 
 
 # --- the figure: a full set's look -------------------------------------------
@@ -904,7 +840,25 @@ def repair_base_price(si):
 def repair_rmod(loc_id, trader_type):
     """One advertised/charged rate; warehouse flags only in their own site."""
     site = holdings.site_at(loc_id) if loc_id is not None else None
-    return RMOD * 0.7 if site is not None and trader_type == site.flag else RMOD
+    return RMOD * 0.7 if (site is not None and site.kind == 'warehouse'
+                         and trader_type == site.flag) else RMOD
+
+
+def trade_rates(store, loc_id, trader_type, char_id):
+    """Local paid-base benefits replace, rather than stack with, other rates."""
+    base = holdings.paid_base_for(store, loc_id, char_id)
+    if base is not None and trader_type in base.traders:
+        return dict(pmod=0.9, smod=float(gold_trade.BASE_SALE_SHARE), rmod=RMOD * 0.5)
+    return dict(pmod=PMOD, smod=SMOD, rmod=repair_rmod(loc_id, trader_type))
+
+
+def purchase_pmod(type_id, rates):
+    """The base discount is for ordinary consumables, never gear or valuables."""
+    params = items.params_of(type_id) or {}
+    if (items.root_of(type_id) in (items.AMMO, items.HEAL)
+            and not gold_trade.protected(type_id, params)):
+        return rates['pmod']
+    return PMOD
 
 
 def repair_window(si, brk, max_break_cur, rmod=RMOD):
@@ -971,7 +925,7 @@ def repair_prices(si, brk, max_break_cur, rmod=RMOD):
     return min(afro, all_afro), min(gold, all_gold), restore
 
 
-def buy_price(si, root, n, gold=False):
+def buy_price(si, root, n, gold=False, pmod=PMOD):
     """What buying n of a type costs, to the unit as the stall window says.
 
     A round is priced by the "Сколько штук купить?" window
@@ -983,7 +937,9 @@ def buy_price(si, root, n, gold=False):
     doubles in the same order here, so 5000 rounds cost what the window
     printed; cost * n / sell_num worked out in one go would part from it by
     the rounding of the unit and, over thousands, by a float's last bit.
-    Anything else goes one at a time at its own price times pmod.
+    Paid-base consumables have a discounted whole-currency UNIT price;
+    buying a stack or separate pieces costs the same. Other stalls retain
+    their native pack/quantity rounding.
     """
     per = as_sent(si["g_cost"] if gold else si["cost"])
     if root == items.AMMO:
@@ -991,7 +947,10 @@ def buy_price(si, root, n, gold=False):
         unit = js_round(per / sell) if gold else js_round(per * 1000 / sell) / 1000
     else:
         unit = per / float(si.get("sell_num", 1) or 1)
-    return int(math.ceil(unit * n * PMOD))
+    if root in (items.AMMO, items.HEAL) and 0 < as_sent(pmod) < 1:
+        import shop_prices
+        return shop_prices.discounted_unit(unit, as_sent(pmod)) * n
+    return int(math.ceil(unit * n * as_sent(pmod)))
 
 
 class TradeSession:
@@ -1008,6 +967,7 @@ class TradeSession:
         self.trader_type = trader_type
         self.loc_id = loc_id
         self.sale_quote = None
+        self.rates = None
 
 
 class Inventory:
@@ -1172,7 +1132,7 @@ class Inventory:
         out = {}
         for r in self.rows():
             if r["slot"] == BAG and r["uniq"] not in self.locked:
-                n = r["count"] if r["root"] in items.HEAPABLE_ROOTS else 1
+                n = r["count"] if items.heapable(r["type_id"]) else 1
                 out[r["type_id"]] = out.get(r["type_id"], 0) + n
         return out
 
@@ -1192,7 +1152,7 @@ class Inventory:
             if row["type_id"] != type_id or row["slot"] not in slots \
                     or row["uniq"] in self.locked:
                 continue
-            have = row["count"] if row["root"] in items.HEAPABLE_ROOTS else 1
+            have = row["count"] if items.heapable(row["type_id"]) else 1
             use = min(have, n - taken)
             if use < have:
                 row["count"] -= use
@@ -1218,7 +1178,7 @@ class Inventory:
         purchase sends it. Returns the rows."""
         si = items.params_of(type_id) or {}
         per = max(1, si.get("max_count", 1)) \
-            if items.root_of(type_id) in items.HEAPABLE_ROOTS else 1
+            if items.heapable(type_id) else 1
         out, left = [], int(n)
         while left > 0:
             count = min(per, left)
@@ -1260,7 +1220,7 @@ class Inventory:
                 break
             if row["type_id"] != type_id:
                 continue
-            have = row["count"] if row["root"] in items.HEAPABLE_ROOTS else 1
+            have = row["count"] if items.heapable(row["type_id"]) else 1
             use = min(have, n - taken)
             if use < have:
                 self.store.update_item(row["uniq"], count=have - use)
@@ -1309,7 +1269,7 @@ class Inventory:
         """Unsolicited dynamic info. This is how a reload, a partial sale or
         a merged stack reaches the client: it changes no number by itself."""
         self.send(DI_COMMAND.get(row["root"], "ss_di_heap"), **di_params(row, self.store))
-        if row["root"] in items.HEAPABLE_ROOTS:
+        if items.heapable(row["type_id"]):
             # A stack's new size: pieces came or went.
             self.bag_changed()
 
@@ -1338,7 +1298,8 @@ class Inventory:
             # it came: it does not wear (combat's per-round wear says why).
             return row
         points = int(points)
-        if row["root"] in GEAR_ROOTS:
+        if (row["root"] in GEAR_ROOTS
+                and item_templates.source_type(row['type_id']) != items.POISON_SYRINGE):
             exact = points * wear_multiplier(row, self.sess.character())
             points = math.floor(exact)
             # Same expected wear as the fractional formula; item fields stay
@@ -1349,6 +1310,11 @@ class Inventory:
         self.store.update_item(row["uniq"], brk=max(0, row["brk"] - points))
         row = self.store.item(row["uniq"])
         if row is not None:
+            if item_templates.source_type(row['type_id']) == items.POISON_SYRINGE and row['brk'] <= 0:
+                self.store.delete_item(row['uniq'])
+                self.push_status(row, 0)
+                self.refresh_gear()
+                return None
             self.push_di(row)
             # A piece of a set that has just broken no longer counts towards
             # it. The ss_di_wear above has told the client its break is 0,
@@ -1722,6 +1688,10 @@ class Inventory:
             # moving it anyway would leave a ghost in one of the two places.
             self.ack(RES_NOT_FOUND)
             return
+        if row['root'] == items.HEAL and row['count'] > 1 and dst in (PRIMARY, SECONDARY):
+            self.ack(RES_REFUSED)
+            self.sess.answer('Отделите одну хилку от стопки, чтобы взять её в руку.')
+            return
         if not fits(row, dst):
             self.ack(RES_NO_ITEM)
             return
@@ -2016,39 +1986,58 @@ class Inventory:
         ss_di_heap, a new one arrives by ss_obj_status, an emptied one
         leaves by ss_obj_status;status=0 (items.md 2.2).
         """
-        row = self.find(p.get("obj"))
-        if not row or row["root"] not in items.HEAPABLE_ROOTS:
-            self.ack(RES_NOT_FOUND)
-            return
         try:
-            num = int(p.get("num", 0) or 0)
+            with storage.atomic(self.store.db):
+                if not self.store.lock_quest_character(self.char_id):
+                    self.ack(RES_REFUSED)
+                    return
+                result, changes = self._change_heap(p)
+        except storage.CommitError:
+            self.close_after_uncertain_commit()
+            return
+        except Exception:
+            log.exception("Stack transfer failed for character %s", self.char_id)
+            self.ack(RES_REFUSED)
+            return
+        # A client must not learn about a split/merge before both sides
+        # commit. A failed second write rolls the first one back too.
+        self.ack(result)
+        for status, row in changes:
+            if status is None:
+                self.push_di(row)
+            else:
+                self.push_status(row, status)
+
+    def _change_heap(self, p):
+        """Validate and mutate one stack transfer under the owner's lock."""
+        row = self.find(p.get("obj"))
+        if not row or not items.heapable(row["type_id"]):
+            return RES_NOT_FOUND, []
+        if row['root'] == items.HEAL and (row['slot'] != BAG or row['use_count'] != 1):
+            return RES_REFUSED, []
+        try:
+            num = int(str(p.get("num", 0)))
         except (TypeError, ValueError):
-            num = 0
+            return RES_REFUSED, []
         if "trg" not in p:
             if not (0 < num < row["count"]):
-                self.ack(RES_REFUSED)
-                return
+                return RES_REFUSED, []
             row["count"] -= num
             self.store.update_item(row["uniq"], count=row["count"])
             part = self.create(row["type_id"], num)
-            self.ack(RES_OK)
-            self.push_status(part, 1)
-            self.push_di(part)
-            self.push_di(row)
-            return
+            return RES_OK, [(1, part), (None, part), (None, row)]
         donor = self.find(p.get("trg"))
         if not donor or donor["uniq"] == row["uniq"]:
-            self.ack(RES_NOT_FOUND)
-            return
+            return RES_NOT_FOUND, []
         if donor["type_id"] != row["type_id"]:
-            self.ack(RES_NO_ITEM)
-            return
+            return RES_NO_ITEM, []
+        if row['root'] == items.HEAL and (donor['slot'] != BAG or donor['use_count'] != 1):
+            return RES_REFUSED, []
         limit = (items.params_of(row["type_id"]) or {}).get("max_count", 1)
-        if not num:
+        if num == 0:
             num = donor["count"]
-        if num > donor["count"] or row["count"] + num > limit:
-            self.ack(RES_REFUSED)
-            return
+        if num < 1 or num > donor["count"] or row["count"] + num > limit:
+            return RES_REFUSED, []
         row["count"] += num
         donor["count"] -= num
         self.store.update_item(row["uniq"], count=row["count"])
@@ -2056,12 +2045,7 @@ class Inventory:
             self.store.update_item(donor["uniq"], count=donor["count"])
         else:
             self.store.delete_item(donor["uniq"])
-        self.ack(RES_OK)
-        self.push_di(row)
-        if donor["count"]:
-            self.push_di(donor)
-        else:
-            self.push_status(donor, 0)
+        return RES_OK, [(None, row), (None if donor['count'] else 0, donor)]
 
     # --- the stall: ss_create s_type=1, ss_upd ------------------------------
     def open_trade(self, p):
@@ -2075,8 +2059,38 @@ class Inventory:
         if not entry or entry[2] != world.TRADER or not self.char_id:
             self.ack(RES_REFUSED)
             return
+        if not holdings.may_serve(self.store, self.sess.room.loc.id, entry[1], self.char_id):
+            self.trade = None
+            self.ack(RES_REFUSED)
+            return
         self.trade = TradeSession(target, entry[1], self.sess.room.loc.id)
+        self.trade.rates = trade_rates(self.store, self.trade.loc_id, entry[1], self.char_id)
+        # Ownership or rent can change while the NPC's earlier info is cached.
+        site = holdings.site_at(self.trade.loc_id)
+        if site is not None and entry[1] in site.traders:
+            self.sess.send_npc_info(target)
         self.ack(RES_OK)
+
+    def current_trade_rates(self):
+        """Re-read local rights; an old window must never charge a higher rate."""
+        trade = self.trade
+        room = getattr(self.sess, 'room', None)
+        loc_id = room.loc.id if room is not None else None
+        rates = trade_rates(self.store, loc_id, getattr(trade, 'trader_type', None), self.char_id)
+        if holdings.base_for(loc_id) is not None:
+            if (not self.trade_present(room)
+                    or not holdings.may_serve(self.store, loc_id, trade.trader_type, self.char_id)):
+                return None
+        if trade is not None and trade.rates is not None and trade.rates != rates:
+            return None
+        return rates
+
+    def trade_present(self, room):
+        """The open counterpart still occupies this base's current room."""
+        trade = self.trade
+        entry = room.npc(trade.npc_id) if room is not None and trade else None
+        return bool(entry and entry[1] == trade.trader_type and entry[2] == world.TRADER
+                    and trade.loc_id == room.loc.id)
 
     def ss_upd(self, p):
         """An operation inside the open stall. Returns False when no stall
@@ -2172,9 +2186,11 @@ class Inventory:
                 if not top:
                     self.ack(RES_REFUSED)
                     return
-                room = getattr(self.sess, "room", None)
-                rate = repair_rmod(room.loc.id if room is not None else None,
-                                   getattr(self.trade, "trader_type", None))
+                rates = self.current_trade_rates()
+                if rates is None:
+                    self.ack(RES_REFUSED)
+                    return
+                rate = rates['rmod']
                 price_afro, price_gold, price_restore = repair_prices(
                     si, row["brk"], row["max_break_cur"], rate)
                 new_top = max(int(math.floor(top * REPAIR_KEEPS)), min(row["brk"], top))
@@ -2221,6 +2237,9 @@ class Inventory:
         if not row or row["root"] not in items.BREAKABLE_ROOTS:
             self.ack(RES_NOT_FOUND)
             return None
+        if item_templates.source_type(row['type_id']) == items.POISON_SYRINGE:
+            self.ack(RES_REFUSED)
+            return None
         trader = getattr(self.trade, "trader_type", None)
         import eden
         import eden_shop
@@ -2237,6 +2256,10 @@ class Inventory:
             self.ack(RES_REFUSED)
             return None
         room = getattr(self.sess, "room", None)
+        if (room is not None and holdings.base_for(room.loc.id) is not None
+                and not self.trade_present(room)):
+            self.ack(RES_REFUSED)
+            return None
         if not holdings.may_repair(self.store, room.loc.id if room is not None else None,
                                    trader, self.char_id):
             self.ack(RES_REFUSED)
@@ -2251,14 +2274,22 @@ class Inventory:
                     self.ack(RES_REFUSED)
                     return
                 import eden_shop
-                if eden_shop.is_buyer(getattr(self.trade, 'trader_type', None)):
+                room = getattr(self.sess, 'room', None)
+                base = holdings.base_for(room.loc.id) if room is not None else None
+                if base is not None or eden_shop.is_buyer(getattr(self.trade, 'trader_type', None)):
                     row = self.repair_context(p)
                     if row is None:
                         return
                 else:
                     row = self.find(p.get("obj"))
+                if base is not None and self.current_trade_rates() is None:
+                    self.ack(RES_REFUSED)
+                    return
                 if not row or row["root"] not in items.BREAKABLE_ROOTS:
                     self.ack(RES_NOT_FOUND)
+                    return
+                if item_templates.source_type(row['type_id']) == items.POISON_SYRINGE:
+                    self.ack(RES_REFUSED)
                     return
                 si = items.params_of(row["type_id"]) or {}
                 if not restore_policy.base_price(row["type_id"], si):
@@ -2314,8 +2345,9 @@ class Inventory:
         stock = items.stock_for(self.trade.trader_type, self.trade.loc_id)
         try:
             index = int(str(p.get("obj", "")), 16)
-            n = int(p.get("param", 1) or 1)
-        except ValueError:
+            requested = p.get("param", 1)
+            n = int(requested or 1)
+        except (TypeError, ValueError, OverflowError):
             self.ack(RES_REFUSED)
             return
         if not (0 <= index < len(stock)):
@@ -2327,12 +2359,18 @@ class Inventory:
         if si is None:
             self.ack(RES_NOT_FOUND)
             return
-        # Only rounds are bought by the number: Trade.buy sends 1 for
-        # everything else, a stack of junk included, and so does the server.
-        # For rounds the "Сколько штук купить?" window runs from 1 to the
-        # stall's stack, which is the type's max_count (TradeItem.initParams,
-        # TradeInterface.createExchangePan): items.AMMO_STACK, 5000.
-        if root != items.AMMO:
+        # The native quantity dialogue also serves single-dose medicine.
+        # Other goods retain one item per purchase, including charged packs.
+        if root == items.HEAL and items.heapable(type_id):
+            try:
+                valid = (not isinstance(requested, bool) and 1 <= n <= 10
+                         and int(str(requested)) == n)
+            except (TypeError, ValueError, OverflowError):
+                valid = False
+            if not valid:
+                self.ack(RES_REFUSED)
+                return
+        if root != items.AMMO and not (root == items.HEAL and items.heapable(type_id)):
             n = 1
         if not (1 <= n <= si.get("max_count", 1)):
             self.ack(RES_REFUSED)
@@ -2355,12 +2393,17 @@ class Inventory:
         if code != UPD_BUY_GOLD and type_id in items.GOLD_INGOTS:
             self.ack(RES_REFUSED)
             return
-        price = buy_price(si, root, n, code == UPD_BUY_GOLD)
         try:
             with storage.atomic(self.store.db):
                 if not self.store.lock_quest_character(self.char_id):
                     self.ack(RES_REFUSED)
                     return
+                rates = self.current_trade_rates()
+                if rates is None:
+                    self.ack(RES_REFUSED)
+                    return
+                price = buy_price(si, root, n, code == UPD_BUY_GOLD,
+                                  purchase_pmod(type_id, rates))
                 # Validate the current bag under the same lock as payment.
                 if self.total_weight() + si.get("weight", 0) * n > self.carry_limit():
                     self.ack(RES_OVERLOAD)
@@ -2424,7 +2467,7 @@ class Inventory:
             self.sell_eden_item(p)
             return
         if row["type_id"] in mortimer.VALUABLES:
-            self.ack(RES_REFUSED)
+            self.sell_gold_item(p)
             return
         si = items.params_of(row["type_id"]) or {}
         import gold_trade
@@ -2441,7 +2484,7 @@ class Inventory:
                 or row["root"] == items.TROPHY):
             self.ack(RES_REFUSED)
             return
-        heapable = row["root"] in items.HEAPABLE_ROOTS
+        heapable = items.heapable(row["type_id"])
         try:
             n = int(p.get("param", 0) or 0)
         except (TypeError, ValueError):
@@ -2465,14 +2508,7 @@ class Inventory:
             return
         # Never nothing: the client draws "if(!cost) cost = 1", and a trader
         # who takes a thing away for free is not what the player was shown.
-        sale_unit = gold_trade.afro_sale_unit(row["type_id"], si)
-        if sale_unit:
-            price = max(1, int(math.floor(sale_unit * n * quality)))
-        else:
-            price = max(1, int(math.floor(unit * n * SMOD * si.get("sell_mod", 1) * quality)))
         cap = gold_trade.afro_sale_cap(row["type_id"], si)
-        if cap:
-            price = min(price, max(1, int(math.floor(cap * n * quality))))
         try:
             with storage.atomic(self.store.db):
                 if not self.store.lock_quest_character(self.char_id):
@@ -2484,6 +2520,17 @@ class Inventory:
                 if buyer and not eden_shop.available(self):
                     self.ack(RES_REFUSED)
                     return
+                rates = self.current_trade_rates()
+                if rates is None:
+                    self.ack(RES_REFUSED)
+                    return
+                share = (gold_trade.BASE_SALE_SHARE if rates['smod'] == float(gold_trade.BASE_SALE_SHARE)
+                         else gold_trade.NPC_SALE_SHARE)
+                sale_unit = gold_trade.afro_sale_unit(row['type_id'], si, share)
+                price = max(1, int(math.floor((sale_unit if sale_unit else
+                    unit * rates['smod'] * si.get('sell_mod', 1)) * n * quality)))
+                if cap:
+                    price = min(price, max(1, int(math.floor(cap * n * quality))))
                 owner = self.store.character(self.char_id)
                 afro, gold = owner["afro"] + price, owner["gold"]
                 if heapable and n < row["count"]:
@@ -2534,20 +2581,32 @@ class Inventory:
         if row is None or row["slot"] != BAG or row["root"] == items.TROPHY:
             return None
         si = items.params_of(row["type_id"]) or {}
-        unit = gold_trade.sale_unit(row["type_id"], si)
+        rates = self.current_trade_rates()
+        if rates is None:
+            return None
+        share = (gold_trade.BASE_SALE_SHARE if rates['smod'] == float(gold_trade.BASE_SALE_SHARE)
+                 else gold_trade.NPC_SALE_SHARE)
+        paying_gold = (row['type_id'] in mortimer.VALUABLES and row['root'] == items.TRASH
+                       and trade.trader_type in gold_trade.BASE_GOLD_BUYERS
+                       and share == gold_trade.BASE_SALE_SHARE)
+        unit = (gold_trade.base_loot_gold(row['type_id']) if paying_gold else
+                gold_trade.sale_unit(row["type_id"], si, share))
         if not unit:
             return None
         try:
             n = int(p.get("param", 1) or 1)
         except (ValueError, TypeError, OverflowError):
             return None
-        if not 1 <= n <= row["count"] or (row["root"] not in items.HEAPABLE_ROOTS and n != 1):
+        if not 1 <= n <= row["count"] or (not items.heapable(row["type_id"]) and n != 1):
             return None
         quality = gold_trade.sale_quality(row, si)
         if quality <= 0:
             return None
         price = max(1, int(math.floor(unit * n * quality)))
-        return dict(row=row, n=n, price=price)
+        terms = dict(row=row, n=n, price=price)
+        if paying_gold:
+            terms['gold'] = True
+        return terms
 
     def quote_gold_sale(self, p):
         """One short-lived quote per stall; this stage never changes the DB."""
@@ -2560,7 +2619,10 @@ class Inventory:
             return
         token = secrets.token_hex(16)
         trade.sale_quote = dict(terms, token=token, expires=time.monotonic() + GOLD_SALE_QUOTE_SECONDS)
-        extra = dict(eden_sale=1, currency=int(terms['gold'])) if 'gold' in terms else {}
+        extra = dict(currency=int(terms['gold'])) if 'gold' in terms else {}
+        import eden_shop
+        if 'gold' in terms and eden_shop.is_buyer(trade.trader_type):
+            extra['eden_sale'] = 1
         self.send("cmdAck", res=RES_OK, token=token, price=terms["price"], count=terms["n"], **extra)
 
     def eden_sale_terms(self, p):
@@ -2575,7 +2637,7 @@ class Inventory:
             n = int(p.get('param', 1) or 1)
         except (TypeError, ValueError, OverflowError):
             return None
-        if not 1 <= n <= row['count'] or (row['root'] not in items.HEAPABLE_ROOTS and n != 1):
+        if not 1 <= n <= row['count'] or (not items.heapable(row['type_id']) and n != 1):
             return None
         price, gold = eden_shop.sale_price(row, n)
         if price <= 0:
@@ -2655,12 +2717,17 @@ class Inventory:
                     self.ack(RES_REFUSED)
                     return
                 terms = self.gold_sale_terms(p)
-                if terms is None or terms != {k: quote[k] for k in ("row", "n", "price")}:
+                expected = {k: quote[k] for k in ('row', 'n', 'price')}
+                if 'gold' in quote:
+                    expected['gold'] = quote['gold']
+                if terms is None or terms != expected:
                     self.ack(RES_REFUSED)
                     return
                 row, n, price = terms["row"], terms["n"], terms["price"]
                 owner = self.store.character(self.char_id)
-                afro, gold = owner["afro"] + price, owner["gold"]
+                paying_gold = terms.get('gold', False)
+                afro = owner['afro'] + (0 if paying_gold else price)
+                gold = owner['gold'] + (price if paying_gold else 0)
                 if n < row["count"]:
                     self.store.update_item(row["uniq"], count=row["count"] - n)
                 else:
@@ -2971,7 +3038,7 @@ class Inventory:
                 if self.total_weight() + weight_of(row) > self.carry_limit():
                     self.ack(RES_OVERLOAD)
                     return
-                if row['root'] in items.HEAPABLE_ROOTS and row['count'] > items.params_of(row['type_id'])['max_count']:
+                if items.heapable(row['type_id']) and row['count'] > items.params_of(row['type_id'])['max_count']:
                     self.sess.say('Обновите клиент, чтобы взять часть стопки')
                     self.ack(RES_REFUSED)
                     return

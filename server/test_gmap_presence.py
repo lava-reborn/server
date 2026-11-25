@@ -426,7 +426,8 @@ def arrive(login, nick, new):
 def to_map(c):
     c.drain()
     c.send("chWorld;")
-    c.until(lambda f: f.startswith("gmap"))
+    got = c.until(lambda f: f.startswith("gmap"))
+    return parse(got[-1])[1]
 
 
 def into_cell(c):
@@ -547,7 +548,7 @@ try:
     y_pid = pid_of("Third")
     to_map(y)
     into_cell(y)
-    to_map(y)
+    point = to_map(y)
     time.sleep(2.5)
     view = view_of(w)
     check("7. новый игрок пришёл, зашёл-вышел: одна фигура",
@@ -573,7 +574,8 @@ try:
           (sum(";vx=0;vy=0;" in f for f in about), last.get("vx"), last.get("vy")),
           (1, "0", "0"))
     check("  ..там, куда он успел дойти: запад от 5970 на треть клетки с лишним",
-          5969.3 < float(last.get("dx", 0)) < 5969.7 and last.get("dy") == "1730", True)
+          float(point["x"]) - .7 < float(last.get("dx", 0)) < float(point["x"]) - .3
+          and last.get("dy") == point["y"], True)
     time.sleep(ghost_wait - 2.5)
     view = view_of(w)
     check("  ..и фигура уходит по таймеру клиента", view.drawn(y_pid), 0)

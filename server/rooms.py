@@ -266,7 +266,11 @@ class Room:
             if other is not sess:
                 cell = other.live_cell()
                 sess.send("lch", newUser=other.pid, pos=cell, rtype=-1)
-                sess.send("usrUp", **player_health(other))
+                if getattr(other, 'peer', None) == 'local-test-bot':
+                    from training.api import local_player_info
+                    local_player_info(sess, other)
+                else:
+                    sess.send("usrUp", **player_health(other))
                 self.send_walk_snapshot(sess, other.pid, other)
 
     def send_walk_snapshot(self, viewer, eid, actor):

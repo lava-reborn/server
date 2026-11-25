@@ -52,6 +52,7 @@ os.environ["LAVA_QUESTS"] = QUESTS_FILE
 sys.path.insert(0, HERE)
 import accounts
 import storage
+import battle_balance
 import combat
 import inventory
 import items
@@ -258,10 +259,10 @@ check("a shotgun's pull spends one round on its full charge of shot: Сайга-
       "then on its last round, ИЖ-27, КС-12's third mode, the Излучатель's third",
       [_pull(25899, 0, 5), _pull(25899, 0, 1), _pull(25876, 0, 2),
        _pull(7072, 2, 4), _pull(1570, 2, 10)],
-      [(6, 6, 4, 1), (6, 6, 0, 1), (6, 6, 1, 1), (12, 12, 3, 1), (9, 9, 9, 1)])
+      [(6, 6, 4, 1), (6, 6, 0, 1), (6, 6, 1, 1), (10, 10, 3, 1), (9, 9, 9, 1)])
 check("a burst still spends a round a bullet, and a short magazine fires what it holds",
       [_pull(25636, 1, 16), _pull(25636, 1, 1), _pull(5842, 0, 14)],
-      [(2, 2, 14, 2), (1, 1, 0, 1), (1, 1, 13, 1)])
+      [(2, 2, 14, 2), (1, 1, 0, 1), (6, 6, 13, 1)])
 check("a magazine emptied during the aim: the shotgun's pairs all go out empty, "
       "the burst's spent share too",
       [_pull(25899, 0, 1, drop=1), _pull(25636, 1, 2, drop=1)],
@@ -291,7 +292,8 @@ def _scene(**at):
 
 def _fire(rc, target, offsets, through=False, gun=None, live=None):
     shooter = type("Shooter", (), {"cell": _row, "eid": 1, "is_player": True,
-                                   "hit_exchanged": lambda self, t: None})()
+                                   "hit_exchanged": lambda self, t: None,
+                                   "character": lambda self: SimpleNamespace(level=20)})()
     if gun is None:
         gun = combat.Weapon(num_shots=len(offsets), dmin=10, dmax=10, opt_lo=0,
                             opt_hi=0, max_range=10, piercing=1, cone=0.1, crit=0,
@@ -428,7 +430,7 @@ async def _aimed_weapon(type_id, mode=0):
 def _damage_target(body, stamina=1000):
     body.stats = copy.copy(body.stats)
     body.stats.hp_max = body.stats.sp_max = 1000
-    body.stats.armor = 11             # ten redirected after piercing=1
+    body.stats.armor = 11             # below 1 HP per pellet against a level-20 attacker
     body.stats.crit_evade = 0
     body.hp, body.sp = 1000, stamina
 
@@ -449,15 +451,15 @@ def _damage_frames(gun, distance=4, stamina=1000, crit=False, live=None):
 
 
 _izh = asyncio.run(_aimed_weapon(25876))
-check("IZH-27 on its optimal range: six hits at H=15/S=15 give 30 HP and 150 SP",
-      _damage_frames(_izh), ([(5, 25, 0)] * 6, (970, 850), (970, 850), 12))
+check("IZH-27 on its optimal range: six hits at H=15/S=15 give 90 HP and 90 SP",
+      _damage_frames(_izh), ([(15, 15, 0)] * 6, (910, 910), (910, 910), 12))
 check("IZH-27 critical pellets retain both components: 90 HP and 90 SP",
       _damage_frames(_izh, crit=True), ([(15, 15, 1)] * 6, (910, 910), (910, 910), 12))
 check("IZH-27 outside optimal range uses both full ranges, starting at H=4/S=4",
-      _damage_frames(_izh, distance=2), ([(0, 8, 0)] * 6, (1000, 952), (1000, 952), 12))
+      _damage_frames(_izh, distance=2), ([(4, 4, 0)] * 6, (976, 976), (976, 976), 12))
 check("stamina runs out mid-charge: later pellets spill to HP and bars match faHit",
       _damage_frames(_izh, stamina=40),
-      ([(5, 25, 0), (15, 15, 0)] + [(30, 0, 0)] * 4, (860, 0), (860, 0), 12))
+      ([(15, 15, 0)] * 2 + [(20, 10, 0)] + [(30, 0, 0)] * 3, (860, 0), (860, 0), 12))
 check("critical pellets exhaust stamina mid-charge without increasing health damage",
       _damage_frames(_izh, stamina=20, crit=True),
       ([(15, 15, 1), (15, 5, 1)] + [(15, 0, 1)] * 4, (910, 0), (910, 0), 12))
@@ -465,35 +467,56 @@ check("an empty charge still closes all pairs and deals neither component",
       _damage_frames(_izh, live=0), ([], (1000, 1000), None, 12))
 _walther = asyncio.run(_aimed_weapon(25636, mode=1))
 check("a Walther burst with zero stamina damage still deals only its H component",
-      _damage_frames(_walther), ([(19, 10, 0)] * 2, (962, 980), (962, 980), 4))
+      _damage_frames(_walther), ([(35, 0, 0)] * 2, (930, 1000), (930, 1000), 4))
 _deagle = asyncio.run(_aimed_weapon(25657))
-for stamina, lost in ((1000, 54), (20, 20), (0, 0)):
+for stamina, lost in ((1000, 108), (20, 20), (0, 0)):
     check("Desert Eagle G critical hit with %d SP: frames and bars agree" % stamina,
           _damage_frames(_deagle, stamina=stamina, crit=True),
-          ([(54, lost, 1)], (946, stamina - lost), (946, stamina - lost), 2))
+          ([(108, lost, 1)], (892, stamina - lost), (892, stamina - lost), 2))
 _ksg = asyncio.run(_aimed_weapon(5842))
-check("a single projectile with both components also retains its stamina damage",
-      _damage_frames(_ksg, crit=True), ([(39, 39, 1)], (961, 961), (961, 961), 2))
+check("six KSG pellets retain both damage components",
+      _damage_frames(_ksg, crit=True), ([(39, 39, 1)] * 6, (766, 766), (766, 766), 12))
 
 _rc, _gr, _d = _scene(mark=(2, DOG), behind=(4, DOG))
 for _body in _d.values():
     _damage_target(_body)
 _through = _izh._replace(num_shots=1, dmin=15, dmax=15, sdmin=9, sdmax=9,
-                         opt_lo=0, opt_hi=0, through=True)
+                          opt_lo=0, opt_hi=0, through=True, crit=0)
 (_h, _s, _hits, _k), _oth = _fire(_rc, _d["mark"], [0.0], gun=_through)
 check("penetration halves H and S before the second body's armour, rounding down",
-      ((_h, _s), [(h, s) for _b, h, s, _dead, _pool in _oth]), ((5, 19), [(0, 11)]))
+      ((_h, _s), [(h, s) for _b, h, s, _dead, _pool in _oth]), ((15, 9), [(7, 4)]))
 check("a zero health critical hit deals zero to both pools",
       _damage_frames(_izh._replace(dmin=0, dmax=0, sdmin=15, sdmax=15), crit=True),
       ([(0, 0, 1)] * 6, (1000, 1000), (1000, 1000), 12))
+
+# A real rifle's aim payload must select the rifle armour policy all the way
+# through faHit, damage application and the health/stamina bars.
+_rifle = asyncio.run(_aimed_weapon(25756))
+check("the actual rifle payload keeps its rifle specialisation",
+      _rifle.spec, combat.SPEC_OF_WEAPON[items.RIFLE])
+_rifle = _rifle._replace(num_shots=1, dmin=100, dmax=100, sdmin=10, sdmax=10,
+                         opt_lo=0, opt_hi=0, piercing=1, through=False)
+with patch.object(battle_balance, 'reference_armour', return_value=148), \
+        patch.object(mobs.Mob, 'armor', return_value=148):
+    for _sp, _health, _stamina in ((1000, 50, 60), (20, 90, 20), (0, 110, 0)):
+        check("rifle bypass and SP overflow reach both packet and bars at %d SP" % _sp,
+              _damage_frames(_rifle, stamina=_sp),
+              ([(_health, _stamina, 0)], (1000 - _health, _sp - _stamina),
+               (1000 - _health, _sp - _stamina), 2))
+    check("rifle AP rounds increase the HP share before stamina runs out",
+          _damage_frames(_rifle._replace(piercing=2)),
+          ([(67, 43, 0)], (933, 957), (933, 957), 2))
+    check("a rifle crit ignores armour without double-counting its SP component",
+          _damage_frames(_rifle, stamina=20, crit=True),
+          ([(100, 20, 1)], (900, 0), (900, 0), 2))
 _rc, _gr, _d = _scene(mark=(3, DOG), behind=(5, DOG))
 for _body in _d.values():
     _damage_target(_body)
 (_h, _s, _hits, _k), _oth = _fire(_rc, _d["mark"], [0.2],
                                 gun=_through._replace(through=False))
-check("a stray pellet carries both components to the body behind its mark",
+check("a capped scatter miss cannot hit a collinear body through its wider hex",
       ((_h, _s, _hits), [(h, s) for _b, h, s, _dead, _pool in _oth]),
-      ((0, 0, 0), [(5, 19)]))
+      ((0, 0, 0), []))
 
 
 check("target BigUINT: one type digit then eight of id", combat.parse_target("10000002a"), (1, 42))
@@ -503,7 +526,9 @@ even = 4 * W + 5
 check("facing east is 8", mobs.direction(even, even + 1, W), 8)
 check("facing west is 4", mobs.direction(even, even - 1, W), 4)
 check("down-right is 1", mobs.direction(even, even + W, W), 1)
-check("straight down keeps the facing", mobs.direction(even, even + 2 * W, W), 0)
+check("straight down faces south", mobs.direction(even, even + 2 * W, W), 2)
+check("straight up faces north", mobs.direction(even, even - 2 * W, W), 6)
+check("a coincident aim keeps the facing", mobs.direction(even, even, W), 0)
 check("neighbours are exactly one hex apart",
       sorted(round(mobs.hex_distance(even, n, W), 6)
              for n in progression.hex_neighbours(even, W, 128)), [1.0] * 6)
@@ -545,7 +570,7 @@ def _parity(level):
 check("a knife against a creature of one's own level lands 65-75% of blows at every level",
       [lv for lv in (1, 4, 8, 12, 16, 20) if not 65 <= _parity(lv) <= 75], [])
 check("an armed bandit carries a pistol of his own",
-      mobs.stats(17).weapon_type_id, 4380)
+      mobs.stats(17).weapon_type_id, 25586)
 
 
 # --- a target is let go of only when it is gone ---------------------------------
@@ -565,7 +590,7 @@ class _Release(object):
         mob.target = None
     mob_reset = mob_release           # its name before the rule
 
-    def nearest_fighter(self, cell, aggro):
+    def nearest_fighter(self, cell, aggro, mob=None):
         return None
 
     def mob_walk(self, mob, goal, t):
@@ -737,48 +762,54 @@ _shooter.skill[progression.SHOOTING] = [6, 0, progression.skill_xp_max(6)]
 _shooter.recalc()
 _blade = combat.Fighter(_XpSession(_shooter))
 _dog = mobs.Mob(1, 82, 10)
-# Harm worth a whole kill: health and stamina together are what a blow is
-# measured against (Fighter.award_xp).
+# Damage is recorded during combat; only death awards the kill's price.
 _whole = dog_stats.hp_max + dog_stats.sp_max
 _blade.award_xp(progression.MELEE, combat.SPEC_BLADE, _whole, _dog)
-check("a knife at Ближний бой 0 against the level-1 dog: +1 pays 12 before its 0.7",
-      _shooter.skill[progression.MELEE][:2], [0, 8])
-_blade.award_xp(progression.SHOOTING, 2, _whole, mobs.Mob(2, 82, 10))
+check("a knife hit records damage without awarding experience before death",
+      (_shooter.skill[progression.MELEE][:2], _blade.sess.pushed), ([0, 0], []))
+_grc = combat.RoomCombat.__new__(combat.RoomCombat)
+_grc.room = type("R", (), {})()
+_grc.room.players = {_blade.sess: None}
+_dog.alive, _dog.hp = False, 0
+_grc.settle_xp(_dog)
+check("a knife at Ближний бой 0 against the level-1 dog: +1 pays 20 before its 0.7",
+      _shooter.skill[progression.MELEE][:2], [0, 14])
+_grey_dog = mobs.Mob(2, 82, 10)
+_blade.award_xp(progression.SHOOTING, 2, _whole, _grey_dog)
+_grey_dog.alive, _grey_dog.hp = False, 0
+_grc.settle_xp(_grey_dog)
 check("the same dog is worth nothing to Стрельба 6",
       _shooter.skill[progression.SHOOTING][:2], [6, 0])
 
-# A bullet takes little stamina: the blows of a gun pay short of the price,
-# and the kill settles the rest (RoomCombat.settle_xp). Health alone is half
-# of the dog's health and stamina, so the pistol is paid half as it shoots
-# and half at the death -- the same 8 the knife gets.
+# A solo gun kill pays the same price as a blade, even when the bullets
+# leave the dog's stamina intact. There is no partial XP before death.
 _gunner = progression.Character()
 _gun = combat.Fighter(_XpSession(_gunner))
 _gdog = mobs.Mob(3, 82, 10)
 _gun.award_xp(progression.SHOOTING, 2, dog_stats.hp_max, _gdog)
 _by_blows = _gunner.skill[progression.SHOOTING][1]
-_grc = combat.RoomCombat.__new__(combat.RoomCombat)
-_grc.room = type("R", (), {})()
 _grc.room.players = {_gun.sess: None}
+_gdog.alive, _gdog.hp = False, 0
 _grc.settle_xp(_gdog)
-check("a gun's shots pay half the dog, its death the other half: 8, as for a knife",
-      (_by_blows, _gunner.skill[progression.SHOOTING][:2]), (4, [0, 8]))
+check("a gun's shots pay nothing until death, then the solo price: 14, as for a knife",
+      (_by_blows, _gunner.skill[progression.SHOOTING][:2]), (0, [0, 14]))
 check("and the ledger is closed with the kill", _gdog.xp_ledger, {})
-# Paid in two frames, and the client prints a «+4» for each; a burst that
-# kills holds its rp_info (Fighter.hold_stats) so the harm and the settlement
-# arrive as one «+8».
-check("  ..the two payments went out as two rp_info", len(_gun.sess.pushed), 2)
+# The one death payment produces one update. Holding a killing burst's stats
+# still postpones that update until the rest of the burst is complete.
+check("  ..the death payment went out as one rp_info", len(_gun.sess.pushed), 1)
 _one = progression.Character()
 _onegun = combat.Fighter(_XpSession(_one))
 _odog = mobs.Mob(4, 82, 10)
 _onegun.hold_stats()
 _onegun.award_xp(progression.SHOOTING, 2, dog_stats.hp_max, _odog)
 _grc.room.players = {_onegun.sess: None}
+_odog.alive, _odog.hp = False, 0
 _grc.settle_xp(_odog)
 check("  ..held through the kill: nothing yet", _onegun.sess.pushed, [])
 _onegun.release_stats()
-check("  ..released: one rp_info for the shooting skill, the whole 8 in it",
+check("  ..released: one rp_info for the shooting skill, the whole 14 in it",
       (_onegun.sess.pushed, _one.skill[progression.SHOOTING][:2]),
-      ([{"skills": {progression.SHOOTING}, "specs": set(), "attribs": set()}], [0, 8]))
+      ([{"skills": {progression.SHOOTING}, "specs": set(), "attribs": set()}], [0, 14]))
 check("  ..and a release with nothing held pushes nothing", (_onegun.release_stats(), _onegun.sess.pushed[1:]), (None, []))
 
 
@@ -978,7 +1009,8 @@ PISTOL_SI = items.params_of(PISTOL)
 CLIP = PISTOL_SI["clip_size"]
 COST = PISTOL_SI["fire_costs"][0]
 # What holding it asks (inventory.item_level): the character's level below.
-LEVEL = inventory.item_level(PISTOL)
+# Keep the loot fixture within three levels of its level-one dog.
+LEVEL = max(1, inventory.item_level(PISTOL) - inventory.GEAR_LEVEL_ALLOWANCE)
 # The blade: the first rung of the knives the stalls sell (knife_lvl1_A).
 KNIFE = 6229
 check("the knife is a cold arm", items.root_of(KNIFE), items.COLD_ARM)
@@ -1087,8 +1119,8 @@ try:
     # СПС asks Стрельба 5 of whoever holds it (inventory.py, "the level") and
     # a newborn is level 0. The shooter must meet the declared skill and
     # pistol specialisation too; INDUSTRY alone no longer permits the gun.
-    # This over-level shooter gets no XP from the level-one dog. Training
-    # and settlement are checked with the eligible novice blade below.
+    # The pistol is three levels above the shooter, so it wears faster.
+    # A lower-level dog's XP settles only at death, checked below.
     c.send("logout;")
     c.frames(0.3)
     c.s.close()
@@ -1219,7 +1251,7 @@ try:
     hands = oids(c.frames()[0][1])
     knife = inventory.parse_oid(hands[6])
     check("the bum holds a knife in the primary hand",
-          (len(hands), hands[:6], hands[7], knife[1:]), (8, ["0"] * 6, "0", (195, items.COLD_ARM)))
+          (len(hands), hands[:6], hands[7], knife[1:]), (8, ["0"] * 6, "0", (6230, items.COLD_ARM)))
     check("a virtual serial, far above the items table", knife[0] >= mobs.VIRTUAL_BASE, True)
     c.send("ss_get_di;obj=x%s;" % hands[6])
     got = c.frames()
@@ -1275,8 +1307,9 @@ try:
               (hit[0]["target"], hit[0]["dmg"] + hit[0]["sdmg"] > 0), (dog, True))
         check("after the pair: the dog's bars, then c_ap, then the magazine",
               tail[:3], ["usrUp", "c_ap", "ss_di_firearm"])
-        check("the dog's bar dropped",
-              [p["hcur"] < dog_hp for n, p in got if n == "usrUp" and p["id"] == dog], [True])
+        check("the dog's health or stamina bar dropped",
+              [p["hcur"] < dog_hp or p['scur'] < dog_stats.sp_max
+               for n, p in got if n == "usrUp" and p["id"] == dog], [True])
         check("an eligible level-five shooter gets no XP from the level-one dog",
               [p for p in named(got, "rp_info") if p.get("xp_skills_mask", 0) & 2], [])
     else:
@@ -1288,9 +1321,10 @@ try:
     # fields through int(), so anything fractional would round to nothing and
     # the durability bar would sit full for ever, which is the fault this
     # check exists to catch.
-    brk -= 1
-    check("and the gun a point of durability",
-          int(named(got, "ss_di_firearm")[0]["break"]), brk)
+    after_brk = int(named(got, "ss_di_firearm")[0]["break"])
+    check("the +3-level gun wears four or five points for this single round",
+          brk - after_brk in (4, 5), True)
+    brk = after_brk
     check("the dog turns on the shooter, and the room stays at war",
           [p for n, p in got if n == "lch"], [{"enemy": dog}])
     dog_cell = last_cell(got, dog, DOG_HOME)
@@ -1378,6 +1412,9 @@ try:
         got += c.frames(0.2)
         if not [p for n, p in got if n == "lch" and p.get("dead") == dog]:
             got += try_exit(got)
+        if got and got[-1][0] == 'caHit' and got[-1][1].get('id') == dog:
+            # TCP may split the adjacent hit/update frames across reads.
+            got += c.until(lambda f: f[0] == 'usrUp' and f[1].get('id') == 0, 1)
         tracker.feed(got)
         for i, (n, p) in enumerate(got):
             if n == "userMove" and p.get("id") == dog:
@@ -1457,8 +1494,10 @@ try:
     # is printed on its own behind the line (RoomCombat.kill releases it
     # before calm()).
     _names = [n for n, _ in tail]
-    check("the over-level shooter's kill awards no extra XP",
-          [p for n, p in tail if n == "rp_info" and p.get("xp_skills_mask", 0) & 2], [])
+    paid = [p for n, p in tail if n == "rp_info" and p.get("xp_skills_mask", 0) & 2]
+    check("the lower-level dog pays once on death, before the room leaves combat",
+          [p['xp_skills'][0] for p in paid],
+          [int(progression.combat_mob_xp(dog_stats.level, LEVEL, xp_mult=dog_stats.xp_mult))])
     after_death = []
     if not any(n == "lch" and p.get("lostUser") == dog for n, p in tail):
         after_death = c.until(lambda f: f[0] == "lch" and f[1].get("lostUser") == dog, 4)
@@ -1663,23 +1702,13 @@ try:
                     lambda cell: mobs.hex_distance(cell, DOG_HOME, loc.width) <= dog_stats.aggro - 0.5,
                     avoid={DOG_HOME})
     dog_cell = last_cell(got, dog, DOG_HOME)
-    # What the server must have paid, worked out from what the blows did:
-    # each the part of the dog's health and stamina it took, of the price of
-    # a mob at the blade's level (10, times the dog's 0.7), and the kill
-    # whatever those parts left of a whole (progression.combat_mob_xp,
-    # Fighter.award_xp, RoomCombat.settle_xp).
+    # This is a solo kill: actual damage earns the whole price once the dog
+    # dies. Neither health nor stamina damage can award it while alive.
     mirror = progression.Character()
     mirror.skill[progression.MELEE] = [1, 0, progression.skill_xp_max(1)]
-    whole, paid = float(dog_stats.hp_max + dog_stats.sp_max), [0.0]
-
-    def pay(share):
-        paid[0] += share
-        mirror.gain_xp(progression.MELEE, mirror.carry_xp(progression.MELEE, progression.combat_mob_xp(
-            dog_stats.level, mirror.skill_level(progression.MELEE), share, dog_stats.xp_mult)),
-            spec_on_top=True)
-
+    kill_reward = progression.combat_mob_xp(dog_stats.level, 1, xp_mult=dog_stats.xp_mult)
     dog_hp = dog_stats.hp_max
-    stamina_trained, stamina_only, shooting_pushed, dead_frames = [], 0, 0, None
+    actual_harm, premature_xp, shooting_pushed, dead_frames = 0, 0, 0, None
     for attempt in range(80):
         if mobs.adjacent(pos, dog_cell, loc):
             c.send("ss_use;type=16;obj=x%s;target=%s;" % (knife, entity(dog)))
@@ -1698,25 +1727,23 @@ try:
             harm = to_hp + p["sdmg"]
             if harm <= 0:
                 continue
-            stamina_only += p["dmg"] == 0
-            pay(min(harm / whole, 1.0 - paid[0]))
-            if p["dmg"] == 0:
-                stamina_trained.append(any(m == "rp_info" and q["xp_skills_mask"] & 1
-                                           for m, q in got[i + 1:]))
+            actual_harm += harm
         if [p for n, p in got if n == "lch" and p.get("dead") == dog]:
             dead_frames = got
             break
-    pay(1.0 - paid[0])             # the kill settles the rest
+        premature_xp += sum(n == 'rp_info' and bool(p['xp_skills_mask'] & 1) for n, p in got)
     check("the dog died to the knife", dead_frames is not None, True)
-    check("some blows took stamina only", stamina_only > 0, True)
-    check("the blows that took stamina only trained Ближний бой as well",
-          any(stamina_trained), True)
+    check("the blade dealt actual damage before the kill", actual_harm > 0, True)
+    check("no melee experience arrives while the dog is alive", premature_xp, 0)
+    mirror.gain_xp(progression.MELEE, mirror.carry_xp(progression.MELEE, kill_reward), spec_on_top=True)
+    # The level-6 character now penetrates this level-1 dog's armour.
+    # Pure stamina XP is covered with a controlled armoured target separately.
     check("and not one of them Стрельба", shooting_pushed, 0)
     c.send("rp_get_info;")
     rp = named(c.until(lambda f: f[0] == "rp_info"), "rp_info")[0]
-    check("the kill paid Ближний бой the equal-level dog's whole price, 10 times its 0.7",
-          (rp["a_skills"][0], rp["xp_skills"][0]), (1, round(10 * dog_stats.xp_mult)))
-    check("to exactly what the owner's rule makes of those blows",
+    check("the equal-level dog pays 95% of the +1 base 25, times its 0.7 (16 XP plus carry)",
+          (rp["a_skills"][0], rp["xp_skills"][0]), (1, 16))
+    check("to exactly one solo kill's price, without per-hit experience",
           [rp["a_skills"][0], rp["xp_skills"][0]], mirror.skill[progression.MELEE][:2])
     check("while Стрельба is where it was", (rp["a_skills"][1], rp["xp_skills"][1]), (6, 0))
     # The dog was all that was after him: peace at once, and the way out.
@@ -1805,7 +1832,7 @@ finally:
     _drain.join(timeout=5)
     out = "".join(_log)
     if "Traceback" in out:
-        fails.append("server logged a traceback:\n" + out[-2500:])
+        fails.append("server logged a traceback:\n" + out[out.index("Traceback"):out.index("Traceback") + 2500])
     elif fails or os.environ.get("LAVA_TEST_LOG"):
         fails.append("server log tail:\n" + out[-4000:])
 

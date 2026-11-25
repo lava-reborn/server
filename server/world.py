@@ -94,9 +94,12 @@ INACTIVE_SET_EXCHANGERS = frozenset({2241, 2242})
 
 def entity_root(type_id, root):
     """The client class, including service overrides for existing NPCs."""
-    if type_id in INACTIVE_SET_EXCHANGERS:
+    # The restored base's lifts only offer native passage quests. Their
+    # original Trader class must not expose an unrelated shop or repair tab.
+    if type_id in INACTIVE_SET_EXCHANGERS or type_id in (688, 689):
         return COMMONER
-    return TRADER if type_id in TROPHY_REGISTRARS else root
+    # Alma's unused upgrade service now offers the approved golden gifts.
+    return TRADER if type_id in TROPHY_REGISTRARS or type_id == 1797 else root
 
 
 def _read(path):
@@ -115,6 +118,96 @@ def _chunks(txt, tag, step):
         return []
     s = "".join(m.group(1).split())
     return [s[i:i + step] for i in range(0, len(s) - step + 1, step)]
+
+
+# Collision footprints, not the artwork's depth-sorting front. This round
+# bush was checked against its SWF and repeated original XML placements.
+# Other vegetation includes palms, trees and mixed scenery, so unknown
+# assets keep their existing obstruction. Library exports need the library
+# in the key: the same plant id can depict different objects there.
+_BUSH_FOOTPRINTS = {
+    ("ext", "", "LN_plant32.png"): ((-1, -1, "2"), (0, -1, "2"),
+        (-1, 0, "2"), (0, 0, "3"), (1, 0, "2"),
+        (-1, 1, "2"), (0, 1, "2")),
+}
+
+# Visually checked low vegetation without a tree trunk, rock or building.
+# It must not reserve a hard scenery box over a verified bush, but its own
+# cells remain hard until a separate collision footprint is verified.
+_LOW_VEGETATION = frozenset(
+    [("ext", "", "LN_plant%02d.png" % n) for n in
+     (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 14, 16, 17, 18, 19, 20, 21, 22, 23, 26, 27, 31)]
+    + [("ext", "", "LN_CornPlant.png")]
+    + [("lib", library, "plant%02d.png" % n) for library, numbers in {
+        "Desert": (1, 2, 3, 4, 5),
+        "Sides": (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 14, 15),
+        "TrueSandDesert": (1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 14, 15, 16, 17, 18, 19, 20),
+    }.items() for n in numbers]
+    + [("lib", "OW_Jungle_2", name) for name in ("bush1.png", "bush2.png")]
+    + [("lib", "Bandit_camp3", "grass%d.png" % n) for n in (1, 2, 3)]
+    + [("lib", "Noob_Zone_Nord", "plant%d.png" % n) for n in (1, 2, 3, 4, 5, 6, 7)])
+
+
+def _bush_cells(txt, attrs, width, height):
+    """Verified soft cover, counted once when loading a location.
+
+    A complete collision template is required. Codes changed by overlapping
+    walls/scenery stay hard. Unknown sprites reserve a conservative box of
+    their front and anchor; front is never used as a bush footprint. Row
+    bitmasks avoid expanding large artwork boxes into thousands of cells.
+    """
+    codes = {}
+    for c in _chunks(txt, "obstacles", 5):
+        point = int(c[:2], 16), int(c[2:4], 16)
+        codes.setdefault(point, set()).add(c[4].lower())
+    candidates, hard = [], {}
+
+    def reserve(points):
+        if not points:
+            return
+        left = max(0, min(x for x, _y in points))
+        right = min(width - 1, max(x for x, _y in points))
+        if right < left:
+            return
+        mask = ((1 << (right - left + 1)) - 1) << left
+        for y in range(max(0, min(y for _x, y in points)),
+                       min(height - 1, max(y for _x, y in points)) + 1):
+            hard[y] = hard.get(y, 0) | mask
+
+    try:
+        for match in re.finditer(r"<sprite\b([^>]*)>(.*?)</sprite>", txt, re.S):
+            at = dict(re.findall(r'(\w+)="([^"]*)"', match.group(1)))
+            kind = at.get("type") or "lib"
+            key = kind, attrs.get("library", "") if kind != "ext" else "", at.get("id", "")
+            template = _BUSH_FOOTPRINTS.get(key)
+            anchors = "".join(match.group(2).split())
+            front = "".join(at.get("front", "").split())
+            if len(anchors) % 4 or len(front) % 4:
+                return frozenset()
+            if key in _LOW_VEGETATION:
+                continue
+            for i in range(0, len(anchors), 4):
+                ax, ay = int(anchors[i:i + 2], 16), int(anchors[i + 2:i + 4], 16)
+                if template is not None:
+                    footprint = [(ax + dx + (1 if ay % 2 and dy % 2 else 0), ay + dy, code)
+                                 for dx, dy, code in template]
+                    if all(0 <= x < width and 0 <= y < height and codes.get((x, y)) == {code}
+                           for x, y, code in footprint):
+                        candidates.append([(x, y) for x, y, _code in footprint])
+                        continue
+                    reserve([(x, y) for x, y, _code in footprint])
+                points = [(ax, ay)]
+                # The client replaces a one-cell depth front with the
+                # anchor, including legacy front="0000" declarations.
+                for j in range(0, len(front) if len(front) > 4 else 0, 4):
+                    dx, dy = int(front[j:j + 2], 16) - 128, int(front[j + 2:j + 4], 16) - 128
+                    points.append((ax + dx + (1 if ay % 2 and dy % 2 else 0), ay + dy))
+                reserve(points)
+    except ValueError:
+        return frozenset()
+    return frozenset(y * width + x for footprint in candidates
+                     if not any(hard.get(y, 0) & (1 << x) for x, y in footprint)
+                     for x, y in footprint)
 
 
 # A location id is not always a file number. SSEmulator.getLocDescription
@@ -449,6 +542,7 @@ class Location:
             self.pvp = 0
 
         self.obstacles = {self._cell(c) for c in _chunks(txt, "obstacles", 5)}
+        self.bushes = _bush_cells(txt, attrs, self.width, self.height)
         # The counter of a range, shot over but not walked over (SHOOT_OVER).
         self.shoot_over = frozenset(
             self._cell(c) for c in _chunks(txt, "obstacles", 5)

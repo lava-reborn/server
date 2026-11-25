@@ -1799,6 +1799,21 @@ RULE = ("type_id -> original texts.xml rows (html-unescaped, otherwise verbatim)
         "and an exact wiki name for the rest. See data/build_orig_items.py.")
 
 
+# One ambiguous wiki match was checked against a later original snapshot.
+# Keep that exact correction reproducible without rebuilding all old names
+# against a different texts.xml; its per-record digest identifies the source.
+EXACT_ITEM_TEXTS = {
+    3737: {
+        "name": "Подсумки спецназовца (G). МОД. А1.",
+        "desc": "Удобные подсумки для магазинов ПП. Установлена модификация уровня А1.",
+        "name_id": 47170, "desc_id": 47171, "confidence": "high", "root": "WearItem",
+        "source_md5": "5753339771815bd83a2cfcbd261db945",
+        "why": "Exact original belt_sub_machineguns_g_mod correction against canonical texts47170/47171; "
+               "previous medium match was a different rifle M2 row. Only this record uses this later original snapshot.",
+    },
+}
+
+
 def build(texts_path):
     if not os.path.isfile(os.path.join(RES, "database", "objects.xml")):
         raise SystemExit("set LAVA_RES to the client's res directory (database/objects.xml)")
@@ -1847,17 +1862,19 @@ def build(texts_path):
         found[tid] = rec
 
     items, counts, by_rule = {}, {}, collections.Counter()
-    for tid in sorted(found):
-        nid, did, conf = found[tid]
+    for tid in sorted(set(found) | set(EXACT_ITEM_TEXTS)):
+        exact = EXACT_ITEM_TEXTS.get(tid)
+        nid, did, conf = ((exact["name_id"], exact["desc_id"], exact["confidence"])
+                          if exact else found[tid])
         if conf not in KEEP or tid not in objects:
             continue
         root = ROOT_NAME[objects[tid][0]]
-        items[str(tid)] = {
+        items[str(tid)] = dict(exact) if exact else {
             "name": T[nid] if nid is not None else None,
             "desc": T[did] if did is not None else None,
             "name_id": nid, "desc_id": did, "confidence": conf, "root": root}
         counts.setdefault(root, collections.Counter())[conf] += 1
-        by_rule[owner[tid], conf] += 1
+        by_rule["exact_original" if exact else owner[tid], conf] += 1
     meta = {"source": texts_path, "source_md5": md5, "source_size": size, "rule": RULE,
             "counts": {r: dict(c) for r, c in counts.items()}}
     return {"_meta": meta, "items": items}, by_rule

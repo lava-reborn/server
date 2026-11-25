@@ -11,7 +11,9 @@ from functools import lru_cache
 ROCKET, CROSSBOW = 3148, 3173
 TUTORIAL_WEAPONS = frozenset(range(3728,3734))
 SPECIAL_WEAPONS = TUTORIAL_WEAPONS | {ROCKET,CROSSBOW,1547,1569,1570}
-EXTRA_SOURCES = TUTORIAL_WEAPONS | {ROCKET,CROSSBOW,3727,6192,6195,6199,6200}
+# Isolated copies keep the flare/crossbow round closure even when ordinary
+# outlets exclude these calibres for lack of a released player weapon.
+EXTRA_SOURCES = TUTORIAL_WEAPONS | {ROCKET,CROSSBOW,3727} | set(range(6191,6201))
 LEVELS = {CROSSBOW:10}
 NAMES = {ROCKET:'Ракетница',CROSSBOW:'Арбалет'}
 GIFT_ALIASES = frozenset((1,44,202,203,204,235,236,366,436))

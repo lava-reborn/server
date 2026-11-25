@@ -35,6 +35,7 @@ import logging
 import math
 import re
 import os
+from functools import lru_cache
 
 import blueprint_prices
 import craft
@@ -66,6 +67,7 @@ LINK_CONFIDENCE = 0.5
 
 # Item.as:39-45. The root type decides which ss_si_* frame describes the item.
 FIRE_ARM, WEAR, HEAL, AMMO, TRASH, COLD_ARM, TROPHY = range(7)
+POISON_SYRINGE = 3552
 
 SI_COMMAND = {
     FIRE_ARM: "ss_si_firearm",
@@ -232,6 +234,13 @@ TRAINING_ROUNDS = 3727
 # window offer it; it was 200. Rounds only: the client asks "how many" for
 # nothing else (Trade.buy sends 1), and junk keeps its stack of 50.
 STARTER_ROUNDS = 6188          # only Самострел and its modified variants
+# Existing 9 mm shock round and designed counterparts, by standard calibre.
+SHOCK_ROUNDS = {6104: 6189, 6105: 60011, 6106: 60012, 6107: 60013,
+               6108: 60014, 6109: 60015, 6110: 60016, 6111: 60017,
+               6112: 60018, 6113: 60019, 6114: 60020, 6115: 60021,
+               7112: 60022, 35021: 60023, 35233: 60024, 41235: 60025, 42259: 60026}
+# Finished laboratory pouches require their tier without the +3 allowance.
+STRICT_LEVEL_GEAR = frozenset((3735, 3736, 3737, 3738, 3739, 3740, 5615))
 AMMO_PACK = 20
 AMMO_STACK = 5000
 
@@ -240,6 +249,7 @@ AMMO_STACK = 5000
 # goes there by the client's own hand (PersEquip.as:339-349).
 HAND_ROOTS = (FIRE_ARM, COLD_ARM, HEAL)
 HEAPABLE_ROOTS = (AMMO, TRASH)
+MEDICINE_STACK = 10
 BREAKABLE_ROOTS = (FIRE_ARM, WEAR, COLD_ARM)
 
 SLOT_HEAD, SLOT_CAMO, SLOT_ARMOR, SLOT_BELT, SLOT_LEGS, SLOT_BOOTS = range(6)
@@ -332,9 +342,29 @@ def stock_for(trader_type, loc_id=None):
     reads own_stock instead, the list without those copies: what it saves is
     the owner's choice, and the rule stays a rule.
     """
+    chosen = _shop_stock(trader_type, loc_id)
+    import effects
+    owners = shop_bands.stock_owners(loc_id) if loc_id in shop_bands.CITY_OF else {}
+    chosen = [t for t in chosen if owners.get(t, trader_type) == trader_type
+              or (trader_type in shop_bands.BUFF_ASSISTANTS
+                  and effects.definition(t) is not None)]
+    # Ordinary gun counters keep compatible rounds after stock allocation.
+    # Oases have dedicated weapon/ammunition counters within the same market.
+    oasis = shop_bands.oasis_stock(trader_type, loc_id, chosen)
+    return (oasis if oasis is not None else
+            shop_bands.with_weapon_ammunition(chosen, trader_type))
+
+
+# Existing coupons still redeem, but selling an unlimited discounted supply
+# lets their gold ammunition be cashed out far above the purchase price.
+DISCOUNT_AMMO_COUPONS = frozenset((6294, 6295, 6296))
+
+
+def _shop_stock(trader_type, loc_id):
+    """Unallocated stock; shared by the displayed list and the location owner map."""
     chosen = shop_bands.apply(trader_type, loc_id, with_gold_pouches(_own_list(trader_type)))
     return [t for t in chosen if not out_of_game(t) and not acquisition_blocked(t)
-            and not upgrade_blueprint_blocked(t)]
+            and not upgrade_blueprint_blocked(t) and t not in DISCOUNT_AMMO_COUPONS]
 
 
 def own_stock(trader_type):
@@ -497,11 +527,14 @@ PLAYER_GEAR_MAX_LEVEL = 17
 def acquisition_blocked(type_id):
     """Ordinary acquisition refuses private templates and unreleased equipment.
 
-    Ordinary medicine, ammunition, blueprints and non-equipment are unaffected.
+    Ammunition also needs a released player firearm that can chamber it.
+    Ordinary medicine, blueprints and other non-equipment are unaffected.
     Keep this separate from out_of_game: it must not trigger confiscation.
     """
     if item_templates.contains(type_id):
         return True
+    if root_of(type_id) == AMMO:
+        return type_id not in player_ammunition()
     if root_of(type_id) not in (FIRE_ARM, COLD_ARM, WEAR):
         return False
     si = params_of(type_id) or {}
@@ -515,6 +548,23 @@ def acquisition_blocked(type_id):
     return level > PLAYER_GEAR_MAX_LEVEL
 
 
+@lru_cache(maxsize=1)
+def player_ammunition():
+    """Qualities of released calibres, including quest and starter weapons."""
+    rounds = set()
+    for type_id, (root, _name) in catalogue().items():
+        if (root == FIRE_ARM and type_id != ADMIN_GUN
+                and not out_of_game(type_id) and not acquisition_blocked(type_id)):
+            rounds.update(params_of(type_id).get('comp_array', ()))
+    def family(type_id):
+        name = re.sub(r'_(?:KS|ST|OT(?:_PS)?|BB_G|EK_G|SHK_G|SB_G|shock)$',
+                      '', catalogue()[type_id][1])
+        return 'Ammo_SP_5_6' if name == 'Ammo_SP_5' else name
+    families = {family(t) for t in rounds if root_of(t) == AMMO}
+    return frozenset(t for t, (root, _name) in catalogue().items()
+                     if root == AMMO and family(t) in families)
+
+
 def upgrade_blueprint_blocked(type_id):
     """Temporarily close level 18-20 upgrade blueprints, keeping owned items."""
     entry = catalogue().get(type_id)
@@ -526,12 +576,20 @@ def upgrade_blueprint_blocked(type_id):
 
 BATTLE_HEAL_AP_MULTIPLIER = 2.5
 BATTLE_HEAL_AFRO_AP_MULTIPLIER = 1.5
+GOLD_VALENTINES = (1069, 1070, 1071, 1072)
 
 
 def battle_medicine(type_id):
     """All battle health/stamina medicines, including G dose packs."""
     root, name = catalogue().get(item_templates.source_type(type_id), (None, ""))
     return root == HEAL and name.startswith("Med_Battle_")
+
+
+def heapable(type_id):
+    """Native heaps, plus single-use health/stamina medicine of one type."""
+    root = root_of(type_id)
+    return root in HEAPABLE_ROOTS or (root == HEAL
+        and (params_of(type_id) or {}).get('max_count', 1) > 1)
 
 
 def no_combat(type_id):
@@ -559,6 +617,9 @@ STIMULANT_UNAVAILABLE = (
 def stimulant_unavailable(type_id):
     """Block only HEAL items promising an unimplemented temporary effect."""
     if item_templates.supports_effects(type_id):
+        return False
+    import effects
+    if effects.definition(type_id) is not None:
         return False
     if STIMULANT_EFFECTS_ENABLED or root_of(type_id) != HEAL:
         return False
@@ -925,6 +986,9 @@ ARTICLE_GOLD_PRICE = {2649: 200, 2650: 250,           # DnLoteryKey_g_9_10, _g_1
                       2651: 300,                      # DnLoteryKey_g_13_14
                       2654: 300, 2655: 350, 3575: 450,  # AhLoteryKey_g_15_16, _17_18, _19_19
                       1567: 25, 1639: 10,             # ah_ticket, ah_dongola_ticket_g
+                      # Plus is the stronger dose above MK IX. Scale its
+                      # price by the bonus, rounded up to the next 0.05 G.
+                      4935: 200, 4936: 220, 4956: 220,  # Salus MK IX/+, Anesthetic +
                       6294: 10, 6295: 100, 6296: 1000}  # kupon_ammo_20, _300, _5000
 GOLD_PRICE_ONLY = frozenset({1333}) | GOLD_LINE_BLUEPRINTS | frozenset(ARTICLE_GOLD_PRICE)
 
@@ -989,6 +1053,7 @@ def gold_round(p):
 # RECOVERED.
 CRAT_TOOLS = (7025, 7026, 7027, 7028, 7029, 7036, 7037, 7038, 7039, 7040, 7041, 7042)
 OWN_ARTICLE_PRICE = {1307: 500,
+                     4934: 84000,                   # Salus MK IX above MK VIII
                      6544: 100, 6545: 150,          # ticket_WH_to_Abri, ticket_Abri_to_WH
                      6546: 100, 6547: 110,          # ticket_Abri_to_DN, ticket_DN_to_Abri
                      2646: 1000, 2647: 1700,        # DnLoteryKey_9_10, _11_12
@@ -1010,8 +1075,9 @@ OWN_ARTICLE_PRICE.update((t, 100) for t in CRAT_TOOLS)
 # 6700 afro (the owner's Абри, 2026-10-12; RECOVERED: the article's own
 # rule). It keeps its use: strength and dexterity +1 for an hour, two bites.
 # Bagira's usable Bone Knife, not the separate ritual quest object 3944.
-PERSONAL_QUEST_REWARDS = frozenset({3941})
-QUEST_GIFTS_UNSOLD = frozenset({3914})
+# The lab's daily equipment part cannot be pooled from other characters.
+PERSONAL_QUEST_REWARDS = frozenset({3941, quests.LABORANT_PART})
+QUEST_GIFTS_UNSOLD = frozenset({3914, quests.LABORANT_PART})
 
 # Things a quest asks for that fall only for it (mobs.QUEST_TIER) and that the
 # wiki prices for a stall: no price either (cost 0). «Алмаз» (5545), the
@@ -1053,17 +1119,19 @@ MINER_WEAR = {first + k: sets.SETS[like]["members"][slot]
 # arguing with the balance. Ours, and openly so; nothing sells it.
 ADMIN_GUN = 1534
 
-# Owner 2026-10-27: the collectible PMM variants of levels 4 and 5.
+# All PMM variants use the same ten-round magazine.
 # Capacity is type metadata, so existing instances get the same limit.
-PMM_CLIP_SIZES = {7056: 7, 7057: 7}
+PMM_CLIP_SIZES = {7055: 10, 7056: 10, 7057: 10, 7058: 10}
 
-# Ordinary collectible KS-12, latest owner decision 2026-10-27:
+# Ordinary collectible KS-12 baseline, owner decision 2026-10-27:
 # Keep x2 of the original AP cost, except level 5 -> 32 and level 9 -> 27.
 # Two shots + one A combat bandage + five steps are a MINIMUM guarantee
 # in a full nearest-lower A set at that weapon level, without AP regen.
 # Only lower a prior cost when that minimum would not fit (levels 4/6/7).
 # Fixed per-type costs, NOT a fee recalculated from each player's gear.
-# Named/clan copies stay separate.
+# Named/clan copies keep their own baseline. The 2026-11-24 reduction
+# applies to every KS-12 below, including the costs sent to the client.
+KS12_FIRE_COST_PERCENT = 95  # All KS-12 copies; nearest integer, halves round up.
 KS12_FIRE_COSTS = {
     7072: 31, 7073: 32, 7074: 33, 7075: 36, 7076: 24,
     7077: 27, 7078: 38, 7079: 38, 7080: 46, 7070: 46, 7081: 46,
@@ -1220,7 +1288,8 @@ def static_info(type_id):
         # A gold round costs the owner's hundredth, the pack its rounds'
         # worth (GOLD_AMMO_ROUND).
         if root_of(type_id) == AMMO and gold_round(info[1]):
-            info[1]["g_cost"] = GOLD_AMMO_ROUND * info[1]["sell_num"]
+            price = 2 if catalogue()[type_id][1].endswith(('_EK_G', '_BB_G')) else GOLD_AMMO_ROUND
+            info[1]["g_cost"] = price * info[1]["sell_num"]
         # Gift rounds must remain affordable through the ordinary client.
         if type_id == STARTER_ROUNDS:
             info[1].update(cost=AMMO_PACK, g_cost=0)
@@ -1243,12 +1312,18 @@ def static_info(type_id):
         # Owner, 2026-10-29: smuggled PKM 7051 again requires learned spec 0.
         # Ordinary/gold variants, modifications and other guns keep their
         # previous requirements, including a learned spec at level zero.
-        if root_of(type_id) == FIRE_ARM and info[1].get("weapon_type") == MACHINEGUN:
+        if root_of(type_id) == FIRE_ARM:
             level = max(info[1].get("need_skills") or [0])
-            if 16 <= level <= 20:
-                required = level - 16
+            requirement = None
+            if info[1].get("weapon_type") == MACHINEGUN and 16 <= level <= 20:
+                requirement = (6, level - 16)
+            elif catalogue()[type_id][1].startswith('lamantin_shotgun_') and level >= 7:
+                # The ordinary shotgun ladder through 12; KS-12 at 15 needs IV.
+                requirement = (3, 1 if level == 7 else 2 if level < 10 else 3 if level < 15 else 4)
+            if requirement is not None:
+                spec, required = requirement
                 mask = info[1].get("need_specs_m", 0) or 0
-                bit = 1 << 6  # PersAttributes: Ручные пулеметы.
+                bit = 1 << spec  # PersAttributes order.
                 offset = (mask & (bit - 1)).bit_count()
                 values = list(info[1].get("need_specs") or [])
                 values.extend([0] * max(0, mask.bit_count() - len(values)))
@@ -1263,11 +1338,51 @@ def static_info(type_id):
             costs = list(info[1]["fire_costs"])
             costs[2] = KS12_FIRE_COSTS[type_id]
             info[1]["fire_costs"] = costs
+        if catalogue()[type_id][1].startswith('lamantin_shotgun_'):
+            info[1]['fire_costs'] = [
+                max(1, (value * KS12_FIRE_COST_PERCENT + 50) // 100) if value else 0
+                for value in info[1]['fire_costs']]
+            info[1]['fire_mods'] = [min(value, 10) for value in info[1]['fire_mods']]
+        import battle_balance
+        for field, value in battle_balance.equipment_changes().get(type_id, {}).items():
+            info[1][field] = list(value) if isinstance(value, list) else value
+        if root_of(type_id) == FIRE_ARM:
+            compatible = info[1]['comp_array']
+            info[1]['comp_array'] = list(dict.fromkeys(compatible + [SHOCK_ROUNDS[t]
+                for t in compatible if t in SHOCK_ROUNDS]))
         # Last, so neither the design nor the wiki can argue with it.
         admin = ADMIN_OVERRIDES.get(type_id)
         if admin:
             info[1].update(admin)
         if root_of(type_id) == HEAL:
+            import effects
+            effect = effects.definition(type_id)
+            if effect is not None:
+                info[1].update(bonus_act_time=effect['duration'],
+                               effects=[effects.FIRST + type_id], effects_prob=[100])
+                # Ordinary A stimulants use the agreed strict character-level
+                # ladder; G stimulants are unrestricted. Neither asks for PvP
+                # reputation or independent shooting/melee levels.
+                level = (max(info[1].get('need_skills') or [0])
+                         if info[1].get('cost') and not info[1].get('g_cost') else 0)
+                info[1].update(buff_level=level, need_pvp_rep=0,
+                               need_skills_m=0, need_skills=[])
+                # Packed masks and their dense lists must change together.
+                # Zero rows are noise in a stimulant's requirements/bonuses.
+                for prefix in ('need', 'bonus'):
+                    for field in ('attribs', 'skills', 'specs'):
+                        key = prefix + '_' + field
+                        mask = int(info[1].get(key + '_m', 0))
+                        values = iter(info[1].get(key, ()))
+                        kept, dense = 0, []
+                        for i in range(mask.bit_length()):
+                            if mask & (1 << i):
+                                value = next(values)
+                                if value:
+                                    kept |= 1 << i
+                                    dense.append(value)
+                        if mask:
+                            info[1][key + '_m'], info[1][key] = kept, dense
             name = catalogue()[type_id][1]
             if name.startswith("Med_Battle_") and (name.endswith('_A') or '_G' in name):
                 multiplier = (BATTLE_HEAL_AFRO_AP_MULTIPLIER if name.endswith('_A')
@@ -1279,8 +1394,19 @@ def static_info(type_id):
         repair_cost = repair_policy.valuation(type_id, info[1])
         if repair_cost is not None:
             info[1]['repair_cost'] = repair_cost
+        if type_id == POISON_SYRINGE:
+            info[1].update(max_break_abs=20, desc=DESC_ID_OFFSET + type_id)
     if info and info[1].get('max_count') == 50:
         info[1]['max_count'] = 100
+    if info and root_of(type_id) == HEAL:
+        name = catalogue()[type_id][1]
+        single = (name.startswith(('Med_Battle_', 'Med_Pacific_'))
+                  and info[1].get('use_count') == 1)
+        info[1]['max_count'] = MEDICINE_STACK if single else 1
+    if info:
+        info[1].update(equipment_level_fields(type_id, info[1]))
+        if root_of(type_id) == AMMO:
+            info[1]['desc'] = DESC_ID_OFFSET + type_id
     return info
 
 
@@ -1563,6 +1689,46 @@ def wiki_descs():
         if text and t in catalogue():
             out.setdefault(t, text)
     return out
+
+
+def equipment_level_allowance(type_id):
+    """The +3 equip allowance belongs only to weapons and set pieces."""
+    if type_id in STRICT_LEVEL_GEAR:
+        return 0
+    root = root_of(type_id)
+    if root in (FIRE_ARM, COLD_ARM):
+        return 3
+    if root == WEAR:
+        import setcraft
+        if sets.set_of(setcraft.base_of(type_id)):
+            return 3
+    return 0
+
+
+def equipment_level_fields(type_id, si):
+    """Presentation of the native character-level gate, not a new requirement.
+
+    Item templates use separate equip rules. Medicine and buffs have their
+    own requirements and must not advertise an equipment allowance.
+    """
+    if root_of(type_id) not in (WEAR, FIRE_ARM, COLD_ARM) or item_templates.contains(type_id):
+        return {}
+    level = max(si.get("need_skills") or [0]) if si.get("need_skills_m") else 0
+    if level <= 0:
+        return {}
+    return dict(equip_level=level, equip_allowance=equipment_level_allowance(type_id))
+
+
+def equipment_level_text(type_id):
+    """Explain the equip allowance without suggesting an upper wearing limit."""
+    fields = equipment_level_fields(type_id, params_of(type_id) or {})
+    if not fields:
+        return ""
+    level = fields['equip_level']
+    if not fields['equip_allowance']:
+        return "Можно надеть только с %d-го уровня." % level
+    return ("Можно надеть с %d-го уровня. Без ускоренного износа — с %d-го."
+            % (max(0, level - 3), level))
 
 
 def preload():

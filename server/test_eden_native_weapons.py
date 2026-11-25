@@ -90,7 +90,9 @@ class EdenNativeWeaponTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(self.case.pending[-1], si['strike_time'] / 1000)
             self.finish()
         strength = self.s.char.attr(progression.STRENGTH)
-        self.assertEqual(self.palm.hp, 5000 - si['h_damage_min'] - strength)
+        # Ordinary blades receive the same intellect scaling on palms as elsewhere.
+        expected = round((si['h_damage_min'] + strength) * (1 + .03 * max(0, self.s.char.attr(progression.INTELLECT) - 5)))
+        self.assertEqual(self.palm.hp, 5000 - expected)
         self.assertEqual(self.store.item(row['uniq'])['brk'], row['brk'] - 1)
         self.assertEqual(self.f.ap, self.f.ap_max - si['strike_cost'])
         self.assertEqual(self.skill_state(), before)
@@ -136,12 +138,18 @@ class EdenNativeWeaponTests(unittest.IsolatedAsyncioTestCase):
         self.assertGreater(self.f.recovery_until, self.case.clock)
         hp = self.palm.hp
         self.attack(live)
-        self.assertEqual([p['res'] for c, p in self.frames if c == 'cmdAck'][-1], inventory.RES_NOT_READY)
+        self.assertEqual([p['res'] for c, p in self.frames if c == 'cmdAck'][-1], inventory.RES_OK)
+        next_shot = self.case.pending
+        self.assertEqual(next_shot[1], 'aim')
+        self.assertNotEqual(next_shot[0], saved[0])
         self.assertEqual(self.store.item(row['uniq']), live)
         self.assertEqual(self.palm.hp, hp)
         self.finish(saved)  # Consumed timer cannot pay or hit twice.
         self.assertEqual(self.store.item(row['uniq']), live)
         self.assertEqual(self.palm.hp, hp)
+        self.finish(next_shot)
+        self.assertEqual(self.store.item(row['uniq'])['ammo_count'], row['ammo_count'] - 2 * rounds)
+        self.assertLess(self.palm.hp, hp)
         self.assertEqual(self.skill_state(), before)
         self.assertEqual(self.palm.xp_ledger, {})
 

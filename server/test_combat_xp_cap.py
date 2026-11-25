@@ -10,6 +10,7 @@ os.environ['LAVA_DB'] = ':memory:'
 logging.disable(logging.CRITICAL)
 
 import combat
+import effects
 import progression as p
 from testkit import run_cases
 
@@ -38,17 +39,19 @@ class CombatXpCap(unittest.TestCase):
         level, xp, ceiling = ch.spec[spec]
         return sum(p.spec_xp_max(i) for i in range(level)) + xp
 
-    def test_equal_lower_and_ceiling_rewards_below_17_retain_the_existing_formula(self):
+    def test_equal_and_lower_rewards_use_the_plus_one_base_and_four_level_cutoff(self):
         for level in range(17):
-            for mob in (max(0, level - 2), level, level + 4, level + 5):
+            for mob in range(level + 1):
                 for share in (0, .125, .5, 1):
                     for mult in (.7, 1, 3):
-                        self.assertEqual(p.combat_mob_xp(mob, level, share, mult), p.mob_xp(mob, level, share, mult))
+                        ratio = {0:.95, -1:.75, -2:.5, -3:.25}.get(mob - level, 0)
+                        expected = p.mob_price(level + 1) * ratio * mult * share
+                        self.assertAlmostEqual(p.combat_mob_xp(mob, level, share, mult), expected)
 
     def test_spec_reward_rises_to_level_16_maximum_at_gap_four(self):
-        ceiling = p.mob_xp(17, 16)
-        self.assertEqual(ceiling, 1996)
-        expected = [748.5, 1060.375, 1372.25, 1684.125, 1996]
+        ceiling = 1996 * 1.25
+        self.assertAlmostEqual(ceiling, 2495)
+        expected = [1996 * .95, 1996, 1996 * 1.05, 1996 * 1.15, 1996 * 1.25]
         for level in (17, 18, 19, 20):
             self.assertEqual([p.combat_mob_xp(17 + gap, level) for gap in range(5)], expected)
             for mob in (17, 18, 21, 30):
@@ -56,8 +59,9 @@ class CombatXpCap(unittest.TestCase):
                     full = min(ceiling, expected[min(mob - 17, 4)] * mult)
                     self.assertEqual(p.combat_mob_xp(mob, level, 1, mult), full)
                     self.assertEqual(p.combat_mob_xp(mob, level, .25, mult), full / 4)
-            self.assertEqual(p.combat_mob_xp(15, level), 0)
-        self.assertEqual(p.combat_mob_xp(16, 17), p.mob_xp(15, 16))
+            self.assertEqual(p.combat_mob_xp(13, level), 0)
+            self.assertEqual(p.combat_mob_xp(15, level), 1996 * .5)
+        self.assertEqual(p.combat_mob_xp(16, 17), 1996 * .75)
         for gap in range(-3, 9):
             self.assertEqual(p.combat_mob_xp(17 + gap, 17),
                              p.combat_mob_xp(16 + gap, 16))
@@ -74,7 +78,72 @@ class CombatXpCap(unittest.TestCase):
                     self.settle(mob, f)
                     self.settle(mob, f)
                     self.assertEqual(ch.skill[skill], before)
-                    self.assertEqual(self.spec_total(ch, spec), 1996)
+                    self.assertEqual(self.spec_total(ch, spec),
+                                     int(2495 * (1 + p.PREMIUM_XP_BONUS[premium]) + 1e-9))
+
+    def test_premium_is_applied_once_before_fractional_combat_carry(self):
+        for level in (12, 17):
+            for premium in (0, 1, 2):
+                with self.subTest(level=level, premium=premium):
+                    split, ch, spec = self.fighter(level, premium)
+                    whole, reference, reference_spec = self.fighter(level, premium)
+                    mob = self.mob(level + 1)
+                    reward = p.combat_mob_xp(mob.level, level) * (1 + p.PREMIUM_XP_BONUS[premium])
+                    for _ in range(100):
+                        split.credit_xp(p.SHOOTING, spec, .01, mob)
+                    whole.credit_xp(p.SHOOTING, reference_spec, 1, mob)
+                    self.assertEqual(ch.skill, reference.skill)
+                    self.assertEqual(ch.spec, reference.spec)
+                    self.assertEqual(self.spec_total(ch, spec), int(reward + 1e-9))
+                    carry = ('spec', spec) if level == 17 else p.SHOOTING
+                    self.assertAlmostEqual(ch.xp_carry[carry], reward % 1)
+
+    def test_intux_residence_percentages_add_before_experience_reduction(self):
+        for type_id, multipliers in ((3112, (1.1, 1.25, 1.4)), (3113, (1.3, 1.45, 1.6)),
+                                     (3114, (1.5, 1.65, 1.8)), (3561, (1.7, 1.85, 2.0))):
+            for premium, multiplier in enumerate(multipliers):
+                for reduction, factor in ((None, 1), (3205, .5), (3206, .2), (3207, .01)):
+                    for level in (12, p.COMBAT_SKILL_CAP):
+                        with self.subTest(type_id=type_id, premium=premium, reduction=reduction, level=level):
+                            f, ch, spec = self.fighter(level, premium)
+                            active = {type_id: NS(source=type_id, deadline=10)}
+                            if reduction:
+                                active[reduction] = NS(source=reduction, deadline=10)
+                            f.sess.effects = NS(active=active, clock=lambda: 0)
+                            expected_multiplier = multiplier * factor
+                            self.assertAlmostEqual(effects.multiplier(f.sess, 'mob_exp',
+                                bonus=p.PREMIUM_XP_BONUS[premium]), expected_multiplier)
+                            mob = self.mob(level + 1)
+                            f.credit_xp(p.SHOOTING, spec, 1, mob)
+                            reward = p.combat_mob_xp(level + 1, level) * expected_multiplier
+                            carry = ('spec', spec) if level == 17 else p.SHOOTING
+                            self.assertEqual(self.spec_total(ch, spec), int(reward + 1e-9))
+                            self.assertAlmostEqual(ch.xp_carry[carry], reward % 1)
+
+    def test_no_active_intux_preserves_residence_with_or_without_effect_manager(self):
+        for premium, expected in ((0, 1), (1, 1.15), (2, 1.3)):
+            for manager in (None, NS(active={}, clock=lambda: 0),
+                            NS(active={3561: NS(source=3561, deadline=0)}, clock=lambda: 1)):
+                f, ch, spec = self.fighter(12, premium)
+                f.sess.effects = manager
+                self.assertAlmostEqual(effects.multiplier(f.sess, 'mob_exp',
+                    bonus=p.PREMIUM_XP_BONUS[premium]), expected)
+                mob = self.mob(13)
+                f.credit_xp(p.SHOOTING, spec, 1, mob)
+                reward = p.combat_mob_xp(13, 12) * expected
+                self.assertEqual(self.spec_total(ch, spec), int(reward + 1e-9))
+                self.assertAlmostEqual(ch.xp_carry[p.SHOOTING], reward % 1)
+
+    def test_expiry_stops_new_bonus_without_reapplying_it_to_old_fraction(self):
+        f, ch, spec = self.fighter(12, 1)
+        mob = self.mob(13)
+        share = .5 / p.combat_mob_xp(13, 12)
+        f.credit_xp(p.SHOOTING, spec, share, mob)
+        self.assertAlmostEqual(ch.xp_carry[p.SHOOTING], .575)
+        ch.premium_until = 1
+        f.credit_xp(p.SHOOTING, spec, share, mob)
+        self.assertEqual(self.spec_total(ch, spec), 1)
+        self.assertAlmostEqual(ch.xp_carry[p.SHOOTING], .075)
 
     def test_overkill_callbacks_do_not_multiply_spec_reward(self):
         f, ch, spec = self.fighter()
@@ -83,7 +152,7 @@ class CombatXpCap(unittest.TestCase):
             f.award_xp(p.SHOOTING, spec, 99999, mob)
         self.settle(mob, f)
         self.assertEqual(ch.skill[p.SHOOTING][1], 0)
-        self.assertEqual(self.spec_total(ch, spec), 1060)
+        self.assertEqual(self.spec_total(ch, spec), int(p.combat_mob_xp(mob.level, ch.level)))
 
     def test_lower_base_skill_still_trains_when_character_is_17(self):
         f, ch, spec = self.fighter(10, skill=p.MELEE)
@@ -105,15 +174,16 @@ class CombatXpCap(unittest.TestCase):
         self.settle(mob, first, second)
         for ch, spec in ((a, spec_a), (b, spec_b)):
             self.assertEqual(ch.skill[p.SHOOTING][1], 0)
-            self.assertEqual(self.spec_total(ch, spec), 530)
-            self.assertAlmostEqual(ch.xp_carry['spec', spec], .1875)
+            reward = p.combat_mob_xp(mob.level, ch.level) / 2
+            self.assertEqual(self.spec_total(ch, spec), int(reward))
+            self.assertAlmostEqual(ch.xp_carry['spec', spec], reward - int(reward))
         f, ch, spec = self.fighter()
-        for _ in range(10):
-            mob = self.mob(16)
+        for _ in range(3):
+            mob = self.mob(17)
             f.award_xp(p.SHOOTING, spec, 1, mob)
             self.settle(mob, f)
-        self.assertEqual(self.spec_total(ch, spec), int(10 * p.mob_xp(15, 16)))
-        self.assertAlmostEqual(ch.xp_carry['spec', spec], .5)
+        self.assertEqual(self.spec_total(ch, spec), int(3 * 1996 * .95))
+        self.assertAlmostEqual(ch.xp_carry['spec', spec], .6)
 
     def test_unlearned_or_missing_spec_gets_no_reward_or_carry(self):
         f, ch, spec = self.fighter()

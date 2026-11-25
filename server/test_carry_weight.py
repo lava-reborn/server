@@ -38,7 +38,7 @@ class CarryWeight(unittest.TestCase):
         self.inv = self.s.inv = inventory.Inventory(self.s, self.store)
         self.inv.push_look = lambda *_: None
         self.f = self.s.combat = Fighter(self.s)
-        self.inv.trade = NS(trader_type=1200, loc_id=102)
+        self.inv.trade = inventory.TradeSession(1, 1200, 102)
 
     def make(self, type_id, count=1, slot=inventory.BAG, owner=None):
         fields = inventory.new_fields(type_id, count)
@@ -88,6 +88,23 @@ class CarryWeight(unittest.TestCase):
                 self.assertEqual(self.buy(),[inventory.RES_OK])
                 self.assertEqual(self.inv.total_weight(),limit)
                 self.assertEqual(self.buy(),[inventory.RES_OVERLOAD])
+
+    def test_research_kit_needs_exactly_two_and_half_kilograms_and_never_charges_overload(self):
+        for free, result in ((2499, inventory.RES_OVERLOAD), (2500, inventory.RES_OK)):
+            with self.subTest(free=free):
+                for row in self.inv.rows():
+                    self.store.delete_item(row['uniq'])
+                self.ch.afro = 500000
+                self.store.set_money(self.s.char_id, 500000, 0)
+                self.fill_to(self.inv.carry_limit() - free)
+                before = self.inv.total_weight()
+                self.frames.clear()
+                with patch.object(items, 'stock_for', return_value=[1573]):
+                    self.inv.buy(dict(obj='0', param=1), inventory.UPD_BUY)
+                self.assertEqual([p['res'] for name, p in self.frames if name == 'cmdAck'], [result])
+                bought = result == inventory.RES_OK
+                self.assertEqual(self.inv.total_weight(), before + (2500 if bought else 0))
+                self.assertEqual(self.store.money(self.s.char_id)[0], 250000 if bought else 500000)
 
     def test_pouch_and_strength_stack_refresh_and_removal_preserves_items(self):
         self.ch.attrib[progression.STRENGTH] = 12

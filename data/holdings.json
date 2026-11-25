@@ -1,8 +1,8 @@
 {
  "_meta": {
   "what": "Capturable sites: a boss whose kill hands the place to a clan, read by server/holdings.py (its docstring has the rules). One row a site; a city added later is a row here.",
-  "min_level": "RECOVERED from the original map labels' «Захват возможен игроками 8 уровня при поддержке клана» (12 for the south warehouse; res/database/locations.xml 315-317): the level two living members of the clan who hurt the boss must have at the kill, and the level of the box's row (data/quests.json 765-767). Донгола's: 12, 16 and 16 (L323-L325; the boxes 768-770). Абу-Хамед's Центр: 17 (the box 771). Every listed level is a minimum, not an exact level or upper cap.",
-  "squad": "DESIGNED, the plan's default 16: «отряд из 2+ членов клана убивает «Хозяина» в окне; уровень — по подписи».",
+  "min_level": "RECOVERED from the original map labels' «Захват возможен игроками 8 уровня при поддержке клана» (12 for the south warehouse; res/database/locations.xml 315-317): the level two living members of the finishing clan who hurt the boss must have at the kill, and the level of the box's row (data/quests.json 765-767). Донгола's: 12, 16 and 16 (L323-L325; the boxes 768-770). Абу-Хамед's Центр: 17 (the box 771). Every listed level is a minimum, not an exact level or upper cap.",
+  "squad": "The finishing clan needs two distinct living contributors of the required level in the room: the killer and at least one clanmate. Damage ranking does not determine the holder.",
   "box_hours": "Kept in data/schedule.json, window wh_box: the labels' «Дележ добычи с 19:00 до 20:00». Абу-Хамед's Центр keeps its own, wh_box_ah: L327 «Дележ добычи с 19:00 до 19:15».",
   "box_tenure_hours": "DESIGNED: a member takes the box's row only after this many hours in the clan, so that nobody is invited at 19:00 to collect and put out at 19:59.",
   "box_one_per_account": "DESIGNED: one character of an account collects a site's row a day.",
@@ -14,19 +14,14 @@
  "box_tenure_hours": 24,
  "box_one_per_account": true,
  "sites": {
-  "wh_sever": {"loc": 111, "boss": 7448, "flag": 1011, "box": 6824, "quest": 765, "min_level": 8,
-               "title": "Северный склад Вади-Хальфы"},
-  "wh_vostok": {"loc": 110, "boss": 7449, "flag": 1011, "box": 6825, "quest": 766, "min_level": 8,
-                "title": "Восточный склад Вади-Хальфы"},
-  "wh_ug": {"loc": 109, "boss": 7450, "flag": 1011, "box": 6826, "quest": 767, "min_level": 12,
-            "title": "Южный склад Вади-Хальфы"},
-  "wh_dn_sever": {"loc": 113, "boss": 7451, "flag": 1011, "box": 6827, "quest": 768, "min_level": 12,
-                  "title": "Северный склад Донголы"},
-  "wh_dn_vostok": {"loc": 114, "boss": 7452, "flag": 1011, "box": 6828, "quest": 769, "min_level": 16,
-                   "title": "Восточный склад Донголы"},
-  "wh_dn_ug": {"loc": 112, "boss": 7453, "flag": 1011, "box": 6829, "quest": 770, "min_level": 16,
-               "title": "Южный склад Донголы"},
-  "wh_ah_center": {"loc": 128, "boss": 7454, "flag": 1011, "box": 6830, "quest": 771, "min_level": 17,
-                   "title": "Центр Абу-Хамеда"}
+  "wh_sever": {"loc": 111, "boss": 7448, "flag": 1011, "box": 6824, "quest": 765, "gold_quest": 18220, "min_level": 8, "title": "Северный склад Вади-Хальфы", "health_scale": 15, "damage_scale": 1.5, "guards": [1040], "guard_health_scale": 10, "guard_damage_scale": 1.5},
+  "wh_vostok": {"loc": 110, "boss": 7449, "flag": 1011, "box": 6825, "quest": 766, "gold_quest": 18221, "min_level": 8, "title": "Восточный склад Вади-Хальфы", "health_scale": 15, "damage_scale": 1.5, "guards": [1040], "guard_health_scale": 10, "guard_damage_scale": 1.5},
+  "wh_ug": {"loc": 109, "boss": 7450, "flag": 1011, "box": 6826, "quest": 767, "gold_quest": 18222, "min_level": 12, "title": "Южный склад Вади-Хальфы", "health_scale": 15, "damage_scale": 1.5, "guards": [4828], "guard_health_scale": 10, "guard_damage_scale": 1.5},
+  "wh_dn_sever": {"loc": 113, "boss": 7451, "flag": 1011, "box": 6827, "quest": 768, "gold_quest": 18223, "min_level": 12, "title": "Северный склад Донголы", "health_scale": 15, "damage_scale": 1.05, "guards": [4828], "guard_health_scale": 10, "guard_damage_scale": 1.5},
+  "wh_dn_vostok": {"loc": 114, "boss": 7452, "flag": 1011, "box": 6828, "quest": 769, "gold_quest": 18224, "min_level": 16, "title": "Восточный склад Донголы", "health_scale": 15, "damage_scale": 1.05, "guards": [4828], "guard_health_scale": 10, "guard_damage_scale": 1.5},
+  "wh_dn_ug": {"loc": 112, "boss": 7453, "flag": 1011, "box": 6829, "quest": 770, "gold_quest": 18225, "min_level": 16, "title": "Южный склад Донголы", "health_scale": 15, "damage_scale": 1.05, "guards": [4828], "guard_health_scale": 10, "guard_damage_scale": 1.5},
+  "wh_ah_center": {"loc": 128, "boss": 7454, "flag": 1011, "box": 6830, "quest": 771, "gold_quest": 18226, "min_level": 17, "title": "Центр Абу-Хамеда", "health_scale": 15, "damage_scale": 1.25, "guards": [4829], "guard_health_scale": 10, "guard_damage_scale": 1.5},
+  "base_ah": {"kind": "base", "guards": [4829], "guard_health_scale": 20, "guard_damage_scale": 2.25, "health_scale": 30, "damage_scale": 2.5, "loc": 118, "boss": 7454, "flag": 4427, "min_level": 16, "title": "Клановая база Абу-Хамеда", "rooms": [118, 609], "traders": [714, 1013, 2018, 989], "rent_quest": 18210, "rent": 1500000, "battle": "clan_base_battle", "payment": "clan_base_payment", "troops": [2312], "troop_health_scale": 5, "troop_damage_scale": 1.5},
+  "base_dn": {"kind": "base", "guards": [4828], "guard_health_scale": 20, "guard_damage_scale": 1, "health_scale": 30, "damage_scale": 2.1, "loc": 1442, "boss": 7451, "flag": 4428, "min_level": 12, "title": "Клановая база Донголы", "rooms": [1442, 1443], "traders": [5240, 1013, 2018, 989], "rent_quest": 18211, "rent": 1500000, "battle": "clan_base_battle", "payment": "clan_base_payment", "troops": [918], "troop_health_scale": 5, "troop_damage_scale": 1}
  }
 }

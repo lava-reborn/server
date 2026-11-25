@@ -313,6 +313,8 @@ def drop(killer, victim, owner, slot):
     pos, frozen by Fighter.die at the actual death hex before the corpse
     and its loot are announced. Returns the items row, or None when
     nothing fell."""
+    if killer.store is not getattr(victim, 'store', killer.store):
+        return None
     kc, vc = killer.sess.char_id, victim.sess.char_id
     rc = victim.rc
     same_clan = getattr(killer.store, 'same_clan', None)

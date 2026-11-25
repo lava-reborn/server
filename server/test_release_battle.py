@@ -453,16 +453,16 @@ class BattleFixes(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(self.room.ws)
         self.assertIn(c.combat,a.combat.duels)
 
-    async def test_decode_17_available_at_16_and_commits_one_reward(self):
+    async def test_decode_17_available_at_14_and_commits_one_reward(self):
         a = self.players[0]
         npc = 104
         self.room.npcs[npc] = rooms.NPC(a.pos, 796, server.world.COMMONER)
-        a.char.set_skill(progression.SHOOTING,16)
+        a.char.set_skill(progression.SHOOTING,14)
         q = quests.get(10713)
         self.assertTrue(a.quest_available(q))
-        a.char.set_skill(progression.SHOOTING,15)
+        a.char.set_skill(progression.SHOOTING,13)
         self.assertFalse(a.quest_available(q))
-        a.char.set_skill(progression.SHOOTING,16)
+        a.char.set_skill(progression.SHOOTING,14)
         row = a.inv.create(2416)
         a.char.save(self.store)
         before = a.char.afro

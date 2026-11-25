@@ -63,6 +63,7 @@ sides and quest ways leads back to a place on a map cell.
 """
 import collections
 import json
+import math
 import os
 import socket
 import subprocess
@@ -427,7 +428,7 @@ def held(cid):
     st = store()
     out = collections.Counter()
     for r in st.items_of(cid):
-        out[r["type_id"]] += r["count"] if r["root"] in items.HEAPABLE_ROOTS else 1
+        out[r["type_id"]] += r["count"] if items.heapable(r["type_id"]) else 1
     st.close()
     return out
 
@@ -642,6 +643,9 @@ try:
     RECYCLING = quests.SPEC_KEYS["recycling"]
     st.save_stats(CID, [("skill", progression.SHOOTING, 10, 0, progression.skill_xp_max(10)),
                         ("spec", RECYCLING, 0, 0, progression.SPEC_XP_START)])
+    # Quest controller with an admin gun: isolate the route from combat balance.
+    st.save_stats(CID, [("attrib", progression.STRENGTH, 1000, 0, 0),
+                          ("attrib", progression.INTELLECT, 1000, 0, 0)])
     st.save_character_state(CID, level=10)
     st.close()
     SPEC0 = learned(CID)
@@ -695,16 +699,19 @@ try:
     # --- the cut: walked off the market ------------------------------------------------
     got = to_map(c)
     check("out of the market onto the map: on its cell, 5860,1835",
-          [(p.get("x"), p.get("y")) for p in named(got, "gmap")], [world.cell_of(PORT)])
-    walked = walk_map(c, 0.5, 1.5)
+          [(math.floor(p["x"]), math.floor(p["y"])) for p in named(got, "gmap")],
+          [world.cell_of(PORT)])
+    point = first(got, "gmap")
+    walked = walk_map(c, 5860.5 - point["x"], 1836.5 - point["y"])
     lid, arrival = enter_cell(c)
     gone = {t for f in CUT_FILES for _c, t in world.location(f).spawns if t}
     check("a cell south, where «Ремесленники по одежде 10 уровень» stood: the wasteland of the"
           " cell, nobody of the cut's places in it",
           (bool(named(walked, "userMove")), lid, sorted(set(inhabitants(arrival)) & gone)),
           (True, world.pack(5860, 1836), []))
-    to_map(c)
-    walk_map(c, 2.5, 0.5)
+    point = first(to_map(c), "gmap")
+    fields = world.cell_of(FIELDS)
+    walk_map(c, fields[0] + .5 - point["x"], fields[1] + .5 - point["y"])
     lid, arrival = enter_cell(c)
     here = inhabitants(arrival, lid)
     check("two cells east, «Хижина Говарда Хаксли»: his fields (261), Хаксли and the corn",
@@ -868,10 +875,10 @@ try:
     lid, arrival = goto(c, FIELDS)
     here = inhabitants(arrival, lid)
     stall, opened = open_stall(c, here, HUXLEY)
-    check("Хаксли's stall: «Купон на 20 патронов» for 0.1 ounce of the ingots' gold; for afro"
-          " refused", (opened, buy(c, CID, stall, COUPON, gold=True), buy(c, CID, stall, COUPON)),
-          ([0], ([0], 1, 0, 10), ([inventory.RES_REFUSED], 0, 0, 0)))
+    check("Хаксли's stall no longer sells discounted ammunition coupons",
+          (opened, stall), ([0], []))
     close_stall(c)
+    give(c, COUPON)
     got, q = take(c, here, HUXLEY, COUPON_EK)
     done = hand_in(c, here, HUXLEY, q, obj_idx=0)
     check("  ..«20 патронов (ЭК) за купон» (492): the coupon in, twenty gold rounds out",

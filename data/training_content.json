@@ -11,7 +11,12 @@
     "4237": "Eden-only harvested spoiled bananas.",
     "4304": "Eden-only work basket; its crafting reward is not range equipment.",
     "4305": "Eden-only harvested palm leaf.",
-    "60010": "Eden-only harvesting tool; ordinary combat cannot use it."
+    "60010": "Eden-only harvesting tool; ordinary combat cannot use it.",
+    "60022": "Shock calibre has no compatible supported range weapon; retain the archived range chamberings.",
+    "60023": "Shock calibre has no compatible supported range weapon; retain the archived range chamberings.",
+    "60024": "Shock calibre has no compatible supported range weapon; retain the archived range chamberings.",
+    "60025": "Shock calibre has no compatible supported range weapon; retain the archived range chamberings.",
+    "60026": "Shock calibre has no compatible supported range weapon; retain the archived range chamberings."
   },
   "labels": {
     "1569": {

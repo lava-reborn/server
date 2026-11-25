@@ -1,5 +1,6 @@
 """Global-map entry follows click position without spawning into walls or traps."""
 from collections import deque
+import math
 from pathlib import Path
 import unittest
 from unittest.mock import patch
@@ -8,6 +9,7 @@ import location_entry as E
 import progression
 import travel
 import world
+from protocol import decode, encode
 from testkit import run_cases
 
 
@@ -71,6 +73,37 @@ class GlobalEntryTests(unittest.TestCase):
                     chosen = E.choose(loc, 6000 + x / 20, 1900 + y / 20)
                     self.assertEqual(chosen, cell(x, y))
                     self.assert_escape(loc, chosen)
+
+    def test_local_projection_maps_center_edges_and_corners_without_changing_map_square(self):
+        loc = Scene()
+        for x, fx in ((0, 0), (10, .5), (20, .99)):
+            for y, fy in ((0, 0), (10, .5), (20, .99)):
+                with self.subTest(x=x, y=y):
+                    point = E.map_position(loc, cell(x, y), 6000.8, 1900.2)
+                    self.assertEqual(point, (6000 + fx, 1900 + fy))
+                    self.assertEqual(tuple(map(math.floor, point)), (6000, 1900))
+                    _command, wire = decode(encode('gmap', x=point[0], y=point[1]))
+                    self.assertEqual((wire['x'], wire['y']), point)
+
+    def test_projection_and_safe_entry_choose_the_same_declared_position(self):
+        entries = [cell(x, y) for y in (2, 10, 18) for x in (2, 10, 18)]
+        loc = Scene(entries)
+        for original in entries:
+            point = E.map_position(loc, original, 6000, 1900)
+            self.assertEqual(E.choose(loc, *point), original)
+            self.assert_escape(loc, original)
+
+    def test_projection_handles_single_hex_and_rejects_invalid_local_or_global_inputs(self):
+        loc = Scene()
+        for bad_cell in (-1, loc.width * loc.height, None):
+            with self.assertRaises(E.NoSafeEntry):
+                E.map_position(loc, bad_cell, 6000, 1900)
+        for bad_point in ((None, 1900), (-1, 1900), (6000, float('inf')),
+                          (float('nan'), 1900)):
+            with self.assertRaises(E.NoSafeEntry):
+                E.map_position(loc, 0, *bad_point)
+        loc.width = loc.height = 1
+        self.assertEqual(E.map_position(loc, 0, 6000, 1900), (6000.5, 1900.5))
 
     def test_real_black_market_declared_center_remains_allowed_and_escapable(self):
         loc = self.real_location(103)

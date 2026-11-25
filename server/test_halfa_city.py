@@ -176,7 +176,7 @@ PAYS = {182: (5388, 200), 181: (5382, 0), 185: (None, 200), 186: (None, 250), 18
         237: (None, 300)}
 PAYS.update({t: (gun, 0) for t, (_n, gun) in GUNS.items()})
 PAYS.update({t: (chapter, 0) for t, (_p, chapter) in PARTS.items()})
-REPEATABLE = {181: 1, 182: 1, 221: 1}          # type -> per_day
+REPEATABLE = {181: 1, 182: 1, 216: 0, 221: 1}  # 216 permits returning after a death.
 REPEATABLE.update({t: 0 for t in PARTS})      # the journal's assemblies, any number of times
 MT = world.mob_types()
 
@@ -294,7 +294,8 @@ try:
           [])
     check("  ..laid over the table's",
           [t for t in ALL for k, key in enumerate(("name", "start", "notfinish", "finish"))
-           if orig.get(t, {}).get(key) and rows[t].texts[k] != quests.served(rows[t], k, orig[t][key])], [])
+           if key not in rows[t].own_texts and orig.get(t, {}).get(key)
+           and rows[t].texts[k] != quests.served(rows[t], k, orig[t][key])], [])
     check("  ..each step's own lines: «Медик Умар» the Вади-Хальфа copy, the guns their names",
           (pinned[182], [pinned[t][0] for t in sorted(GUNS)], pinned[184][1]),
           ([41396, 41397, 41398, 41399], [47336, 47340, 47342, 47344, 47346, 47348, 47350], 47401))
@@ -434,7 +435,8 @@ try:
     check("«Быть или не быть»: one drop or two, rows that shut each other, one vial each",
           [(real[t].excludes, real[t].branch, real[t].obj, real[t].rew_obj)
            for t in (BRANCH_A, BRANCH_B)],
-          [([BRANCH_B], [BRANCH_A], VIAL, [ONE_DROP]), ([BRANCH_A], [BRANCH_B], VIAL, [TWO_DROPS])])
+          [([BRANCH_B], [BRANCH_A, 214, 215], VIAL, [ONE_DROP]),
+           ([BRANCH_A], [BRANCH_B, 216, 217, 218], VIAL, [TWO_DROPS])])
     check("  ..the one-drop branch goes on to «Посланник смерти», the two-drop one to «Смерти"
           " вопреки»", (rows[214].need_all, rows[214].obj, rows[216].need_all, rows[216].obj),
           ([BRANCH_A], ONE_DROP, [BRANCH_B], TWO_DROPS))
@@ -674,7 +676,7 @@ def owned():
     out = {}
     for r in st.items_of(char_id()):
         out[r["type_id"]] = out.get(r["type_id"], 0) + (
-            r["count"] if r["root"] in items.HEAPABLE_ROOTS else 1)
+            r["count"] if items.heapable(r["type_id"]) else 1)
     st.close()
     return out
 

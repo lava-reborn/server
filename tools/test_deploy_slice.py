@@ -230,6 +230,27 @@ try:
     code, err, calls = deploy_tree(client(ORIGINAL), "--data-only")
     check("  ..and refused the same way when the client lacks the original's",
           (code, OLD in err, calls), (1, True, []))
+
+    # A Windows checkout may keep CRLF in base.txt. Its original paths must
+    # still be checked, rather than mistaken for unpinned new locations.
+    manifest = os.path.join(TREE, 'client', 'base.txt')
+    with open(manifest, 'rb') as fh:
+        manifest_lf = fh.read().replace(b'\r\n', b'\n')
+    for ending in (b'\n', b'\r\n'):
+        with open(manifest, 'wb') as fh:
+            fh.write(manifest_lf.replace(b'\n', ending))
+        for state in ('original', 'modified', 'missing'):
+            res = installed(**{NEW: PLACE, OLD: original_102})
+            target = os.path.join(res, *REL.split('/'))
+            if state == 'modified':
+                with open(target, 'wb') as fh:
+                    fh.write(OURS)
+            elif state == 'missing':
+                os.remove(target)
+            code, err, calls = deploy_tree(res, '--data-only')
+            expected = (0, False, ['ssh', 'rsync']) if state == 'original' else (1, True, [])
+            check('manifest %r, %s client: originals alone may be sent' % (ending, state),
+                  (code, REL in err, [c.split()[0] for c in calls]), expected)
 finally:
     shutil.rmtree(WORK, ignore_errors=True)
 

@@ -57,3 +57,7 @@ data/map_editor_base.png
 
 # Local release reports.
 /releases/
+
+# Local release documents and icon generation diagnostics.
+/recon/releases/
+/data/item_icons/sources.json

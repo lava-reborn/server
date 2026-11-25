@@ -247,15 +247,12 @@ try:
           (100, 0, EK_G, [10] * 6, 0, 0))
     worth = {t: (items.params_of(t)["g_cost"], items.params_of(t)["sell_num"], items.params_of(t)["cost"])
              for t in EK_G}
-    # Worth the ounce at 2 G for 20; a gold round is a hundredth of an ounce
-    # since the owner's word of 2026-09-28 (items.GOLD_AMMO_ROUND), so the
-    # ten are a tenth of it now -- left for the owner to settle (UNDONE,
-    # «Решения владельца по Хальфе»).
-    check("  ..a tenth of the ounce it costs, at the stalls' own price: 0,20 G for 20, no afro"
-          " price",
-          {t: g * 10 // n for t, (g, n, _c) in worth.items()} == {t: late.cost_gold // 10
-                                                                  for t in EK_G}
-          and all(c == 0 for _g, _n, c in worth.values()), True)
+    # EK/BB gold ammunition now costs 0.02 G per cartridge. The quest's
+    # own price and guaranteed reward quantity remain unchanged.
+    check("gold expansive ammunition costs 0.40 G per 20 rounds, no afro price",
+          ({t: g * 20 // n for t, (g, n, _c) in worth.items()},
+           all(c == 0 for _g, _n, c in worth.values())),
+          ({t: 40 for t in EK_G}, True))
     check("  ..1 G is 50 000 afro at the one rate", progression.GOLD_TO_AFRO_RATE * late.cost_gold // 100,
           50000)
     ways = [RIDE, BACK, GATE_W, GATE_S, EXIT]
@@ -319,8 +316,10 @@ try:
     check("the talons come from Томпсон's 75 alone, two once a day: 37.5 armbands a talon, the"
           " original's rate (62292), and no row of the whole table pays one faster",
           payers, {SEVENTY_FIVE: (2, [75], 1)})
+    # Nominal purchase value differs from the 70% NPC resale payout.
+    # test_prison_farm_economy checks actual redemption and sale transactions.
     check("  ..a talon is 500 rounds, 5 G at the stalls' gold price: 10 G of rounds a day at"
-          " most, 500 000 afro at the one rate, which no stall buys back",
+          " most, nominally 500 000 afro before the NPC resale share",
           (per_talon, 2 * max(per_talon) * progression.GOLD_TO_AFRO_RATE // 100),
           ({500}, 500_000))
     paid = sorted({t for q in Q.values() for t in q.rew_obj + [o for o, _n in q.rew_also]})
@@ -632,14 +631,16 @@ async def _rooms():
               " window's); since 2026-10-13 Донгола's the same: Нур-ад-Дин and its two"
               " guards by its gates' window, its three boxes by wh_box; since 2026-10-14"
               " Абу-Хамед's: Веласкес and its two guards by its gates' window, the box of"
-              " the Центр by its own quarter of an hour, wh_box_ah",
+              " the Центр by its own quarter of an hour, wh_box_ah; the two restored"
+              " clan-base flags keep their separate payment window",
               {t: [w.name for w in ws] for t, ws in SCHEDULE.marked().items()},
               {HASSIR: ["prison_wh_gates"], WEST_GUARD: ["prison_wh_gates"],
                SOUTH_GUARD: ["prison_wh_gates"], 6824: ["wh_box"], 6825: ["wh_box"],
                6826: ["wh_box"], 156: ["prison_dn_gates"], 1792: ["prison_dn_gates"],
                1795: ["prison_dn_gates"], 6827: ["wh_box"], 6828: ["wh_box"],
                6829: ["wh_box"], 740: ["prison_ah_gates"], 1793: ["prison_ah_gates"],
-               1796: ["prison_ah_gates"], 6830: ["wh_box_ah"]})
+               1796: ["prison_ah_gates"], 6830: ["wh_box_ah"],
+               4427: ["clan_base_payment"], 4428: ["clan_base_payment"]})
     finally:
         bosses.clock = real_clock
         store.close()
@@ -858,7 +859,7 @@ class Server:
         out = {}
         for r in st.items_of(self.char_id()):
             out[r["type_id"]] = out.get(r["type_id"], 0) + (
-                r["count"] if r["root"] in items.HEAPABLE_ROOTS else 1)
+                r["count"] if items.heapable(r["type_id"]) else 1)
         st.close()
         return out
 

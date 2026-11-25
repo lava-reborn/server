@@ -155,6 +155,22 @@
    "from": 20,
    "to": 25,
    "why": "RECOVERED times, DESIGNED pairing (the owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»), decision 43 of its plan). Рашид's line sends the player to ambush Люшер's masters on the roads 144-146 («Пустошь: дорога», Q_DN_Road01-03), each master marked on the map in turn by the Сакиб of the road before: «Он появляется там ровно в 20 минут каждый час и будет доступен в течении 5 минут» (48690): the third master, on the third road (146)."
+  },
+  "clan_base_battle": {
+   "daily": [
+    "20:00"
+   ],
+   "minutes": 60,
+   "weekdays": [
+    5
+   ],
+   "why": "DESIGNED owner-approved 2026-11-22: capture Saturday 20:00–21:00 Moscow; old ownership expires five minutes earlier at 19:55. At the boss kill three living clan members at the base's minimum level must be present; each need not deal damage. Existing world-boss and warehouse hours remain unchanged."
+  },
+  "clan_base_payment": {
+   "of": "clan_base_battle",
+   "from": 0,
+   "to": 75,
+   "why": "DESIGNED owner-approved 2026-11-22: successful capturer pays 1500000 afro from its clan treasury by Saturday 21:15, no automatic renewal."
   }
  },
  "spawns": [
@@ -553,6 +569,36 @@
    ],
    "gate": "both",
    "why": "RECOVERED times (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). The Центр's «Патроны и афро владельцам склада» (771), taken and handed in at the box only while the share-out lasts: the label L327 «Дележ добычи с 19:00 до 19:15»; who may take it is data/holdings.json's (holders)."
+  },
+  {
+   "window": "clan_base_payment",
+   "types": [
+    18210,
+    18211
+   ],
+   "gate": "both",
+   "why": "DESIGNED owner-approved 2026-11-22: native base rent service, availability and payment recheck current capture, clan treasury rights and one-base limit."
+  },
+  {
+   "window": "wh_box",
+   "types": [
+    18220,
+    18221,
+    18222,
+    18223,
+    18224,
+    18225
+   ],
+   "gate": "both",
+   "why": "DESIGNED owner-approved 2026-11-22: separate once-per-warehouse/day clan-gold service follows the existing personal box window. Persistent claims and native treasury permissions gate both offer and hand-in."
+  },
+  {
+   "window": "wh_box_ah",
+   "types": [
+    18226
+   ],
+   "gate": "both",
+   "why": "DESIGNED owner-approved 2026-11-22: separate once-per-warehouse/day clan-gold service follows the existing personal box window. Persistent claims and native treasury permissions gate both offer and hand-in."
   }
  ],
  "loot": [

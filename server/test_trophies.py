@@ -772,12 +772,11 @@ try:
           " registered at a stall", (sold, reg), ([inventory.RES_REFUSED], [inventory.RES_REFUSED]))
     check("  ..and stays in the bag", (with_store(lambda s: s.item(T1)) or {}).get("char_id"), H)
     # Адам stood in as the valley's registrar until the owner moved it to
-    # Демир: an ordinary stall again, the emptied one he was before.
+    # Демир: an ordinary stall, now serving the approved base A buffs.
     adam = next((p for p in named(arrival, "userInfo_Trader") if p["name"] == ADAM), {})
-    check("Адам on the Nubian market takes no trophies any more: his stall as it was"
-          " before him (can_trade, can_repair, nothing on it)",
+    check("Адам on the Nubian market takes no trophies: trade and repair stay, base A buffs are sold",
           (adam.get("can_trophy"), adam.get("can_trade"), adam.get("can_repair"),
-           adam.get("type_list")), (0, 1, 1, items.stock_for(ADAM)))
+           adam.get("type_list")), (0, 1, 1, [4917, 4937]))
     opened, got = register(h, adam.get("id", 0), OID1)
     check("  ..and a registration there is refused, the trophy still in the bag",
           (opened, acks(got), named(got, "ss_obj_status"),

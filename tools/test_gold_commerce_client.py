@@ -6,6 +6,8 @@ import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'server'))
 import widescreen as w
+import inventory
+import items
 from avm_test import Function, Arr
 from gold_commerce_client import patches
 from protocol import decode
@@ -67,6 +69,182 @@ class GoldCommerceClient(unittest.TestCase):
                   __gcCommissionOrig=lambda: self.fail('unexpected native commission'))
         self.methods['checkComission'].invoke(ui, [])
         self.assertEqual(ui['info_txt']['htmlText'], '\rКомиссия: 19338 А')
+
+    def test_discounted_a_g_consumable_cards_show_exact_purchase_total(self):
+        cases = (
+            (2, True, 4, 1, .03), (2, True, 4, 10, .30), (2, True, 1, 1, .01),
+            (2, False, 13, 1, 12), (2, False, 13, 10, 120),
+            (2, False, 9, 1, 8), (2, False, 2, 1, 1), (2, False, 1, 1, 1),
+            (2, True, 2, 1, .01),
+            (3, True, 2, 1, .01), (3, True, 2, 100, 1),
+            (3, True, 1, 1, .01), (3, True, 1, 100, 1),
+            (3, False, .65, 1, 1), (3, False, .65, 100, 100),
+        )
+        for root, gold, price, count, expected in cases:
+            with self.subTest(root=root, gold=gold, price=price, count=count):
+                values, frames = [], []
+                item = self.item(size=count, cost=0 if gold else price, g_cost=price if gold else 0)
+                item['rootID'] = root
+                card = dict(showItemSellMod=False, showHeapCount=True, attachIconEnabled=True,
+                            showPriseInGold=True, cost_mod=.9, __gcShowCostOrig=lambda *a: None,
+                            price_mc=dict(gotoAndStop=frames.append, fontContainer=dict(showValue=values.append)))
+                self.methods['showCost'].invoke(card, [item, 'left'])
+                self.assertEqual((values, frames), ([expected], [2 if gold else 1]))
+                self.assertEqual(card['mainCost'], expected)
+                self.assertEqual(card['costType'], 'Золото' if gold else 'Афро')
+
+    def test_minimum_cent_discount_is_visible_in_quantity_dialogue_immediately(self):
+        exchange = dict(mainSize='rightNum', rightNum=1, cost_num=4, cost_mod=.9,
+                        showCostInGold=True, sell_bool=False, money_mc=dict(info_txt=dict(text='native')),
+                        __gcCountMoneyOrig=lambda: None)
+        exchange['countMoney'] = lambda: self.methods['countMoney'].invoke(exchange, [])
+        ui = dict(__gcExchangeOrig=lambda *args: exchange)
+        item = self.item(g_cost=4)
+        item['rootID'] = 2
+        self.methods['createExchangePan'].invoke(ui, [item, '', .9, True, False])
+        self.assertEqual(float(exchange['money_mc']['info_txt']['text']), .03)
+        for count, expected in ((2, .06), (10, .30)):
+            exchange['rightNum'] = count
+            exchange['countMoney']()
+            self.assertEqual(float(exchange['money_mc']['info_txt']['text']), expected)
+        # The minimum cut applies to each cartridge, including bulk buys.
+        exchange['__gcBuyRoot'] = 3
+        exchange['cost_num'] = 2
+        for count, expected in ((1, .01), (100, 1)):
+            exchange['rightNum'] = count
+            exchange['countMoney']()
+            self.assertEqual(float(exchange['money_mc']['info_txt']['text']), expected)
+
+    def test_base_stock_tooltips_show_one_local_unit_price_without_changing_nominal(self):
+        self.pan['trader'] = dict(pmod=.9, type_list=Arr([60011]))
+        for root, gold, price, count, unit in (
+                (2, True, 4, 10, .03), (2, False, 13, 10, 12),
+                (3, True, 1, 5000, .01), (3, False, .65, 100, 1)):
+            with self.subTest(root=root, gold=gold):
+                item = self.item(cost=0 if gold else price, g_cost=price if gold else 0, size=count)
+                item.update(rootID=root, typeID=60011, tradeID=0)
+                rows = Arr()
+                panel = dict(item=item, __gcAddCostOrig=lambda arr: arr.push(Arr(['Базовая цена:', price])))
+                self.methods['addCost'].invoke(panel, [rows])
+                self.assertEqual(rows[0][1], price)
+                self.assertEqual(len(rows), 2)
+                self.assertEqual(rows[1][0], 'Цена на клан базе:')
+                self.assertEqual(float(rows[1][1].split()[0]), unit)
+                self.assertEqual(item['getProp']('g_cost' if gold else 'cost'), price)
+
+    def test_base_purchase_tooltip_cannot_leak_to_bag_another_shop_or_repair(self):
+        item = self.item(cost=13, size=10)
+        item.update(rootID=2, typeID=6057, tradeID=0)
+        for scene, modifier, index in (('trade', .9, None), ('trade', 1, 0),
+                                        ('repair', .9, 0), ('trade', .9, 1)):
+            with self.subTest(scene=scene, modifier=modifier, index=index):
+                self.env['lol']['gpui']['StaffInterface']['ssType'] = scene
+                self.pan['trader'] = dict(pmod=modifier, type_list=Arr([6057, 6063]))
+                item['tradeID'] = index
+                rows = Arr()
+                panel = dict(item=item, __gcAddCostOrig=lambda arr: arr.push(Arr(['Базовая цена:', 13])))
+                self.methods['addCost'].invoke(panel, [rows])
+                self.assertEqual(len(rows), 1)
+
+    def test_every_base_consumable_tooltip_matches_the_authoritative_purchase_price(self):
+        checked = 0
+        for loc, suppliers in ((609, (714, 1013, 2018)), (1443, (5240, 1013, 2018))):
+            for supplier in suppliers:
+                stock = items.stock_for(supplier, loc)
+                self.pan['trader'] = dict(pmod=.9, type_list=Arr(stock))
+                for index, tid in enumerate(stock):
+                    root = items.root_of(tid)
+                    if root not in (items.HEAL, items.AMMO):
+                        continue
+                    si = items.params_of(tid)
+                    cost, gold_cost = si['cost'], si['g_cost']
+                    if root == items.AMMO:
+                        cost = inventory.js_round(cost * 1000 / (si['sell_num'] or 1)) / 1000
+                        gold_cost = inventory.js_round(gold_cost / (si['sell_num'] or 1))
+                    item = self.item(cost=cost, g_cost=gold_cost)
+                    item.update(rootID=root, typeID=tid, tradeID=index)
+                    for count in (1, 10, 100) if root == items.AMMO else (1, 10):
+                        with self.subTest(location=loc, supplier=supplier, type=tid, count=count):
+                            shown = self.env['_global']['__gcBaseBuyPrice'].invoke(None, [item, count])
+                            value = float(shown.split()[0]) * (100 if gold_cost else 1)
+                            self.assertAlmostEqual(value, inventory.buy_price(si, root, count, bool(gold_cost), .9))
+                            checked += 1
+        self.assertGreater(checked, 400)
+
+    def test_purchase_price_override_keeps_ordinary_cards_gear_and_sale_routes_native(self):
+        for root, modifier, scene in ((2, 1, 'trade'), (0, .9, 'trade'), (1, .9, 'trade'), (2, .9, 'repair')):
+            values, native = [], []
+            self.env['lol']['gpui']['StaffInterface']['ssType'] = scene
+            item = self.item(g_cost=4)
+            item['rootID'] = root
+            card = dict(showItemSellMod=False, showHeapCount=True, attachIconEnabled=True,
+                        showPriseInGold=True, cost_mod=modifier,
+                        __gcShowCostOrig=lambda *a: native.append(a),
+                        price_mc=dict(gotoAndStop=lambda *args: None, fontContainer=dict(showValue=values.append)))
+            self.methods['showCost'].invoke(card, [item, 'left'])
+            self.assertEqual(len(native), 1)
+            self.assertEqual(values, [])
+
+    def test_paid_base_selects_static_base_price_without_corrupting_cached_ordinary_price(self):
+        item = self.item(g_sale_unit=700, g_base_sale_unit=850, size=2)
+        unit = self.env['_global']['__gcSaleUnit']
+        for smod, expected in ((0.7, 700), (0.85, 850), (0.7, 700)):
+            self.pan['trader'] = dict(smod=smod)
+            self.assertEqual(unit.invoke(None, [item]), expected)
+        self.pan['trader'] = dict(smod=0.85)
+        self.assertEqual(unit.invoke(None, [self.item(g_sale_unit=700, g_base_sale_unit=850, a_sale_cap=600)]), 600)
+        self.assertEqual(unit.invoke(None, [self.item(g_sale_unit=0, g_base_sale_unit=0,
+                                                       a_sale_unit=140, a_base_sale_unit=170)]), 170)
+
+    def test_base_card_and_exchange_use_same_wear_quantity_and_capped_price(self):
+        self.pan['trader'] = dict(smod=0.85)
+        item = self.item(g_sale_unit=700, g_base_sale_unit=850, size=3)
+        values = []
+        card = dict(showItemSellMod=True, showHeapCount=True, attachIconEnabled=True,
+                    __gcShowCostOrig=lambda *a: None,
+                    price_mc=dict(gotoAndStop=lambda frame: None,
+                                  fontContainer=dict(showValue=values.append)))
+        self.methods['showCost'].invoke(card, [item, 'left'])
+        self.assertEqual(values, [1275])
+        exchange = {}
+        ui = dict(__gcExchangeOrig=lambda *a: exchange)
+        self.methods['createExchangePan'].invoke(ui, [item, '', 0, False, True])
+        self.assertEqual((exchange['cost_num'], exchange['cost_mod'], exchange['showCostInGold']),
+                         (850, 0.5, False))
+
+    def test_initialized_base_fields_are_static_and_do_not_replace_normal_units(self):
+        item = dict(__gcInitializeOrig=lambda obj: None)
+        self.methods['initialize'].invoke(item, [dict(a_sale_unit=70, g_sale_unit=0,
+                                                       a_base_sale_unit=85, g_base_sale_unit=0)])
+        self.assertEqual((item['a_sale_unit'], item['a_base_sale_unit']), (70, 85))
+
+    def test_base_gold_valuable_card_exchange_and_sale_use_gold_quote(self):
+        self.pan['trader'] = dict(smod=0.85, base_gold_buyer=True)
+        item = self.item(g_sale_unit=0, base_loot_gold=5, size=3)
+        item['rootID'] = 4
+        values, frames = [], []
+        card = dict(showItemSellMod=True, showHeapCount=True, attachIconEnabled=True,
+                    __gcShowCostOrig=lambda *a: None,
+                    price_mc=dict(gotoAndStop=frames.append, fontContainer=dict(showValue=values.append)))
+        self.methods['showCost'].invoke(card, [item, 'left'])
+        self.assertEqual((values, frames, card['costType']), ([0.15], [2], 'Золото'))
+        exchange = {}
+        ui = dict(__gcExchangeOrig=lambda *a: exchange)
+        self.methods['createExchangePan'].invoke(ui, [item, '', 0, False, True])
+        self.assertEqual((exchange['cost_num'], exchange['cost_mod'], exchange['showCostInGold']), (5, 1, True))
+        trade = self.trade()
+        self.methods['sell'].invoke(trade, [item, 3])
+        self.assertEqual(self.sent[0]['sale_stage'], '@quote@')
+        self.assertEqual(self.sent[0]['param'], 3)
+        self.pan['trader']['base_gold_buyer'] = False
+        self.assertFalse(self.env['_global']['__gcBaseLoot'].invoke(None, [item]))
+
+    def test_trader_info_clears_gold_valuable_right_when_server_revokes_lease(self):
+        trader = dict(__esTraderInfoOrig=lambda obj: None)
+        self.methods['userInfo'].invoke(trader, [dict(param=dict(base_gold_buyer=1))])
+        self.assertTrue(trader['base_gold_buyer'])
+        self.methods['userInfo'].invoke(trader, [dict(param={})])
+        self.assertFalse(trader['base_gold_buyer'])
 
     def test_blueprint_without_durability_can_sell_and_tooltip_says_yes(self):
         for gold in (False,True):

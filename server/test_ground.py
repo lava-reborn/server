@@ -362,7 +362,16 @@ _drain = None
 
 def start(**extra):
     global srv, _drain
-    srv = subprocess.Popen([sys.executable, "server.py"], cwd=HERE, env=dict(BASE_ENV, **extra),
+    # Ground persistence is independent of NPC lethality. Keep their movement,
+    # real deaths and drops, while the player survives opening the bags.
+    # PvP attacks and the victim's death/drop path remain native.
+    boot = """import runpy
+from unittest.mock import patch
+import combat
+with patch.object(combat.RoomCombat, 'mob_attack'):
+    runpy.run_path('server.py', run_name='__main__')
+"""
+    srv = subprocess.Popen([sys.executable, "-c", boot], cwd=HERE, env=dict(BASE_ENV, **extra),
                            stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
     _drain = threading.Thread(target=lambda: _log.extend(srv.stdout), daemon=True)
     _drain.start()
@@ -608,7 +617,7 @@ try:
     H, V, S, W = (char_id(n) for n in ("hunter", "victim", "stranger", "walker"))
     s = store()
     ch = progression.Character.load(s, H)
-    ch.skill[progression.MELEE] = [20, 0, progression.skill_xp_max(20)]
+    ch.skill[progression.MELEE] = [3, 0, progression.skill_xp_max(3)]
     ch.recalc()
     ch.hp = ch.sp = None
     ch.save(s)

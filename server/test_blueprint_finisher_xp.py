@@ -1,6 +1,6 @@
 """Finishing attacks keep the fixed 10% drop when XP raises player level.
 
-Runs real Fighter.fire_now/strike_now -> award_xp/credit_xp -> RoomCombat.kill
+Runs real Fighter.fire_now/strike_now -> damage ledger -> RoomCombat.kill/settle_xp
 with deterministic hits and fake sessions, without any database or sockets.
 """
 import asyncio
@@ -38,6 +38,8 @@ class Finisher:
     credit_xp = combat.Fighter.credit_xp
     level = property(lambda self: self.ch.level)
     character = lambda self: self.ch
+    present = combat.Fighter.present
+    preparing = lambda self: False
     stats_changed = lambda *args: None
     hold_stats = lambda *args: None
     release_stats = lambda *args: None
@@ -47,8 +49,8 @@ class Finisher:
 
 def victim(eid, level):
     return NS(is_player=False, eid=eid, type_id=269, level=level, hp=100,
-              cell=1, aim=None, stats=NS(name='test boss', hp_max=100,
-              sp_max=0, xp_mult=1), present=lambda rc: True,
+              cell=1, aim=None, slot=None, stats=NS(name='test boss', hp_max=100,
+              sp_max=0, xp_mult=1, level=level, role='boss'), xp_ledger={}, armor=lambda: 0, present=lambda rc: True,
               dodge_melee=lambda: 0, crit_evade_melee=lambda: 0,
               sp_now=lambda: 0, apply_damage=lambda h, s: True)
 
@@ -68,16 +70,18 @@ async def exercise():
             row = dict(char_id=7, ammo_count=1, brk=100, type_id=25566,
                        slot=inventory.PRIMARY, root=items.FIRE_ARM)
             killer.store = NS(item=lambda uniq: row, update_item=lambda *a, **k: None)
-            killer.sess = NS(char_id=7, loc=NS(width=10, height=10),
+            killer.sess = NS(char_id=7, combat=killer, loc=NS(width=10, height=10),
                 push_vitals=lambda: None,
                 inv=NS(push_di=lambda row: None, wear_uniq=lambda *a: None))
             room = NS(ws=False, broadcast=lambda frame: None,
-                npcs={2: target, 3: other}, players=[], loc=NS(title='test'))
+                npcs={2: target, 3: other}, players=[killer.sess], loc=NS(title='test'))
+            killer.sess.room = room
             rc = NS(room=room, within_fire=lambda *a: True,
                 after_hostile=lambda *a: None, hit_landed=lambda *a: None,
                 push_vitals=lambda *a: None, quest_wants=lambda *a: frozenset(),
-                settle_xp=lambda mob: None, corpse_gone=lambda *a: None,
+                corpse_gone=lambda *a: None,
                 calm=lambda: None)
+            rc.settle_xp = lambda mob: combat.RoomCombat.settle_xp(rc, mob)
             rc.kill = lambda mob, player, **kw: combat.RoomCombat.kill(rc, mob, player, **kw)
             rc.melee_critical = lambda *args: combat.RoomCombat.melee_critical(rc, *args)
             rc.melee_damage = lambda *args: combat.RoomCombat.melee_damage(rc, *args)
@@ -114,10 +118,11 @@ async def exercise():
                                        (0.099999, [(2408, 1)]),
                                        (0.10, []), (0.100001, [])):
                     for player_level in (corpse.blueprint_killer_level, killer.level):
-                        with patch.object(mobs, 'carried', return_value=[]), \
+                        with patch.object(mobs.mob_equipment_loot, 'roll', return_value=[]), \
+                                patch.object(mobs, 'carried', return_value=[]), \
                                 patch.object(mobs, 'roll_table', return_value=[]), \
                                 patch.object(mobs, 'quest_table', return_value=[]):
-                            loot = mobs.loot_for(NS(type_id=269), NS(random=lambda: roll),
+                            loot = mobs.loot_for(NS(type_id=269, role='boss', level=corpse.stats.level), NS(random=lambda: roll),
                                 loc_id=82, killer_level=player_level)
                         check(label + ': roll %s at level %d' % (roll, player_level),
                               loot, expected)

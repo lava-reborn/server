@@ -109,6 +109,24 @@ class QuestTransactions(unittest.TestCase):
         self.assertEqual([p["res"] for n, p in self.frames if n == "cmdAck"],
                          [0, server.RES_NO_SUCH])
 
+    def test_forgetting_required_specialisation_cannot_spend_inputs_or_reward_until_relearned(self):
+        self.q.requires_spec = [2]
+        self.s.char.set_spec(2, 1)
+        qid = self.take_ready()
+        self.s.char.forget_spec(2)
+        before = (self.store.money(self.cid), self.s.inv.rows(), self.s.char.rows())
+        self.hand_in(qid)
+        self.assertEqual((self.store.money(self.cid), self.s.inv.rows(), self.s.char.rows()), before)
+        self.assertIsNotNone(self.store.quest(qid))
+        self.assertEqual(self.history(), 0)
+        self.assertEqual([p['res'] for cmd, p in self.frames if cmd == 'cmdAck'], [server.RES_NOT_AVAILABLE])
+        self.frames.clear()
+        self.s.char.set_spec(2, 0)
+        self.hand_in(qid)
+        self.assertIsNone(self.store.quest(qid))
+        self.assertEqual(self.history(), 1)
+        self.assertEqual(self.s.inv.bag_pieces().get(6106), 1)
+
     def test_halfa_provisions_consumes_abu_bakr_quest_ful_and_rewards_once(self):
         self.q = quests.QUESTS[148]
         self.assertIn(334, items.stock_for(155, 50))

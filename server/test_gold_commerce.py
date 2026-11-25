@@ -167,9 +167,13 @@ class GoldCommerce(unittest.TestCase):
         self.assertNotEqual(self.sell(row, 1), 0)
 
     def test_g_transfer_includes_mail_legacy_blueprints_not_new_acquisition(self):
-        for t in (25567, 26075, 4363, 7006, 37679):
+        for t in (25567, 26075, 4363, 6140, 37679):
             self.assertTrue(barter.tradable(t), t)
             self.assertTrue(mail.postable(t), t)
+        # Retired KSG ammunition is not part of the released calibre list.
+        self.assertTrue(items.acquisition_blocked(7006))
+        self.assertFalse(barter.tradable(7006))
+        self.assertFalse(mail.postable(7006))
         self.assertTrue(items.upgrade_blueprint_blocked(37679))
         self.assertFalse(items.acquisition_blocked(37679))
         self.assertTrue(combat.gold_item(26075))

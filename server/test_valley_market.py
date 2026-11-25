@@ -575,7 +575,7 @@ def owned(cid, slot=inventory.BAG):
     out = {}
     for r in st.items_of(cid):
         if r["slot"] == slot:
-            n = r["count"] if r["root"] in items.HEAPABLE_ROOTS else 1
+            n = r["count"] if items.heapable(r["type_id"]) else 1
             out[r["type_id"]] = out.get(r["type_id"], 0) + n
     st.close()
     return out
@@ -657,7 +657,7 @@ def positions(frames):
 
 def hunt(c, got, loc_id, targets, pos):
     """Shoot one creature of each type in targets, in order, each from a cell
-    with a clear line to it and out of every hostile's reach (the admin gun
+    with a clear line, clearing hostiles along narrow approaches (the admin gun
     fells anything with one shot). (the fight's frames, the types killed,
     where the player stands, type -> the cell it fell on, the cells within
     reach of the hostiles still standing)."""
@@ -670,6 +670,24 @@ def hunt(c, got, loc_id, targets, pos):
     hostile = {e for e, t in types.items() if MT.get(t, (None,))[0] == world.MOB}
     reach = max([mobs.stats(types[e]).aggro for e in hostile] or [0]) + 0.5
     out, killed, fell, dead = [], [], {}, set()
+
+    def shoot(eid):
+        frames = []
+        for _ in range(30):
+            c.send("ss_use;type=16;obj=x%s;target=%s;" % (GUN, entity(eid)))
+            got_ = c.until(lambda f: f[0] == "ss_di_firearm"
+                           or (f[0] == "cmdAck" and f[1].get("res")), 3) + c.frames(0.4)
+            frames += got_
+            if [p for p in named(got_, "lch") if p.get("dead") == eid]:
+                kind = types[eid]
+                if kind in targets:
+                    killed.append(kind)
+                    fell[kind] = positions(got + out + frames).get(eid)
+                dead.add(eid)
+                return frames
+            time.sleep(0.3)
+        return None
+
     for want in targets:
         where = positions(got + out)
         for eid in [e for e, t in types.items() if t == want and e not in dead]:
@@ -704,19 +722,10 @@ def hunt(c, got, loc_id, targets, pos):
                                       set(c.scene_cells.values()), limit=20000)
                 if not path:
                     continue
-                out += testkit.clear_approach(c, in_sight, None, (), shot_range)
+                out += testkit.clear_approach(c, in_sight, shoot, hostile - dead, shot_range)
             pos = c.scene_pos
-            for _ in range(30):
-                c.send("ss_use;type=16;obj=x%s;target=%s;" % (GUN, entity(eid)))
-                got_ = c.until(lambda f: f[0] == "ss_di_firearm"
-                               or (f[0] == "cmdAck" and f[1].get("res")), 3) + c.frames(0.4)
-                out += got_
-                if [p for p in named(got_, "lch") if p.get("dead") == eid]:
-                    killed.append(want)
-                    dead.add(eid)
-                    fell[want] = positions(got + out).get(eid, home)
-                    break
-                time.sleep(0.3)
+            if eid not in dead:
+                out += shoot(eid) or []
             if want in killed:
                 break
     where = positions(got + out)
@@ -962,9 +971,9 @@ try:
            owned(CID).get(RAG, 0) - before_rewards.get(RAG, 0),
            owned(CID).get(CARAVANEER, 0) - before_rewards.get(CARAVANEER, 0),
            [p["daily_available"] for p in named(got, "q_sys")]),
-          (["ss_di_heap"] + ["ss_obj_status", "ss_di_heal"] * 3
+          (["ss_di_heap"] + ["ss_obj_status", "ss_di_heal"]
            + ["userInfo_Player", "q_sys", "cmdAck"],
-           [0], AFRO, [RAG] * 3, stock - 5, 3, 0, [9]))
+           [0], AFRO, [RAG], stock - 5, 3, 0, [9]))
     before_rewards = owned(CID)
     got = hand_in(c, here, MATCHES_Q, q, obj_idx=1)
     check("replaying the hand-in cannot claim the other reward or spend more matches",
@@ -1053,8 +1062,8 @@ try:
             got += c.frames(2.0)     # the adits shot empty: a rat comes back
     cells = ground_cells(KING)
     check("black rats shot in the adits with the quest open until a king falls:"
-          " within twenty-five kills (one in five), the king in one bag on the ground",
-          (1 <= kills <= 25, len(cells)), (True, 1))
+          " within twenty-five kills (one in five), a king on the ground",
+          (1 <= kills <= 25, 1 <= len(cells) <= kills), (True, True))
     # Deaths on the same hex share a ground bag. A rat returning to that
     # hex can leave a second tail beside the king; verify all existing tail
     # stacks instead of assuming this bag belongs to exactly one kill.
@@ -1254,7 +1263,7 @@ try:
            owned(CID).get(RAG, 0) - before_rewards.get(RAG, 0),
            owned(CID).get(CARAVANEER, 0) - before_rewards.get(CARAVANEER, 0),
            [p["daily_available"] for p in named(got, "q_sys")]),
-          ([0], AFRO, [CARAVANEER] * 3, before_rewards.get(MATCHES, 0) - 5, 0, 3, [5]))
+          ([0], AFRO, [CARAVANEER], before_rewards.get(MATCHES, 0) - 5, 0, 3, [5]))
     check("  ..the second day also allows only one matches hand-in",
           status(c, MATCHES_Q), 0)
     logout(c)

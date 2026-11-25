@@ -86,6 +86,7 @@ old ones. A missing file means no bands.
 import json
 import os
 import re
+from functools import lru_cache
 
 PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                     "data", "shop_bands.json")
@@ -111,6 +112,248 @@ TOP_LEVEL = 20
 # -- the original's medicine stalls by their articles (the docstring). 0
 # sells the band's tiers alone, two to a city. Weapons and sets keep the band.
 MED_REACH = 4
+
+# City ceilings select the agreed stimulant ranks, independently of player level.
+BUFF_RANKS = {4: (0, 0), 8: (1, 3), 12: (3, 5), 16: (5, 7), 20: (7, 9)}
+BUFF_ASSISTANTS = frozenset((1196, 2015, 2016, 2017, 2018, 5216))
+BUFF_SELLERS = BUFF_ASSISTANTS | {1013, 5215}
+BASE_AMMO_SELLERS = frozenset((714, 5240))
+BASE_INTERIORS = frozenset((609, 1443))
+BASE_MEDICS = {1013: "gold", 2018: "afro"}
+PRISON_SUPPLIERS = frozenset((2180, 2181, 880))
+# Weapon/ammunition counters share a market, not duplicate inventories.
+OASIS_MARKETS = {62: (1224, 1227), 76: (1225, 1228), 195: (1229, 1230), 196: (None, 1232)}
+
+
+@lru_cache(maxsize=256)
+def stimulant_currency(trader_type, loc_id):
+    """Assistants sell A; the doctor also sells A where no assistant stands."""
+    if trader_type in BUFF_ASSISTANTS:
+        return 'afro'
+    import world
+    loc = world.location(loc_id)
+    present = {t for _cell, t in loc.spawns}
+    present.update(int(row['type']) for row in world.placed_in(loc_id))
+    return 'gold' if present & BUFF_ASSISTANTS else None
+
+
+def stimulants(top, currency=None):
+    import effects
+    import items
+    low, high = BUFF_RANKS[top]
+    reagent = top // 4 - 1
+    attribute = min(3, reagent)
+    result = []
+    for type_id in sorted(effects.definitions()):
+        name = items.catalogue()[type_id][1]
+        rank = re.fullmatch(r'(?:Salus|Anesthetic)_MK_(\d+)(?:_Gold)?', name)
+        if rank:
+            # Nubia's starter tier exists only in A. Its doctor sells the
+            # lowest existing G pair; later ranks keep their city bands.
+            selected = (low <= int(rank[1]) <= high
+                        or top == 4 and rank[1] == '1' and name.endswith('_Gold'))
+        elif name in ('Salus_noob', 'Anesthetic_noob'):
+            selected = top == 4
+        elif name in ('Salus_Plus', 'Anesthetic_Plus'):
+            selected = top == 20
+        elif name.startswith(('item_up_critical_probability_', 'item_up_critical_evade_')):
+            selected = int(name.removesuffix('_gold').rsplit('_', 1)[1]) == reagent
+        elif name.startswith(('item_int_up_', 'item_dex_up_', 'item_const_up_')):
+            selected = {'I': 1, 'II': 2, 'III': 3}[name.rsplit('_', 1)[1]] == attribute
+        elif name == 'item_up_max_od':
+            selected = top >= 8
+        elif type_id in effects.EXPERIENCE_UP:
+            selected = int(name.removesuffix('_gold').rsplit('_', 1)[1]) == reagent
+        elif type_id in effects.EXPERIENCE_DOWN:
+            selected = int(name.removesuffix('_gold').rsplit('_', 1)[1]) == {4: 0, 8: 50, 12: 80, 16: 99, 20: 99}[top]
+        elif type_id in effects.SCANNERS:
+            selected = type_id == (3789 if top <= 12 else 3826) and top >= 8
+        else:
+            selected = False
+        if selected:
+            params = items.params_of(type_id)
+            gold = bool(params.get('g_cost'))
+            if (params.get('cost') or gold) and (currency is None or gold == (currency == 'gold')):
+                result.append(type_id)
+    return result
+
+
+@lru_cache(maxsize=2)
+def base_stimulants(currency):
+    """Every released city stimulant, split between the two base counters."""
+    import items
+    chosen = set().union(*(stimulants(top) for top in BUFF_RANKS))
+    return sorted(t for t in chosen
+                  if bool(items.params_of(t).get('g_cost')) == (currency == 'gold'))
+
+
+@lru_cache(maxsize=1)
+def gold_ammunition_by_calibre():
+    """Index immutable retail ammunition once, not once per shop row."""
+    import items
+    groups = {}
+    for t, (root, name) in items.catalogue().items():
+        if (root == items.AMMO and name.endswith(('_EK_G', '_BB_G', '_SHK_G', '_shock'))
+                and items.gold_round(items.params_of(t))):
+            calibre, _rank = ammunition_order(t)
+            groups.setdefault(calibre, []).append(t)
+    return groups
+
+
+def gold_ammunition(stock):
+    """Gold variants of the calibres already sold or used by this stall's guns."""
+    import items
+    compatible = set()
+    for type_id in stock:
+        if items.root_of(type_id) == items.FIRE_ARM:
+            compatible.update(items.params_of(type_id).get('comp_array', ()))
+        elif items.root_of(type_id) == items.AMMO:
+            calibre, _rank = ammunition_order(type_id)
+            compatible.update(gold_ammunition_by_calibre().get(calibre, ()))
+    return sorted(t for t in compatible if items.root_of(t) == items.AMMO
+                  and items.catalogue()[t][1].endswith(('_EK_G', '_BB_G', '_SHK_G', '_shock'))
+                  and items.gold_round(items.params_of(t)))
+
+
+_AMMO_LINE = re.compile(r'^Ammo_(.+)_(KS|ST|OT|OT_PS|BB_G|EK_G|SHK_G)$')
+_AMMO_ORDER = {'KS': 0, 'ST': 1, 'OT': 2, 'OT_PS': 3, 'BB_G': 4, 'EK_G': 5, 'SHK_G': 6}
+
+
+@lru_cache(maxsize=256)
+def ammunition_order(type_id):
+    """Calibre and quality of ordinary retail rounds, including the SP-5 alias."""
+    import items
+    match = _AMMO_LINE.fullmatch(items.catalogue()[type_id][1])
+    if match:
+        calibre, quality = match.groups()
+        return ('SP_5_6' if calibre == 'SP_5' else calibre), _AMMO_ORDER[quality]
+    if items.catalogue()[type_id][1] == 'Ammo_9mmNato_shock':
+        return '9mmNato', 6  # Retain this existing G round beside its calibre.
+    return type_id, 6
+
+
+@lru_cache(maxsize=1)
+def retail_ammunition_by_calibre():
+    """All released retail qualities, indexed once for every ammunition seller."""
+    import items
+    groups = {}
+    for t, (root, name) in items.catalogue().items():
+        if root != items.AMMO or not (_AMMO_LINE.fullmatch(name) or t == 6189):
+            continue
+        # Catalogue placeholders have fallback prices but no ammunition
+        # definition or compatible weapon. They are not released qualities.
+        if t not in items.wiki() and t not in items.loot_manual():
+            continue
+        if items.out_of_game(t) or items.acquisition_blocked(t):
+            continue
+        si = items.params_of(t)
+        if si.get('quest') or not (si.get('cost') or si.get('g_cost')):
+            continue
+        groups.setdefault(ammunition_order(t)[0], []).append(t)
+    return groups
+
+
+def with_weapon_ammunition(stock, trader_type=None):
+    """Keep compatible retail rounds at each gun seller, grouped after weapons."""
+    import items
+    guns = [t for t in stock if items.root_of(t) in (items.FIRE_ARM, items.COLD_ARM)]
+    if not any(items.root_of(t) in (items.FIRE_ARM, items.AMMO) for t in stock):
+        return stock
+    chosen = dict.fromkeys(stock)
+    calibres = {}
+    for gun in guns:
+        if items.root_of(gun) != items.FIRE_ARM:
+            continue
+        for round_id in items.params_of(gun).get('comp_array', ()):
+            if items.root_of(round_id) != items.AMMO:
+                continue
+            calibre, _ = ammunition_order(round_id)
+            calibres.setdefault(calibre, len(calibres))
+            name = items.catalogue()[round_id][1]
+            si = items.params_of(round_id)
+            if ((_AMMO_LINE.fullmatch(name) or round_id in (items.STARTER_ROUNDS, 6189))
+                    and (si.get('cost') or si.get('g_cost'))
+                    and not items.out_of_game(round_id) and not items.acquisition_blocked(round_id)):
+                chosen[round_id] = None
+    rounds = [t for t in chosen if items.root_of(t) == items.AMMO]
+    for type_id in rounds:
+        calibre, _ = ammunition_order(type_id)
+        calibres.setdefault(calibre, len(calibres))
+    for calibre in calibres:
+        for variant in retail_ammunition_by_calibre().get(calibre, ()):
+            rank = ammunition_order(variant)[1]
+            if trader_type in PRISON_SUPPLIERS and rank == 0:
+                continue
+            if (trader_type in BASE_AMMO_SELLERS
+                    and rank != 2 and not items.params_of(variant).get('g_cost')):
+                continue
+            chosen[variant] = None
+    rounds = [t for t in chosen if items.root_of(t) == items.AMMO]
+    rounds.sort(key=lambda t: (calibres[ammunition_order(t)[0]], ammunition_order(t)[1]))
+    other = [t for t in chosen if t not in guns and items.root_of(t) != items.AMMO]
+    return guns + rounds + other if guns else other + rounds
+
+
+@lru_cache(maxsize=4)
+def oasis_ammunition(loc_id):
+    """Move compatible rounds to the actual ammunition counter, once per oasis."""
+    import items
+    weapon_seller, ammo_seller = OASIS_MARKETS[loc_id]
+    stock = items._shop_stock(ammo_seller, loc_id)
+    if weapon_seller is not None:
+        stock += items._shop_stock(weapon_seller, loc_id)
+    return [t for t in with_weapon_ammunition(stock, ammo_seller)
+            if items.root_of(t) == items.AMMO]
+
+
+def oasis_stock(trader_type, loc_id, stock):
+    market = OASIS_MARKETS.get(loc_id)
+    if market is None:
+        return None
+    import items
+    if trader_type == market[1]:
+        return list(oasis_ammunition(loc_id))
+    if trader_type == market[0]:
+        return [t for t in stock if items.root_of(t) in (items.FIRE_ARM, items.COLD_ARM)]
+    return None
+
+
+@lru_cache(maxsize=256)
+def stock_owners(loc_id):
+    """One seller per item within a location; cached with the static catalogue."""
+    import items
+    import names
+    import world
+    loc = world.location(loc_id)
+    types = world.mob_types()
+    traders = {t for _, t in loc.spawns if t in SELLERS and t in types and names.known(t)
+               and world.belongs_here(t, types[t][1], types[t][0], loc.war, loc_id)}
+    traders.update(int(row['type']) for row in world.placed_in(loc_id)
+                   if int(row['type']) in SELLERS and names.known(int(row['type'])))
+    stocks = {t: items._shop_stock(t, loc_id) for t in sorted(traders)}
+    candidates = {}
+    for trader, stock in stocks.items():
+        for item in stock:
+            candidates.setdefault(item, []).append(trader)
+
+    def preference(trader, item):
+        kinds = SELLERS[trader]
+        root = items.root_of(item)
+        # Dedicated ammunition stalls win over weapon sellers. Else retain
+        # a compatible firearm seller, then use a stable type-id tie break.
+        if root == items.AMMO:
+            ammo_only = not kinds and all(items.root_of(t) == items.AMMO for t in stocks[trader])
+            compatible = any(items.root_of(t) == items.FIRE_ARM and item in items.params_of(t).get('comp_array', ())
+                             for t in stocks[trader])
+            return (0 if ammo_only else 1 if compatible else 2, trader)
+        if root == items.WEAR:
+            import sets
+            specialist = ('sets' in kinds) if sets.set_of(item) else ('sets' not in kinds)
+            return (not specialist, trader)
+        return (0, trader)
+
+    return {item: min(choices, key=lambda trader: preference(trader, item))
+            for item, choices in candidates.items() if len(choices) > 1}
 
 _LINE = re.compile(r"^(pistols|shotgun|sub_machine_guns|assault_rifle|rifle|machine_gun)"
                    r"_([1-9]\d*)_lvl_(\d+)(_gold)?$")
@@ -410,14 +653,39 @@ def apply(trader_type, loc_id, own):
     """What the trader's stall holds at this place, given its own list."""
     which = SELLERS.get(trader_type)
     b = band(loc_id) if loc_id is not None else None
+    import effects
+    import items
+    if trader_type in PRISON_SUPPLIERS:
+        own = [t for t in own if items.root_of(t) != items.AMMO or ammunition_order(t)[1] != 0]
+    if trader_type not in BUFF_SELLERS:
+        own = [t for t in own if effects.definition(t) is None]
+    # The archived assistant's own list carries IV outside the city ladder.
+    if b is None or b[1] != 20:
+        own = [t for t in own if t != 3561]
     if which is None or b is None:
         return list(own)
     low, top = b
+    if loc_id in BASE_INTERIORS and trader_type in BASE_MEDICS:
+        currency = BASE_MEDICS[trader_type]
+        return (goods(("combat_meds",), 0, TOP_LEVEL, currency)
+                + goods(("peace_meds",), low, top, currency)
+                + base_stimulants(currency))
     # Halfa's knife merchant also serves players arriving at level one.
     # Keep every other seller and city band unchanged.
     if trader_type == 1152 and loc_id == 102:
         low = 1
-    if which:
-        return goods(which, low, top, ONLY.get(trader_type)) \
-            + [t for t in own if not band_ware(t)]
-    return [t for t in own if not band_ware(t) or fits(t, low, top)]
+    if trader_type in BUFF_SELLERS:
+        own = [t for t in own if effects.definition(t) is None]
+    if trader_type in BASE_AMMO_SELLERS:
+        own = [t for t in own if items.root_of(t) == items.AMMO
+               and (items.params_of(t).get('g_cost') or ammunition_order(t)[1] == 2)]
+        own += items.SHOCK_ROUNDS.values()
+    stock = goods(which, low, top, ONLY.get(trader_type)) if which else []
+    if trader_type in BUFF_SELLERS:
+        stock += stimulants(top, stimulant_currency(trader_type, loc_id))
+    stock += [t for t in own if not band_ware(t) or (not which and fits(t, low, top))]
+    if any(kind in FIREARM_KINDS for kind in which):
+        stock += gold_ammunition(stock)
+    if stock and all(items.root_of(t) == items.AMMO for t in stock):
+        stock += gold_ammunition(stock)
+    return list(dict.fromkeys(stock))

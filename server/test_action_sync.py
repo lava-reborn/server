@@ -637,6 +637,45 @@ class ActionSync(unittest.IsolatedAsyncioTestCase):
         hits = [e for e in events if e[0] == 'resolved_strike']
         self.assertEqual(len(hits), 1)
         self.assertEqual(hits[0][1][1], 1)
+
+    async def test_repeated_same_shot_preserves_deadline_and_resolves_once(self):
+        for weapon in (25566, 26062, 25485):
+            f, s, room, events, row = self.fixture(weapon)
+            for spec in f.character().spec:
+                spec[0] = 5
+            command = dict(obj='weapon', target='000000001')
+            combat.Fighter.use_fire(f, command)
+            timer, revision = f.aim, f.action_revision
+            deadline = timer.when()
+            saved = (timer._callback, timer._args)
+            for _ in range(1000):
+                combat.Fighter.use_fire(f, command)
+                self.assertIs(f.aim, timer)
+                self.assertEqual((timer.when(), f.action_revision), (deadline, revision))
+            self.assertEqual(sum(e[0] == 'faAim' for e in events), 1)
+            self.assertFalse(any(e[0] == 'actionCancel' for e in events))
+            saved[0](*saved[1])
+            saved[0](*saved[1])
+            timer.cancel()
+            self.assertEqual(sum(e[0] == 'resolved_fire' for e in events), 1)
+
+    async def test_changed_mode_or_weapon_cannot_reuse_old_aim(self):
+        f, s, room, events, row = self.fixture(25485)
+        for spec in f.character().spec:
+            spec[0] = 5
+        command = dict(obj='weapon', target='000000001')
+        combat.Fighter.use_fire(f, command)
+        timer = f.aim
+        old = (timer._callback, timer._args)
+        row['cur_mode'] = 1
+        combat.Fighter.use_fire(f, command)
+        self.assertTrue(timer.cancelled())
+        self.assertIsNot(f.aim, timer)
+        combat.Fighter.primary_changed(f)
+        self.assertIsNone(f.aim)
+        self.assertIsNone(f.aim_request)
+        old[0](*old[1])
+        self.assertFalse(any(e[0] == 'resolved_fire' for e in events))
 if __name__ == '__main__':
     try:
         run_cases(ActionSync)

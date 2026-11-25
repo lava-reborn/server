@@ -473,6 +473,12 @@ def bag_of(char_id, type_id):
 def hunt(c, gun):
     """In 28: shoot the courier from out of his reach until he falls, then
     open his bag. What it holds (type ids), or None if he did not fall."""
+    # Each loot scenario starts healthy. Three successive unarmoured fights
+    # test attrition instead of the letter's quest/duplicate conditions.
+    _call, rested, _pos = goto(c, 181)
+    healer = inhabitants(rested)[5200][0]
+    c.send("on_conv;mob=%d;op=1;" % healer)
+    check("the courier scenario starts after paid native healing", acks(c.frames()), [0])
     call, got, pos = goto(c, *GONEC)
     here = world.location(28)
     found = inhabitants(got).get(COURIER, [])
@@ -618,6 +624,8 @@ try:
               [box[0].get(k) for k in ("res", "can_set_home", "can_banking")], [BOX, 0, 0])
 
     # --- the courier's letter -------------------------------------------------------------
+    c.send("userMsg;entry=@/money 1000 0@;group=0;")
+    c.until(lambda f: f[0] == "userMsg")
     gun = give(c, ADMIN_GUN)
     rounds = give(c, ROUNDS, 50)
     c.send("ss_get;target=0;slot=11;")

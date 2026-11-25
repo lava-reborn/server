@@ -15,6 +15,7 @@ exit pointing into the lake -- ends in a pocket the player backs out of.
 Map bookmarks (GlobalMap.marks/addMark/editMark/removeMark) and the way home
 (on_conv;op=0, then go_home) ride along.
 """
+import math
 import os
 import socket
 import subprocess
@@ -365,7 +366,8 @@ try:
     check("the map from the rim",
           [f.split(";")[0] for f in got], ["cmdAck", "gmap", "marks"])
     check("puts the player on the last cell of the map",
-          "x=%d;y=%d;" % (RIM_X, ROW) in got[1], True)
+          (math.floor(float(param(got[1], "x"))), math.floor(float(param(got[1], "y")))),
+          (RIM_X, ROW))
     c.send("chWorld;")
     got = c.frames()
     check("which opens the rocks again", "id=%d;" % RIM_LOC in got[1], True)
@@ -500,7 +502,9 @@ try:
     enter(c)
     c.send("chWorld;")
     got = c.frames()
-    check("and the map cell is the quarter's", "x=%d;y=%d;" % world.cell_of(36) in got[1], True)
+    check("and the map cell is the quarter's",
+          (math.floor(float(param(got[1], "x"))), math.floor(float(param(got[1], "y")))),
+          world.cell_of(36))
     # Keep the bookmark scene at its original reference cell.
     goto(c, "102")
     enter(c)

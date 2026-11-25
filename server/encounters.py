@@ -245,6 +245,26 @@ def entered_over(vx, vy):
     return travel.N if vy > 0 else travel.S
 
 
+def arrival_cell(loc, side, spawns):
+    """A safe cell on the same edge, or no ambush if the weapons cover it."""
+    start = travel.arrival_cell(loc, side)
+    threats = [(cell, mobs.stats(type_id).range) for cell, type_id in spawns]
+
+    def safe(cell):
+        return all(mobs.hex_distance(cell, nest, loc.width) > reach + 1
+                   for nest, reach in threats)
+
+    if safe(start):
+        return start
+    goals = {cell for cell, edge in travel.exit_sides(loc).items()
+             if edge == side and cell not in loc.obstacles and safe(cell)}
+    if not goals:
+        return None
+    path = mobs.find_path(loc, start, lambda cell: cell in goals,
+                          {cell for cell, _reach in threats}, limit=20000)
+    return path[-1] if path and path[-1] in goals else None
+
+
 def day(now=None):
     """The UTC day (the daily limit's, DAILY_RESET_TIME 0)."""
     return int((time.time() if now is None else now) // 86400)
@@ -354,7 +374,10 @@ class Encounters:
             room.npcs[self.rooms.ids.npc()] = rooms.NPC(nest, RNG.choice(band.types),
                                                          world.MOB)
         side = entered_over(leg[3], leg[4]) if leg else travel.W
-        pos = travel.arrival_cell(loc, side)
+        pos = arrival_cell(loc, side, [(npc.cell, npc.type_id) for npc in room.npcs.values()])
+        if pos is None:
+            del self.rooms.rooms[key]
+            return None
         self.met[sess] = Meeting(key, loc_id, cell)
         when, n = self.today.get(sess.char_id, (None, 0))
         self.today[sess.char_id] = (day(), (n if when == day() else 0) + 1)

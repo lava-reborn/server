@@ -154,7 +154,7 @@ def item_catalogue():
                 category = 'event_medicine'
             elif training_effects.definition(type_id):
                 category = 'buff'
-            elif items.stimulant_unavailable(type_id):
+            elif items.stimulant_unavailable(type_id) or p.get('bonus_act_time'):
                 continue
 
         # These are legacy wearable souvenirs, not combat equipment. Some are

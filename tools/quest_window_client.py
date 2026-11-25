@@ -1,4 +1,4 @@
-"""Keep passive quest status separate from an explicit NPC interaction."""
+"""Bound quest refreshes by live NPCs and keep retired windows inactive."""
 from avm_codegen import Compiler
 
 SOURCE = '''
@@ -19,6 +19,8 @@ def __qwKill():
     this.__qwInitial = False
     this.questInspector.removeEventListener(lol.core.quests.QuestEvent.UPDATE, this, this.getAck)
     this.questInspector.removeEventListener(lol.core.quests.QuestEvent.UPDATE, this, this.takeAck)
+    if this.currentQuest:
+        this.currentQuest.removeEventListener("questLoaded", this, this.ReopenDescription)
     this.__qwKillOrig()
 
 def __qwStatus(obj):
@@ -37,9 +39,9 @@ def __qwEdenNPC(obj):
     # Native checkedQuests survives location changes and even relogin.
     # After a release its status=0 can otherwise hide every subsequent
     # quest except the first one of an Eden NPC. Revalidate only this
-    # NPC's Eden offers; keep the read FIFO and pending actions intact.
+    # NPC's Eden/lift offers; keep the read FIFO and pending actions intact.
     res = obj.param.res
-    if res and res >= 1784 and res <= 1789:
+    if res and ((res >= 1784 and res <= 1789) or res == 689):
         inspector = lol.core.quests.QuestInspector.getInstance()
         i = 0
         while i < len(obj.param.give_quests):
@@ -50,14 +52,68 @@ def __qwEdenNPC(obj):
             inspector.checkedQuests[obj.param.take_quests[i]] = None
             i = i + 1
     return this.__qwEdenNPCOrig(obj)
+
+def __qwRefreshNPCs():
+    # Keep one native status scan across overlapping repeatable hand-ins.
+    # The request/ack FIFO is deliberately untouched.
+    clearInterval(this.updateTimerID)
+    this.updateTimerID = None
+    return this.__qwRefreshNPCsOrig()
+
+def __qwLocationKill():
+    inspector = lol.core.quests.QuestInspector.getInstance()
+    clearInterval(inspector.updateTimerID)
+    inspector.updateTimerID = None
+    inspector.updateNPCList = []
+    inspector.quester = None
+    return this.__qwLocationKillOrig()
+
+def __qwStatusChanged():
+    # Replies already in flight still retire normally; their old NPC/window
+    # no longer belongs to a live location and must not be dereferenced.
+    if not this.quester:
+        return
+    return this.__qwStatusChangedOrig()
+
+def __qwNPCRemoved(id):
+    # Timed NPC refreshes also happen without leaving the location (rent,
+    # warehouse rewards, the lab). Drop the open contact before native
+    # removal destroys its playerInfo/walker. Pending replies still retire
+    # through the existing queues; another NPC's window is left alone.
+    inspector = lol.core.quests.QuestInspector.getInstance()
+    if inspector.quester and inspector.quester.id == id:
+        inspector.quester = None
+        inspector.questStatusList = []
+        lol.core.SceneShifter.closeWindow("quests", "all")
+    return this.__qwNPCRemovedOrig(id)
 '''
+
+
+def npc_list(Asm):
+    """Enumerate occupied entity IDs; local allies make playerList sparse."""
+    a = Asm()
+    a.push('result', 0).op('initarray').op('definelocal')
+    a.push('players', 0).var('lol').member('core', 'Master')
+    a.push('getInstance').op('callmethod').member('currentLocation', 'playerList').op('definelocal')
+    a.var('players').op('not').iftrue('done')
+    a.var('players').op('enumerate2').label('next')
+    a.push('key').op('stackswap').op('definelocal')
+    a.var('key').push(None).op('equals2').iftrue('done')
+    a.push('npc').var('players').var('key').op('getmember').op('definelocal')
+    # NPC's constructor sets isNPC for every quest-giver/service subclass.
+    # Deleted entries and ordinary players (including allies) do not qualify.
+    a.var('npc').member('isNPC').op('not').iftrue('skip')
+    a.var('npc').push(1).var('result').push('push').op('callmethod').op('pop')
+    a.label('skip').push(True).iftrue('next')
+    a.label('done').var('result').op('return')
+    return a
 
 
 def patches(Asm, undef):
     source = SOURCE
     specs = [('init', '__qwInit'), ('kill', '__qwKill'),
              ('questsStatusUpdate', '__qwStatus')]
-    for method in ('getQuest', 'takeQuest', 'back', 'selectQuest', 'getAck', 'takeAck', 'questsUpdate'):
+    for method in ('getQuest', 'takeQuest', 'back', 'selectQuest', 'getAck', 'takeAck', 'questsUpdate', 'ReopenDescription'):
         helper = '__qw' + method[0].upper() + method[1:]
         source += f'''
 def {helper}(obj):
@@ -74,4 +130,14 @@ def {helper}(obj):
         for method, helper in specs)
     wraps += ((('core', 'player', 'NPC'), 'userInfo', '__qwEdenNPCOrig',
                *bodies['__qwEdenNPC']),)
+    wraps += ((('core', 'quests', 'QuestInspector'), 'requestAllNPC', '__qwRefreshNPCsOrig',
+               *bodies['__qwRefreshNPCs']),)
+    wraps += ((('core', 'quests', 'QuestInspector'), 'checkStatusChanged', '__qwStatusChangedOrig',
+               *bodies['__qwStatusChanged']),)
+    wraps += ((('core', 'location', 'Location'), 'kill', '__qwLocationKillOrig',
+               *bodies['__qwLocationKill']),)
+    wraps += ((('core', 'location', 'Location'), 'removePlayer', '__qwNPCRemovedOrig',
+               *bodies['__qwNPCRemoved']),)
+    wraps += ((('core', 'quests', 'QuestInspector'), 'getNPCList', '__qwNPCListOrig',
+               (), npc_list(Asm)),)
     return dict(globals=[], wraps=wraps)

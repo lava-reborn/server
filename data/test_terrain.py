@@ -27,6 +27,7 @@ import json
 import os
 import re
 import sys
+from unittest.mock import patch
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(os.path.dirname(HERE), "server"))
@@ -175,6 +176,37 @@ def main():
     assert not unexplained, \
         "terrain: %d rock cells are walkable for no recorded reason: %s" % (
             len(unexplained), unexplained[:6])
+
+    # The original JPGs paint the town names on otherwise open ground.
+    # Only these visually verified letters were opened: do not remove the
+    # rock layer or let this repair override an owner's hand-drawn wall.
+    caption_cells = ({(x, 2007) for x in range(5883, 5886)}
+                     | {(x, 2008) for x in range(5882, 5891)}
+                     | {(x, 2009) for x in range(5883, 5891)}
+                     | {(x, 1970) for x in range(6187, 6194)}
+                     | {(x, 1971) for x in range(6187, 6194)}
+                     | {(x, 1972) for x in range(6188, 6194)})
+    verified = load("terrain_verified.json")
+    provenance = {tuple(map(int, c.split(",")))
+                  for c in verified["_caption_repairs"]["cells"]}
+    assert provenance == caption_cells and len(caption_cells) == 40
+    fixes = world.terrain_overrides()
+    for x, y in caption_cells:
+        assert rows[y - gy0][x - gx0] == "#"
+        assert (x, y) not in repairs
+        assert fixes[(x, y)] is True and world.passable(x + .9, y + .9)
+    nearby = {(x + dx, y + dy) for x, y in caption_cells
+              for dx in range(-2, 3) for dy in range(-2, 3)} - caption_cells
+    unchanged = {c: world.passable(*c) for c in nearby}
+    before_captions = {c: allowed for c, allowed in fixes.items()
+                       if c not in caption_cells}
+    with patch.object(world, "terrain_overrides", return_value=before_captions):
+        assert all(not world.passable(*c) for c in caption_cells)
+        assert {c: world.passable(*c) for c in nearby} == unchanged
+    assert all(not world.passable(*map(int, c.split(",")))
+               for c in verified["blocked"])
+    assert not world.passable(5968, 1719)  # original quarry icon / owner's wall
+    print("40 caption cells opened; nearby terrain and every manual wall unchanged")
     print("rock stops a walker on %d cells and water on %d; %d cells are open"
           " because a location file says they are"
           % (len(stopped), kinds.get("~", 0), len(repairs)))

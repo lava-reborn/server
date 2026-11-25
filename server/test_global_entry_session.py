@@ -1,4 +1,5 @@
 """Real session/map acknowledgements and safe placement across the load gap."""
+import math
 import unittest
 from types import SimpleNamespace as NS
 from unittest.mock import Mock, patch
@@ -97,6 +98,162 @@ class GlobalEntrySessionTests(unittest.IsolatedAsyncioTestCase):
                     self.assertIn(self.s, self.room().players)
                     positions.add(chosen)
         self.assertGreater(len(positions), 3)
+
+    async def test_local_exit_projects_position_persists_and_returns_to_a_safe_entry(self):
+        positions = set()
+        for fx in (.05, .5, .95):
+            for fy in (.05, .5, .95):
+                with self.subTest(fx=fx, fy=fy):
+                    self.on_map()
+                    self.s.handle('chWorld', {})
+                    self.s.handle('lenter', {'accept': 1})
+                    loc = self.s.loc
+                    blocked = loc.obstacles | movement.get(self.s.room).occupied(exclude=self.s)
+                    free = set(range(loc.width * loc.height)) - blocked
+                    target = min(free, key=lambda c: (
+                        (c % loc.width / (loc.width - 1) - fx) ** 2
+                        + (c // loc.width / (loc.height - 1) - fy) ** 2, c))
+                    self.s.pos = target
+                    self.s.writer.frames.clear()
+                    self.s.handle('chWorld', {})
+                    self.assertEqual(self.acks(), [0])
+                    self.assertTrue(self.s.on_map)
+                    point = self.s.gx, self.s.gy
+                    self.assertEqual(tuple(map(math.floor, point)), (5879, 2012))
+                    self.assertEqual(point, (
+                        round(5879 + min(.99, target % loc.width / (loc.width - 1)), 2),
+                        round(2012 + min(.99, target // loc.width / (loc.height - 1)), 2)))
+                    packet = next(p for cmd, p in self.s.writer.frames if cmd == 'gmap')
+                    self.assertEqual((packet['x'], packet['y']), point)
+                    saved = self.store.character(self.s.char_id)
+                    self.assertEqual((saved['gx'], saved['gy'], saved['on_map']), (*point, 1))
+                    expected = self.expected(*point)
+                    self.s.writer.frames.clear()
+                    self.s.handle('chWorld', {})
+                    self.s.handle('lenter', {'accept': 1})
+                    self.assertFalse(self.s.closed)
+                    self.assertEqual(self.acks(), [0])
+                    self.assertEqual(self.s.pos, expected)
+                    self.assertNotIn(self.s.pos, loc.obstacles)
+                    positions.add(point)
+        self.assertEqual(len(positions), 9)
+
+    async def test_local_exit_uses_completed_walking_hex_not_accepted_destination(self):
+        self.s.handle('chWorld', {})
+        self.s.handle('lenter', {'accept': 1})
+        loc = self.s.loc
+        blocked = (set(loc.obstacles) | set(travel.exit_sides(loc))
+                   | movement.get(self.s.room).occupied(exclude=self.s))
+        blocked.update(c for cells, _record in travel.walk_ins(loc) for c in cells)
+        route = next([y * loc.width + x + step for step in range(7)]
+                     for y in range(loc.height) for x in range(loc.width - 6)
+                     if all(y * loc.width + x + step not in blocked for step in range(7)))
+        self.s.pos = route[0]
+        self.s.handle('moveTo', {'path': route})
+        self.assertEqual(self.s.pos, route[-1])
+        self.assertEqual(self.s.live_cell(), route[0])
+        expected = location_entry.map_position(loc, route[0], 5879, 2012)
+        unwalked = location_entry.map_position(loc, route[-1], 5879, 2012)
+        self.assertNotEqual(expected, unwalked)
+        self.s.writer.frames.clear()
+        self.s.handle('chWorld', {})
+        self.assertEqual(self.acks(), [0])
+        self.assertEqual((self.s.gx, self.s.gy), expected)
+
+    def walk_towards_exit_during_pvp_pause(self):
+        self.s.handle('chWorld', {})
+        self.s.handle('lenter', {'accept': 1})
+        loc = self.s.loc
+        self.other.combat.left()
+        self.case.room.players.pop(self.other, None)
+        self.other.loc, self.other.room = loc, self.s.room
+        self.other.pos = next(c for c in loc.entries if c not in loc.obstacles and c != self.s.pos)
+        self.s.room.players[self.other] = True
+        blocked = loc.obstacles | movement.get(self.s.room).occupied(exclude=self.s)
+        for end in travel.exit_sides(loc):
+            try:
+                travel.plan_exit(loc, end, 5879, 2012)
+            except travel.Refused:
+                continue
+            for middle in progression.hex_neighbours(end, loc.width, loc.height):
+                if middle in blocked or travel.side_at(loc, middle) is not None:
+                    continue
+                for start in progression.hex_neighbours(middle, loc.width, loc.height):
+                    if start in blocked or travel.side_at(loc, start) is not None:
+                        continue
+                    self.s.pos = start
+                    self.s.handle('moveTo', {'path': [start, middle, end]})
+                    self.s.combat.engage_player(self.other.combat)
+                    self.s.combat.last_hit = 100 - combat.LEAVE_COMBAT_TIMEOUT - 1
+                    self.assertFalse(self.s.combat.in_combat())
+                    self.assertEqual(self.s.pos, end)
+                    self.assertEqual(self.s.live_cell(), start)
+                    self.s.writer.frames.clear()
+                    return start, end
+        self.fail('A real market exit with a walkable approach is required')
+
+    async def check_pvp_exit_waits_for_actual_exit_hex(self, params, refused):
+        with self.case.at(100):
+            start, end = self.walk_towards_exit_during_pvp_pause()
+            room, walk = self.s.room, self.s.walk
+            self.s.handle('chWorld', params)
+            self.assertEqual(self.acks(), [refused])
+            self.assertIs(self.s.room, room)
+            self.assertFalse(self.s.on_map)
+            self.assertEqual(self.s.live_cell(), start)
+            self.assertEqual(self.s.pos, end)
+            self.assertIs(self.s.walk, walk)
+            self.assertFalse(any(cmd in ('gmap', 'lcall') for cmd, _ in self.s.writer.frames))
+        with self.case.at(100 + 2 * movement.get(room).step + .01):
+            self.assertEqual(self.s.live_cell(), end)
+            self.s.writer.frames.clear()
+            self.s.handle('chWorld', params)
+            self.assertEqual(self.acks(), [0])
+            self.assertTrue(any(cmd in ('gmap', 'lcall') for cmd, _ in self.s.writer.frames))
+
+    async def test_plain_pvp_exit_waits_for_the_walk_to_reach_a_real_exit(self):
+        await self.check_pvp_exit_waits_for_actual_exit_hex({}, server.RES_NO_WAY)
+
+    async def test_neighbour_pvp_exit_waits_for_the_walk_to_reach_a_real_exit(self):
+        await self.check_pvp_exit_waits_for_actual_exit_hex({'to': 1}, server.RES_NOT_AVAILABLE)
+
+    async def test_fractional_map_entry_keeps_the_parent_cell_for_every_side_exit(self):
+        for side in travel.SIDES:
+            with self.subTest(side=side):
+                self.on_map(.99, .99)
+                self.s.handle('chWorld', {})
+                self.s.handle('lenter', {'accept': 1})
+                self.assertEqual((self.s.gx, self.s.gy), (5879, 2012))
+                loc = self.s.loc
+                blocked = loc.obstacles | movement.get(self.s.room).occupied(exclude=self.s)
+                cell = next(c for c, exit_side in travel.exit_sides(loc).items()
+                            if exit_side == side and c not in blocked)
+                expected = travel.plan_exit(loc, cell, 5879, 2012)
+                self.s.pos = cell
+                self.s.writer.frames.clear()
+                self.s.handle('chWorld', {'to': 1})
+                self.assertEqual(self.acks(), [0])
+                self.assertEqual((self.s.loc.id, self.s.gx, self.s.gy),
+                                 (expected.loc_id, expected.gx, expected.gy))
+                self.assertNotIn(self.s.pos, self.s.loc.obstacles)
+
+    async def test_encounter_and_outside_world_keep_their_original_return_position(self):
+        self.s.handle('chWorld', {})
+        self.s.handle('lenter', {'accept': 1})
+        self.s.gx, self.s.gy = 5879.25, 2012.75
+        with patch.object(server.ENCOUNTERS, 'room_key', return_value=('test', 'encounter')):
+            self.s.writer.frames.clear()
+            self.s.handle('chWorld', {})
+        self.assertEqual(self.acks(), [0])
+        self.assertEqual((self.s.gx, self.s.gy), (5879.25, 2012.75))
+        self.on_map()
+        self.s.handle('chWorld', {})
+        self.s.handle('lenter', {'accept': 1})
+        self.s.gx, self.s.gy = travel.MAP_X[1] + 1, 2012
+        self.s.writer.frames.clear()
+        self.s.handle('chWorld', {})
+        self.assertEqual(self.acks(), [0])
+        self.assertEqual((self.s.gx, self.s.gy), (travel.MAP_X[1], 2012))
 
     async def test_loading_rechecks_occupied_entry_and_escape_route(self):
         self.s.handle('chWorld', {})

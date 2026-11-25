@@ -509,10 +509,21 @@ try:
     c.frames()
     c.send("newPers;res=1;sex=0;name=@assayer@;")
     c.frames()
+    c.send("logout;")
+    c.frames(0.3)
+    c.s.close()
+    time.sleep(0.3)
     probe = accounts.Store(DB)
     CHAR = probe.db.execute("SELECT id FROM characters WHERE name = ?", ("assayer",)).fetchone()["id"]
+    # Boss loot/quests are checked with an admin gun, not a balance loadout.
+    probe.save_stats(CHAR, [("attrib", progression.STRENGTH, 1000, 0, 0),
+                            ("attrib", progression.INTELLECT, 1000, 0, 0)])
     probe.close()
-    c.send("actPlayer;")
+    c = Client(testkit.connect(PORT_NO, srv, LOG, None))
+    c.send("hello;minor=2;major=0;")
+    c.send("login;hash=@%s@;" % CRED)
+    c.frames()
+    c.send("selPers;num=0;")
     c.until(lambda f: f[0] == "lcall")
     arrival, pos = enter(c)
 

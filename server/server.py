@@ -111,6 +111,10 @@ PREMIUM_TRANSPORT_REFUSED = "транспорт %d — (P), выведен из 
 SERVER_CHAT = os.environ.get("LAVA_SERVER_CHAT", "").strip().lower() not in (
     "", "0", "no", "off", "false")
 STORE = accounts.Store()
+if CHEATS and not storage.using_postgres(STORE.db):
+    bosses._OFFSET = bosses.restore_test_offset(
+        accounts.DB_PATH, (held["slot"] for held in STORE.holdings()
+                           if held["site"] in holdings.base_keys()))
 
 # Every connection with a Session behind it, so a stop can reach them all.
 # handle_client adds on connect and removes in its finally.
@@ -413,7 +417,7 @@ QUEST_LOG_CAPACITY = 25
 QUEST_LOG_EXEMPT_ROOM = 10
 CLIENT_QUEST_LOG_CAPACITY = QUEST_LOG_CAPACITY + QUEST_LOG_EXEMPT_ROOM
 DAILY_MAX = 10
-DAILY_RESET_TIME = 0
+DAILY_RESET_TIME = events.DAILY_RESET_TIME
 
 # What a quest puts in the bag -- its reward, a parcel at the take -- goes in
 # past the character's carry limit too (the owner's decision of 2026-09-26). A
@@ -585,6 +589,15 @@ class Session:
         talk incomplete until its base skill goals have been reached."""
         if self.closed:
             return
+        if _cmd[0] == "userMsg" and params.get("from"):
+            confined = eden.confined(self)
+            group = params.get("group")
+            if confined and group not in (0, 2):
+                return
+            if group == 0:
+                sender = ONLINE.by_pid(params["from"])
+                if sender is not None and confined != eden.confined(sender):
+                    return
         if getattr(self, 'training_ground', None) is not None:
             params = training_ground.outgoing(self, _cmd[0], params)
             if params is None:
@@ -618,7 +631,7 @@ class Session:
             return
         # Dead: the client's own filter lets only resurrect through
         # (FilterManager.createDSFilter), so this is the server's copy of it.
-        if self.combat.blocks(cmd, expects_ack(cmd, params)):
+        if self.combat.blocks(cmd, expects_ack(cmd, params), params):
             return
         fn = getattr(self, "cmd_" + cmd, None)
         if not fn:
@@ -841,6 +854,9 @@ class Session:
             self.cancel_travel()
             self.inv.close()
             self.combat.close()         # never raises; see Fighter.close
+            active = getattr(self, 'effects', None)
+            if active is not None:
+                active.close()
             # Whoever shared a room or the map with this player is told now:
             # a dropped socket sends no logout, so this is the only place
             # that covers every way out.
@@ -939,6 +955,7 @@ class Session:
             "SELECT * FROM items WHERE char_id=? AND type_id=? AND ammo_count>?",
             (char_id, magazine_migration.BIZON_DAMAGE_CLIP_A, magazine_migration.CAPACITY)).fetchall()]
         magazine_migration.normalize(STORE, char_id, legacy_guns)
+        quests.recover_cinema(STORE, char_id)
         # Anything worn in a slot it does not fit (a row from before the
         # slot_type fix) goes back to the bag before the gear is counted,
         # and so does anything above the character's level (the level rule).
@@ -958,6 +975,12 @@ class Session:
         # The rental rides in the same row and is read in the same breath.
         row = STORE.character(char_id)
         self.combat.restore(row)
+        import effects
+        previous = getattr(self, 'effects', None)
+        if previous is not None:
+            previous.close()
+        self.effects = effects.Effects(self)
+        self.effects.load()
         self.schedule_residence()
         kind = row["transport_type"] if row is not None else None
         self.transport = (int(kind), int(row["transport_until"] or 0))             if kind else None
@@ -1192,6 +1215,9 @@ class Session:
         if not self.account:
             self.send("cmdAck", res=1)
             return
+        if self.char_id is not None or self.char is not None:
+            self.send("cmdAck", res=1)
+            return
         name = (p.get("name") or "").strip()
         if not name:
             self.send("cmdAck", res=5)          # invalid characters in name
@@ -1233,6 +1259,11 @@ class Session:
     def cmd_selPers(self, p):
         # Deliberately no cmdAck: PersGenerator does not register a handler for
         # one, so replying here would be consumed by the next command's.
+        if self.char_id is not None or self.char is not None:
+            # Fighter and room ledgers belong to the selected character for
+            # the life of this connection. A different choice needs a login.
+            log.warning("  ??    selPers on an active character, ignoring")
+            return
         slot = int(p.get("num", 0))
         for c in self.characters:
             if c["slot"] == slot:
@@ -1602,11 +1633,14 @@ class Session:
         through_exit = not self.on_map and int(p.get("to", 0) or 0) == 1
         if self.combat.refuse_leave():
             return
+        # pos is the accepted walking destination, not necessarily reached.
+        # The gate and map projection must use the same completed hex.
+        cell = self.live_cell() if not self.on_map else None
         if through_exit:
-            self.leave_through_exit()
+            self.leave_through_exit(cell)
             return
         if (not self.on_map and self.combat.duels
-                and travel.side_at(self.loc, self.pos) is None):
+                and travel.side_at(self.loc, cell) is None):
             # Both the map button and the exit window send plain chWorld.
             # A PvP pause opens only the exit window: require its cell even
             # if a stale or modified client asks from the middle of the room.
@@ -1626,6 +1660,19 @@ class Session:
         if self.on_map:
             self.enter_cell(acknowledge=True)
         else:
+            gx, gy = travel.clamp(self.gx, self.gy)
+            if sentence:
+                gx, gy = eden_map.cell_of(self.loc.id) or eden_map.CENTER_CELL
+            if sentence or (travel.in_map(self.gx, self.gy)
+                            and ENCOUNTERS.room_key(self) is None):
+                try:
+                    gx, gy = location_entry.map_position(
+                        self.loc, cell, gx, gy)
+                except location_entry.NoSafeEntry:
+                    self.send('cmdAck', res=RES_NO_WAY)
+                    return
+                gx, gy = (eden_map.clamp(gx, gy, self.loc.id) if sentence
+                          else travel.clamp(gx, gy))
             self.send("cmdAck", res=0)
             # Leaving puts the player back on the cell the location stands
             # on -- or the nearest one the map has, from a location beyond
@@ -1635,9 +1682,7 @@ class Session:
             self.on_map = True
             self.cancel_travel()
             self.leave_room()
-            self.gx, self.gy = travel.clamp(self.gx, self.gy)
-            if sentence:
-                self.gx, self.gy = eden_map.cell_of(self.loc.id) or eden_map.CENTER_CELL
+            self.gx, self.gy = gx, gy
             self.send("gmap", x=self.gx, y=self.gy, v_rad=VIEW_RADIUS)
             self.send_marks()
             # Only after gmap: newUser is an offset from the client's own
@@ -1645,7 +1690,7 @@ class Session:
             GMAP.enter(self)
             self.save_place()
 
-    def leave_through_exit(self):
+    def leave_through_exit(self, cell):
         """chWorld;to=1: out through the exit the player is standing on.
 
         The client sends nothing about which exit that is (world.md §5), so
@@ -1655,9 +1700,9 @@ class Session:
         res but 39 as a silent return to the previous state, so the reason
         for a refusal goes to chat behind the acknowledgement.
         """
-        side = travel.side_at(self.loc, self.pos)
+        side = travel.side_at(self.loc, cell)
         try:
-            dest = travel.plan_exit(self.loc, self.pos,
+            dest = travel.plan_exit(self.loc, cell,
                                     round(self.gx), round(self.gy))
         except travel.Refused as why:
             self.send("cmdAck", res=RES_NOT_AVAILABLE)
@@ -1865,6 +1910,10 @@ class Session:
         if "group" not in p and p.get("to"):
             self.whisper(p["to"], raw)
             return
+        if eden.confined(self) and group not in (0, 2):
+            self.send("cmdAck", res=inventory.RES_REFUSED)
+            self.answer("На плантации Эдем доступны только чат локации и клановый чат.")
+            return
         self.send("cmdAck", res=0)
         # /goto, /give and /money make money, items and distance out of
         # nothing for whoever types them, which stopped being acceptable the
@@ -1879,10 +1928,40 @@ class Session:
         # LAVA_CHEATS is set by no script that serves anybody: not run.sh,
         # not the compose file, not the deployment.
         if CHEATS and text.split(" ")[0] in ("/goto", "/give", "/money",
-                                             "/skill", "/spec"):
+                                             "/skill", "/spec", "/base-respawn", "/boss-now",
+                                             "/base-now", "/boss-spawn", "/test-bot", "/test-bot-stop", "/test-time-reset",
+                                             "/test-allies", "/test-allies-stop", "/lab-respawn", "/box-now"):
             args = text.split()[1:]
             try:
-                if text.startswith("/goto"):
+                if text.split()[0] in ('/test-allies', '/test-allies-stop'):
+                    count = int(args[0]) if len(args) == 1 else 4
+                    out = ('Используйте /test-allies [1–9] или /test-allies-stop.' if len(args) > 1
+                           or (text.split()[0] == '/test-allies-stop' and args) else
+                           self.admin_test_allies(count, stop=text.split()[0] == '/test-allies-stop'))
+                elif text.split()[0] in ('/boss-now', '/base-now', '/boss-spawn', '/test-bot', '/test-bot-stop', '/test-time-reset'):
+                    command = text.split()[0]
+                    if args:
+                        out = 'Используйте %s без аргументов.' % command
+                    elif command in ('/boss-now', '/base-now', '/boss-spawn'):
+                        base = command == '/base-now' or (command == '/boss-spawn'
+                                                       and holdings.base_for(self.loc.id) is not None)
+                        out = self.admin_boss_now(base=base)
+                    elif command == '/test-time-reset':
+                        out = self.admin_test_clock(bosses._offset()) or (
+                            'Тестовые часы возвращены к исходной настройке сервера.')
+                    else:
+                        out = self.admin_test_bot(stop=command == '/test-bot-stop')
+                elif text.split()[0] == '/box-now':
+                    out = ('Используйте /box-now или /box-now prepare.'
+                           if args and args != ['prepare']
+                           else self.admin_warehouse_reward(prepare=bool(args)))
+                elif text.split()[0] == '/lab-respawn':
+                    out = ('Используйте /lab-respawn без аргументов.' if args
+                           else self.admin_laborant_respawn())
+                elif text.startswith("/base-respawn"):
+                    out = ("Используйте /base-respawn без аргументов."
+                           if args else self.admin_base_respawn())
+                elif text.startswith("/goto"):
                     if len(args) >= 2:
                         out = self.admin_goto(None, args[0], args[1])
                     else:
@@ -1973,6 +2052,10 @@ class Session:
         """A private message. res=9 is what the client words as "the character
         is offline, write a letter"; on res=0 it prints its own line."""
         target = ONLINE.by_nick(nick)
+        if eden.confined(self) or (target is not None and eden.confined(target)):
+            self.send("cmdAck", res=inventory.RES_REFUSED)
+            self.answer("Приватные сообщения на плантации Эдем недоступны.")
+            return
         if target is None or target is self:
             self.send("cmdAck", res=9)
             return
@@ -2094,7 +2177,7 @@ class Session:
         refused = refused_gift(type_id)
         if refused:
             return refused
-        if items.root_of(type_id) not in items.HEAPABLE_ROOTS:
+        if not items.heapable(type_id):
             count = 1
         count = max(1, min(count, 999))
         row = self.inv.create(type_id, count)
@@ -2138,6 +2221,193 @@ class Session:
         self.send_player_info()
         return "%s: %s на %d дн., скорость x%s" % (
             self.nick, vehicle["name"], days, vehicle["speed_mod"])
+
+    def admin_warehouse_reward(self, prepare=False):
+        """Prepare a local box test; grant and daily claim remain native."""
+        if not CHEATS or not self.char_id:
+            return 'Команда доступна только в локальном тестовом комплекте.'
+        site = holdings.site_at(self.loc.id) if self.loc and not self.on_map else None
+        if self.room is None or site is None or site.kind != 'warehouse' or not site.gold_quest:
+            return 'Войдите на захватываемый склад; центр Абу-Хамеда: /goto 128.'
+        with storage.atomic(STORE.db):
+            if not STORE.lock_quest_character(self.char_id, clan_first=True):
+                return 'Персонаж недоступен; повторите после входа.'
+            held = holdings.holder(STORE, site)
+            if not holdings.member_of(STORE, held, self.char_id):
+                return 'Склад должен принадлежать твоему текущему клану.'
+            refusal = holdings.gold_refusal(STORE, site, self.char_id, self.day_start())
+            if refusal:
+                return refusal
+            # Only an explicit test preparation changes the join timestamp.
+            # The default command preserves the 24-hour negative scenario.
+            if prepare:
+                joined = int(time.time() - holdings.table().tenure)
+                STORE.db.execute('UPDATE clan_members SET joined_at = ? WHERE char_id = ?'
+                                 ' AND clan_id = ? AND joined_at > ?',
+                                 (joined, self.char_id, held['clan_id'], joined))
+        if prepare:
+            STORE.quests_changed(self.char_id)
+        events.open_local_quest(site.gold_quest, site.box)
+        events.keep(combat.room_combat(self.room, STORE))
+        return ('Тестовое окно золотых слитков у ящика открыто на 15 минут. '
+                + ('Твой стаж подготовлен до 24 часов. ' if prepare else 'Стаж членства сохранён. ')
+                + 'Возьми и сдай задание у ящика; права казны, стаж, вес и суточный лимит действуют. '
+                'Часы и обычное расписание сохранены.')
+
+    def admin_laborant_respawn(self):
+        """Local retry of the lab only; real schedules and other progress stay intact."""
+        if not CHEATS or not self.char_id:
+            return 'Команда доступна только в локальном тестовом комплекте.'
+        if self.on_map or self.room is None or self.loc.id != quests.LABORANT_LOC:
+            return 'Войдите в центр Абу-Хамеда: /goto 128.'
+        day = self.day_start()
+        with storage.atomic(STORE.db):
+            if not STORE.lock_quest_character(self.char_id, clan_first=True):
+                return 'Персонаж недоступен; повторите после входа.'
+            STORE.db.execute('DELETE FROM boss_kills WHERE spot = ?', (quests.LABORANT_SPOT,))
+            STORE.db.execute('DELETE FROM char_quests_done WHERE char_id = ? AND type = ?'
+                             ' AND done_at >= ? AND done_at < ?',
+                             (self.char_id, quests.LABORANT_DETAIL, day, day + 86400))
+        STORE.quests_changed(self.char_id)
+        events.touch(quests.LABORANT_NPC)
+        events.keep(combat.room_combat(self.room, STORE))
+        return ('Лаборант возвращён. Тестовые лимиты общей сборки и твоей детали сброшены; '
+                'часы, вещи и владения сохранены. Условия уровня и клана действуют.')
+
+    def admin_base_respawn(self):
+        """Local cheats only: restore this base's native scheduled wave."""
+        if not CHEATS or self.room is None or self.room.combat is None:
+            return "Команда доступна только в локальном тестовом комплекте."
+        base = holdings.base_for(self.loc.id)
+        if base is None or self.loc.id != base.loc:
+            return "Войдите на поверхность клановой базы: /goto 1442 или /goto 118."
+        rc = self.room.combat
+        due = rc.boss_slots(bosses.clock())
+        if not any(slot is not None for slot in due.values()):
+            return "Сначала откройте тестовое окно захвата или оплатите аренду базы."
+        if (self.room.ws or any(m.target is not None or m.aim is not None
+                               or not m.alive and not m.away for m in rc.bosses)):
+            return "Дождитесь конца боя и исчезновения тел."
+        with storage.atomic(STORE.db):
+            for mob in rc.bosses:
+                STORE.db.execute("DELETE FROM boss_kills WHERE spot IN (?, ?)",
+                                 (rc.boss_spot(mob), rc.boss_spot(mob) + ':respawn'))
+        for mob in rc.bosses:
+            if mob.alive:
+                rc.boss_leaves(mob)
+            mob.slot = None
+            mob.base_respawn_at = None
+        rc.keep_hours()
+        return "Охрана восстановлена; хозяин и телохранители появляются по таймеру в окно захвата."
+
+    def admin_test_clock(self, offset):
+        if not CHEATS:
+            return 'Команда доступна только в локальном тестовом комплекте.'
+        try:
+            database = None if storage.using_postgres(STORE.db) else accounts.DB_PATH
+            bosses.save_test_offset(database, offset)
+        except (OSError, ValueError, OverflowError):
+            log.exception('Could not persist local test clock')
+            return 'Не удалось сохранить тестовые часы; время не изменено.'
+        bosses._OFFSET = offset
+        return None
+
+    def admin_boss_now(self, base=False):
+        """Use the existing local test clock; production schedules are unchanged."""
+        if not CHEATS or self.on_map or self.room is None or self.room.combat is None:
+            return 'Команда доступна только на локации локального тестового комплекта.'
+        rc = self.room.combat
+        site = holdings.base_for(self.loc.id)
+        if base != bool(site) or site is not None and site.loc != self.loc.id:
+            return 'Для базы используйте /base-now на поверхности; для лагеря — /boss-now.'
+        if not rc.bosses:
+            return 'На этой локации нет босса с расписанием.'
+        # Native escorts share the boss's test reset. Do not interrupt an
+        # escort's shot or remove its still-visible corpse either.
+        actors = rc.bosses + [m for m in rc.escorts if m not in rc.bosses]
+        if self.room.ws or any(m.target is not None or m.aim is not None
+                               or not m.alive and not m.away for m in actors):
+            return 'Дождитесь конца боя и исчезновения тел.'
+        now = bosses.clock()
+        held = holdings.holder(STORE, site) if site is not None else None
+        start = max(now, float(held['slot']) + 3600) if held is not None and held['slot'] is not None else now
+        def opens(t):
+            if site is not None:
+                slot = holdings.battle_slot(site, t)
+                return slot is not None and (held is None or held['slot'] is None or slot > held['slot'])
+            return any(bosses.slot_of(m.type_id, t, self.loc.id) is not None for m in rc.bosses)
+        when = next((t for minute in range(7 * 24 * 60 + 1)
+                     if opens(t := start if minute == 0 else int(start // 60) * 60 + minute * 60)), None)
+        if when is None:
+            return 'В ближайшую неделю нет доступного окна появления.'
+        refusal = self.admin_test_clock(bosses._OFFSET + when - now)
+        if refusal:
+            return refusal
+        if base:
+            return self.admin_base_respawn() + ' Часы тестового сервера переведены к окну захвата.'
+        with storage.atomic(STORE.db):
+            for mob in rc.bosses:
+                STORE.db.execute('DELETE FROM boss_kills WHERE spot = ?', (rc.boss_spot(mob),))
+        for mob in actors:
+            movement.get(self.room).forget(mob)
+            if mob.alive:
+                rc.boss_leaves(mob)
+            mob.recalled = False
+            mob.slot = None
+        rc.keep_hours()
+        for mob in actors:
+            if mob.alive and not mob.away:
+                self.room.broadcast(('lch', dict(lostUser=mob.eid)))
+                mob.cell = movement.get(self.room).free_cell(self.live_cell(), exclude=mob)
+                self.room.npcs[mob.eid] = self.room.npcs[mob.eid]._replace(cell=mob.cell)
+                self.room.broadcast(('lch', dict(newUser=mob.eid, pos=mob.cell, rtype=world.MOB)))
+                for viewer in list(self.room.players):
+                    viewer.send_npc_info(mob.eid)
+        return ('Босс появился рядом со штатной охраной этой локации. '
+                'Часы тестового сервера переведены к его окну появления.')
+
+    def admin_test_bot(self, stop=False):
+        if not CHEATS:
+            return 'Команда доступна только в локальном тестовом комплекте.'
+        previous = getattr(self, 'local_test_bot', None)
+        if previous is not None:
+            previous.exit()
+        if stop:
+            return 'Тестовый противник удалён.'
+        if self.on_map or self.room is None or self.combat.dead or not self.combat.pvp_allowed():
+            return 'Войдите живым персонажем на локацию, где разрешён PvP.'
+        if sum(getattr(s, 'peer', None) == 'local-test-bot' for s in self.room.players) >= 10:
+            return 'На локации уже десять тестовых противников.'
+        training_ground.local_bot(self)
+        return 'Рядом появился противник с твоими навыками, надетым снаряжением и патронами на 5 минут, без наград.'
+
+    def admin_test_allies(self, count=4, stop=False):
+        if not CHEATS:
+            return 'Команда доступна только в локальном тестовом комплекте.'
+        if not stop and not 1 <= count <= 9:
+            return 'Количество союзников: от 1 до 9.'
+        if not stop and (self.on_map or self.room is None or self.combat.dead
+                         or self.inv.store.clan_member(self.char_id) is None):
+            return 'Войдите живым персонажем своего клана на нужную локацию.'
+        previous = getattr(self, 'local_test_allies', [])
+        if not stop:
+            total = sum(actor.peer == 'local-test-bot' for actor in self.room.players)
+            if total - len(previous) + count > 10:
+                return 'На локации допускается не больше десяти тестовых ботов.'
+        for ally in tuple(previous):
+            ally.exit()
+        self.local_test_allies = []
+        if stop:
+            return 'Тестовые союзники удалены.'
+        try:
+            for index in range(count):
+                training_ground.local_bot(self, ally=True, index=index)
+        except Exception:
+            for ally in tuple(self.local_test_allies):
+                ally.exit()
+            raise
+        return ('Рядом появились союзники твоего клана: %d. Снаряжение и навыки скопированы; '
+                'у каждого 20 доз боевой G-медицины. Срок — 30 минут или до выхода с локации.' % count)
 
     def admin_goto(self, loc_id=None, gx=None, gy=None):
         """Open a location, or the one standing on a map cell.
@@ -2573,6 +2843,11 @@ class Session:
         at once.
         """
         other = ONLINE.by_pid(pid)
+        if other is None and CHEATS and self.room is not None:
+            candidate = self.room.player(pid)
+            if candidate is not None and candidate.peer == 'local-test-bot':
+                training_ground.local_player_info(self, candidate)
+                return
         if other is None or other.active is None:
             log.info("  ..    getInfo about %d, who is not online", pid)
             return
@@ -2637,8 +2912,20 @@ class Session:
                       take_quests=quests.taken_by(type_id), m_hello=[],
                       can_set_home=0, can_banking=0, can_trophy=0,
                       can_repair=0, can_trade=0)
+        # These lifts offer only the bunker entry. Do not expose that list
+        # to an unauthorized client: QuestInspector can still hold an earlier
+        # positive q_status. Clearing the whole entry-only offer preserves
+        # every remaining q_idx; the live take/hand-in checks also remain.
+        if (params['give_quests']
+                and all(t in quests.CLAN_BASE_ENTRIES for t in params['give_quests'])
+                and not self.base_entry_allowed(quests.get(params['give_quests'][0]))):
+            params['give_quests'] = []
+            params['take_quests'] = [t for t in params['take_quests']
+                                     if t not in quests.CLAN_BASE_ENTRIES]
         holder = None
         if root == world.TRADER:
+            import gold_trade
+            rates = inventory.trade_rates(STORE, self.room.loc.id, type_id, self.char_id)
             # type_list is the price list itself, in order: the client builds a
             # TradeItem per entry and later refers to a purchase by that index,
             # not by the item's own id. It is the list at this place: a weapon
@@ -2650,8 +2937,14 @@ class Session:
                           bg_objects=[], bg_obj_rep_req=[],
                           # One source, not two: the client draws prices
                           # with these and the server charges with the same.
-                          pmod=inventory.PMOD, smod=inventory.SMOD,
-                          rmod=inventory.repair_rmod(self.room.loc.id, type_id))
+                          **rates)
+            if holdings.base_for(self.room.loc.id) is not None:
+                params['can_repair'] = int(holdings.may_repair(
+                    STORE, self.room.loc.id, type_id, self.char_id))
+            params['base_gold_buyer'] = int(type_id in gold_trade.BASE_GOLD_BUYERS
+                and rates['smod'] == float(gold_trade.BASE_SALE_SHARE))
+            if not holdings.may_serve(STORE, self.room.loc.id, type_id, self.char_id):
+                params.update(can_trade=0, can_repair=0, type_list=[])
             if eden_shop.is_buyer(type_id):
                 params.update(res=eden_shop.ART_TYPE, type_list=[], eden_shop=1)
             if trophies.is_registrar(type_id):
@@ -2678,6 +2971,24 @@ class Session:
                 params.update(can_trade=0, can_repair=1 if mends else 0)
                 if holder is not None:
                     params.update(clan=int(holder["clan_id"]))
+                    if holder["paid_until"] and holdings.base_for(self.room.loc.id) is not None:
+                        # A paid base has no second rent offer. Keep the flag
+                        # and its open contact alive while the ACK retires.
+                        params.update(give_quests=[], take_quests=[])
+        elif root == world.MOB:
+            base = (holdings.base_for(self.room.loc.id, type_id)
+                    or holdings.guard_site(self.room.loc.id, type_id))
+            if base is not None and base.kind == 'base':
+                # Presentation only: warehouse identities and combat types stay native.
+                if type_id == base.boss:
+                    params['name'] = holdings.BASE_MASTER_NAME
+                else:
+                    params.update(name=(holdings.BASE_BODYGUARD_NAME if type_id in base.guards
+                                        else holdings.BASE_GUARD_NAME), res=base.guards[0])
+                holder = holdings.flag_for(STORE, base.loc, base.flag, self.char_id)[0]
+                if holder is not None:
+                    params.update(clan=int(holder['clan_id']))
+                params['ally'] = int(holdings.member_of(STORE, holder, self.char_id))
         elif root == world.UPGRADER:
             # What its window turns into what, and for how many hundredths
             # of an ounce (upgrader.lists): the recipes a weapons master
@@ -2714,6 +3025,14 @@ class Session:
         # has to follow the userInfo at once, or the bar is drawn against a
         # maximum of 1200 (combat.md 5).
         params.update(self.combat.mob_info(npc_id))
+        if root == world.MOB:
+            rc = self.combat.rc
+            mob = rc.mobs.get(npc_id) if rc is not None else None
+            if mob is not None:
+                # Use the final display type: base soldiers deliberately
+                # share their guard's model, never their actual combat type.
+                params['res'] = mobs.visual_type(params['res'], mob.stats.weapon_type_id)
+        params.update(npcs.presentation(type_id, self.room.loc.id))
         self.send(cmd, **params)
         if holder is not None:
             self.send("fellow", id=npc_id, reg=int(holder["clan_id"]),
@@ -2825,6 +3144,9 @@ class Session:
             if why:
                 self.answer(why)
             return
+        # Pouch specialisations lend attributes only while learned. Recount
+        # on learning as well as forgetting; neither changes the item row.
+        self.inv.refresh_gear()
         if status == progression.UPD_FORGET:
             # Removing gear can remove a bonus supporting another weapon.
             while self.inv.over_level_to_bag(notify=True):
@@ -2957,6 +3279,13 @@ class Session:
         # same window of five as ss_get_si; the sixth item stalls without it.
         # A mob's weapon is an instance too, just not one in the database.
         parsed = inventory.parse_oid(p.get('obj'))
+        if CHEATS and parsed and self.room is not None:
+            for actor in self.room.players:
+                if actor.peer == 'local-test-bot':
+                    row = actor.inv.store.item(parsed[0])
+                    if row and (row['type_id'], row['root']) == parsed[1:]:
+                        self.send(inventory.DI_COMMAND[row['root']], **inventory.di_params(row, actor.inv.store))
+                        return
         if parsed and parsed[0] >= training_ground.SERIAL_BASE:
             # Late replies after leaving a range are empty real-instance frames,
             # never a virtual mob weapon with a different dynamic-info schema.
@@ -3004,6 +3333,13 @@ class Session:
         self.send("ss_si_set", **params)
 
     def cmd_ss_get(self, p):
+        if CHEATS and self.room is not None:
+            actor = self.room.player(int(p.get('target', 0) or 0))
+            mask = int(p.get('slot', 0) or 0)
+            if (actor is not None and actor.peer == 'local-test-bot'
+                    and mask in (inventory.MASK_WEAR, inventory.MASK_HANDS, inventory.MASK_WEAR | inventory.MASK_HANDS)):
+                training_ground.local_equipment(self, actor, p)
+                return
         # Answered whatever the target: the ss_ack queue is FIFO and the
         # client slices the list by the mask it remembers sending. A mob
         # answers with the weapon it holds, which picks its animation set.
@@ -3113,6 +3449,19 @@ class Session:
         """The player's best skill level, the number quest.level is held to."""
         return self.character().level
 
+    def base_entry_allowed(self, quest):
+        """Recheck the paid lease even for an old or fight-delayed passage."""
+        if quest.type not in quests.CLAN_BASE_ENTRIES:
+            return True
+        member = STORE.clan_member(self.char_id) if self.char_id else None
+        # 0 and 16777215 are clanless wire sentinels, even if an old import
+        # left matching rows. Never trust a cached character/clan label.
+        loc = getattr(self, 'loc', None)
+        return bool(member and type(member['clan_id']) is int
+                    and 0 < member['clan_id'] <= accounts.Store.CLAN_MAX_ID
+                    and loc is not None and travel.quest_way(loc, quest.type) is not None
+                    and holdings.paid_base_for(STORE, loc.id, self.char_id) is not None)
+
     def quest_available(self, quest, state=None):
         """Whether this player may take or carry the quest right now.
 
@@ -3151,18 +3500,38 @@ class Session:
         """
         if not eden.allowed(self, quest):
             return False
+        if not self.base_entry_allowed(quest):
+            return False
+        if (quest.type in quests.CLAN_BASE_EXITS
+                and (getattr(self, 'loc', None) is None
+                     or travel.quest_way(self.loc, quest.type) is None)):
+            return False
         if quest.type == training_ground.EXIT_QUEST:
             return False
         if quest.type == training_ground.ENTRY_QUEST and not training_ground.entry_available(self):
             return False
         if quest.type in residence.QUESTS and not residence.allowed(self.character(), residence.QUESTS[quest.type]):
             return False
+        base = holdings.rent_site(quest.type)
+        if base is not None:
+            loc = getattr(self, "loc", None)
+            if loc is None or holdings.rent_refusal(STORE, base, self.char_id, loc.id, check_funds=False):
+                return False
         if (quests.acquisition_blocked(quest) or quest.over_cap(self.skill_level())
                 or quest.level > self.skill_level()):
             return False
+        if quest.type in quests.LABORANT_QUESTS:
+            loc = getattr(self, "loc", None)
+            if (loc is None or loc.id != quests.LABORANT_LOC
+                    or not quests.laborant_available(STORE, self.day_start())):
+                return False
         carried = bool(self.char_id) and (quest.type in state.active if state is not None
                                         else STORE.has_quest(self.char_id, quest.type))
         done = state.done if state is not None else lambda t: STORE.quest_done(self.char_id, t)
+        if quest.type in (215, 218) and self.char_id and any(done(t) for t in (215, 218)):
+            return False
+        if quest.type == 216 and self.char_id and any(done(t) for t in (215, 217, 218)):
+            return False
         # A previously repeatable quest may have become one-off while its
         # next instance was still in the journal. History wins over it;
         # cancellation remains available and does not consume its inputs.
@@ -3175,6 +3544,10 @@ class Session:
         # A warehouse box's row (quests: holders) only to the holders, and
         # carried too: the site may have changed hands since the take.
         if quest.holders and self.box_refusal(quest) is not None:
+            return False
+        gold_site = holdings.gold_site(quest.type)
+        if gold_site is not None and holdings.gold_refusal(
+                STORE, gold_site, self.char_id, self.day_start()) is not None:
             return False
         if carried:
             return True
@@ -3255,6 +3628,8 @@ class Session:
         requested = set()
         if quest_type is not None:
             requested.add(quest_type)
+            if quest_type in (215, 216, 218):
+                requested.update((215, 217, 218))
             q = quests.get(quest_type)
             if q is not None:
                 requested.update(q.need_all + q.need_any + q.branch + q.excludes)
@@ -3288,11 +3663,7 @@ class Session:
         """The last daily reset (DAILY_RESET_TIME minutes past UTC
         midnight), as a unix time: the day of the daily limit and of the
         once-a-day quests alike."""
-        now = int(time.time() if now is None else now)
-        reset = now - now % 86400 + DAILY_RESET_TIME * 60
-        if reset > now:
-            reset -= 86400
-        return reset
+        return events.day_start(time.time() if now is None else now, DAILY_RESET_TIME)
 
     def daily_available(self):
         """Repeatable hand-ins left today, counted from the last daily reset
@@ -3480,7 +3851,7 @@ class Session:
         # (a salvage's broken gun, fee_ready).
         self.fee_recount()
 
-    def quest_write(self, handler, p):
+    def quest_write(self, handler, p, clan_first=False):
         """Commit resources/history together, then publish the original frames."""
         if not self.char_id:
             return handler(p)
@@ -3495,7 +3866,9 @@ class Session:
         way = None
         try:
             with storage.atomic(STORE.db):
-                if not STORE.lock_quest_character(self.char_id):
+                locked = (STORE.lock_quest_character(self.char_id, clan_first=True) if clan_first
+                          else STORE.lock_quest_character(self.char_id))
+                if not locked:
                     raise ValueError("quest character no longer exists")
                 way = handler(p)
         except Exception as exc:
@@ -3570,12 +3943,24 @@ class Session:
             self.send("cmdAck", res=RES_NO_SUCH)
             return
         quest = quests.get(offered[idx])
+        if quest.type == 216:
+            restored = quests.recover_cinema(STORE, self.char_id, at_loc=self.loc.id)
+            for row in self.inv.rows():
+                if row['type_id'] in restored:
+                    self.inv.push_status(row, 1)
+                    self.inv.push_di(row)
         if STORE.has_quest(self.char_id, quest.type):
             self.send("cmdAck", res=RES_NOT_AVAILABLE)
             return
         if not self.quest_available(quest):
             self.send("cmdAck", res=RES_NOT_AVAILABLE)
             return
+        if holdings.rent_site(quest.type) is not None:
+            npc = self.room.npc(int(p.get("mob", 0))) if self.room else None
+            if not npc or not progression.within_reach(
+                    self.live_cell(), npc[0], self.loc.width, self.loc.height):
+                self.send("cmdAck", res=progression.ERR_TOO_FAR)
+                return
         # Asked of the whole table, not of this location's rows: a way
         # handed in where the table does not say where it leads could not
         # be handed in at all (cmd_q_co), so given by somebody standing
@@ -3652,7 +4037,29 @@ class Session:
             + sum(weigh(t, n) for t, n in pieces) > self.inv.carry_limit()
 
     def cmd_q_co(self, p):
-        self.quest_write(self.hand_in_quest, p)
+        q_id = int(p.get("q_id", 0))
+        row = STORE.quest(q_id)
+        base = (holdings.rent_site(row["type"])
+                if row and row["char_id"] == self.char_id else None)
+        gold_site = (holdings.gold_site(row["type"])
+                     if row and row["char_id"] == self.char_id else None)
+        lab = bool(row and row["char_id"] == self.char_id
+                   and row["type"] in quests.LABORANT_RECIPES)
+        lab_access = bool(row and row["char_id"] == self.char_id
+                          and row["type"] in quests.LABORANT_QUESTS)
+        committed = self.quest_write(self.hand_in_quest, p,
+                                    clan_first=base is not None or gold_site is not None or lab_access)
+        if committed and base is not None and STORE.quest(q_id) is None:
+            # Other sessions' frames must follow COMMIT, just like the
+            # payer's buffered quest ACK. No stale treasury on rollback.
+            holdings.refresh_paid_services(ONLINE, base)
+            held = holdings.holder(STORE, base)
+            if held is not None:
+                clans.clan_treasury.tell_balance(CLANS, held["clan_id"])
+        if committed and gold_site is not None and STORE.quest(q_id) is None:
+            events.touch(gold_site.box)
+        if committed and lab and STORE.quest(q_id) is None:
+            events.laborant_finished(combat.room_combat(self.room, STORE))
 
     def hand_in_quest(self, p):
         """Hand a quest in. Rewards go out before the ack: the client listens
@@ -3715,6 +4122,10 @@ class Session:
         if not quest or npc_type not in quest.take:
             self.send("cmdAck", res=RES_WRONG_NPC)
             return
+        if not self.base_entry_allowed(quest):
+            self.send("cmdAck", res=RES_NOT_AVAILABLE)
+            self.answer("В бункер могут входить только участники клана, оплатившего аренду этой базы.")
+            return
         if quest.type in eden.QUESTS:
             # Both placement and sentence are checked again under the quest
             # character lock. A forged/stale journal cannot pay for an escape.
@@ -3749,7 +4160,26 @@ class Session:
                 self.answer("Учебные занятия на получение опыта отключены. Задание можно отменить в журнале.")
             elif quest.type in quests.TEMPORARILY_DISABLED_QUESTS:
                 self.answer("Задания на получение компонентов и сборку Паладина временно отключены.")
+            elif quest.type in quests.REPLACED_WAREHOUSE_REWARDS:
+                self.answer("Личные награды склада заменены общей выдачей слитков для клана."
+                            " Старое задание можно отменить в журнале.")
             return
+        if quest.type in quests.LABORANT_QUESTS:
+            npc = self.room.npc(int(p.get("mob", 0))) if self.room else None
+            if (self.loc.id != quests.LABORANT_LOC
+                    or not quests.laborant_available(STORE, self.day_start())):
+                self.send("cmdAck", res=RES_NOT_AVAILABLE)
+                self.answer("Лаборант уже закончил сегодняшний эксперимент. Приходите после суточного сброса.")
+                return
+            if (quest.type == quests.LABORANT_DETAIL and STORE.quests_done_since(
+                    self.char_id, self.day_start(), [quest.type])):
+                self.send("cmdAck", res=RES_NOT_AVAILABLE)
+                self.answer("Сегодняшнюю деталь оборудования вы уже получили. Приходите завтра.")
+                return
+            if not npc or not progression.within_reach(
+                    self.live_cell(), npc[0], self.loc.width, self.loc.height):
+                self.send("cmdAck", res=progression.ERR_TOO_FAR)
+                return
         # Read live history while quest_write holds the character lock,
         # before taking any input or paying anything. This also closes old
         # active instances after a repeatable quest becomes one-off.
@@ -3771,6 +4201,10 @@ class Session:
         # (quests: until_max) takes no fee for nothing: refused, the reason
         # in chat, the quest left in the journal to be dropped.
         ch = self.character()
+        if any(ch.spec[i][0] < 0 for i in quest.requires_spec):
+            self.send("cmdAck", res=RES_NOT_AVAILABLE)
+            self.answer("Для сдачи задания требуется изученная специализация. Задание и предметы сохранены.")
+            return
         if quest.maxed(ch.skill, ch.spec):
             log.info("  ..    quest #%d (%s) not handed in by %s: nothing left to train",
                      q_id, quest.name, self.nick)
@@ -3815,6 +4249,29 @@ class Session:
         if not complete:
             self.send("cmdAck", res=RES_NOT_READY)
             return
+        base = holdings.rent_site(quest.type)
+        if base is not None:
+            why = holdings.rent_refusal(STORE, base, self.char_id, self.loc.id)
+            if why is not None:
+                self.send("cmdAck", res=RES_NOT_AVAILABLE)
+                self.answer(why)
+                return
+            npc = self.room.npc(int(p.get("mob", 0))) if self.room else None
+            if not npc or not progression.within_reach(
+                    self.live_cell(), npc[0], self.loc.width, self.loc.height):
+                self.send("cmdAck", res=progression.ERR_TOO_FAR)
+                return
+            if holdings.pay_rent(STORE, base, self.char_id) is None:
+                self.send("cmdAck", res=RES_NOT_AVAILABLE)
+                self.answer("Оплата недоступна: проверьте казну, права и владение базой.")
+                return
+            STORE.finish_quest(q_id, self.char_id, quest.type, require_active=True)
+            self.fee_shown.pop(q_id, None)
+            self.skill_shown.pop(q_id, None)
+            self._quest_status_snapshot = None
+            self.answer("Аренда клановой базы оплачена из казны до следующей субботы, 19:55 по Москве.")
+            self.send("cmdAck", res=0)
+            return
         if not quest.fee_at_take and not self.fee_ready(quest):
             cmd, params = quest.di_frame(q_id, progress, complete)
             self.send(cmd, **params)
@@ -3833,9 +4290,35 @@ class Session:
         if taken is None:
             self.send("cmdAck", res=RES_NOT_READY)
             return
-        if not QUEST_ITEMS_PAST_WEIGHT and self.over_weight(reward, taken):
+        gold_site = holdings.gold_site(quest.type)
+        if (gold_site is not None or not QUEST_ITEMS_PAST_WEIGHT) and self.over_weight(reward, taken):
             self.send("cmdAck", res=RES_OVERLOAD)
             return
+        lab_wear = quests.laborant_wear(quest, self.inv)
+        if quest.type in quests.LABORANT_RECIPES and not STORE.boss_claim(
+                quests.LABORANT_SPOT, self.day_start()):
+            self.send("cmdAck", res=RES_NOT_AVAILABLE)
+            self.answer("Сегодняшний эксперимент уже завершил другой персонаж. Компоненты сохранены.")
+            return
+        if gold_site is not None:
+            npc = self.room.npc(int(p.get("mob", 0))) if self.room else None
+            if self.loc.id != gold_site.loc:
+                self.send("cmdAck", res=RES_WRONG_NPC)
+                return
+            if not npc or not progression.within_reach(
+                    self.live_cell(), npc[0], self.loc.width, self.loc.height):
+                self.send("cmdAck", res=progression.ERR_TOO_FAR)
+                return
+            why = holdings.gold_refusal(STORE, gold_site, self.char_id, self.day_start())
+            if why is not None:
+                self.send("cmdAck", res=RES_NOT_AVAILABLE)
+                self.answer(why)
+                return
+            if not STORE.holding_gold_claim(gold_site.key, self.day_start(), self.char_id,
+                                            holdings.table().tenure):
+                self.send("cmdAck", res=RES_NOT_AVAILABLE)
+                self.answer("Награда недоступна: проверьте владение складом, права и срок членства в клане.")
+                return
         # A craftsman's step changes the mod, not the wear (setcraft.py), and
         # so does a gun's upgrade or a knife's sharpening, the gun's rounds
         # given back first (craft.py).
@@ -3854,6 +4337,9 @@ class Session:
             given = self.inv.give_pieces(obj, num)
             setcraft.keep_wear(worn, given, self.inv)
             craft.keep_wear(worn_gun, given, self.inv)
+            if lab_wear is not None:
+                for piece in given:
+                    setcraft.pass_wear(lab_wear, piece, self.inv)
         # Now and then a piece of a collection besides, for a collector
         # (keepsakes.py).
         for obj, num in keepsakes.find(quest, quests.wanted_things(
@@ -4047,7 +4533,8 @@ class Session:
                 or self.combat.dead):
             self.refund_way(quest)
             return
-        if quest.over_cap(self.skill_level()) or quest.level > self.skill_level():
+        if (quest.over_cap(self.skill_level()) or quest.level > self.skill_level()
+                or not self.base_entry_allowed(quest)):
             self.refund_way(quest)
             return
         hold = self.hold_line("отправитесь")
@@ -4349,8 +4836,6 @@ class Session:
         The walk animation starts solely from a server userMove, including for
         the player who asked.
         """
-        if combat.Fighter.refuse_recovery(self.combat, moving=True):
-            return
         path = p.get("path")
         # Location.movePlayer registers a cmdAck handler for every single step
         # it asks for. Leaving those unanswered does not stall movement, since
@@ -4989,7 +5474,7 @@ def apply_admin_action(row):
         if refused:
             return refused
         count = int(args.get("count", 1))
-        if items.root_of(type_id) not in items.HEAPABLE_ROOTS:
+        if not items.heapable(type_id):
             count = 1
         # Factory-fresh, as Session.admin_give's Inventory.create makes it:
         # the bare row this was gave a gun 0 of 0, past any repair window

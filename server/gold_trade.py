@@ -1,18 +1,24 @@
 """Gold commerce valuations, separate from purchase prices and death rules."""
 from functools import lru_cache
 from fractions import Fraction
+import math
 import re
 
 import items
+import mortimer
 import progression
+import quests
 import repair_policy
 import restore_policy
+import shop_prices
 
 
 # The legacy-blueprint ceiling is a pricing decision, independent of future level caps.
 BLUEPRINT_SALE_MAX_LEVEL = 17
 BLUEPRINT_SALE_DISCOUNT = 3
 NPC_SALE_SHARE = Fraction(7, 10)
+BASE_SALE_SHARE = Fraction(17, 20)
+BASE_GOLD_BUYERS = frozenset((714, 5240))
 
 
 # Twice the agreed 175-kill afro income around the source camp. Legacy
@@ -89,45 +95,97 @@ def sale_quality(row, params):
     return 1.0
 
 
+def base_loot_gold(type_id):
+    """Only existing gold valuables: at least one cent over ordinary buyback."""
+    ordinary = mortimer.unit_gold(type_id)
+    if not ordinary:
+        return 0
+    params = items.params_of(type_id) or {}
+    nominal = (Fraction(str(params.get('cost', 0))) * progression.GOLD_OUNCE
+               * BASE_SALE_SHARE / progression.GOLD_TO_AFRO_RATE)
+    rounded = -(-nominal.numerator // nominal.denominator)
+    return max(ordinary + 1, rounded)
+
+
 def _sent_unit(value):
     """One wire value for both the shop display and the authoritative payout."""
     return int(value) if value.denominator == 1 else float('%.6g' % float(value))
 
 
-def afro_sale_unit(type_id, params):
-    """Healthy A-gear payout; purchase/repair prices retain their own fields."""
-    if (items.root_of(type_id) not in items.BREAKABLE_ROOTS
+def cap_consumable_sale(type_id, params, share, unit):
+    """No buy/sell profit after the base's minimum per-piece discount.
+
+    Preserve safe prices; cap profitable routes using the ordinary/base ratio.
+    Ammo uses the same rounded unit as its native purchase window.
+    """
+    root = items.root_of(type_id)
+    if root not in (items.AMMO, items.HEAL):
+        return unit
+    prices = []
+    for key, conversion in (('cost', 1), ('g_cost', Fraction(
+            progression.GOLD_TO_AFRO_RATE, progression.GOLD_OUNCE))):
+        cost = params.get(key, 0) or 0
+        if cost <= 0:
+            continue
+        purchase_unit = Fraction(str(cost)) / Fraction(str(params.get('sell_num') or 1))
+        if root == items.AMMO:
+            precision = 1 if key == 'g_cost' else 1000
+            purchase_unit = Fraction(math.floor(purchase_unit * precision + Fraction(1, 2)), precision)
+        cheapest = shop_prices.discounted_unit(float(purchase_unit))
+        prices.append(Fraction(cheapest) * conversion)
+    if not prices or unit <= min(prices):
+        return unit
+    return min(unit, min(prices) * share / BASE_SALE_SHARE)
+
+
+def afro_sale_unit(type_id, params, share=NPC_SALE_SHARE):
+    """Healthy A-gear/consumable payout; purchase and repair fields stay separate."""
+    if (items.root_of(type_id) not in (*items.BREAKABLE_ROOTS, items.HEAL, items.AMMO)
             or params.get("quest") or gold_priced(type_id, params)
             or params.get("cost", 0) <= 0):
         return 0
-    unit = (Fraction(str(params['cost'])) * NPC_SALE_SHARE
+    unit = (Fraction(str(params['cost'])) * share
             * Fraction(str(params.get('sell_mod', 1)))
             / Fraction(str(params.get('sell_num') or 1)))
+    unit = cap_consumable_sale(type_id, params, share, unit)
     return _sent_unit(max(Fraction(0), unit))
 
 
-def sale_unit(type_id, params):
+def sale_unit(type_id, params, share=NPC_SALE_SHARE):
     """Afro payout per healthy piece, before quantity and condition.
 
     A blueprint with an alternative gold purchase price stays an A item.
     """
     if protected(type_id, params) or not gold_priced(type_id, params):
         return 0
-    unit = (Fraction(str(params['g_cost'])) * progression.GOLD_TO_AFRO_RATE
-            * NPC_SALE_SHARE / progression.GOLD_OUNCE)
+    nominal = Fraction(str(params['g_cost']))
+    # Buying a finished lab pouch skips five personal daily parts. That
+    # convenience premium must not become cash when crafting it instead.
+    # Keep ordinary/base buyback tied to the two wearable ingredients.
+    # A factory-new experiment also spends a kit, five personal daily parts
+    # and the shared daily completion; worn-input value can rise by design.
+    for base, output in quests.LABORANT_RECIPES.values():
+        if type_id == output:
+            ingredients = sum(Fraction(str(items.params_of(t).get('g_cost', 0)))
+                              for t in (quests.LABORANT_MOD, base))
+            nominal = min(nominal, ingredients)
+            break
+    unit = (nominal * progression.GOLD_TO_AFRO_RATE
+            * share / progression.GOLD_OUNCE)
     # Preserve every existing purchase route. If a G-labelled type has an
     # afro purchase price too, cap resale against that cheaper source.
     if params.get('cost', 0) > 0:
-        unit = min(unit, Fraction(str(params['cost'])) * NPC_SALE_SHARE)
+        unit = min(unit, Fraction(str(params['cost'])) * share)
     sell_mod = min(Fraction(1), Fraction(str(params.get('sell_mod', 1))))
     unit *= sell_mod / Fraction(str(params.get('sell_num') or 1))
+    unit = cap_consumable_sale(type_id, params, share, unit)
     level = blueprint_level(type_id)
     if level is not None:
         if level > BLUEPRINT_SALE_MAX_LEVEL:
             counterpart = blueprint_reference(type_id)
             if counterpart is None:
                 return 0
-            return min(int(unit), sale_unit(counterpart, items.params_of(counterpart) or {}))
+            return min(int(unit), sale_unit(counterpart, items.params_of(counterpart) or {}, share))
         # The limit applies to the final payout, not to the shop buy price.
         cap = BLUEPRINT_SALE_CAPS.get(level, 0)
         return min(int(unit / BLUEPRINT_SALE_DISCOUNT), cap)
@@ -178,6 +236,9 @@ def client_fields(type_id):
                           and not protected(type_id, params)
                           and (params.get('cost', 0) > 0 or gold_sale > 0))
     return dict(a_sale_unit=afro_sale_unit(type_id, params),
+                a_base_sale_unit=afro_sale_unit(type_id, params, BASE_SALE_SHARE),
+                g_base_sale_unit=sale_unit(type_id, params, BASE_SALE_SHARE),
+                base_loot_gold=base_loot_gold(type_id),
                 g_restore_base=restore_policy.base_price(type_id, params),
                 g_sale_unit=gold_sale, bp_sell=int(blueprint_sellable),
                 a_sale_cap=afro_sale_cap(type_id, params),

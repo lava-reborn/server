@@ -11,7 +11,7 @@ weapon multipliers. Nothing here invents a second set of numbers: every
 figure a mob fights with comes from those two files.
 
 Geometry lives here too, because the mob's brain and the shot resolver in
-combat.py share it and neither may import the other: LocationGrid.as puts a
+combat.py share it without a startup import cycle: LocationGrid.as puts a
 hex at rx = gx + 0.5*(gy % 2), ry = gy * 0.866, measures distance as the
 Euclidean one between those points (getHexDistance), and reads the facing
 angle off the signs of the difference (getDirection). The client colours the
@@ -23,7 +23,9 @@ import logging
 import math
 import os
 from collections import deque
+from functools import lru_cache
 
+import mob_equipment_loot
 import inventory
 import items
 import loot_rules
@@ -120,10 +122,9 @@ MELEE_DODGE_CUT = 30
 
 ROW_H = 0.8660254037844386
 
-# getDirection's table (LocationGrid.as:15-22): the sign pair of (dx, dy)
-# picks k, angles[k] is what faAim carries. dx == 0 leaves k undefined and
-# the figure keeps its facing, which 0 tells the client as well
-# (DisplayLocScene.as:306).
+# Native eight-direction art (LocationGrid.as:15-22). Its legacy aiming
+# helper omitted exact verticals; LocWalker uses 2 south and 6 north.
+# Only coincident positions should keep the previous facing with angle 0.
 ANGLES = {1: 1, 2: 8, 3: 7, -1: 3, -2: 4, -3: 5}
 
 
@@ -147,7 +148,7 @@ def direction(a, b, width):
     bx, by = real(b, width)
     dx, dy = bx - ax, by - ay
     if dx == 0:
-        return 0
+        return 2 if dy > 0 else 6 if dy < 0 else 0
     if dy > 0:
         k = 1
     elif dy == 0:
@@ -246,7 +247,7 @@ def find_path(loc, start, goal, blocked=(), limit=SEARCH_LIMIT, toward=None):
 class MobStats:
     """One type's numbers, from mob_types.json through mob_curves.json."""
 
-    def __init__(self, type_id):
+    def __init__(self, type_id, balanced=True):
         info = TYPES.get(str(type_id), {})
         self.type_id = type_id
         self.name = info.get("name", "")
@@ -312,6 +313,10 @@ class MobStats:
             ts, rng = si.get("target_size", [0])[0], si.get("max_range", [0])[0]
             if ts > 0 and rng > 0:
                 self.scatter = ts / float(rng)
+
+        if balanced:
+            import battle_balance
+            battle_balance.configure_mob(self)
 
     def weapon_oid(self, entity_id):
         """The oid of the weapon in this mob's primary hand, or None. Virtual:
@@ -631,12 +636,30 @@ def count_of(type_id, t):
     return counts.get(t, 1)
 
 
-def roll_table(type_id, rng):
+@lru_cache(maxsize=1)
+def standard_ammunition_types():
+    """KS -> ST of the same native calibre, for corpse loot only."""
+    catalogue = items.catalogue()
+    by_name = {name: t for t, (root, name) in catalogue.items() if root == items.AMMO}
+    return {t: by_name[name[:-3] + '_ST']
+            for t, (root, name) in catalogue.items()
+            if root == items.AMMO and name.endswith('_KS') and name[:-3] + '_ST' in by_name}
+
+
+def standard_ammunition(drops):
+    """Keep native counts and other qualities; never change firing ammo."""
+    replacements = standard_ammunition_types()
+    return [(replacements.get(t, t), n) for t, n in drops]
+
+
+def roll_table(type_id, rng, multiplier=1, *, gold_multiplier=1, guarantee_ingots=False):
     """[(type_id, count)] off loot_table: every row rolled, so the dice
     spent do not depend on what came up, and the first MAX_DROPS successes
     kept. A row at SURE is certain: in the bag every time, without a die and
     outside the cap. Explicit independent rows also do not consume or
     compete for the cap; their individual chances remain literal.
+    A boss's existing ingot rows are certain too; this adds no carriers,
+    and ONE_OF groups keep their single native weighted choice.
     The count is the row's own (count_of), 1 but where the
     owner's file says more. Then one thing of each ONE_OF group
     (one_of_groups)."""
@@ -644,9 +667,10 @@ def roll_table(type_id, rng):
     kept = 0
     independent = independent_loot(type_id)
     for t, chance, _valuable in loot_table(type_id):
-        if chance >= SURE:
+        if chance >= SURE or (guarantee_ingots and t in items.GOLD_INGOTS):
             out.append((t, count_of(type_id, t)))
-        elif rng.random() < chance and (t in independent or kept < MAX_DROPS):
+        elif rng.random() < min(1, chance * (gold_multiplier if t in items.GOLD_INGOTS else multiplier)) \
+                and (t in independent or kept < MAX_DROPS):
             out.append((t, count_of(type_id, t)))
             if t not in independent:
                 kept += 1
@@ -657,7 +681,7 @@ def roll_table(type_id, rng):
             if pick < 0:
                 break
         out.append((t, 1))
-    return out
+    return standard_ammunition(out)
 
 
 # A group of data/loot_manual.json rows of which exactly one lies in the bag
@@ -729,6 +753,13 @@ def quest_table(type_id):
     return rows
 
 
+def personal_quest_item(type_id):
+    """A wanted quest item that cannot become money or change owners."""
+    si = items.params_of(type_id)
+    return bool(si) and not (si.get('exchang') or si.get('auction') or si.get('sellable')
+                            or type_id in items.GOLD_INGOTS)
+
+
 def quest_roll(type_id, wanted, rng, excluded_groups=()):
     """[(type_id, 1)] of the quest rows that came up for a corpse, given the
     things a quest of those who brought it down still asks for (wanted, as
@@ -755,13 +786,13 @@ def quest_roll(type_id, wanted, rng, excluded_groups=()):
     return out
 
 
-def carried(st, rng):
+def carried(st, rng, multiplier=1):
     """[(type_id, count)]: what the body certainly had on it."""
     if st.role == "animal":
         parts = animal_parts(st)
         if not parts:
             return [(FALLBACK_LOOT, 1)]
-        return [(parts[0], 1)] + [(t, 1) for t in parts[1:] if rng.random() < 0.5]
+        return [(parts[0], 1)] + [(t, 1) for t in parts[1:] if rng.random() < min(1, 0.5 * multiplier)]
     out = []
     si = items.params_of(st.weapon_type_id) if st.weapon_type_id else None
     if si and st.ranged and si.get("comp_array"):
@@ -773,19 +804,52 @@ def carried(st, rng):
         piece = junk(st.level, rng)
         if piece is not None:
             out.append((piece, 1))
-    return out or [(FALLBACK_LOOT, 1)]
+    return standard_ammunition(out) if out else [(FALLBACK_LOOT, 1)]
 
 
-def loot_for(st, rng, wanted=(), *, loc_id=None, killer_level=None):
+def loot_level_factor(gap):
+    """Random PvE loot only; XP and PvP death losses have separate rules."""
+    if gap <= -5:
+        return 0
+    return {-4: .25, -3: .5, -2: 1, -1: 1, 0: 1,
+            1: 1, 2: 1.05, 3: 1.15}.get(gap, 1.25)
+
+
+def loot_for(st, rng, wanted=(), *, loc_id=None, ambush_camp=None,
+             killer_level=None, multiplier=1, gold_multiplier=1,
+             box_player_kill=False, box_weapon_type=None):
     """[(type_id, count)] for a corpse of this type: what it carried, then
     what its kind's table rolled, then the quest rows for what those who
     brought it down still need (quest_roll; wanted, the types). combat.
     drop_loot still turns away anything out of the game (items.out_of_game),
     whatever a list says."""
+    if st.role != 'object' and (multiplier <= 0 or
+            (killer_level is not None and loot_level_factor(st.level - killer_level) <= 0)):
+        personal = [t for t in wanted if personal_quest_item(t)]
+        out = quest_roll(st.type_id, personal, rng) if personal else []
+        if st.role == 'boss':
+            # The level cutoff excludes ordinary loot, not a boss's ingots.
+            # Its native ingot kinds/counts are certain at every level.
+            out += [(t, n) for t, n in roll_table(st.type_id, rng, guarantee_ingots=True)
+                    if t in items.GOLD_INGOTS]
+        return out
     import bosses                  # late: keep module initialization separate
     blueprint = bosses.blueprint_for(loc_id, st.type_id)
-    out = carried(st, rng) + roll_table(st.type_id, rng) + \
-        quest_roll(st.type_id, wanted, rng)
+    # Scanner x3 and the level ladder (0.25..1.25) affect random
+    # drops only, never harvest/quest/event quantities.
+    multiplier = min(3.75, multiplier) if st.role != 'object' else 1
+    ordinary = carried(st, rng, multiplier) + roll_table(st.type_id, rng, multiplier,
+                                                       gold_multiplier=gold_multiplier,
+                                                       guarantee_ingots=st.role == 'boss')
+    if st.role == 'object':
+        import camp_box_loot
+        ordinary = camp_box_loot.replace(ordinary, st, rng, loc_id=loc_id,
+                                        ambush_camp=ambush_camp, player_kill=box_player_kill,
+                                        weapon_type_id=box_weapon_type, killer_level=killer_level)
+    personal = quest_roll(st.type_id, wanted, rng)
+    # One shared slot replaces native ordinary A equipment. Quest rewards
+    # and guaranteed G pouches retain their own acquisition rules.
+    out = (ordinary if st.role == 'object' else mob_equipment_loot.without_equipment(ordinary)) + personal
     # Encrypted blueprints have exactly one acquisition roll per corpse,
     # from the explicit scheduled-boss table below. Legacy quest rows or
     # an ordinary loot entry cannot supply an additional source.
@@ -796,8 +860,10 @@ def loot_for(st, rng, wanted=(), *, loc_id=None, killer_level=None):
         # Levels are accepted for compatibility; the chance is fixed at 10%.
         blueprint_level = int(items.catalogue()[blueprint][1].rsplit("_", 1)[1])
         chance = bosses.blueprint_drop_chance(killer_level, blueprint_level)
-        if rng.random() < chance:
+        if rng.random() < min(1, chance * multiplier):
             out.append((blueprint, 1))
+    out += mob_equipment_loot.roll(st, rng, loc_id=loc_id, ambush_camp=ambush_camp,
+                                  multiplier=multiplier, protected=personal)
     return out
 
 
@@ -809,6 +875,34 @@ def stats(type_id):
     if st is None:
         st = _STATS[type_id] = MobStats(type_id)
     return st
+
+
+def visual_type(type_id, weapon_type_id):
+    """Existing armed art for the few native bodies without that animation.
+
+    The identity, equipment and fighting stats stay those of the actual mob;
+    only userInfo.res uses the donor. Never substitute unarmed actors or
+    animals. The m7 donor is the same body with a complete animation folder.
+    """
+    info = TYPES.get(str(type_id), {})
+    if info.get('role') not in ('mob', 'boss') or weapon_type_id is None:
+        return type_id
+    root = items.root_of(weapon_type_id)
+    if root == items.COLD_ARM:
+        stance = 'knife'
+    elif root == items.FIRE_ARM:
+        params = items.params_of(weapon_type_id) or {}
+        stance = 'pistol' if params.get('weapon_type') == items.PISTOL else 'rifle'
+    else:
+        return type_id
+    resource = info.get('resource')
+    if resource in ('bich', '120'):
+        return 14
+    if resource in ('band_leader', '82') and stance == 'knife':
+        return 1668
+    if resource == 'm7' and stance in ('pistol', 'rifle'):
+        return 131
+    return type_id
 
 
 def virtual_di(uniq, type_id, root, ammo_type=None):
@@ -861,6 +955,7 @@ class Mob:
         # combat.Fighter -> [harm done, share of the kill already paid,
         # skill, spec]: what a kill is settled from (RoomCombat.settle_xp)
         self.xp_ledger = {}
+        self.loot_level = 0
         # Character id -> harm done since it was last whole: what a
         # warehouse's boss is taken by (holdings.py). Apart from the xp
         # ledger, which keeps every blow until the kill: this one forgets
@@ -875,6 +970,8 @@ class Mob:
         # set at the kill (RoomCombat.kill): the quest rows of its loot that
         # may come up in its bag (quest_roll).
         self.quest_wants = frozenset()
+        self.box_player_kill = False
+        self.box_weapon_type = None
         # A boss's hours (bosses.py, RoomCombat.keep_hours): the window it
         # last came for, whether it is gone until the next one, and whether
         # its stay is over and it is only finishing the fight it is in.
@@ -969,9 +1066,12 @@ class Mob:
         self.target = None
         self.homing = False
         self.xp_ledger = {}
+        self.loot_level = 0
         self.capture_harm = {}
         self.capture = None
         self.quest_wants = frozenset()
+        self.box_player_kill = False
+        self.box_weapon_type = None
         self.busy_until = 0.0
         self.walk = None
         self.next_attack = 0.0
@@ -1003,7 +1103,7 @@ class Mob:
             # A boss past its stay picks no new fight: the one it was in is
             # what kept it here (RoomCombat.keep_hours).
             if self.stats.can_attack and not self.leaving:
-                found = rc.nearest_fighter(self.cell, self.stats.aggro)
+                found = rc.nearest_fighter(self.cell, self.stats.aggro, self)
                 if found is not None:
                     rc.aggro(self, found)
                     return
@@ -1016,8 +1116,11 @@ class Mob:
             return
         target = self.target
         if self.stats.ranged:
+            # The firing decision and its walking goal use the same cover
+            # as the actual burst; verified bushes never become AI walls.
+            from combat import shot_wall
             in_reach = (hex_distance(self.cell, target.cell, loc.width) <= self.stats.range
-                        and line_of_fire(loc, self.cell, target.cell) is None)
+                        and shot_wall(loc, self.cell, target.cell) is None)
         else:
             in_reach = adjacent(self.cell, target.cell, loc)
         if in_reach:
@@ -1028,7 +1131,7 @@ class Mob:
             return
         if self.stats.ranged:
             goal = (lambda c: hex_distance(c, target.cell, loc.width) <= self.stats.range
-                    and line_of_fire(loc, c, target.cell) is None)
+                    and shot_wall(loc, c, target.cell) is None)
         else:
             goal = lambda c: adjacent(c, target.cell, loc)
         rc.mob_walk(self, goal, now)

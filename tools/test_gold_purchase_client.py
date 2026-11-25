@@ -13,7 +13,7 @@ class GoldPurchaseClient(unittest.TestCase):
         self.frames = []
         self.pan = dict(trader=dict(pmod=1, type_list={8: 25217, 9: 25218}))
         self.windows = dict(trade=dict(instance=dict(content=self.pan)), query=dict(instance=None))
-        self.env = dict(_global={}, String=str, Math=dict(ceil=math.ceil, floor=math.floor, max=max), isNaN=lambda n: n is None or math.isnan(float(n)),
+        self.env = dict(_global={}, String=str, Math=dict(ceil=math.ceil, floor=math.floor, max=max, min=min), isNaN=lambda n: n is None or math.isnan(float(n)),
                         TextFormat=lambda font, size: dict(font=font, size=size),
                         Selection=dict(setFocus=lambda field: None),
                         lol=dict(core=dict(SceneShifter=dict(_ref=dict(UIPanels=self.windows),
@@ -57,6 +57,17 @@ class GoldPurchaseClient(unittest.TestCase):
         props = dict(g_cost=gold, name='G3 (G)')
         return dict(rootID=root, typeID=type_id, tradeID=index,
                     getProp=lambda name: props.get(name), props=props)
+
+    def test_single_dose_medicine_confirms_exact_stack_quantity_and_price(self):
+        item = self.item(root=2, gold=20)
+        item['props']['max_count'] = 10
+        self.methods['buy'].invoke(self.trade, [item, 7])
+        dialog = self.trade['__gcBuyDialog']
+        self.assertIn('1.4 G', dialog['label'])
+        self.assertIn('Количество: 7.', dialog['label'])
+        self.assertFalse(self.bought)
+        self.answer()
+        self.assertEqual(self.bought, [(item['typeID'], 7)])
 
     def buy(self, item=None):
         self.methods['buy'].invoke(self.trade, [item if item is not None else self.item(), 99])
@@ -140,6 +151,20 @@ class GoldPurchaseClient(unittest.TestCase):
         self.assertIn('12.5 G', self.trade['__gcBuyDialog']['label'])
         self.answer()
         self.assertEqual(self.bought, [(25218, 500)])
+
+    def test_base_discount_is_per_round_and_keeps_the_one_cent_floor(self):
+        for root, price, n, expected in ((3, 2, 1, .01), (3, 2, 20, .2),
+                                         (3, 2, 5000, 50.0), (2, 105, 1, .95),
+                                         (3, 1, 1, .01), (3, 1, 5000, 50.0),
+                                         (3, 3, 20, .4), (2, 1, 1, .01)):
+            with self.subTest(root=root, price=price, n=n):
+                self.setUp()
+                self.pan['trader']['pmod'] = 0.9
+                item = self.item(root=root, gold=price)
+                self.methods['buy'].invoke(self.trade, [item, n])
+                self.assertIn(str(expected) + ' G', self.trade['__gcBuyDialog']['label'])
+                self.answer()
+                self.assertEqual(self.bought, [(25218, n)])
 
     def test_invalid_ammo_count_cannot_open_purchase_dialog(self):
         for n in (0, -1, 1.5, None):

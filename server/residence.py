@@ -43,6 +43,8 @@ def frame(character):
         deadline = datetime.fromtimestamp(until, timezone(timedelta(hours=4))) if until else None
         label += " — до " + (deadline.strftime("%d.%m.%Y %H:%M") + " (UTC+4)" if deadline else "отмены")
         label += ". +%d кг." % (WEIGHT[level]//1000)
+        import progression
+        label += " +%d%% опыта." % round(progression.PREMIUM_XP_BONUS[level] * 100)
     return dict(residence_level=level, residence_until=until,
                 residence_bonus=WEIGHT[level], residence_days=rent_days(character),
                 residence_text=label, residence_now=int(time.time()))

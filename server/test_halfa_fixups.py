@@ -140,7 +140,7 @@ CITY_MARKETS = {(5160, 378): (8, 12), (5161, 378): (8, 12), (5161, 469): (12, 16
                 (5161, 467): (16, 20)}
 check("  ..5160 and 5161 their city's band at its market, nothing of their own",
       ({k: items.stock_for(*k) for k in CITY_MARKETS}, items.stock_for(5160), items.stock_for(5161)),
-      ({k: ladder(*band) for k, band in CITY_MARKETS.items()}, [], []))
+      ({k: ([] if k == (5161, 378) else ladder(*band)) for k, band in CITY_MARKETS.items()}, [], []))
 piece_order = {p["type"]: (s["level"], s["family"], s["variant"], slot)
                for s in SETS.values() for slot, p in s["members"].items()}
 broken_pairs = []
@@ -163,7 +163,7 @@ check("  ..which is Беженец to Магриб, Налетчик and Пус�
       {(5158, None): ["Беженец", "Колонист", "Магриб", "Странник"],
        (5159, None): ["Налетчик", "Пустынник"],
        (5160, 378): ["Налетчик", "Пустынник", "Чёрный Ловелас"],
-       (5161, 378): ["Налетчик", "Пустынник", "Чёрный Ловелас"],
+       (5161, 378): [],
        (5161, 469): ["Красное Эхо", "Легионер", "Спецназ", "Чёрный Ловелас"],
        (5161, 467): ["Красное Эхо", "Штурм-М"]})
 SOLD = sorted({t for tr, place in [(5158, None), (5159, None), (1204, 102), (1205, 102),
@@ -222,7 +222,7 @@ check("Странник[4] in both variants and the gold sets of 4, 6 and 8 at �
 check("  ..both the town's band, 4-8, both versions (shop_bands.py, 2026-10-10); Ваккас then"
       " his belts, each with its (G) right after it (items.GOLD_POUCHES, 2026-10-11)",
       (items.stock_for(1204, 102), items.stock_for(1205, 102)),
-      (ladder(4, 8) + [3582, 3604, 3581, 3603, 3579, 3601, 3578, 3600, 5613, 5614],
+      ([3582, 3604, 3581, 3603, 3579, 3601, 3578, 3600, 5613, 5614],
        ladder(4, 8)))
 
 # --- 2. Ольсен and the lottery man ---------------------------------------------------------
@@ -308,11 +308,29 @@ class _XpSession(object):
 
 def xp_for(mob_type):
     """Стрельба experience a newborn takes for a whole kill of one."""
+    from types import SimpleNamespace
+
     ch = progression.Character()
     shooter = combat.Fighter(_XpSession(ch))
+    shooter.sess.char_id, shooter.sess.combat = 1, shooter
+    shooter.sess.closed = False
     st = mobs.stats(mob_type)
     target = mobs.Mob(1, mob_type, 10)
+    target.apply_damage(st.hp_max, st.sp_max)
     shooter.award_xp(progression.SHOOTING, 2, st.hp_max + st.sp_max, target)
+    check("  ..%d: damage records no experience before death" % mob_type,
+          ch.skill[progression.SHOOTING][1], 0)
+    target.alive = False
+    rc = SimpleNamespace(room=SimpleNamespace(players=[shooter.sess]))
+    combat.RoomCombat.settle_xp(rc, target)
+    expected = (progression.combat_mob_xp(target.level, 0, xp_mult=st.xp_mult)
+                if combat.OBJECTS_PAY_XP or st.role != "object" else 0)
+    check("  ..%d: the solo death pays its one reward" % mob_type,
+          ch.skill[progression.SHOOTING][1], int(expected + 1e-9))
+    settled = ch.skill[progression.SHOOTING][:]
+    combat.RoomCombat.settle_xp(rc, target)
+    check("  ..%d: another settlement cannot pay again" % mob_type,
+          ch.skill[progression.SHOOTING], settled)
     return ch.skill[progression.SHOOTING][1]
 
 

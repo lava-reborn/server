@@ -5,9 +5,8 @@ The owner's «сделай так чтобы склады можно было з
 standing in the Северный склад (111), its boss on a clock turned by hand,
 and a real database:
 
-  * the capture: a clan qualifies with two living members at the site's
-    level who hurt the boss, and the most harm wins -- a tie to the killing
-    blow's clan, else the older clan; one member alone, one below the level,
+  * the capture: the finishing clan qualifies with two living members at the
+    site's level who hurt the boss; other clans' damage cannot win; one member alone, one below the level,
     one dead, one gone from the room take nothing; the holder's own kill is
     a defence; harm banked over a heal, or past the boss's health and
     stamina, counts for nothing; a reconnect, onto the body left standing or
@@ -26,19 +25,17 @@ and a real database:
     mending for anybody (Донгола's three are sites since 2026-10-13, the
     owner's «и потом сделай донголу тоже», and Абу-Хамед's Центр 128 since
     2026-10-14, «сделай потом абу хамед в таком же формате»);
-  * the box: «Патроны и афро владельцам склада» (765) between 19:00 and
-    20:00 to a member of the holding clan of a day's standing at the site's
-    level, once a day, one character of an account; refused at the hand-in
-    to one who left the clan or whose clan lost the site, the quest in his
-    journal; the day turning at 03:00 Moscow time; the box shown under a new
+  * the old personal box rows765-771 stay closed, including carried
+    journal instances. Shared ingots keep live ownership and a daily claim;
+    the day turns at03:00 Moscow time; the box is shown under a new
     id when its window opens and shuts, and when the holder changes;
   * the admin's hold and release (clan_admin.py) through the queue, and
     tools/admin_account.py's holdings, clan-hold and clan-release;
   * Абу-Хамед's Центр (128), the one site whose box keeps its own window
-    (wh_box_ah, 19:00-19:15): taken at 20:00 by two members of level 19 who
+    (wh_box_ah, 19:00-19:15): taken at 20:00 by two members of level 17 who
     kill its master (7454), the flag naming them; its box (6830, row 771)
-    paying 48 000 afro and 50 rounds at 19:05, once a day, and shut at 19:20
-    while the Северный склад's still pays.
+    refusing the old personal payout and granting shared ingots only once;
+    shut at19:20 while the Северный склад's window remains open.
 
     LAVA_RES=.../lava/res python3 server/test_holdings.py
 
@@ -54,6 +51,7 @@ import sys
 import tempfile
 import time
 from datetime import datetime, timedelta, timezone
+from unittest.mock import patch
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -75,7 +73,7 @@ sys.path.insert(0, os.path.join(ROOT, "tools"))
 import accounts  # noqa: E402
 from protocol import decode  # noqa: E402
 
-LOGINS = ("alice", "amir", "anna", "andy", "arno", "bob", "bill", "carl", "dora", "dick")
+LOGINS = ("alice", "amir", "anna", "andy", "arno", "bob", "bill", "ben", "carl", "dora", "dick", "dina")
 accounts.DB_PATH = DB
 _store = accounts.Store(DB)
 for _l in LOGINS:
@@ -259,10 +257,12 @@ async def main():
     arno = login("arno", "Arno")            # Волки, the newcomer of the box
     bob = login("bob", "Bob")               # the Шакалы's head
     bill = login("bill", "Bill")            # Шакалы
+    ben = login("ben", "Ben")              # Шакалы
+    dina = login("dina", "Dina")            # future third Соколы member
     carl = login("carl", "Carl")            # in no clan
     dora = login("dora", "Dora")            # the Орлы's head, disbanded below
     dick = login("dick", "Dick")            # Орлы
-    for s in (alice, amir, andy, arno, bob, bill, carl, dora, dick):
+    for s in (alice, amir, andy, arno, bob, bill, ben, carl, dora, dick, dina):
         level(s, 8)
     level(anna, 7)
     wolves = found(alice, "Волки")
@@ -270,9 +270,10 @@ async def main():
     for s in (amir, anna, andy, arno):
         admit(wolves, s)
     admit(jackals, bill)
+    admit(jackals, ben)
     check("the Волки are the older clan, the lower id", wolves < jackals, True)
 
-    everybody = [alice, amir, anna, andy, arno, bob, bill, carl, dora, dick]
+    everybody = [alice, amir, anna, andy, arno, bob, bill, ben, carl, dora, dick, dina]
     NOW[0] = at(12)
     for s in everybody:
         into(s, SEVER)
@@ -301,7 +302,8 @@ async def main():
                        'wh_dn_sever': 12, 'wh_dn_vostok': 16, 'wh_dn_ug': 16,
                        'wh_ah_center': 17}
     check("all seven warehouses keep their agreed minimum levels",
-          {key: site.min_level for key, site in holdings.sites().items()}, expected_levels)
+          {key: site.min_level for key, site in holdings.sites().items()
+           if site.kind == "warehouse"}, expected_levels)
     for key, minimum in expected_levels.items():
         site = holdings.sites()[key]
         for second_level in (minimum - 1, minimum, minimum + 1, 20):
@@ -321,7 +323,8 @@ async def main():
     # 14, 18 and 22 -- the day before the fights below, he is not there.
     check("the boss keeps the warehouse masters' hour, 20:00 alone",
           (bosses.hours_of(BOSS),
-           [bosses.hours_of(site.boss) for site in holdings.sites().values()]),
+           [bosses.hours_of(site.boss) for site in holdings.sites().values()
+            if site.kind == "warehouse"]),
           ([20 * 60], [[20 * 60]] * 7))
     seen = []
     for h in (14, 18, 22, 20):
@@ -365,8 +368,8 @@ async def main():
     LINES.take()
     check("one member of a clan alone: nobody takes it, a 'none' row",
           await fight([(alice, 300)], alice), ("none", None))
-    check("  ..and the log says why: no two living members of level 8 who hurt it",
-          [line.startswith("..    warehouse wh_sever (111): its boss killed, and no clan had 2"
+    check("  ..and the log says why: the finishing clan needs two living contributors of level 8",
+          [line.startswith("..    warehouse wh_sever (111): its boss killed, and the finishing clan lacked 2"
                            " living members of level 8") for line in LINES.take()], [True])
     check("two members, one of them a level short (7): nobody takes it",
           await fight([(alice, 300), (anna, 300)], alice), ("none", None))
@@ -425,33 +428,33 @@ async def main():
           [(r["how"], r["clan_id"], r["prev"], r["by_char"]) for r in log_rows(1)],
           [("defend", wolves, wolves, alice.char_id)])
 
-    # --- the most harm ---------------------------------------------------------------------
-    check("both clans qualify: the one with more harm takes it, though the other struck"
-          " last", await fight([(alice, 100), (amir, 100), (bob, 150), (bill, 150)], alice),
-          ("capture", jackals))
-    check("  ..the row says from whom", (log_rows(1)[0]["prev"], log_rows(1)[0]["by_char"]),
-          (wolves, bob.char_id))
-    check("a tie, the killing blow carl's, in no clan: the older clan, the Волки",
-          await fight([(alice, 150), (amir, 150), (bob, 150), (bill, 150)], carl),
-          ("capture", wolves))
-    check("a tie, the killing blow the Шакалы's: the Шакалы, the younger",
-          await fight([(alice, 150), (amir, 150), (bob, 150), (bill, 150)], bill),
-          ("capture", jackals))
-    check("the Волки have more harm, a stranger and the Шакалы strike too, the Шакалы"
-          " last: the Волки", await fight([(alice, 300), (amir, 300), (carl, 400), (bob, 50),
-                                          (bill, 50)], bob), ("capture", wolves))
+    # --- the finishing clan, never the damage leaders --------------------------------------
     order("hold", clan=jackals, site="wh_sever")
+    check("both clans qualify: the finishing Волки win despite dealing less damage",
+          await fight([(alice, 100), (amir, 100), (andy, 100),
+                       (bob, 150), (bill, 150), (ben, 150)], alice), ("capture", wolves))
+    check("  ..the row credits the finisher and previous owner",
+          (log_rows(1)[0]["prev"], log_rows(1)[0]["by_char"]), (jackals, alice.char_id))
+    check("a clanless last hit has no fallback winner even when both clans qualify",
+          await fight([(alice, 150), (amir, 150), (andy, 150),
+                       (bob, 150), (bill, 150), (ben, 150)], carl), ("none", wolves))
+    check("equal damage: the finishing Шакалы capture the warehouse",
+          await fight([(alice, 150), (amir, 150), (andy, 150),
+                       (bob, 150), (bill, 150), (ben, 150)], bill), ("capture", jackals))
+    order("hold", clan=wolves, site="wh_sever")
+    check("much less damage still wins for the finishing clan with one assistant",
+          await fight([(alice, 300), (amir, 300), (andy, 300), (carl, 400),
+                       (bob, 1), (bill, 1)], bob), ("capture", jackals))
     andy.combat.dead = True
-    check("a member lying dead in the room still adds his harm: 100 + 100 + his 100 beat"
-          " 160 + 130", await fight([(alice, 100), (amir, 100), (andy, 100), (bob, 160),
-                                     (bill, 130)], bob), ("capture", wolves))
+    check("a dead assistant cannot qualify the finishing clan; no fallback to the other clan",
+          await fight([(alice, 100), (andy, 100),
+                       (bob, 160), (bill, 130), (ben, 100)], alice), ("none", jackals))
     andy.combat.dead = False
     pool = boss.hp_max + boss.sp_max
-    check("a clan's harm is capped at the boss's health and stamina (%d): both clans"
-          " reach that cap, and the killing blow decides" % pool,
-          await fight([(alice, 5 * pool), (amir, 5 * pool),
-                       (bob, pool // 2), (bill, pool - pool // 2)], bill),
-          ("capture", jackals))
+    order("hold", clan=wolves, site="wh_sever")
+    check("damage beyond the boss pool cannot displace the finishing clan",
+          await fight([(alice, 5 * pool), (amir, 5 * pool), (andy, 5 * pool),
+                       (bob, 1), (bill, 1), (ben, 1)], bill), ("capture", jackals))
 
     # --- banked harm --------------------------------------------------------------------------
     window()
@@ -463,13 +466,15 @@ async def main():
           (boss.hp == boss.hp_max, boss.capture_harm), (True, {}))
     alice.combat.award_xp(progression.SHOOTING, None, 20, boss)
     amir.combat.award_xp(progression.SHOOTING, None, 20, boss)
+    andy.combat.award_xp(progression.SHOOTING, None, 20, boss)
     bob.combat.award_xp(progression.SHOOTING, None, 100, boss)
     bill.combat.award_xp(progression.SHOOTING, None, 100, boss)
+    ben.combat.award_xp(progression.SHOOTING, None, 100, boss)
     order("hold", clan=wolves, site="wh_sever")
     rc.kill(boss, bob.combat)
     await asyncio.sleep(0.3)
-    check("  ..the Волки's 800 before the heal count for nothing: the Шакалы's 200 since"
-          " take it from their 40", (log_rows(1)[0]["how"], holder()), ("capture", jackals))
+    check("  ..the Волки's 800 before the heal count for nothing: the Шакалы's 300 since"
+          " take it from their 60", (log_rows(1)[0]["how"], holder()), ("capture", jackals))
     window()
     boss.hp = boss.hp_max - 3
     bob.combat.award_xp(progression.SHOOTING, None, 3, boss)
@@ -498,6 +503,7 @@ async def main():
     into(amir, SEVER)
     amir.combat.award_xp(progression.SHOOTING, None, 50, boss)
     alice.combat.award_xp(progression.SHOOTING, None, 100, boss)
+    andy.combat.award_xp(progression.SHOOTING, None, 100, boss)
     check("  ..his body put away when its time runs out, a new session of his walks in:"
           " his harm is still his character's",
           (gone, amir is body, boss.capture_harm.get(amir.char_id)), (False, False, 200))
@@ -508,7 +514,7 @@ async def main():
     everybody[1] = amir
     order("hold", clan=jackals, site="wh_sever")
     check("a member put out of his clan between the kill and the corpse fading still"
-          " counts for it", await fight([(alice, 200), (amir, 200)], alice,
+          " counts for it", await fight([(alice, 200), (amir, 200), (andy, 200)], alice,
                                         between=lambda: STORE.clan_member_remove(amir.char_id,
                                                                                  wolves)),
           ("capture", wolves))
@@ -533,12 +539,13 @@ async def main():
         off_room = rooms.Room(world.location(SEVER), rooms.IdAllocator(), world.mob_types(), SEVER)
         off_rc = off_room.combat = combat.RoomCombat(off_room, STORE)
         off_boss = next(m for m in off_rc.mobs.values() if m.type_id == BOSS)
-        for s in (bob, bill):
+        for s in (bob, bill, ben):
             room.players.pop(s, None)
             off_room.players[s] = True
             s.room = off_room
         bob.combat.award_xp(progression.SHOOTING, None, 300, off_boss)
         bill.combat.award_xp(progression.SHOOTING, None, 300, off_boss)
+        ben.combat.award_xp(progression.SHOOTING, None, 300, off_boss)
         off_rc.kill(off_boss, bob.combat)
         await asyncio.sleep(0.3)
         check("with LAVA_BOSS_HOURS=off the boss is an ordinary mob, and its kill settles all"
@@ -546,7 +553,7 @@ async def main():
               ([], "capture", jackals, True))
     finally:
         bosses.HOURS, combat.RESPAWN_DELAY = hours, delay
-        for s in (bob, bill):
+        for s in (bob, bill, ben):
             off_room.players.pop(s, None)
             room.players[s] = True
             s.room = room
@@ -555,7 +562,7 @@ async def main():
                 bag.expiry.cancel()
 
     # --- a restart inside the window ----------------------------------------------------------
-    got = await fight([(alice, 300), (amir, 300)], amir)
+    got = await fight([(alice, 300), (amir, 300), (andy, 300)], amir)
     rows = len(log_rows())
     again = rooms.Room(world.location(SEVER), rooms.IdAllocator(), world.mob_types(), SEVER)
     again_rc = combat.RoomCombat(again, STORE)
@@ -657,95 +664,47 @@ async def main():
           (True, [{"lostUser": shut_id}, {"newUser": open_id, "pos": room.npcs[open_id].cell,
                                           "rtype": room.npcs[open_id].root}]))
     NOW[0] = at(19, 30, day=40)
-    check("19:30: the row is on offer to a holder of a day's standing at level 8",
-          alice.quest_available(BOX_ROW), True)
-    check("  ..not to carl, in no clan, nor to bob of another clan, nor to anna, a level"
-          " short", [s.quest_available(BOX_ROW) for s in (carl, bob, anna)],
-          [False, False, False])
-    joined(arno, 23)
-    check("  ..nor to arno, in the clan for 23 hours", arno.quest_available(BOX_ROW), False)
-    joined(arno, 24)
-    check("  ..who has it at 24", arno.quest_available(BOX_ROW), True)
-    afro0 = alice.character().afro
-    take(alice)
-    run(alice, "q_st;mob=%d;q_idx=0;" % open_id)
-    got = take(alice)
-    q_id = named(got, "q_di_del_obj")[0]["q_id"] if named(got, "q_di_del_obj") else None
-    check("alice takes it at the box: 0, and in the journal complete",
-          (acks(got), named(got, "q_di_del_obj")[0]["obj"] if q_id else None), ([0], 1))
-    rounds0 = sum(r["count"] for r in STORE.items_of(alice.char_id) if r["type_id"] == 6092)
-    run(alice, "q_co;q_id=%d;mob=%d;obj_idx=0;" % (q_id, open_id))
-    got = take(alice)
-    check("  ..and hands it in: 0, 8000 afro and 50 rounds of 9мм НАТО КС",
-          (acks(got)[-1:], alice.character().afro - afro0,
-           sum(r["count"] for r in STORE.items_of(alice.char_id) if r["type_id"] == 6092)
-           - rounds0), ([0], 8000, 50))
-    check("  ..the hand-in written in the history, which per_day reads",
-          STORE.quests_done_since(alice.char_id, server.Session.day_start(), [765]), 1)
-    check("  ..so not on offer a second time that day", alice.quest_available(BOX_ROW), False)
-    check("  ..and not counted against the day's tasks: a service",
-          (BOX_ROW.service, server.Session.counts_daily(BOX_ROW)), (True, False))
+    check("retired personal payout is hidden even from the current holder",
+          [s.quest_available(BOX_ROW) for s in (alice, bob, carl)], [False] * 3)
+    before = (STORE.money(alice.char_id), alice.inv.rows())
+    run(alice, "q_st;mob=%d;q_idx=0;" % box())
+    check("forged old quest index cannot take a retired personal payout",
+          acks(take(alice)), [server.RES_NOT_AVAILABLE])
+    legacy_qid = STORE.take_quest(alice.char_id, BOX_ROW.type, {}, True)
+    run(alice, "q_co;q_id=%d;mob=%d;obj_idx=0;" % (legacy_qid, box()))
+    check("an existing personal journal row pays neither afro nor rounds",
+          (acks(take(alice)), STORE.money(alice.char_id), alice.inv.rows(),
+           STORE.quest(legacy_qid) is not None),
+          ([server.RES_NOT_AVAILABLE], *before, True))
     alice.close()
     alice2 = login("alice", "Alice2")
     admit(wolves, alice2, days=3)
     level(alice2, 8)
     into(alice2, SEVER)
-    check("alice's other character, of the Волки for days: refused the same box that day,"
-          " one character of an account a day",
-          (alice2.quest_available(BOX_ROW),
-           holdings.box_refusal(STORE, BOX_ROW, alice2.char_id, alice2.account["id"],
-                                server.Session.day_start())),
-          (False, "a character of account %d has collected wh_sever today"
-           % alice2.account["id"]))
-    check("  ..a box of another site is no concern of this one's",
-          holdings.box_refusal(STORE, quests.get(766), alice2.char_id, alice2.account["id"],
-                               server.Session.day_start()), "nobody holds wh_vostok")
-    take(andy)
-    run(andy, "q_st;mob=%d;q_idx=0;" % box())
-    andy_q = named(take(andy), "q_di_del_obj")[0]["q_id"]
-    STORE.clan_member_remove(andy.char_id, wolves)
-    check("andy takes it, then is put out of the clan: no longer on offer, carried or not",
-          andy.quest_available(BOX_ROW), False)
-    run(andy, "q_co;q_id=%d;mob=%d;obj_idx=0;" % (andy_q, box()))
-    check("  ..and the hand-in refused, the quest still in his journal",
-          (acks(take(andy)), STORE.has_quest(andy.char_id, 765)),
-          ([server.RES_NOT_AVAILABLE], True))
-    admit(wolves, andy, days=3)
-    run(arno, "q_st;mob=%d;q_idx=0;" % box())
-    arno_q = named(take(arno), "q_di_del_obj")[0]["q_id"]
+    check("a second character of the same account cannot restore old rewards",
+          alice2.quest_available(BOX_ROW), False)
     order("release", clan=wolves, site="wh_sever")
-    run(arno, "q_co;q_id=%d;mob=%d;obj_idx=0;" % (arno_q, box()))
-    check("arno takes it, then the Волки lose the site: the hand-in refused",
-          (acks(take(arno)), STORE.has_quest(arno.char_id, 765)),
-          ([server.RES_NOT_AVAILABLE], True))
     order("hold", clan=wolves, site="wh_sever")
-    before = box()
+    before_id = box()
     for s in everybody[1:] + [alice2]:
         take(s)
     order("hold", clan=jackals, site="wh_sever")
     rc.keep_hours()
-    check("the holder changes: on the room's next tick the box is shown under a new id"
-          " (events.touch)", (box() != before,
-                              [p for n, p in take(bob) if n == "lch" and "newUser" in p]
-                              == [{"newUser": box(), "pos": room.npcs[box()].cell,
-                                   "rtype": room.npcs[box()].root}]), (True, True))
-    check("  ..and now the row is the Шакалы's, of a day's standing",
-          (bob.quest_available(BOX_ROW), andy.quest_available(BOX_ROW)), (True, False))
+    check("a holder change still refreshes the money box for live quest offers",
+          (box() != before_id, any(n == "lch" and "newUser" in p for n, p in take(bob))),
+          (True, True))
+    check("recapture does not reopen retired personal rewards",
+          bob.quest_available(BOX_ROW), False)
     order("hold", clan=wolves, site="wh_sever")
     NOW[0] = at(20, 0, day=40)
-    before = box()
+    before_id = box()
     rc.keep_hours()
-    check("20:00: shut again -- refused, and the box shown under a new id once more",
-          (andy.quest_available(BOX_ROW), box() != before), (False, True))
+    check("20:00 still refreshes the box at the end of its reward window",
+          box() != before_id, True)
     check("the day turns at 00:00 UTC, three in the morning in Moscow",
           (server.Session.day_start(at(2, 59, day=41)), server.Session.day_start(at(3, day=41)),
            datetime.fromtimestamp(at(3, day=41), timezone.utc).hour),
           (at(3, day=40), at(3, day=41), 0))
-    STORE.finish_quest(0, andy.char_id, 765, when=at(2, 59, day=41))
-    check("  ..a box collected at 02:59 is yesterday's from 03:00",
-          [STORE.account_quests_done_since(andy.account["id"], server.Session.day_start(t),
-                                           [765]) for t in (at(2, 59, day=41), at(3, day=41))],
-          [1, 0])
 
     # --- the admin's orders -------------------------------------------------------------------
     for s in [alice2] + everybody[1:]:
@@ -782,7 +741,7 @@ async def main():
           ("склад «Северный склад Вади-Хальфы» уже не за кланом «Шакалы»", 0))
     check("a site that is not: said so, with the ones there are",
           order("hold", clan=wolves, site="склад"),
-          "склада «склад» нет (есть: wh_ah_center, wh_dn_sever, wh_dn_ug, wh_dn_vostok,"
+          "склада «склад» нет (есть: base_ah, base_dn, wh_ah_center, wh_dn_sever, wh_dn_ug, wh_dn_vostok,"
           " wh_sever, wh_ug, wh_vostok)")
 
     # --- a disband ------------------------------------------------------------------------------
@@ -813,7 +772,7 @@ async def main():
     code, out = tool("clan-hold", "Шакалы", "--wait", "0.5")
     check("tool: clan-hold without --site is refused, nothing queued",
           (code, list(STORE.admin_pending())),
-          ("clan-hold needs --site, one of: wh_ah_center, wh_dn_sever, wh_dn_ug, wh_dn_vostok,"
+          ("clan-hold needs --site, one of: base_ah, base_dn, wh_ah_center, wh_dn_sever, wh_dn_ug, wh_dn_vostok,"
            " wh_sever, wh_ug, wh_vostok", []))
     code, out = tool("clan-hold", "Шакалы", "--site", "wh_sever", "--wait", "0.5")
     pending = [json.loads(r["args_json"]) for r in STORE.admin_pending()]
@@ -831,10 +790,11 @@ async def main():
     # --- Абу-Хамед's Центр (128): a box of a quarter of an hour ----------------------------------
     # The one site whose box keeps a window of its own, wh_box_ah, the label's
     # «Дележ добычи с 19:00 до 19:15» (L327), a quarter of wh_box's hour: taken
-    # by the kill of its master at 20:00 by two members of level 19, its box
+    # by the kill of its master at 20:00 by two members of level 17, its box
     # paid 19:00-19:15 and not at 19:20, when the Северный склад's still pays.
     falcons = found(dora, "Соколы")
     admit(falcons, dick)
+    admit(falcons, dina)
     for s in (dora, dick):
         joined(s, 72)
         level(s, 17)
@@ -858,7 +818,7 @@ async def main():
     ah_rc.kill(ah_boss, dick.combat)
     await asyncio.sleep(0.3)
     held = STORE.holding("wh_ah_center")
-    check("  ..two Соколы of level 19 hurt him and kill him: they take it, a 'capture' row",
+    check("  ..two Соколы of level 17 hurt him and kill him: they take it, a 'capture' row",
           (held and held["clan_id"], [(r["how"], r["clan_id"], r["by_char"])
                                       for r in STORE.holding_log("wh_ah_center", 1)]),
           (falcons, [("capture", falcons, dick.char_id)]))
@@ -874,22 +834,15 @@ async def main():
     check("18:59 the next day: the box's row is nobody's", dora.quest_available(AH_ROW), False)
     NOW[0] = at(19, 5, day=51)
     ah_rc.keep_hours()
-    check("19:05: the row is on offer to both holders", [s.quest_available(AH_ROW)
-                                                         for s in (dora, dick)], [True, True])
-    afro0 = dora.character().afro
-    rounds0 = sum(r["count"] for r in STORE.items_of(dora.char_id) if r["type_id"] == 6099)
+    check("Abu's retired personal reward is hidden from both holders",
+          [s.quest_available(AH_ROW) for s in (dora, dick)], [False, False])
+    before_personal = (STORE.money(dora.char_id), dora.inv.rows())
+    legacy_qid = STORE.take_quest(dora.char_id, AH_ROW.type, {}, True)
     take(dora)
-    run(dora, "q_st;mob=%d;q_idx=0;" % ah_box())
-    got = take(dora)
-    q_id = named(got, "q_di_del_obj")[0]["q_id"] if named(got, "q_di_del_obj") else 0
-    run(dora, "q_co;q_id=%d;mob=%d;obj_idx=0;" % (q_id, ah_box()))
-    done = take(dora)
-    check("  ..dora takes it at the box and hands it in: 48 000 afro and 50 rounds of 7.62x54R",
-          (acks(got), acks(done)[-1:], dora.character().afro - afro0,
-           sum(r["count"] for r in STORE.items_of(dora.char_id) if r["type_id"] == 6099)
-           - rounds0), ([0], [0], 48000, 50))
-    check("  ..and not on offer to her a second time that day", dora.quest_available(AH_ROW),
-          False)
+    run(dora, "q_co;q_id=%d;mob=%d;obj_idx=0;" % (legacy_qid, ah_box()))
+    check("Abu's old journal cannot add a personal payout beside the shared ingots",
+          (acks(take(dora)), STORE.money(dora.char_id), dora.inv.rows()),
+          ([server.RES_NOT_AVAILABLE], *before_personal))
     NOW[0] = at(19, 20, day=51)
     check("19:20: shut for dick, who has not collected -- while the Северный склад's box of"
           " 19:00-20:00 still pays", (dick.quest_available(AH_ROW),
@@ -899,6 +852,148 @@ async def main():
     take(dick)
     run(dick, "q_st;mob=%d;q_idx=0;" % ah_box())
     check("  ..and his take refused", acks(take(dick))[:1] != [0], True)
+
+    # The same native transactions on PostgreSQL in CI: unlike isolated
+    # in-memory unit fixtures, this suite honours LAVA_DB_URL throughout.
+    NOW[0] = datetime(2026, 11, 21, 20, 5, tzinfo=bosses.ZONE).timestamp()
+    base = holdings.site("base_ah")
+    slot = holdings.battle_slot(base)
+    payer = alice2                     # the first Alice logged out above
+    STORE.clan_member_update(payer.char_id, wolves, perm=clans.R_CHAT | clans.R_AFRO)
+    STORE.holding_capture(base.key, wolves, slot, payer.char_id, NOW[0],
+                          base_sites=holdings.base_keys())
+    treasury = STORE.clan_treasury(wolves)
+    STORE.clan_treasury_adjust(wolves, 3_000_000, "admin")
+    level(payer, 16)
+    into(payer, base.loc)
+    base_room = payer.room
+    base_flag = next(e for e, npc in base_room.npcs.items() if npc.type_id == base.flag)
+    payer.stop_walk()
+    payer.pos = base_room.npcs[base_flag].cell
+    take(payer)
+    run(payer, "q_st;mob=%d;q_idx=%d;" % (
+        base_flag, quests.given_by(base.flag).index(base.rent_quest)))
+    offered = take(payer)
+    rent_id = named(offered, "q_di_del_obj")[0]["q_id"]
+    finish = STORE.finish_quest
+
+    def fail_history(*args, **kwargs):
+        finish(*args, **kwargs)
+        raise RuntimeError("native holding reward failed after SQL history")
+
+    STORE.finish_quest = fail_history
+    try:
+        run(payer, "q_co;q_id=%d;mob=%d;" % (rent_id, base_flag))
+    finally:
+        STORE.finish_quest = finish
+    check("native rent history failure rolls back the lease and treasury together",
+          (acks(take(payer)), STORE.holding(base.key)["paid_until"],
+           STORE.clan_treasury(wolves), STORE.quest(rent_id) is not None),
+          ([1], 0, treasury + 3_000_000, True))
+    run(payer, "q_co;q_id=%d;mob=%d;" % (rent_id, base_flag))
+    paid = acks(take(payer))
+    run(payer, "q_co;q_id=%d;mob=%d;" % (rent_id, base_flag))
+    check("native rent retry and replay pay the weekly lease only once",
+          (paid, acks(take(payer)), STORE.clan_treasury(wolves),
+           STORE.holding(base.key)["paid_until"],
+           holdings.paid_base_for(STORE, 609, payer.char_id) is base),
+          ([0], [server.RES_NO_SUCH], treasury + 1_500_000, slot + 7 * 86400 - 300, True))
+    base_room.combat.keep_hours()
+    payer.send_npc_info(base_flag)
+    paid_flag = named(take(payer), 'userInfo_Trader')
+    check("paid rent keeps the same flag and withdraws both rent menus",
+          (base_flag in base_room.npcs, paid_flag[-1]['give_quests'], paid_flag[-1]['take_quests']),
+          (True, [], []))
+
+    NOW[0] = at(19, 5, day=51)
+    into(dora, CENTER)
+    gold_id = ah_box()
+    dora.stop_walk()
+    dora.pos = ah_room.npcs[gold_id].cell
+    gold_quest = site.gold_quest
+    before_gold = dora.inv.bag_pieces()
+    take(dora)
+    run(dora, "q_st;mob=%d;q_idx=%d;" % (
+        gold_id, quests.given_by(AH_BOX).index(gold_quest)))
+    offered = take(dora)
+    gold_qid = named(offered, "q_di_del_obj")[0]["q_id"]
+    STORE.finish_quest = fail_history
+    try:
+        run(dora, "q_co;q_id=%d;mob=%d;" % (gold_qid, gold_id))
+    finally:
+        STORE.finish_quest = finish
+    check("native warehouse gold history failure releases its SQL claim and pays no ingots",
+          (acks(take(dora)), STORE.holding_gold_claimed(site.key, dora.day_start()),
+           dora.inv.bag_pieces(), STORE.quest(gold_qid) is not None),
+          ([1], False, before_gold, True))
+    run(dora, "q_co;q_id=%d;mob=%d;" % (gold_qid, gold_id))
+    paid = acks(take(dora))
+    run(dora, "q_co;q_id=%d;mob=%d;" % (gold_qid, gold_id))
+    after_gold = dora.inv.bag_pieces()
+    check("native warehouse gold retry and replay grant exactly 7 G as original ingots",
+          (paid, acks(take(dora)), STORE.holding_gold_claimed(site.key, dora.day_start()),
+           after_gold.get(4796, 0) - before_gold.get(4796, 0),
+           after_gold.get(7620, 0) - before_gold.get(7620, 0)),
+          ([0], [server.RES_NO_SUCH], True, 1, 2))
+
+    # The laboratory reuses boss_kills CAS, not a new reward ledger. Keep
+    # its native quest transaction in this PG-capable suite as well as the
+    # isolated SQLite race/unit cases of test_laborant.
+    lab_now = [time.time()]
+    with patch.object(time, "time", lambda: lab_now[0]):
+        STORE.holding_set("wh_ah_center", wolves, "admin")
+        into(payer, quests.LABORANT_LOC)
+        lab_room = payer.room
+        lab_rc = combat.room_combat(lab_room, STORE)
+
+        def lab_id():
+            return next(e for e, npc in lab_room.npcs.items()
+                        if npc.type_id == quests.LABORANT_NPC)
+
+        def experiment(kind):
+            events.keep(lab_rc)
+            payer.stop_walk()
+            payer.pos = lab_room.npcs[lab_id()].cell
+            for type_id, count in quests.get(kind).wants():
+                payer.inv.give_pieces(type_id, count)
+            take(payer)
+            run(payer, "q_st;mob=%d;q_idx=%d;" % (
+                lab_id(), quests.given_by(quests.LABORANT_NPC).index(kind)))
+            return named(take(payer), "q_di_bring_l_obj")[0]["q_id"]
+
+        lab_qid = experiment(18306)
+        before_lab = payer.inv.bag_pieces()
+        first_lab = lab_id()
+        STORE.finish_quest = fail_history
+        try:
+            run(payer, "q_co;q_id=%d;mob=%d;" % (lab_qid, first_lab))
+        finally:
+            STORE.finish_quest = finish
+        check("native laboratory failed history rolls back its CAS, inputs and output together",
+              (acks(take(payer)), quests.laborant_available(STORE, payer.day_start()),
+               payer.inv.bag_pieces(), STORE.quest(lab_qid) is not None, lab_id()),
+              ([1], True, before_lab, True, first_lab))
+        run(payer, "q_co;q_id=%d;mob=%d;" % (lab_qid, first_lab))
+        paid = acks(take(payer))
+        run(payer, "q_co;q_id=%d;mob=%d;" % (lab_qid, first_lab))
+        check("native laboratory retry, replay and same-day CAS create only one output",
+              (paid, acks(take(payer)), STORE.boss_claim(quests.LABORANT_SPOT, payer.day_start()),
+               payer.inv.bag_pieces().get(3735, 0) - before_lab.get(3735, 0),
+               any(npc.type_id == quests.LABORANT_NPC for npc in lab_room.npcs.values())),
+              ([0], [server.RES_NO_SUCH], False, 1, False))
+        lab_now[0] = payer.day_start() + 86400
+        second_qid = experiment(18307)
+        second_lab = lab_id()
+        before_next = payer.inv.bag_pieces().get(3738, 0)
+        run(payer, "q_co;q_id=%d;mob=%d;" % (second_qid, second_lab))
+        paid = acks(take(payer))
+        run(payer, "q_co;q_id=%d;mob=%d;" % (second_qid, second_lab))
+        check("native laboratory next-day claim opens once and replay pays no second output",
+              (paid, acks(take(payer)), second_lab != first_lab,
+               payer.inv.bag_pieces().get(3738, 0) - before_next,
+               STORE.boss_kills([quests.LABORANT_SPOT])),
+              ([0], [server.RES_NO_SUCH], True, 1,
+               {quests.LABORANT_SPOT: float(payer.day_start())}))
 
     check("no clan command was answered twice", CLANS.double_acks, [])
     for s in list(server.SESSIONS):

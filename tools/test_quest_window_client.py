@@ -11,11 +11,120 @@ from testkit import run_cases
 
 
 class QuestWindow(unittest.TestCase):
+    def test_npc_refresh_enumerates_sparse_ids_without_reading_array_length(self):
+        class SparsePlayers(dict):
+            def get(self, key, default=None):
+                if key == 'length':
+                    raise AssertionError('quest refresh must not scan 101 million array holes')
+                return super().get(key, default)
+
+        lab, flag, box = [dict(id=i, isNPC=True) for i in (800001, 73, 6830)]
+        players = SparsePlayers({800001: lab, 73: flag, 6830: box,
+                                 101000008: dict(id=101000008, isNPC=False),
+                                 11: dict(id=11), 101000007: None})
+        master = dict(currentLocation=dict(playerList=players))
+        env = dict(lol=dict(core=dict(Master=dict(getInstance=lambda: master))))
+        row = next(r for r in patches(w.Asm, w.UNDEF)['wraps']
+                   if r[0] == ('core', 'quests', 'QuestInspector') and r[1] == 'getNPCList')
+        callback = Function(row[3], row[4].assemble(), env)
+        # Repeated post-hand-in refreshes must leave native entities intact.
+        for _ in range(10):
+            result = callback.invoke({}, [])
+            self.assertEqual({v['id'] for v in result}, {800001, 73, 6830})
+            self.assertTrue(all(any(v is npc for v in result) for npc in (lab, flag, box)))
+            self.assertEqual(len(players), 6)
+        for location in (None, {}, dict(playerList=None), dict(playerList=Arr())):
+            master['currentLocation'] = location
+            self.assertEqual(list(callback.invoke({}, [])), [])
+
+    def test_repeated_handins_keep_one_native_scan_and_preserve_the_queue(self):
+        timers, cleared = set(), []
+        queue = Arr([dict(q_type=7)])
+        env = dict(clearInterval=lambda timer: (timers.discard(timer), cleared.append(timer)))
+        spec = next(row for row in patches(w.Asm, w.UNDEF)['wraps']
+                    if row[1] == 'requestAllNPC')
+        callback = Function(spec[3], spec[4].assemble(), env)
+        inspector = dict(updateTimerID=None, callStack=queue, callCount=1)
+        def native():
+            timer = len(cleared)
+            timers.add(timer)
+            inspector['updateTimerID'] = timer
+        inspector['__qwRefreshNPCsOrig'] = native
+        for _ in range(100):
+            callback.invoke(inspector, [])
+            self.assertEqual(timers, {inspector['updateTimerID']})
+            self.assertIs(inspector['callStack'], queue)
+            self.assertEqual(inspector['callCount'], 1)
+
+    def test_location_departure_stops_only_its_scan_and_late_status_is_safe(self):
+        inspector = dict(updateTimerID=42, updateNPCList=Arr([1, 2]), quester=dict(id=1),
+                         callStack=Arr([dict(q_type=18201)]), callCount=1, currentQuests={3: 18202})
+        queue = inspector['callStack']
+        cleared, native = [], []
+        env = dict(clearInterval=cleared.append, lol=dict(core=dict(quests=dict(QuestInspector=dict(
+            getInstance=lambda: inspector)))))
+        callbacks = {keep: Function(params, body.assemble(), env)
+                     for path, method, keep, params, body in patches(w.Asm, w.UNDEF)['wraps']}
+        callbacks['__qwLocationKillOrig'].invoke(dict(__qwLocationKillOrig=lambda: native.append('kill')), [])
+        inspector['__qwStatusChangedOrig'] = lambda: native.append('status')
+        callbacks['__qwStatusChangedOrig'].invoke(inspector, [])
+        inspector['quester'] = dict(id=2)
+        callbacks['__qwStatusChangedOrig'].invoke(inspector, [])
+        self.assertEqual(cleared, [42])
+        self.assertEqual(native, ['kill', 'status'])
+        self.assertIs(inspector['callStack'], queue)
+        self.assertEqual(inspector['callCount'], 1)
+        self.assertEqual(inspector['currentQuests'], {3: 18202})
+        self.assertEqual(list(inspector['updateNPCList']), [])
+
+    def test_removing_contact_closes_quest_window_before_native_npc_destruction(self):
+        for npc_id in (800001, 73, 1407):
+            with self.subTest(npc=npc_id):
+                contact = dict(id=npc_id, playerInfo=dict(ally=True))
+                queue = Arr([dict(q_type=18211)])
+                current = {142: dict(typeID=18211)}
+                inspector = dict(quester=contact, questStatusList=Arr([18211]),
+                                 callStack=queue, callCount=1, currentQuests=current)
+                events = []
+                env = dict(lol=dict(core=dict(quests=dict(QuestInspector=dict(
+                    getInstance=lambda: inspector)), SceneShifter=dict(
+                        closeWindow=lambda *args: events.append(('close', args))))))
+                row = next(r for r in patches(w.Asm, w.UNDEF)['wraps'] if r[1] == 'removePlayer')
+                def remove(entity_id):
+                    self.assertIsNone(inspector['quester'])
+                    self.assertEqual(list(inspector['questStatusList']), [])
+                    events.append(('remove', entity_id))
+                    contact.clear()
+                    return 'native-result'
+                callback = Function(row[3], row[4].assemble(), env)
+                self.assertEqual(callback.invoke(dict(__qwNPCRemovedOrig=remove), [npc_id]),
+                                 'native-result')
+                self.assertEqual(events, [('close', ('quests', 'all')), ('remove', npc_id)])
+                self.assertIs(inspector['callStack'], queue)
+                self.assertEqual(inspector['callCount'], 1)
+                self.assertIs(inspector['currentQuests'], current)
+
+    def test_other_entity_removal_keeps_live_contact_and_pending_quest_replies(self):
+        for contact in (None, dict(id=74)):
+            with self.subTest(contact=contact):
+                inspector = dict(quester=contact, questStatusList=Arr([18211]))
+                events = []
+                env = dict(lol=dict(core=dict(quests=dict(QuestInspector=dict(
+                    getInstance=lambda: inspector)), SceneShifter=dict(
+                        closeWindow=lambda *args: events.append('close')))))
+                row = next(r for r in patches(w.Asm, w.UNDEF)['wraps'] if r[1] == 'removePlayer')
+                callback = Function(row[3], row[4].assemble(), env)
+                callback.invoke(dict(__qwNPCRemovedOrig=lambda eid: events.append(eid)), [73])
+                self.assertEqual(events, [73])
+                self.assertIs(inspector['quester'], contact)
+                self.assertEqual(list(inspector['questStatusList']), [18211])
+
     def setUp(self):
         self.events = []
         self.env = dict(lol=dict(core=dict(quests=dict(QuestEvent=dict(UPDATE='update')))))
         self.functions = {method: Function(params, body.assemble(), self.env)
-                          for path, method, keep, params, body in patches(w.Asm, w.UNDEF)['wraps']}
+                          for path, method, keep, params, body in patches(w.Asm, w.UNDEF)['wraps']
+                          if path == ('gpui', 'QuestInterface')}
         self.panel = dict(currentStatus='list',
                           questInspector=dict(removeEventListener=lambda *a:self.events.append(('remove', a))),
                           getAck='get-listener', takeAck='take-listener',
@@ -61,6 +170,21 @@ class QuestWindow(unittest.TestCase):
         self.assertEqual([item[0] for item in self.events if isinstance(item,tuple)], ['remove','remove'])
         self.assertEqual(self.events[-1], 'kill')
         self.assertEqual(self.events.count('kill'), 1)
+
+    def test_late_quest_description_cannot_reopen_a_closed_npc_window(self):
+        detached = []
+        reopen = object()
+        self.panel.update(currentQuest=dict(removeEventListener=lambda *args: detached.append(args)),
+                          ReopenDescription=reopen,
+                          __qwReopenDescriptionOrig=lambda obj: self.events.append('description'))
+        self.call('init')
+        self.call('ReopenDescription', dict(quest=1))
+        self.assertIn('description', self.events)
+        self.call('kill')
+        self.assertEqual(detached, [('questLoaded', self.panel, reopen)])
+        before = list(self.events)
+        self.call('ReopenDescription', dict(quest=1))
+        self.assertEqual(self.events, before)
 
     def test_empty_status_keeps_native_close_or_service_window_behavior(self):
         self.call('init')

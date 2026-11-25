@@ -15925,6 +15925,396 @@
     ],
     "why": "RECOVERED qJM_prison_Palm. DESIGNED reviewed62-cell layout: twelve accessible palms, two free rings, at least8hexes from entry/staff routes and20between palms, complete map coverage within26hexes."
    }
+  ],
+  "118": [
+   {
+    "type": 7454,
+    "cell": [
+     32,
+     26
+    ],
+    "why": "DESIGNED approved capturable clan base, 2026-11-22. Existing native boss/flag artwork; capture strength and ownership are location-scoped in holdings, preserving warehouse behaviour."
+   },
+   {
+    "type": 4829,
+    "cell": [
+     24,
+     25
+    ],
+    "why": "DESIGNED weekly base bodyguard. Original guardian art; locally tuned stats, persistent weekly deaths, friendly to the paid owner until 19:55."
+   },
+   {
+    "type": 4829,
+    "cell": [
+     40,
+     21
+    ],
+    "why": "DESIGNED weekly base bodyguard. Original guardian art; locally tuned stats, persistent weekly deaths, friendly to the paid owner until 19:55."
+   },
+   {
+    "type": 4829,
+    "cell": [
+     39,
+     32
+    ],
+    "why": "DESIGNED weekly base bodyguard. Original guardian art; locally tuned stats, persistent weekly deaths, friendly to the paid owner until 19:55."
+   },
+   {
+    "type": 2312,
+    "cell": [
+     35,
+     31
+    ],
+    "why": "DESIGNED owner-marked outer guards, 2026-11-23. Safe reachable hexes with bypass routes; native guardian appearance and automatic weapon, owner-friendly, five-minute respawn outside capture."
+   },
+   {
+    "type": 2312,
+    "cell": [
+     35,
+     43
+    ],
+    "why": "DESIGNED owner-marked outer guards, 2026-11-23. Safe reachable hexes with bypass routes; native guardian appearance and automatic weapon, owner-friendly, five-minute respawn outside capture."
+   },
+   {
+    "type": 2312,
+    "cell": [
+     26,
+     49
+    ],
+    "why": "DESIGNED owner-marked outer guards, 2026-11-23. Safe reachable hexes with bypass routes; native guardian appearance and automatic weapon, owner-friendly, five-minute respawn outside capture."
+   },
+   {
+    "type": 2312,
+    "cell": [
+     5,
+     55
+    ],
+    "why": "DESIGNED owner-marked outer guards, 2026-11-23. Safe reachable hexes with bypass routes; native guardian appearance and automatic weapon, owner-friendly, five-minute respawn outside capture."
+   },
+   {
+    "type": 2312,
+    "cell": [
+     52,
+     64
+    ],
+    "why": "DESIGNED owner-marked outer guards, 2026-11-23. Safe reachable hexes with bypass routes; native guardian appearance and automatic weapon, owner-friendly, five-minute respawn outside capture."
+   },
+   {
+    "type": 2312,
+    "cell": [
+     12,
+     71
+    ],
+    "why": "DESIGNED owner-marked outer guards, 2026-11-23. Safe reachable hexes with bypass routes; native guardian appearance and automatic weapon, owner-friendly, five-minute respawn outside capture."
+   },
+   {
+    "type": 2312,
+    "cell": [
+     38,
+     70
+    ],
+    "why": "DESIGNED owner-marked outer guards, 2026-11-23. Safe reachable hexes with bypass routes; native guardian appearance and automatic weapon, owner-friendly, five-minute respawn outside capture."
+   },
+   {
+    "type": 2312,
+    "cell": [
+     24,
+     85
+    ],
+    "why": "DESIGNED owner-marked outer guards, 2026-11-23. Safe reachable hexes with bypass routes; native guardian appearance and automatic weapon, owner-friendly, five-minute respawn outside capture."
+   },
+   {
+    "type": 2312,
+    "cell": [
+     11,
+     105
+    ],
+    "why": "DESIGNED owner-marked outer guards, 2026-11-23. Safe reachable hexes with bypass routes; native guardian appearance and automatic weapon, owner-friendly, five-minute respawn outside capture."
+   },
+   {
+    "type": 2312,
+    "cell": [
+     51,
+     105
+    ],
+    "why": "DESIGNED owner-marked outer guards, 2026-11-23. Safe reachable hexes with bypass routes; native guardian appearance and automatic weapon, owner-friendly, five-minute respawn outside capture."
+   }
+  ],
+  "111": [
+   {
+    "type": 1040,
+    "cell": [
+     26,
+     47
+    ],
+    "why": "DESIGNED approved warehouse guard, 2026-11-22. Half the corresponding base bodyguard HP/SP and damage; lower Wadi-Halfa tier. Daily master schedule and persistent death checkpoints, not normal respawn farming."
+   },
+   {
+    "type": 1040,
+    "cell": [
+     40,
+     54
+    ],
+    "why": "DESIGNED approved warehouse guard, 2026-11-22. Half the corresponding base bodyguard HP/SP and damage; lower Wadi-Halfa tier. Daily master schedule and persistent death checkpoints, not normal respawn farming."
+   }
+  ],
+  "110": [
+   {
+    "type": 1040,
+    "cell": [
+     22,
+     43
+    ],
+    "why": "DESIGNED approved warehouse guard, 2026-11-22. Half the corresponding base bodyguard HP/SP and damage; lower Wadi-Halfa tier. Daily master schedule and persistent death checkpoints, not normal respawn farming."
+   },
+   {
+    "type": 1040,
+    "cell": [
+     36,
+     53
+    ],
+    "why": "DESIGNED approved warehouse guard, 2026-11-22. Half the corresponding base bodyguard HP/SP and damage; lower Wadi-Halfa tier. Daily master schedule and persistent death checkpoints, not normal respawn farming."
+   }
+  ],
+  "109": [
+   {
+    "type": 4828,
+    "cell": [
+     27,
+     47
+    ],
+    "why": "DESIGNED approved warehouse guard, 2026-11-22. Half the corresponding base bodyguard HP/SP and damage; lower Wadi-Halfa tier. Daily master schedule and persistent death checkpoints, not normal respawn farming."
+   },
+   {
+    "type": 4828,
+    "cell": [
+     41,
+     56
+    ],
+    "why": "DESIGNED approved warehouse guard, 2026-11-22. Half the corresponding base bodyguard HP/SP and damage; lower Wadi-Halfa tier. Daily master schedule and persistent death checkpoints, not normal respawn farming."
+   }
+  ],
+  "113": [
+   {
+    "type": 4828,
+    "cell": [
+     23,
+     43
+    ],
+    "why": "DESIGNED approved warehouse guard, 2026-11-22. Half the corresponding base bodyguard HP/SP and damage; lower Wadi-Halfa tier. Daily master schedule and persistent death checkpoints, not normal respawn farming."
+   },
+   {
+    "type": 4828,
+    "cell": [
+     37,
+     53
+    ],
+    "why": "DESIGNED approved warehouse guard, 2026-11-22. Half the corresponding base bodyguard HP/SP and damage; lower Wadi-Halfa tier. Daily master schedule and persistent death checkpoints, not normal respawn farming."
+   }
+  ],
+  "114": [
+   {
+    "type": 4828,
+    "cell": [
+     23,
+     42
+    ],
+    "why": "DESIGNED approved warehouse guard, 2026-11-22. Half the corresponding base bodyguard HP/SP and damage; lower Wadi-Halfa tier. Daily master schedule and persistent death checkpoints, not normal respawn farming."
+   },
+   {
+    "type": 4828,
+    "cell": [
+     37,
+     52
+    ],
+    "why": "DESIGNED approved warehouse guard, 2026-11-22. Half the corresponding base bodyguard HP/SP and damage; lower Wadi-Halfa tier. Daily master schedule and persistent death checkpoints, not normal respawn farming."
+   }
+  ],
+  "112": [
+   {
+    "type": 4828,
+    "cell": [
+     27,
+     47
+    ],
+    "why": "DESIGNED approved warehouse guard, 2026-11-22. Half the corresponding base bodyguard HP/SP and damage; lower Wadi-Halfa tier. Daily master schedule and persistent death checkpoints, not normal respawn farming."
+   },
+   {
+    "type": 4828,
+    "cell": [
+     41,
+     57
+    ],
+    "why": "DESIGNED approved warehouse guard, 2026-11-22. Half the corresponding base bodyguard HP/SP and damage; lower Wadi-Halfa tier. Daily master schedule and persistent death checkpoints, not normal respawn farming."
+   }
+  ],
+  "128": [
+   {
+    "type": 4829,
+    "cell": [
+     25,
+     72
+    ],
+    "why": "DESIGNED approved warehouse guard, 2026-11-22. Half the corresponding base bodyguard HP/SP and damage; lower Wadi-Halfa tier. Daily master schedule and persistent death checkpoints, not normal respawn farming."
+   },
+   {
+    "type": 4829,
+    "cell": [
+     37,
+     82
+    ],
+    "why": "DESIGNED approved warehouse guard, 2026-11-22. Half the corresponding base bodyguard HP/SP and damage; lower Wadi-Halfa tier. Daily master schedule and persistent death checkpoints, not normal respawn farming."
+   }
+  ],
+  "1442": [
+    {
+      "type": 7451,
+      "cell": [
+        32,
+        26
+      ],
+      "why": "DESIGNED approved capturable clan base, 2026-11-22. Existing native boss/flag artwork; capture strength and ownership are location-scoped in holdings, preserving warehouse behaviour."
+    },
+    {
+      "type": 4828,
+      "cell": [
+        24,
+        25
+      ],
+      "why": "DESIGNED weekly base bodyguard. Original guardian art; locally tuned stats, persistent weekly deaths, friendly to the paid owner until 19:55."
+    },
+    {
+      "type": 4828,
+      "cell": [
+        40,
+        21
+      ],
+      "why": "DESIGNED weekly base bodyguard. Original guardian art; locally tuned stats, persistent weekly deaths, friendly to the paid owner until 19:55."
+    },
+    {
+      "type": 4828,
+      "cell": [
+        39,
+        32
+      ],
+      "why": "DESIGNED weekly base bodyguard. Original guardian art; locally tuned stats, persistent weekly deaths, friendly to the paid owner until 19:55."
+    },
+    {
+      "type": 918,
+      "cell": [
+        35,
+        31
+      ],
+      "why": "DESIGNED owner-marked outer guards, 2026-11-23. Safe reachable hexes with bypass routes; native guardian appearance and automatic weapon, owner-friendly, five-minute respawn outside capture."
+    },
+    {
+      "type": 918,
+      "cell": [
+        35,
+        43
+      ],
+      "why": "DESIGNED owner-marked outer guards, 2026-11-23. Safe reachable hexes with bypass routes; native guardian appearance and automatic weapon, owner-friendly, five-minute respawn outside capture."
+    },
+    {
+      "type": 918,
+      "cell": [
+        26,
+        49
+      ],
+      "why": "DESIGNED owner-marked outer guards, 2026-11-23. Safe reachable hexes with bypass routes; native guardian appearance and automatic weapon, owner-friendly, five-minute respawn outside capture."
+    },
+    {
+      "type": 918,
+      "cell": [
+        5,
+        55
+      ],
+      "why": "DESIGNED owner-marked outer guards, 2026-11-23. Safe reachable hexes with bypass routes; native guardian appearance and automatic weapon, owner-friendly, five-minute respawn outside capture."
+    },
+    {
+      "type": 918,
+      "cell": [
+        52,
+        64
+      ],
+      "why": "DESIGNED owner-marked outer guards, 2026-11-23. Safe reachable hexes with bypass routes; native guardian appearance and automatic weapon, owner-friendly, five-minute respawn outside capture."
+    },
+    {
+      "type": 918,
+      "cell": [
+        12,
+        71
+      ],
+      "why": "DESIGNED owner-marked outer guards, 2026-11-23. Safe reachable hexes with bypass routes; native guardian appearance and automatic weapon, owner-friendly, five-minute respawn outside capture."
+    },
+    {
+      "type": 918,
+      "cell": [
+        38,
+        70
+      ],
+      "why": "DESIGNED owner-marked outer guards, 2026-11-23. Safe reachable hexes with bypass routes; native guardian appearance and automatic weapon, owner-friendly, five-minute respawn outside capture."
+    },
+    {
+      "type": 918,
+      "cell": [
+        24,
+        85
+      ],
+      "why": "DESIGNED owner-marked outer guards, 2026-11-23. Safe reachable hexes with bypass routes; native guardian appearance and automatic weapon, owner-friendly, five-minute respawn outside capture."
+    },
+    {
+      "type": 918,
+      "cell": [
+        11,
+        105
+      ],
+      "why": "DESIGNED owner-marked outer guards, 2026-11-23. Safe reachable hexes with bypass routes; native guardian appearance and automatic weapon, owner-friendly, five-minute respawn outside capture."
+    },
+    {
+      "type": 918,
+      "cell": [
+        51,
+        105
+      ],
+      "why": "DESIGNED owner-marked outer guards, 2026-11-23. Safe reachable hexes with bypass routes; native guardian appearance and automatic weapon, owner-friendly, five-minute respawn outside capture."
+    }
+  ],
+  "609": [
+    {
+      "type": 989,
+      "cell": [
+        39,
+        48
+      ],
+      "why": "DESIGNED existing NPC on verified walkable cell; approved 2026-11-22."
+    },
+    {
+      "type": 2018,
+      "cell": [
+        11,
+        58
+      ],
+      "why": "Owner-marked A-medic counter in front of the kitchen, 2026-11-24; walkable cell with three free approaches. Other suppliers stay in place."
+    }
+  ],
+  "1443": [
+    {
+      "type": 989,
+      "cell": [
+        39,
+        48
+      ],
+      "why": "DESIGNED existing NPC on verified walkable cell; approved 2026-11-22."
+    },
+    {
+      "type": 2018,
+      "cell": [
+        11,
+        58
+      ],
+      "why": "Owner-marked A-medic counter in front of the kitchen, 2026-11-24; walkable cell with three free approaches. Other suppliers stay in place."
+    }
   ]
  }
 }

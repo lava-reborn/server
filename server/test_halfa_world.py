@@ -300,6 +300,7 @@ class _Killer(object):
 
 class _Shooter(object):
     is_player = False
+    stats = SimpleNamespace(level=1, weapon_class='pistols')
 
     def __init__(self, cell):
         self.cell, self.eid = cell, 999999
@@ -418,7 +419,7 @@ async def _the_turrets():
     st = mobs.stats(832)
     check("141 stands its twelve turrets: guns that never walk",
           (len(guns), st.moves, st.can_attack, st.ranged, st.weapon_class),
-          (12, False, True, True, "machine_gun"))
+          (12, False, True, True, "pistol"))
     loc = r.loc
     w = loc.width
     turret = guns[0]

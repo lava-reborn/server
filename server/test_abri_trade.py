@@ -117,9 +117,9 @@ WORLD_PUTS = {PORT: {LOTTERY, GOLD_LOTTERY, MORTIMER}}
 DECIDED = {
     PORT: {1159: "band", 1161: "band", 1163: "band", SHOTGUNS: "band", ONE_EAR: "band",
            ALIMA: "band", GALI: "band", TORSI: "band", MUKHSIM: "band", LUIGI: "own",
-           PILOT: "own", LOTTERY: "own", GOLD_LOTTERY: "own", KHAN_SELL: "band",
+           LOTTERY: "own", GOLD_LOTTERY: "own", KHAN_SELL: "band",
            MORTIMER: "own"},
-    QUARTER: {1013: "wiki", 1196: "wiki", 2016: "wiki"},
+    QUARTER: {1013: "band", 1196: "band", 2016: "band"},
     SLUMS: {MORTIMER: "own", FREYA: "own"},
     OASIS: {1225: "band", AMMO_OASIS: "own", JUT: "band"},
     CLOTHES: {5160: "band", 5161: "band", 5181: "own"},
@@ -313,8 +313,8 @@ for p, decided in DECIDED.items():
                 and items.stock_for(t, p) == items.stock_table().get(t)
         if not ok:
             how[(p, t)] = kind
-check("  ..each the way the table says: a seller of the band, a list of the owner's file, or"
-      " the wiki's list untouched (Гофус, Бернар, the doctor's junior helper)", how, {})
+check("  ..each the way the table says: city band (including Gofus and his assistants),"
+      " an owner list, or the archived wiki list", how, {})
 check("the lists of data/npcs.json, trader by trader (DESIGN.md 6.2)",
       {t: npcs.stock(t) for t in OWN}, OWN)
 # The articles of Торси and Мухсим, which the wiki's shifted links had given the pilot
@@ -359,7 +359,7 @@ check("no gun, knife or set piece out of 8-12 on a seller's stall of Абри, n
       (sorted((p, t, x) for (p, t), s in STALLS.items() for x in s if t in shop_bands.SELLERS
               and band_thing(x) and not shop_bands.fits(x, LO, HI)),
        sorted((p, t) for (p, t), s in STALLS.items() if t in shop_bands.SELLERS
-              and shop_bands.SELLERS[t] and not shop_bands.only(t)
+              and shop_bands.SELLERS[t] and not shop_bands.only(t) and (p, t) != (CLOTHES, 5161)
               and not {gold_only(x) for x in s if band_thing(x)} >= {True, False}),
        sorted((p, t, shop_bands.only(t)) for (p, t) in STALLS if shop_bands.only(t))),
       ([], [], [(OASIS, JUT, "gold")]))
@@ -379,9 +379,9 @@ check("every gun on a stall of Абри has a round it chambers on sale in the t
               and not set(items.params_of(x)["comp_array"]) & ROUNDS}), [])
 check("  ..the P90's 5.7x28 among them: the oasis's «Торговец патронами» (1228) sells its СТ and"
       " ОТ beside Вади-Хальфа's oasis list", [x for x in STALLS[(OASIS, AMMO_OASIS)]
-                                              if x in (6101, 6113, 6125)], [6113, 6125])
-check("the stalls' sizes: none longer than 64, the knife trader's band and his own list",
-      (max(len(s) for s in STALLS.values()) <= 64, STALLS[(PORT, ONE_EAR)]),
+                                              if x in (6101, 6113, 6125)], [6101, 6113, 6125])
+check("the stalls stay below128 rows; knife trader keeps his band and own list",
+      (max(len(s) for s in STALLS.values()) <= 128, STALLS[(PORT, ONE_EAR)]),
       (True, [6245, 6246, 6250, 6251, 6255, 6256] + OWN[ONE_EAR]))
 check("Алима: the town's sets, then her pouches, each with its (G) right after it",
       STALLS[(PORT, ALIMA)][-10:], [3577, 3599, 3581, 3603, 5613, 5614, 3578, 3600, 3579, 3601])
@@ -403,12 +403,12 @@ with open(os.path.join(ROOT, "data", "questgen_weaponcraft.json"), encoding="utf
     CRAFT_DOC = json.load(_fh)
 stone = [r for r in CRAFT_DOC["quests"] if r["give"] == [WHETSTONE]]
 check("«Точильный камень Абри» (2280, the port market) sharpens Нож кастет (G) and Штык нож (G)"
-      " three ways each, for player levels 6-20, repeatable services",
+      " three ways each, from output level minus three, repeatable services",
       sorted((r["craft"]["gun"], r["craft"]["blueprint"], r["rew_obj"][0], r["level"],
               r["max_level"], r["repeatable"], r["service"]) for r in stone),
-      [(6251, 6620, 6252, 6, 20, 1, True), (6251, 6621, 6253, 6, 20, 1, True),
-       (6251, 6622, 6254, 6, 20, 1, True), (6256, 6623, 6257, 6, 20, 1, True),
-       (6256, 6624, 6258, 6, 20, 1, True), (6256, 6625, 6259, 6, 20, 1, True)])
+      [(6251, 6620, 6252, 7, 20, 1, True), (6251, 6621, 6253, 7, 20, 1, True),
+       (6251, 6622, 6254, 7, 20, 1, True), (6256, 6623, 6257, 9, 20, 1, True),
+       (6256, 6624, 6258, 9, 20, 1, True), (6256, 6625, 6259, 9, 20, 1, True)])
 check("  ..in the original's words, loaded (quests.get), the whetstone standing in the port"
       " market", ([quests.get(r["type"]).texts[quests.NAME] for r in stone],
                   WHETSTONE in standing(PORT)),
@@ -650,10 +650,12 @@ async def main():
     close_stall(sess)
 
     stall, opened = open_stall(sess, FIELDS, HUXLEY)
-    check("Говард Хаксли (Поля Абри): his coupons; «Купон на 300 патронов» for 1 ounce, for afro"
-          " refused", (stall, opened, buy(sess, stall, 6295, GOLD), buy(sess, stall, 6295, BUY)),
-          (list(COUPONS), [0], ([0], [6295], 0, 100), (REFUSED, [], 0, 0)))
-    check("  ..and not bought back", sell(sess, 6295), (REFUSED, True, 0, 0))
+    check("Говард Хаксли (Поля Абри): discounted coupons are no longer sold",
+          (stall, opened), ([], [0]))
+    before = purse(sess)
+    got = run(sess, "ss_upd;s_status=4;obj=x0;param=1;")
+    check("  ..an old coupon index cannot purchase hidden stock",
+          (acks(got), purse(sess)), ([inventory.RES_NOT_FOUND], before))
     close_stall(sess)
 
     stall, opened = open_stall(sess, DUMP, MCCANDLESS)

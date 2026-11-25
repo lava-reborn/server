@@ -117,7 +117,7 @@ class WeaponcraftCompletion(unittest.TestCase):
             self.assertTrue(stalls)
             for stall in stalls:
                 self.assertIn(c['blueprint'], stocks[str(stall)])
-            self.assertEqual((row['level'], row['max_level']), {'halfa': (0, 20), 'dongola': (9, 20), 'abu_hamed': (17, 20)}[city['name']])
+            self.assertEqual((row['level'], row['max_level']), (max(0, c['level'] - 3), 20))
 
     def test_desert_eagle_and_f2000_gold_match_afro_options(self):
         for a, g in ((25656, 25657), (25319, 25320)):

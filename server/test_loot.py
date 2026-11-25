@@ -213,9 +213,10 @@ pistol = sum(b == [PISTOL_BELT] for b in belts) / 4000.0
 check("  ..the pistol belt about three times in four (%.3f)" % pistol, abs(pistol - 0.75) < 0.03, True)
 check("no other creature has a group", [t for t in mobs.TYPES if int(t) != MVAMBA
                                         and mobs.one_of_groups(int(t))], [])
-rounds = (items.params_of(mobs.stats(COURIER).weapon_type_id) or {}).get("comp_array", [0])[0]
+firing_rounds = mobs.stats(COURIER).loot_ammo_type
+rounds = mobs.standard_ammunition_types().get(firing_rounds, firing_rounds)
 courier = [mobs.loot_for(mobs.stats(COURIER), rng) for _ in range(300)]
-check("a gunman leaves his rounds and a piece of junk as well, every time",
+check("a gunman leaves standard rounds of his calibre and a piece of junk, every time",
       all({t for t, _n in d} & {rounds} and {t for t, _n in d} & set(TRASH[0:3])
           for d in courier), True)
 dog = [mobs.loot_for(mobs.stats(DOG), rng) for _ in range(300)]
@@ -406,7 +407,7 @@ try:
           (store.item(KEPT) or {}).get("char_id"), 999)
     char_id = store.character_by_name("scavenger")["id"]
     ch = progression.Character.load(store, char_id)
-    ch.skill[progression.MELEE] = [20, 0, progression.skill_xp_max(20)]
+    ch.skill[progression.MELEE] = [6, 0, progression.skill_xp_max(6)]
     ch.recalc()
     ch.hp = ch.sp = None
     ch.save(store)
@@ -480,8 +481,9 @@ try:
           only(got, "cmdAck", "ss_loot"),
           [("cmdAck", {"res": 0}), ("ss_loot", {"s_status": 0, "hex": [where]})])
     c.send("ss_get;slot=8;")
+    bag = oids(named(c.frames(), "ss_ack")[0])
     check("everything he left is in the player's bag",
-          all(o in oids(named(c.frames(), "ss_ack")[0]) for o in loot), True)
+          all(o in bag for o in loot), True)
     c.send("ss_upd;s_status=0;obj=x0;param=1;")
     c.frames(0.3)
     c.send("logout;")

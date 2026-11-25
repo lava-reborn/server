@@ -588,7 +588,20 @@ env = dict(os.environ, LAVA_PORT=str(PORT), LAVA_HOST="127.0.0.1", LAVA_DB=DB,
            LAVA_CHEATS="1", LAVA_START="181", LAVA_AP_REGEN="50", LAVA_RESPAWN="600",
            LAVA_SEED="23", LAVA_LEAVE_COMBAT="2")
 LOG = os.path.join(os.path.dirname(DB), "server.log")
-srv = subprocess.Popen([sys.executable, "server.py"], cwd=HERE, env=env,
+# Keep the real quest-drop chances and wanted-item checks, but isolate their
+# seeded draws from combat. New weapon modes must not decide whether the
+# finite set of miners happens to contain the ring in this story test.
+_boot = """import random, runpy
+from unittest.mock import patch
+import mobs
+original = mobs.quest_roll
+quest_rng = random.Random(23)
+def quest_roll(type_id, wanted, rng, excluded_groups=()):
+    return original(type_id, wanted, quest_rng, excluded_groups)
+with patch.object(mobs, 'quest_roll', quest_roll):
+    runpy.run_path('server.py', run_name='__main__')
+"""
+srv = subprocess.Popen([sys.executable, "-c", _boot], cwd=HERE, env=env,
                        stdout=open(LOG, "w"), stderr=subprocess.STDOUT, text=True)
 
 
@@ -735,7 +748,7 @@ def held(cid):
     st = accounts.Store(DB)
     out = collections.Counter()
     for r in st.items_of(cid):
-        out[r["type_id"]] += r["count"] if r["root"] in items.HEAPABLE_ROOTS else 1
+        out[r["type_id"]] += r["count"] if items.heapable(r["type_id"]) else 1
     st.close()
     return out
 
@@ -782,6 +795,9 @@ def reshape(name, skill):
     st = accounts.Store(DB)
     ch = progression.Character.load(st, st.character_by_name(name)["id"])
     ch.skill[progression.SHOOTING] = [skill, 0, progression.skill_xp_max(skill)]
+    # Keep the admin raid controller alive while checking production quests.
+    ch.attrib[progression.STRENGTH] = 1000
+    ch.attrib[progression.INTELLECT] = 1000
     ch.recalc()
     ch.hp = ch.sp = None
     ch.save(st)
@@ -824,7 +840,7 @@ def heal_if_needed(c):
     assert hp > 0, ('raid controller died', c.scene_pos)
     if hp >= maximum * 0.8:
         return out
-    left = getattr(c, 'fixture_healed_at', 0) + 4.05 - time.monotonic()
+    left = getattr(c, 'fixture_healed_at', 0) + 6.05 - time.monotonic()
     if left > 0:
         out += c.frames(left)
     c.send('ss_use;type=2;obj=x%s;' % c.fixture_medicine)

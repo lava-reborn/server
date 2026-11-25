@@ -277,6 +277,113 @@ class ReleaseQuests(unittest.TestCase):
                 self.assertEqual(self.hand_in(qid), [0])
                 self.assertIsNone(self.store.quest(qid))
 
+    def cinema_prefix(self):
+        for qtype, loc, npc, given in ((208, 37, 1685, 3939), (209, 37, 1685, None),
+                                       (210, 36, 49, None), (211, 70, 1691, None)):
+            self.at(loc, npc)
+            qid = self.take(qtype, npc)
+            if given:
+                self.give(given)
+            dest, taker = ((36, 49) if qtype == 209 else
+                           (70, 1691) if qtype == 210 else (37, 1685))
+            self.at(dest, taker)
+            self.assertEqual(self.hand_in(qid), [0])
+
+    def test_cinema_one_drop_route_rewards_syringe_once(self):
+        self.cinema_prefix()
+        self.assertEqual(self.s.inv.bag_pieces().get(3957), 1)
+        for qtype, loc, giver, taker in ((212, 37, 1685, 1692),
+                                        (214, 70, 1691, 1691), (215, 37, 1685, 1685)):
+            self.at(loc, giver)
+            qid = self.take(qtype, giver)
+            self.at(loc, taker)
+            self.assertEqual(self.hand_in(qid), [0])
+            self.assertEqual(self.hand_in(qid), [server.RES_NO_SUCH])
+        self.assertEqual(self.s.inv.bag_pieces().get(3552), 1)
+        self.assertFalse(self.s.quest_available(quests.get(218)))
+        self.assertEqual(quests.recover_cinema(self.store, self.cid), [])
+        self.assertIn('20', quests.get(215).texts[3])
+
+    def test_cinema_two_drop_route_has_real_safe_passages_and_finishes(self):
+        self.cinema_prefix()
+        self.at(37, 1685)
+        qid = self.take(213, 1685)
+        self.at(37, 1692)
+        self.assertEqual(self.hand_in(qid), [0])
+        self.at(70, 1691)
+        qid = self.take(216, 1691)
+        self.assertEqual(self.hand_in(qid), [0])
+        destination = travel.plan_quest_way(self.s.loc, 216, 5967, 1727)
+        self.assertEqual(destination.loc_id, 688)
+        self.assertNotIn(destination.pos, world.location(688).obstacles)
+        self.assertTrue(travel.no_map(688))
+        self.at(688, 1691)
+        qid = self.take(217, 1691)
+        self.assertEqual(sum(t == 1694 for _cell, t in self.s.loc.spawns), 4)
+        # A death/old save outside the ghost map must not strand this branch.
+        self.at(70, 1691)
+        again = self.take(216, 1691)
+        self.assertEqual(self.s.inv.bag_pieces().get(3959), 1)
+        self.assertEqual(self.hand_in(again), [0])
+        self.at(688, 1691)
+        for _ in range(4):
+            quests.kill_progress(self.store, self.cid, 1694)
+        self.assertEqual(self.hand_in(qid), [0])
+        self.assertFalse(self.s.quest_available(quests.get(216)))
+        back = travel.plan_quest_way(self.s.loc, 217, 5967, 1727)
+        self.assertEqual(back.loc_id, 70)
+        self.assertNotIn(back.pos, world.location(70).obstacles)
+        self.at(70, 1691)
+        qid = self.take(218, 1691)
+        self.at(37, 1685)
+        self.assertEqual(self.hand_in(qid), [0])
+        self.assertEqual(self.s.inv.bag_pieces().get(3552), 1)
+        self.assertFalse(self.s.quest_available(quests.get(215)))
+
+    def test_cinema_lost_tokens_recover_once_without_duplication_or_final_reissue(self):
+        for producer, consumer, token in ((211, 212, 3957), (212, 214, 3958), (213, 216, 3959)):
+            with self.subTest(producer=producer):
+                self.store.db.execute('DELETE FROM char_quests_done WHERE char_id=?', (self.cid,))
+                self.store.db.execute('DELETE FROM items WHERE char_id=?', (self.cid,))
+                self.done(producer)
+                self.assertEqual(quests.recover_cinema(self.store, self.cid), [token])
+                self.assertEqual(quests.recover_cinema(self.store, self.cid), [])
+                row = next(r for r in self.store.items_of(self.cid) if r['type_id'] == token)
+                self.store.update_item(row['uniq'], slot=inventory.BANK)
+                self.assertEqual(quests.recover_cinema(self.store, self.cid), [])
+                self.store.delete_item(row['uniq'])
+                self.done(consumer)
+                if consumer == 216:
+                    self.done(217)  # Returning after a death remains possible until this step.
+                self.assertNotIn(token, quests.recover_cinema(self.store, self.cid))
+        self.done(218)
+        self.assertEqual(quests.recover_cinema(self.store, self.cid), [])
+        self.assertNotIn(3552, self.s.inv.bag_pieces())
+        for qtype in (215, 216, 218):
+            q = quests.get(qtype)
+            self.assertFalse(self.s.quest_available(q))
+            self.assertFalse(self.s.quest_available(q, self.s.quest_status_state(qtype)))
+
+    def test_cinema_duplicate_journal_and_conflicting_active_branch_are_repaired(self):
+        self.done(211)
+        self.done(212)
+        for t in (211, 213, 216):
+            self.store.take_quest(self.cid, t, {}, False)
+        quests.recover_cinema(self.store, self.cid)
+        self.assertEqual(self.store.quests(self.cid), [])
+        self.assertEqual(self.s.inv.bag_pieces().get(3958), 1)
+
+    def test_cinema_recovery_rolls_back_items_and_journal_together(self):
+        self.done(211)
+        qid = self.store.take_quest(self.cid, 211, {}, True)
+        before = [dict(r) for r in self.store.quests(self.cid)]
+        with patch.object(self.store, 'create_item', side_effect=RuntimeError('storage failure')):
+            with self.assertRaises(RuntimeError):
+                quests.recover_cinema(self.store, self.cid)
+        self.assertEqual([dict(r) for r in self.store.quests(self.cid)], before)
+        self.assertIsNotNone(self.store.quest(qid))
+        self.assertNotIn(3957, self.s.inv.bag_pieces())
+
     def test_nubian_return_remains_closed_from_level_three_even_if_taken_earlier(self):
         self.at(41, 30)
         q = quests.get(44)

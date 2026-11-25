@@ -20,16 +20,41 @@ from testkit import run_cases
 
 
 # Explicit owner-approved targets, independent of the runtime mapping.
-EXPECTED = {4: (7072, 31), 5: (7073, 32), 6: (7074, 33), 7: (7075, 36),
-            8: (7076, 24), 9: (7077, 27), 10: (7078, 38), 11: (7079, 38),
-            12: (7080, 46), 14: (7070, 46), 15: (7081, 46)}
+EXPECTED = {4: (7072, 29), 5: (7073, 30), 6: (7074, 31), 7: (7075, 34),
+            8: (7076, 23), 9: (7077, 26), 10: (7078, 36), 11: (7079, 36),
+            12: (7080, 44), 14: (7070, 44), 15: (7081, 44)}
 
 
 class Ks12Numbers(unittest.TestCase):
+    def test_specialisation_ladder_and_named_copies(self):
+        required = {4: None, 5: None, 6: None, 7: 1, 8: 2, 9: 2,
+                    10: 3, 11: 3, 12: 3, 14: 3, 15: 4}
+        for t, (root, name) in items.catalogue().items():
+            if root != items.FIRE_ARM or not name.startswith('lamantin_shotgun_'):
+                continue
+            row = dict(type_id=t, root=root)
+            params = items.params_of(t)
+            level = inventory.item_level(t)
+            if level not in required:
+                continue
+            need = required[level]
+            with self.subTest(type=t, level=level):
+                ch = progression.Character()
+                ch.skill[progression.SHOOTING][0] = level
+                ch.recalc()
+                if need is None:
+                    self.assertFalse(params.get('need_specs_m', 0) & (1 << 3))
+                    continue
+                ch.spec[3][0] = need - 1
+                self.assertIsNotNone(inventory.weapon_requirement_error(row, ch))
+                ch.spec[3][0] = need
+                self.assertIsNone(inventory.weapon_requirement_error(row, ch))
+
     def test_all_base_versions_change_only_the_active_shot_cost(self):
         for level, (t, cost) in EXPECTED.items():
             with self.subTest(level=level, type=t):
-                with patch.dict(items.KS12_FIRE_COSTS, {}, clear=True):
+                with patch.dict(items.KS12_FIRE_COSTS, {}, clear=True), \
+                        patch.object(items, "KS12_FIRE_COST_PERCENT", 100):
                     before = items.params_of(t)
                 after = items.params_of(t)
                 self.assertEqual(max(after['need_skills']), level)
@@ -39,7 +64,20 @@ class Ks12Numbers(unittest.TestCase):
                                  {k: v for k, v in after.items() if k != 'fire_costs'})
                 # Pellets do not become cartridges after changing AP.
                 self.assertEqual(combat.pull(after, 2, after['clip_size']),
-                                 (6 if level == 14 else 12, 1))
+                                 (6 if level == 14 else 10, 1))
+
+    def test_burst_limit_covers_named_and_clan_copies_without_changing_damage(self):
+        for t, (root, name) in items.catalogue().items():
+            if root != items.FIRE_ARM or not name.startswith('lamantin_shotgun_'):
+                continue
+            with self.subTest(type=t):
+                params = items.params_of(t)
+                original = items.wiki()[t]
+                self.assertEqual(params['fire_mods'], [min(v, 10) for v in original['fire_mods']])
+                self.assertEqual(combat.pull(params, 2, params['clip_size']),
+                                 (6 if '_14' in name else 10, 1))
+                for field in ('h_damage_min', 'h_damage_max', 'st_damage_min', 'st_damage_max'):
+                    self.assertEqual(params[field], original[field])
 
     def test_original_two_shot_budget_is_not_rebalanced_by_new_medicine_cost(self):
         slots = dict(helm=inventory.HEAD, shirt=inventory.CAMO,
@@ -58,23 +96,32 @@ class Ks12Numbers(unittest.TestCase):
                 bandage = 6056 if level < 8 else 6057 if level < 12 else 6058
                 # KS-12's approved costs predate the independent medicine AP change.
                 heal = {6056: 8, 6057: 10, 6058: 12}[bandage]
-                with patch.dict(items.KS12_FIRE_COSTS, {}, clear=True):
+                with patch.dict(items.KS12_FIRE_COSTS, {}, clear=True), \
+                        patch.object(items, "KS12_FIRE_COST_PERCENT", 100):
                     original = items.params_of(weapon)['fire_costs'][2]
                 previous = 32 if level == 5 else 27 if level == 9 else original * 2
                 limit = (ch.ap_ceiling - heal - 5) // 2
-                self.assertEqual(cost, min(previous, limit))
+                self.assertEqual(cost, (min(previous, limit) * 95 + 50) // 100)
                 self.assertGreaterEqual(ch.ap_ceiling - cost * 2 - heal - 5, 0)
                 if previous <= limit:
-                    self.assertEqual(cost, previous)  # a minimum must not become an extra nerf
+                    self.assertEqual(cost, (previous * 95 + 50) // 100)
 
-    def test_striker_and_named_copies_are_unchanged(self):
-        for t in (25996, 25997, 34565, 35032, 35033, 35037, 36860):
+    def test_all_copies_reduce_cost_and_description_matches(self):
+        for t, (root, name) in items.catalogue().items():
+            if root != items.FIRE_ARM or not name.startswith('lamantin_shotgun_'):
+                continue
             with self.subTest(type=t):
-                with patch.dict(items.KS12_FIRE_COSTS, {}, clear=True):
+                with patch.object(items, 'KS12_FIRE_COST_PERCENT', 100):
                     before = items.params_of(t)
-                self.assertEqual(items.params_of(t), before)
-        self.assertEqual(items.params_of(25996)['fire_costs'][0], 15)
-        self.assertEqual(items.params_of(25997)['fire_costs'][0], 15)
+                after = items.params_of(t)
+                expected = [max(1, (v * 95 + 50) // 100) if v else 0
+                            for v in before['fire_costs']]
+                self.assertEqual(after['fire_costs'], expected)
+                self.assertEqual(items.static_info(t)[1]['fire_costs'], expected)
+                self.assertEqual({k: v for k, v in after.items() if k != 'fire_costs'},
+                                 {k: v for k, v in before.items() if k != 'fire_costs'})
+        for t in (25996, 25997):  # Striker is not a KS-12.
+            self.assertEqual(items.params_of(t)['fire_costs'][0], 15)
 
 
 class Ks12AttackCosts(unittest.IsolatedAsyncioTestCase):

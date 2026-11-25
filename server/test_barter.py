@@ -84,7 +84,7 @@ from testkit import check, fails  # noqa: E402
 check("a Beretta may change hands", barter.tradable(BERETTA), True)
 check("the starter rounds may too", barter.tradable(ROUNDS), True)
 check("gold gear and supplies may change hands unless individually bound",
-      [barter.tradable(t) for t in (25567, 4363, 7006, 37670)], [True] * 4)
+      [barter.tradable(t) for t in (25567, 4363, 6140, 37670)], [True] * 4)
 check("gold sand and ingots remain transferable loot",
       [barter.tradable(t) for t in (2258, *items.GOLD_INGOTS)],
       [True] * (1 + len(items.GOLD_INGOTS)))

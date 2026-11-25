@@ -489,16 +489,13 @@ def in_band(city, level):
 def service(city, row):
     """The keys every craft row has."""
     lo, hi = city["band"]
-    # Recipe selection still uses the city's weapon band. Players keep
-    # access to blueprint upgrades and decoding through level 20. Abri
-    # opens at player level 6; other services keep their original limits.
-    if city["name"] in ("halfa", "abri", "dongola", "abu_hamed") \
-            and row["craft"]["family"] in ("upgrade", "knife", "decode"):
-        if city["name"] == "abri":
-            lo = 6
+    recipe = row['craft']
+    if recipe['family'] in ('upgrade', 'knife', 'decode'):
+        import inventory
+        required = (recipe['level'] if recipe['family'] == 'decode'
+                    else inventory.item_level(recipe['mod']))
+        lo = max(0, required - inventory.GEAR_LEVEL_ALLOWANCE)
         hi = 20
-        if city['name'] == 'abu_hamed' and row['craft']['family'] == 'decode' and row['craft'].get('level') == 17:
-            lo = 16
     row.update(repeatable=1, service=True, level=lo, max_level=hi)
     return row
 

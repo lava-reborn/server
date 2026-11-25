@@ -194,6 +194,21 @@ for _type in items.catalogue():
              else "Только для (" + next(iter(_lines)) + ") оружия.")
     ALL[_did] = (ALL[_did] + "<br>" if ALL.get(_did) else "") + _note
 
+# Keep original/wiki ammunition prose. Missing descriptions use the original
+# quality text, or the cached wiki's «Категория:Боеприпасы» (revision 1640).
+# Built once: both HTTP preloads and the static export carry the same IDs.
+_AMMO_QUALITY_DESCS = {'KS': 6092, 'ST': 6104, 'OT': 6116, 'OT_PS': 6140,
+                       'EK': 6152, 'BB': 6164, 'SB': 6176, 'SHK': 6189}
+_AMMO_GENERIC = ('Боевые припасы — составная часть вооружения, непосредственно '
+                 'предназначенная для поражения живой силы противника.')
+for _type, (_root, _internal_name) in items.catalogue().items():
+    if _root == items.AMMO:
+        _did = items.DESC_ID_OFFSET + _type
+        if not ALL.get(_did):
+            _quality = re.search(r'_(OT_PS|KS|ST|OT|EK|BB|SB|SHK)(?:_G)?$', _internal_name, re.I)
+            _source = _AMMO_QUALITY_DESCS.get(_quality[1].upper()) if _quality else None
+            ALL[_did] = ORIG_ITEM_DESCS.get(items.DESC_ID_OFFSET + _source, _AMMO_GENERIC) if _source else _AMMO_GENERIC
+
 # Battle medicine states its AP cost inside the original HTML description.
 # Use the same final value as ss_si_heal / actual use, without rewriting the
 # text, price or restoration numbers. Built once for both text preloads.
@@ -206,6 +221,21 @@ for _type, (_root, _internal_name) in items.catalogue().items():
             ALL[_did] = _BATTLE_AP_ROW.sub(
                 lambda match: match.group(1) + format(_cost, "g"), ALL[_did], count=1)
 
+# Wear limits apply to the final description, after original/set overrides.
+# Both HTTP text preloads read this table; no per-trader text or changed skill
+# requirement is needed. Training copies have their own equipment rules.
+for _type in items.catalogue():
+    _note = items.equipment_level_text(_type)
+    if _note:
+        _did = items.DESC_ID_OFFSET + _type
+        ALL[_did] = (ALL[_did] + "<br>" if ALL.get(_did) else "") + _note
+
+# The quest reward has a finite supply; the description follows its rules.
+ALL[items.DESC_ID_OFFSET + items.POISON_SYRINGE] = (
+    'Только против других игроков. Хватает на 20 попыток применения, '
+    'включая промахи. После последней попытки исчезает. '
+    'Нельзя отремонтировать или восстановить.')
+
 # The table as the game's own sources leave it, before anybody had a say.
 # tools/npc_editor.py compares against this to tell a name that was chosen
 # from one that was merely sitting in the field when Save was pressed.
@@ -217,6 +247,13 @@ BASE = dict(ALL)
 # A hand-given name now fills a gap the original leaves, and the editor still
 # decides everyone the original is silent about.
 ALL.update({t: n for t, n in npcs.NAMES.items() if t not in ORIG_PERSON_NAMES})
+
+# Location-scoped captions have their own preloaded IDs. Never rename the
+# shared NPC or let an unknown string trigger a late client text request.
+for _sid, _caption in npcs.PRESENTATION_NAMES.items():
+    if _sid in ALL and ALL[_sid] != _caption:
+        raise ValueError('NPC presentation name overlaps an existing string id')
+    ALL[_sid] = _caption
 
 # Owner, 2026-10-28: set upgrades moved to Joseph; former exchangers
 # retain only personal names until the service is restored.

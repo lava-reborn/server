@@ -42,13 +42,17 @@ from collections import namedtuple
 
 import action_animation
 import battle_medicine
+import battle_balance
 import bosses
+import mob_equipment_loot
 import eden
 import eden_harvest
 import eden_ground
+import effects
 import events
 import holdings
 import inventory
+import item_templates
 import items
 import mobs
 import movement
@@ -177,12 +181,12 @@ LOOT_OWNER = 0
 # What a dead player loses, in per cent -- the owner's rules of 2026-09-25,
 # for every death, whoever or whatever did the killing («При любой смерти»):
 # each piece of clothing on the body falls with WEAR_DROP_CHANCE if it is
-# an afro thing («...с вероятностью 10%, если оно афро; если голд-предметы,
-# то они не падают»), and each thing in the backpack with BAG_DROP_CHANCE
+# an afro thing (5% per eligible piece; gold equipment stays bound),
+# and each thing in the backpack with BAG_DROP_CHANCE
 # («Каждая вещь с шансом 30%»). See death_losses. The environment moves them
 # for a test that has to know what falls (test_death_drops sets both to
 # 100); nothing that serves anybody sets either.
-WEAR_DROP_CHANCE = int(os.environ.get("LAVA_WEAR_DROP", "10"))
+WEAR_DROP_CHANCE = int(os.environ.get("LAVA_WEAR_DROP", "5"))
 BAG_DROP_CHANCE = int(os.environ.get("LAVA_BAG_DROP", "30"))
 
 # What the server still accepts from a client it knows to be dead. Two
@@ -208,7 +212,7 @@ BAG_DROP_CHANCE = int(os.environ.get("LAVA_BAG_DROP", "30"))
 #
 # Everything else is an action, and the client's own filter
 # (FilterManager.createDSFilter) never sends one while dead.
-RECOVERY_COMMANDS = frozenset(('moveTo', 'ss_use', 'ss_move', 'chWorld', 'ss_create'))
+RECOVERY_COMMANDS = frozenset(('ss_use', 'ss_move', 'chWorld', 'ss_create'))
 
 DEAD_PASSES = frozenset((
     "hello", "login", "logout", "selPers", "newPers", "actPlayer", "lenter",
@@ -227,11 +231,11 @@ DEAD_REFUSAL = {"head": 20, "admit": 20, "apply": 20}
 
 # The specialisation each firearm class trains (PersAttributes.specMatrix,
 # CharInterface.showKrit): pistols 2, shotguns 3, assault 4, rifles 5,
-# machine guns 6, SMGs 7. Fists train 0, blades 1. Medicine: first aid 8,
-# surgery 9.
+# machine guns 6, SMGs 7. Fists train 0, blades 1. Medicine: surgery 8,
+# first aid 9 (PersAttributes.specMatrix and spec.xml).
 SPEC_OF_WEAPON = {items.PISTOL: 2, items.SHOTGUN: 3, items.ASSAULT: 4,
                   items.RIFLE: 5, items.MACHINEGUN: 6, items.SMG: 7}
-SPEC_FIST, SPEC_BLADE, SPEC_FIRST_AID, SPEC_SURGERY = 0, 1, 8, 9
+SPEC_FIST, SPEC_BLADE, SPEC_SURGERY, SPEC_FIRST_AID = 0, 1, 8, 9
 
 # One generator, seedable for a replayable session (LAVA_SEED).
 RNG = (random.Random(int(os.environ["LAVA_SEED"])) if os.environ.get("LAVA_SEED")
@@ -289,17 +293,47 @@ def pull(si, mode, ammo):
 # player it was not aimed at (not with a gun a quest lends, quests.lent).
 # sdmin/sdmax are the gun's independent stamina damage. Creature curves
 # define only health damage, so their extra stamina component stays zero.
+# hit_cap bounds the ordinary player's accuracy through that same scatter;
+# the range's original rules and NPC attacks retain the default of 1.
 Weapon = namedtuple("Weapon", "num_shots dmin dmax opt_lo opt_hi max_range "
-                              "piercing cone crit skill spec through at_players sdmin sdmax",
-                    defaults=(False, True, 0, 0))
+                              "piercing cone crit skill spec through at_players sdmin sdmax hit_cap",
+                    defaults=(False, True, 0, 0, 1.0))
+
+
+def machinegun_burst_limit(shooter, target, weapon):
+    """A full same-tier player survives one MG pull; later pulls stay lethal.
+
+    Called once per struck body before applying the burst. Only health is
+    bounded: stamina damage, ammunition, AP, accuracy and criticals are paid
+    normally. Impact vitals prevent this from protecting an already hurt foe.
+    """
+    if not target.is_player or weapon.num_shots <= 1:
+        return None
+    if shooter.is_player:
+        if weapon.spec != SPEC_OF_WEAPON[items.MACHINEGUN]:
+            return None
+    else:
+        type_id = getattr(shooter.stats, 'weapon_type_id', None)
+        params = items.params_of(type_id) if type_id is not None else None
+        if not params or params.get('weapon_type') != items.MACHINEGUN:
+            return None
+    if shooter.level - target.level not in (0, 1):
+        return None
+    vital = target.vitals()
+    if vital['hcur'] != vital['hmax'] or vital['scur'] != vital['smax']:
+        return None
+    return max(0, vital['hmax'] - 1)
 
 
 def checked_weapon(original, prepared):
     """Validate optional attack preparation before any acceptance side effect."""
-    if prepared is original:
-        return original
     if not isinstance(prepared, Weapon):
         raise ValueError("Weapon preparation must return a Weapon")
+    if (isinstance(prepared.hit_cap, bool) or not isinstance(prepared.hit_cap, (int, float))
+            or not math.isfinite(prepared.hit_cap) or not 0 < prepared.hit_cap <= 1):
+        raise ValueError("Invalid prepared weapon field: hit_cap")
+    if prepared is original:
+        return original
     for field in ('num_shots', 'skill', 'spec', 'through', 'at_players'):
         if getattr(prepared, field) != getattr(original, field):
             raise ValueError("Weapon preparation changed attack identity: " + field)
@@ -472,7 +506,7 @@ def drops_on_death(type_id):
 
 def pieces_of(row):
     """How many of a thing a row is: a stack's size, one of anything else."""
-    return row["count"] if row["root"] in items.HEAPABLE_ROOTS else 1
+    return row["count"] if items.heapable(row["type_id"]) else 1
 
 
 def bag_share(row, rng=None):
@@ -494,6 +528,9 @@ def bag_share(row, rng=None):
     no tie to break.
     """
     n = pieces_of(row)
+    if row['root'] == items.HEAL and items.heapable(row['type_id']):
+        # Stacking must keep the old independent 30% loss per single dose.
+        return sum(roll(BAG_DROP_CHANCE, rng) for _ in range(n))
     if n >= 3:
         return int(round(n / 3.0))
     return n if roll(BAG_DROP_CHANCE, rng) else 0
@@ -512,8 +549,10 @@ def death_losses(rows, locked=(), rng=None):
     medicines, which are neither, and keep what they hold; the bank is not
     on the body; what lies on the table in a barter (locked) is not in the
     backpack either -- though Fighter.die ends the barter first, and it
-    comes back to it. One roll per row, rows in order, so a seeded RNG
-    gives the same losses for the same things.
+    comes back to it. At most one worn armour piece is lost; the belt
+    rolls separately. Multiple successful armour rolls choose uniformly,
+    so inventory order does not favour the first slot. Backpack losses
+    retain their existing rules.
     """
     out = []
     for row in rows:
@@ -526,6 +565,11 @@ def death_losses(rows, locked=(), rng=None):
             n = bag_share(row, rng)
             if n:
                 out.append((row, n))
+    armour = [row["uniq"] for row, _n in out
+              if row["slot"] in inventory.WEAR_SLOTS and row["slot"] != inventory.BELT]
+    if len(armour) > 1:
+        chosen = armour[(rng or RNG).randint(0, len(armour) - 1)]
+        out = [(row, n) for row, n in out if row["uniq"] not in armour or row["uniq"] == chosen]
     return out
 
 
@@ -543,7 +587,7 @@ def lost_line(plan):
     for row, part in plan:
         name = names.text(items.STRING_ID_OFFSET + row["type_id"]).split("$")[0].strip()
         n = pieces_of(row) if part is None else part
-        said.append("%s (%d шт.)" % (name, n) if row["root"] in items.HEAPABLE_ROOTS
+        said.append("%s (%d шт.)" % (name, n) if items.heapable(row["type_id"])
                     else name)
     text = ", ".join(said[:LOST_NAMED])
     if len(said) > LOST_NAMED:
@@ -609,11 +653,11 @@ def cone_of(factor, target_size, acc_mod, max_range):
     return factor * target_size * acc_mod / float(max_range)
 
 
-def hit_probability(cone, dist):
+def hit_probability(cone, dist, hit_cap=1.0):
     """What the scatter leaves of a shot at this distance, 0..1: the
-    target's width over the cone's, once the cone is wider than it."""
+    target's width over the cone's, limited by the prepared accuracy cap."""
     width = cone * dist
-    return 1.0 if width <= TARGET_SIZE else TARGET_SIZE / width
+    return min(hit_cap, 1.0 if width <= TARGET_SIZE else TARGET_SIZE / width)
 
 
 def bullet_offset(cone, dist, rng=None):
@@ -642,6 +686,7 @@ def bullet_offset(cone, dist, rng=None):
 THROUGH_TYPES = frozenset((items.RIFLE, items.MACHINEGUN))
 THROUGH_SHARE = 0.5
 COVER_SHARE = 1.0 / 3
+BUSH_DAMAGE_SHARE = .75
 
 
 def on_target(offset, window=TARGET_SIZE):
@@ -677,13 +722,19 @@ def stray(loc, a, aim, offset, max_range):
     return flight(loc, a, aim, offset, max_range)[1]
 
 
-def flight(loc, a, aim, offset, max_range, bodies=None, past=0.0):
+def flight(loc, a, aim, offset, max_range, bodies=None, past=0.0, *, bush_hits=None, ground=None,
+           body_width=None):
     """A round's way out from hex a: (the bodies it passes through, nearest
     first, and faWall at the first obstacle or else faMiss where it runs out
     at max_range). Its line goes through the point offset sideways at the
     aim. bodies is cell -> body; a body is passed when its hex is, and only
     farther out than past hexes (a round that hit its mark goes on from
     there).
+
+    bush_hits optionally receives the distance to the first crossed bush.
+    ground reuses the burst's obstacle view instead of rebuilding it per pellet.
+    body_width narrows body collisions without changing wall or foliage geometry;
+    None keeps the legacy hex collision used by uncapped weapons.
 
     A mark on the hex the round starts from -- a creature come back on its
     spawn hex under the player, one he walked onto, the ground at his own
@@ -705,7 +756,9 @@ def flight(loc, a, aim, offset, max_range, bodies=None, past=0.0):
     bx, by = px - ax, py - ay
     b = math.hypot(bx, by)
     bx, by = bx / b, by / b
-    ground = _Sights(loc) if getattr(loc, "shoot_over", None) else loc
+    bushes = getattr(loc, 'bushes', ())
+    if ground is None:
+        ground = _Sights(loc) if getattr(loc, "shoot_over", None) or bushes else loc
     x, y = tx, ty
     crossed = []
     steps = max(1, int(math.ceil(max_range * 2)))
@@ -720,9 +773,22 @@ def flight(loc, a, aim, offset, max_range, bodies=None, past=0.0):
             continue
         if c in ground.obstacles:
             return crossed, ("faWall", dict(hex=c))
+        if bush_hits is not None and not bush_hits and c in bushes:
+            bush_hits.append(t)
         body = bodies.get(c)
-        if body is not None and body not in crossed                 and mobs.hex_distance(a, c, w) > past:
-            crossed.append(body)
+        if body is None or body in crossed:
+            continue
+        distance = mobs.hex_distance(a, c, w)
+        if distance <= past:
+            continue
+        if body_width is not None:
+            # A crossed hex can be wider than the body or overlap max_range.
+            cx, cy = mobs.real(c, w)
+            along = (cx - ax) * ux + (cy - ay) * uy
+            across = (cy - ay) * ux - (cx - ax) * uy
+            if distance > max_range or abs(across - offset * along / d) > body_width / 2:
+                continue
+        crossed.append(body)
     return crossed, ("faMiss", dict(x=round(x, 2), y=round(y, 2)))
 
 
@@ -778,22 +844,20 @@ def miss_at(rx, ry):
 
 
 class _Sights(object):
-    """The ground as a bullet sees it where it flies over a counter."""
+    """Hard terrain only: bullets pass range counters and verified bushes."""
 
     def __init__(self, loc):
         self.width, self.height = loc.width, loc.height
-        self.obstacles = loc.obstacles - loc.shoot_over
+        self.obstacles = (loc.obstacles - getattr(loc, 'shoot_over', frozenset())
+                          - getattr(loc, 'bushes', frozenset()))
 
 
 def shot_wall(loc, a, b):
     """mobs.line_of_fire for a shot: the first obstacle between the hexes, or
-    None -- but in a range (world.SHOOT_OVER) the booth's counter is shot
-    over, so the targets beyond it can be hit at all. Everywhere else the
-    same answer as line_of_fire."""
-    wall = mobs.line_of_fire(loc, a, b)
-    if wall is None or not getattr(loc, "shoot_over", None):
-        return wall
-    return mobs.line_of_fire(_Sights(loc), a, b)
+    None. A range counter and verified bushes do not stop the shot; all
+    remaining obstacles retain the original line_of_fire behaviour."""
+    ground = _Sights(loc) if getattr(loc, "shoot_over", None) or getattr(loc, 'bushes', None) else loc
+    return mobs.line_of_fire(ground, a, b)
 
 
 # --- a bag on the ground --------------------------------------------------
@@ -929,6 +993,7 @@ class Fighter:
         self.interception = None
         self.dead = False
         self.aim = None         # TimerHandle: a burst waiting for fire_times
+        self.aim_request = None  # Repeated clicks must not postpone this shot.
         self.strike = None      # TimerHandle: a swing waiting for strike_time
         self.healing = None     # TimerHandle: a heal waiting for heal_time
         self.reloading = None   # TimerHandle: ammunition is applied on completion
@@ -1064,8 +1129,9 @@ class Fighter:
         """The card's armour: base plus armor_class over the six clothing
         slots (CharInterface.showArmorLevel)."""
         worn = sum((items.params_of(r["type_id"]) or {}).get("armor_class", 0)
-                   for r in self.sess.inv.rows() if r["slot"] in inventory.WEAR_SLOTS)
-        return progression.armor_class(self.character(), worn)
+                   for r in self.sess.inv.rows() if r["slot"] in inventory.WEAR_SLOTS and r['brk'] > 0)
+        active = getattr(self.sess, 'effects', None)
+        return progression.armor_class(self.character(), worn, active.bonus['armor'] if active else 0)
 
     def present(self, rc):
         return not self.dead and not self.preparing() and self.sess in rc.room.players
@@ -1116,7 +1182,11 @@ class Fighter:
         rc = self.rc
         if rc is None:
             return
-        self.sess.send("e_list", mobi_id=0, effects=[])
+        active = getattr(self.sess, 'effects', None)
+        if active is not None:
+            active.send_list()
+        else:
+            self.sess.send("e_list", mobi_id=0, effects=[])
         if resumed:
             self.sess.send("lch", ws=int(rc.room.ws))
             self.sess.send("c_ap", ap=self.ap)
@@ -1248,6 +1318,7 @@ class Fighter:
                 had = True
         if had_reload:
             self.sess.inv.cancel_reloads()
+        self.aim_request = None
         self.action_revision = getattr(self, "action_revision", 0) + 1
         self.hostile_action = False
         if had and notify:
@@ -1357,15 +1428,16 @@ class Fighter:
         except Exception:
             log.exception("  !!    combat close failed")
 
-    def blocks(self, cmd, wants_ack):
+    def blocks(self, cmd, wants_ack, params=None):
         """The dead filter (FilterManager.createDSFilter): the client sends
         nothing but resurrect while dead, so an action that arrives anyway
         came from a modified one and is refused -- with an ack where one is
         owed, and an empty page for a search that waits on its own queue,
         so every queue stays in step. What still goes through, and why, is
         DEAD_PASSES."""
-        if not self.dead and cmd in RECOVERY_COMMANDS:
-            if Fighter.refuse_recovery(self, moving=cmd == 'moveTo'):
+        firing = cmd == 'ss_use' and (params or {}).get('type') in (inventory.USE_FIRE, '16')
+        if not self.dead and cmd in RECOVERY_COMMANDS and not firing:
+            if Fighter.refuse_recovery(self):
                 return True
         if not self.dead or cmd in DEAD_PASSES:
             return False
@@ -1425,12 +1497,9 @@ class Fighter:
         as its target keeps you for as long as you stay (mobs.Mob.think),
         and the room at war with it (RoomCombat.hostilities) -- but the way
         out is yours once the timer has run out, the creature still at your
-        heels. Nor is it whether you fired: a shot that hit nothing -- a
-        miss, a burst into the scenery, a swing at bare ground -- starts no
-        countdown on the client, and none here. What starts it is a hit,
-        given or taken, by a creature or by a player; so a duel holds both
-        its sides, the one who struck as much as the one who was struck, and
-        every hit that lands keeps it running.
+        heels. A shot at an opponent in range can keep the room at war
+        even when it misses or cover stops it, but only a hit given or
+        taken restarts this personal countdown.
 
         It is the client's own countdown, which is why it has to be exactly
         that one. The exit window of a zone cell -- the one way out a player
@@ -1460,9 +1529,12 @@ class Fighter:
         self.ack(RES_NO_LEAVE)
         return True
 
-    def c_ap(self):
+    def c_ap(self, *, amax=False):
         Fighter.settle_walk(self)
-        self.sess.send("c_ap", ap=self.ap)
+        params = dict(ap=self.ap)
+        if amax:
+            params['amax'] = self.ap_max
+        self.sess.send("c_ap", **params)
 
     def newbie_ground(self):
         """Standing on the Nubian valley's ground (travel.newbie_ground):
@@ -1478,8 +1550,17 @@ class Fighter:
         return bool(self.sess.loc.pvp) and not self.newbie_ground()
 
     def same_clan(self, other):
+        if not other.is_player:
+            return False
+        for fighter in (self, other):
+            ground = getattr(getattr(fighter, 'sess', None), 'ground', None)
+            if getattr(ground, 'ally', False):
+                if fighter is self:
+                    self = ground.owner.combat
+                else:
+                    other = ground.owner.combat
         same_clan = getattr(self.store, 'same_clan', None)
-        return bool(other.is_player and same_clan
+        return bool(other.is_player and getattr(other, 'store', self.store) is self.store and same_clan
                     and same_clan(self.sess.char_id, other.sess.char_id))
 
     def allied(self, other):
@@ -1533,7 +1614,20 @@ class Fighter:
         is all a player sees of a mob's level."""
         rc = self.rc
         mob = rc.mobs.get(npc_id) if rc is not None else None
-        return dict(lvl=mob.level) if mob is not None else {}
+        if mob is None:
+            return {}
+        shown = mob.level
+        if (mob.stats.role == 'boss' and not getattr(mob, '_holding_prepared', False)
+                and mob.type_id not in bosses.WAREHOUSE_MASTERS
+                and getattr(mob, 'training_ground', None) is None):
+            # Presentation only: keep the old fixed shield level without
+            # changing combat, recovery, contribution XP or loot eligibility.
+            source = battle_balance.data()
+            index = source['mobs'].get(str(mob.type_id))
+            shown = (source['mob_records'][index]['level'] if index is not None
+                     else mobs.TYPES.get(str(mob.type_id), {}).get('level', shown))
+            shown = max(1, shown)
+        return dict(lvl=shown)
 
     def after_npc_info(self, npc_id):
         """usrUp right behind a mob's userInfo, or the bar over its head
@@ -1608,7 +1702,7 @@ class Fighter:
         or invalid result refuses preparation without replacing an old action.
         row is the held firearm; ammo is its immutable-by-contract static data.
         """
-        return weapon
+        return battle_balance.weapon(weapon, self.character(), row, ammo)
 
     def prepare_melee(self, bounds, row):
         """Pure integer damage bounds, before accepting a swing; row=None for fists.
@@ -1616,7 +1710,7 @@ class Fighter:
         Return ordered nonnegative integer bounds. Do not change timing, costs,
         inventory or the actor; errors leave any previous action untouched.
         """
-        return bounds
+        return battle_balance.melee(bounds, self.character(), row)
 
     def healing_spec(self, vitals):
         """Pure specialisation index, resolved at completion before any healing cost."""
@@ -1624,7 +1718,7 @@ class Fighter:
 
     def healing_multiplier(self, character):
         """Pure finite nonnegative scale, validated before HP, items or AP change."""
-        return 1
+        return battle_balance.healing_multiplier(character)
 
     def medicine_cooldown_seconds(self):
         """Pure duration in (0, default cooldown], validated before consuming a dose."""
@@ -1633,8 +1727,8 @@ class Fighter:
     def use_fire(self, p):
         """type=16: a shot with the primary firearm, or a strike with a blade
         or the bare fist (obj=x0, ItemActivator.strike)."""
-        if Fighter.refuse_recovery(self):
-            return
+        # A committed shot's cosmetic sequence must not delay the next aim.
+        # Healing/reloading/swaps keep their own committed-action checks.
         sess = self.sess
         rc = self.rc
         if rc is None or sess.on_map or self.dead:
@@ -1667,6 +1761,9 @@ class Fighter:
             target = rc.actor(tid)
             if target is None:
                 self.ack(inventory.RES_NOT_FOUND)
+                return
+            if holdings.defender_friendly(rc, target, self):
+                self.ack(inventory.RES_REFUSED)
                 return
             if target.is_player and target.preparing():
                 self.ack(inventory.RES_NOT_READY)
@@ -1701,6 +1798,14 @@ class Fighter:
                 self.ack(inventory.RES_NOT_FOUND)
                 return
             hexcell = tid
+        if (row is not None and item_templates.source_type(row['type_id']) == items.POISON_SYRINGE
+                and (target is None or not target.is_player)):
+            self.ack(inventory.RES_REFUSED)
+            return
+        if (row is not None and row['root'] == items.FIRE_ARM and self.aim is not None
+                and getattr(self, 'aim_request', None) == (row['uniq'], ttype, tid, row['cur_mode'])):
+            self.ack(inventory.RES_OK)
+            return
         if eden_harvest.try_attack(self, row, target, hexcell):
             return
         if row is None or row["root"] == items.COLD_ARM:
@@ -1772,6 +1877,7 @@ class Fighter:
         palm_cycle = eden_harvest.attack_cycle(rc, target)
         if palm_cycle is not None:
             args += (palm_cycle,)
+        self.aim_request = (row['uniq'], ttype, tid, row['cur_mode'])
         Fighter.schedule_action(self, revision, "aim",
             pace.paced(si.get("fire_times", [700])[mode] / 1000.0),
             self.fire_now, *args)
@@ -1783,6 +1889,7 @@ class Fighter:
         num_shots for a burst); what the magazine lost meanwhile leaves its
         share of the pairs empty."""
         self.aim = None
+        self.aim_request = None
         rc = self.rc
         if rc is None or self.dead:
             return
@@ -1817,19 +1924,18 @@ class Fighter:
             rounds = weapon.num_shots
         spent = min(rounds, row["ammo_count"]) if row else 0
         live = weapon.num_shots * spent // rounds if rounds else 0
+        # Intent depends on range, not cover. Both creatures and players
+        # react to a paid shot at their figure; only actual hits hold exits.
+        shot_in_range = (live > 0 and self.is_player and target is not None
+                         and target is not self and self.sess.room is rc.room
+                         and self.present(rc)
+                         and rc.within_fire(self, target, weapon.max_range))
+        pvp_shot = (shot_in_range and target.is_player
+                    and target.sess.room is rc.room
+                    and self.pvp_allowed() and target.pvp_allowed()
+                    and not Fighter.same_clan(self, target)
+                    and not Fighter.allied(self, target))
         pool = target.hp if target is not None and not target.is_player else 0
-        # Asked before the burst, which may kill it: whether the rounds could
-        # have got there at all. Only then is the shot a provocation. It
-        # walks the line the burst walks (shot_wall), and a fault in it is
-        # no reason to keep the burst back: faAim has announced its pairs,
-        # and raised out of here none of them went and nothing was paid. The
-        # error log has it; the shot provokes nobody.
-        try:
-            reached = rc.within_fire(self, target, weapon.max_range)
-        except Exception:
-            log.exception("  !!    the line of fire of %s failed before its burst: it"
-                          " provokes nobody", self.eid)
-            reached = False
         others = []
         recovery_ms = Fighter.commit_animation(self, items.params_of(row['type_id']), weapon.num_shots)
         h, s, hits, killed = rc.burst(self, target, hexcell, weapon, live, others,
@@ -1865,23 +1971,23 @@ class Fighter:
             for body, oh, os_, _dead, opool in others:
                 if not body.is_player:
                     self.award_xp(weapon.skill, weapon.spec, min(oh, opool) + os_, body)
-            # A burst that fell short of the mark, or into a wall on the way,
-            # turns no creature on the shooter and opens no duel: every round
-            # dropped on the ground, and nothing out there felt it. A miss
-            # within reach does provoke -- the bullets went past its ears.
-            # Whatever else a round hit was hit: it turns, or it is a duel.
-            if reached:
+            # A paid shot in range engages its intended opponent even when
+            # hard cover stopped it. Objects and friendly guards do not aggro.
+            # Only actual hits refresh the native countdown in burst.
+            if pvp_shot or (shot_in_range and not target.is_player):
                 rc.after_hostile(self, target)
             for body, _h, _s, _dead, _pool in others:
                 rc.after_hostile(self, body)
             if killed:
-                rc.kill(target, self, blueprint_killer_level=blueprint_killer_level)
+                rc.kill(target, self, blueprint_killer_level=blueprint_killer_level,
+                        killing_weapon_type=row['type_id'])
             for body, _h, _s, dead, _pool in others:
                 if dead:
                     # kill() lets the held rp_info go; each kill's price in
                     # one frame of its own.
                     self.hold_stats()
-                    rc.kill(body, self, blueprint_killer_level=blueprint_killer_level)
+                    rc.kill(body, self, blueprint_killer_level=blueprint_killer_level,
+                            killing_weapon_type=row['type_id'])
         finally:
             self.release_stats()
 
@@ -1958,6 +2064,7 @@ class Fighter:
         sess = self.sess
         ch = self.character()
         loc = sess.loc
+        syringe = False
         if uniq is not None:
             row = self.store.item(uniq)
             if (row is None or row["char_id"] != sess.char_id
@@ -1965,13 +2072,22 @@ class Fighter:
                     or inventory.weapon_requirement_error(row, ch)):
                 rc.room.broadcast(("caMiss", dict(id=self.eid, hex=hexcell if target is None else target.cell)))
                 return
+            syringe = item_templates.source_type(row['type_id']) == items.POISON_SYRINGE
+            if syringe:
+                if target is None or not target.is_player:
+                    Fighter.action_cancelled(self, stop_aim=True)
+                    return
+                # Commit the finite dose before damage/notifications. A failed
+                # reply or damage handler must not leave a reusable last dose.
+                sess.inv.wear(row, 1)
         # Melee keeps its strike timing; only firearm release locks actions.
         recovery_ms = 0
         aim_cell = target.cell if target is not None else hexcell
         killed = False
         reach = (target is not None and target.present(rc)
                  and mobs.adjacent(self.cell, target.cell, loc))
-        hit = reach and roll(melee_hit_chance(ch, spec) - target.dodge_melee())
+        hit = (reach and not holdings.defender_friendly(rc, target, self)
+               and roll(melee_hit_chance(ch, spec) - target.dodge_melee()))
         if hit:
             crit = rc.melee_critical(self, target, melee_crit(ch, spec) - target.crit_evade_melee())
             dmg = RNG.randint(dmg_range[0], dmg_range[1])
@@ -1996,7 +2112,7 @@ class Fighter:
         # The swing costs the blade a point whether or not it landed: the
         # edge meets something either way, and a miss that cost nothing would
         # make flailing free.
-        if uniq is not None:
+        if uniq is not None and not syringe:
             self.sess.inv.wear_uniq(uniq, 1)
         # The blow's pay and the kill's settlement in one rp_info
         # (hold_stats), as for a burst.
@@ -2071,6 +2187,11 @@ class Fighter:
             self.ack(inventory.RES_REFUSED)
             return
         si = items.params_of(row["type_id"]) or {}
+        error = effects.use_error(self, target, row['type_id'])
+        if error:
+            self.ack(inventory.RES_REFUSED)
+            sess.answer(error)
+            return
         cost = si.get("heal_cost", 0)
         peace = items.no_combat(row["type_id"])
         if Fighter.medicine_blocked(self, peace):
@@ -2104,9 +2225,14 @@ class Fighter:
     def heal_now(self, uniq, target, peace_damage=None, ap_cost=0):
         self.healing = None
         row = self.store.item(uniq)
-        if row is None or row["char_id"] != self.sess.char_id or self.dead:
+        if (row is None or row['char_id'] != self.sess.char_id or self.dead
+                or row['root'] != items.HEAL or row['use_count'] <= 0
+                or row.get('count', 1) <= 0 or row.get('slot', inventory.BAG) == inventory.BANK
+                or uniq in getattr(self.sess.inv, 'locked', ())):
             self.sess.send("actionCancel", release=1)
             return
+        if row is not None and effects.definition(row['type_id']) is not None:
+            return effects.activate(self, uniq, target, ap_cost, peace_damage)
         if items.stimulant_unavailable(row["type_id"]):
             self.sess.send("actionCancel", release=1)
             self.sess.answer(items.STIMULANT_UNAVAILABLE)
@@ -2155,10 +2281,30 @@ class Fighter:
         in_combat = ap_cost > 0 or (self.rc is not None and self.rc.room.ws)
         cooldown = (battle_medicine.validate_duration(self.medicine_cooldown_seconds())
                     if items.battle_medicine(row["type_id"]) and in_combat else None)
+        if cooldown is not None:
+            cooldown = min(cooldown, battle_medicine.duration(row['type_id']))
         mult = (1 + 0.2 * spec_or_zero(ch, spec)) * multiplier
         healed = min(v["hmax"] - v["hcur"], int(RNG.uniform(lo, hi) * mult))
         slo, shi = si.get("min_st_rest", 0), si.get("max_st_rest", 0)
         rested = min(v["smax"] - v["scur"], int(RNG.uniform(slo, shi) * mult))
+        # Consume the checked dose before granting vitals/AP or broadcasting
+        # success. A failed write must not heal for free or start cooldown.
+        left = row["use_count"] - 1
+        stacked = left <= 0 and items.heapable(row['type_id']) and row.get('count', 1) > 1
+        try:
+            if stacked:
+                self.store.update_item(uniq, count=row['count'] - 1)
+            elif left <= 0:
+                self.store.delete_item(uniq)
+            else:
+                self.store.update_item(uniq, use_count=left)
+        except storage.CommitError:
+            self.sess.inv.close_after_uncertain_commit()
+            return
+        except Exception:
+            log.exception("Medicine consumption failed for character %s", self.sess.char_id)
+            self.sess.send("actionCancel", release=1)
+            return
         patient.hp = v["hcur"] + max(0, healed)
         patient.sp = v["scur"] + max(0, rested)
         if ap_cost:
@@ -2170,12 +2316,11 @@ class Fighter:
             room.broadcast(frame)
         else:
             self.sess.send(frame[0], **frame[1])
-        left = row["use_count"] - 1
-        if left <= 0:
-            self.store.delete_item(uniq)
+        if stacked:
+            self.sess.inv.push_di(self.store.item(uniq))
+        elif left <= 0:
             self.sess.inv.push_status(row, 0)
         else:
-            self.store.update_item(uniq, use_count=left)
             self.sess.inv.push_di(self.store.item(uniq))
         if cooldown is not None:
             remaining = battle_medicine.start(
@@ -2193,84 +2338,81 @@ class Fighter:
 
     # --- experience ---------------------------------------------------------
     def award_xp(self, skill, spec, dealt, target):
-        """Experience for a blow or a burst that harmed a mob, by the owner's
-        rule (progression.combat_mob_xp): equal/lower rewards stay unchanged,
-        +1 through +4 rise linearly to the old ceiling, times xp_mult;
-        the trained skill's 17+ cap applies before splitting the reward.
+        """Record actual HP/SP harm; experience is paid only at the death.
 
-        A kill is worth the price and no more, and a blow pays the part of
-        it that its harm is of the mob's health and stamina together -- a
-        blade lands on stamina first, and those blows have to train as well.
-        A bullet takes little stamina, so blows alone would pay a gun less
-        than a knife for the same kill; RoomCombat.settle_xp pays the rest
-        when the mob dies, to everyone who harmed it by their share. The
-        mob's ledger never lets one fighter be paid more than a whole kill.
-
-        Against the level of the skill being trained, not the best one: a
-        Стрельба 6 picking up a knife is a beginner with the blade, and the
-        level-1 dog has to teach the knife (test_combat pins it).
+        Each skill/spec keeps its own harm and damage-time reward, including
+        the trained skill's level and active XP bonuses. Regeneration cannot
+        mint another kill price, and a late weapon or buff cannot inherit
+        somebody else's earlier contribution. A character's stable ID keeps
+        a reconnect from retaining its old Fighter/Session until the kill.
         """
         if eden_harvest.is_palm(self.sess.loc, target):
             return
         st = getattr(target, "stats", None)
-        if st is None or dealt <= 0:
+        if st is None or dealt <= 0 or not getattr(target, "alive", True):
             return
-        pool = max(1, int(getattr(st, "hp_max", 1)) + int(getattr(st, "sp_max", 0)))
-        share = min(float(dealt), pool) / pool
         ledger = getattr(target, "xp_ledger", None)
         if ledger is not None:
-            row = ledger.setdefault(self, [0.0, 0.0, skill, spec])
+            owner = getattr(self.sess, "char_id", None)
+            key = owner if owner is not None else self
+            row = ledger.setdefault(key, [0.0, 0.0, skill, spec, {}, owner])
             row[0] += dealt
             row[2], row[3] = skill, spec
-            share = min(share, max(0.0, 1.0 - row[1]))
-            row[1] += share
+            ch = self.character()
+            trained_spec = (spec if spec is not None and 0 <= spec < progression.SPECS
+                            and ch.spec[spec][0] >= 0 else None)
+            bucket = row[4].setdefault((skill, trained_spec), [0.0, 0.0])
+            bucket[0] += dealt
+            bucket[1] += Fighter.xp_reward(self, skill, dealt, target)
+            # Later levelling or departure must not lower the level used
+            # for loot. Keep the contributor's level at the time of the hit.
+            target.loot_level = max(getattr(target, 'loot_level', 0), self.level)
         # The same harm on the capture ledger, by character: what a
         # warehouse's boss is taken by (holdings.py; mobs.Mob.capture_harm).
         harm = getattr(target, "capture_harm", None)
         char_id = getattr(self.sess, "char_id", None)
         if harm is not None and char_id:
             harm[int(char_id)] = harm.get(int(char_id), 0) + dealt
-        self.credit_xp(skill, spec, share, target)
 
-    def credit_xp(self, skill, spec, share, target):
-        """`share` of a kill of `target` into `skill`: the skill takes the
-        whole award and a learned specialisation the same on top (gain_xp
-        spec_on_top), so that opening one does not halve the pace the rule
-        is built around. The fraction a hit leaves over carries to the next.
-        The client prints "+N опыта" from the difference in the next
-        rp_info, pushed for the indexes that moved; a level-up (constitution)
-        and a level of a strength or agility specialisation move a bar's
-        maximum, which travels by usrUp (progression.moves_vitals). An
-        object pays nothing (OBJECTS_PAY_XP). A trained combat skill stops
-        at 17; its learned specialisation keeps a capped reward and its own
-        fractional carry. The same rules apply to the death settlement."""
-        if share <= 0:
-            return
+    def xp_reward(self, skill, share, target):
+        """Value at the damaging action, before any fractional rounding."""
         ch = self.character()
         st = target.stats
         if not OBJECTS_PAY_XP and getattr(st, "role", None) == "object":
+            return 0.0
+        return (progression.combat_mob_xp(
+            target.level, ch.skill[skill][0], share, getattr(st, "xp_mult", 1))
+            * effects.multiplier(self.sess, 'mob_exp',
+                                 bonus=progression.PREMIUM_XP_BONUS[ch.premium_level()]))
+
+    def credit_xp(self, skill, spec, share, target, *, reward=None):
+        """Pay a settled share, or an explicit damage-time reward snapshot.
+
+        Skill and spec keep separate fractions so switching weapons cannot
+        move the first weapon's residue into the next. Combat skill stops at
+        17; the learned specialisation continues on its existing capped curve.
+        """
+        if share <= 0:
             return
-        skill_level = ch.skill[skill][0]
+        ch = self.character()
+        if not OBJECTS_PAY_XP and getattr(target.stats, "role", None) == "object":
+            return
         spec_only = (skill in (progression.SHOOTING, progression.MELEE)
-                     and skill_level >= progression.COMBAT_SKILL_CAP)
-        if spec_only and (spec is None or not 0 <= spec < progression.SPECS
-                          or ch.spec[spec][0] < 0):
-            return
-        reward = progression.combat_mob_xp(
-            target.level, skill_level, share, getattr(st, "xp_mult", 1))
-        if spec_only:
-            # Preserve the already earned fraction when a skill reaches 17.
-            reward += ch.xp_carry.pop(skill, 0.0)
-            xp = ch.carry_spec_xp(spec, reward)
-        else:
+                     and ch.skill[skill][0] >= progression.COMBAT_SKILL_CAP)
+        spec_on = spec is not None and 0 <= spec < progression.SPECS and ch.spec[spec][0] >= 0
+        if reward is None:
+            reward = Fighter.xp_reward(self, skill, share, target)
+        changed = {"skills": set(), "specs": set(), "attribs": set()}
+        if not spec_only:
             xp = ch.carry_xp(skill, reward)
-        if xp <= 0:
-            return
-        if spec_only:
-            changed = ch.gain_spec_xp(spec, xp)
-        else:
-            changed = ch.gain_xp(skill, xp, spec, spec_on_top=True,
-                                 skill_cap=progression.COMBAT_SKILL_CAP)
+            if xp > 0:
+                changed = ch.gain_xp(skill, xp, skill_cap=progression.COMBAT_SKILL_CAP,
+                                     premium=False)
+        if spec_on:
+            xp = ch.carry_spec_xp(spec, reward)
+            if xp > 0:
+                for name, indexes in ch.gain_spec_xp(spec, xp, premium=False).items():
+                    changed[name] |= indexes
         if any(changed.values()):
             self.stats_changed(changed)
         if progression.moves_vitals(changed):
@@ -2365,7 +2507,10 @@ class Fighter:
         room = self.sess.room
         if room is not None:
             room.broadcast(("lch", dict(dead=self.eid)))
-            self.drop_on_death()
+            # PvE deaths retain their ordinary losses. A player cannot farm
+            # possessions from a victim four or more levels below them.
+            if killer is None or not killer.is_player or killer.level - self.level < 4:
+                self.drop_on_death()
         # Nothing here to shoot at any more. think() would notice on its
         # next tick (present() is false for a corpse), but until then the
         # room stays at war over a target that cannot be hit.
@@ -2592,7 +2737,8 @@ class Fighter:
                 else:
                     eden_ground.take(self, bag, [row])
                 return True
-            if items.acquisition_blocked(row["type_id"]):
+            if (items.acquisition_blocked(row["type_id"])
+                    or row["type_id"] == quests.LABORANT_PART):
                 self.ack(inventory.RES_REFUSED)
                 return True
             if inv.total_weight() + inventory.weight_of(row) > inv.carry_limit():
@@ -2635,7 +2781,8 @@ class Fighter:
             if any(eden.restricted_item(r['type_id']) for r in rows):
                 eden_ground.take(self, bag, rows)
                 return True
-            if any(items.acquisition_blocked(r["type_id"]) for r in rows):
+            if any(items.acquisition_blocked(r["type_id"])
+                   or r["type_id"] == quests.LABORANT_PART for r in rows):
                 self.ack(inventory.RES_REFUSED)
                 return True
             if inv.total_weight() + sum(inventory.weight_of(r) for r in rows) \
@@ -2676,6 +2823,9 @@ class Fighter:
         """e_si with every key Effect.clone reads, all neutral. Five of these
         may be in flight (EffectsFactory.packageLength) and each must be
         answered. name is a string id: the shared empty string."""
+        active = getattr(self.sess, 'effects', None)
+        if active is not None and active.static(int(p.get('type', 0) or 0)):
+            return
         self.sess.send("e_si", type=int(p.get("type", 0) or 0),
                        name=quests.EMPTY_STRING_ID, work_time=0, update_delta=0,
                        attribs_mask=0, attribs=[], skills_mask=0, skills=[],
@@ -2685,6 +2835,10 @@ class Fighter:
                        immob=0, stun=0)
 
     def e_get_di(self, p):
+        active = getattr(self.sess, 'effects', None)
+        if active is not None and int(p.get('type', 0) or 0) - effects.FIRST in effects.definitions():
+            active.dynamic(int(p['type']))
+            return
         self.sess.send("e_di", type=int(p.get("type", 0) or 0),
                        mobi_id=int(p.get("mobi_id", 0) or 0), time=0)
 
@@ -2730,9 +2884,12 @@ class RoomCombat:
         self.mobs = {eid: mobs.Mob(eid, npc.type_id, npc.cell)
                      for eid, npc in room.npcs.items() if npc.root == world.MOB}
         eden_harvest.prepare_room(self)
+        holdings.prepare_room(self)
+        battle_balance.prepare_world_boss_defence(self)
         # The ones that keep hours instead of the respawn timer (bosses.py):
         # keep_hours brings them in and sends them away.
-        self.bosses = [m for m in self.mobs.values() if bosses.keeps_hours(m.type_id)]
+        self.bosses = [m for m in self.mobs.values()
+                       if bosses.keeps_hours(m.type_id, self.room.loc.id)]
         self.recall_kills()
         # A boss's escort (data/placements.json "escort", rooms.Room.escorts):
         # while the room has a boss keeping hours, one killed waits for its
@@ -2749,16 +2906,20 @@ class RoomCombat:
 
     # --- pure target-resolution policies ------------------------------------------
     def ranged_critical(self, shooter, target, weapon, optimal):
-        return optimal and roll(weapon.crit - target.crit_evade_ranged())
+        return battle_balance.ranged_critical(shooter, target, weapon, optimal, ordinary=True)
 
     def melee_critical(self, attacker, target, chance):
-        return roll(chance)
+        return battle_balance.critical(attacker, target, chance, ordinary=True)
 
     def bullet_damage(self, shooter, target, weapon, damage, stamina_damage, critical, stamina_left):
-        return split_damage(damage, target.armor(), weapon.piercing, critical, stamina_left, stamina_damage)
+        rifle = (weapon.spec == SPEC_OF_WEAPON[items.RIFLE] if shooter.is_player
+                 else getattr(shooter.stats, 'weapon_class', None) == 'rifle')
+        return battle_balance.split(shooter, target, damage, weapon.piercing, critical,
+                                    stamina_left, stamina_damage, rifle=rifle, ordinary=True)
 
     def melee_damage(self, attacker, target, damage, critical, stamina_left):
-        return melee_split(damage, critical, stamina_left)
+        return battle_balance.split(attacker, target, damage, 1, critical, stamina_left,
+                                    melee=True, ordinary=True)
 
     # --- who is here -------------------------------------------------------------
     def fighters(self):
@@ -2775,15 +2936,19 @@ class RoomCombat:
                 return sess.combat
         return None
 
-    def nearest_fighter(self, cell, radius):
+    def nearest_fighter(self, cell, radius, mob=None):
         width = self.room.loc.width
         best, best_d = None, radius
         for f in self.fighters():
             if not f.present(self):
                 continue
             d = mobs.hex_distance(cell, f.cell, width)
-            if d <= best_d:
-                best, best_d = f, d
+            if d > best_d:
+                continue
+            if mob is not None and (holdings.defender_friendly(self, mob, f)
+                                    or holdings.warehouse_defender_passive(self, mob, f)):
+                continue
+            best, best_d = f, d
         return best
 
     def push_vitals(self, actor):
@@ -2856,11 +3021,21 @@ class RoomCombat:
                 self.ap_last += ticks * AP_TICK
         else:
             self.ap_last = t
-        for mob in list(self.mobs.values()):
-            # Settle quiet time before a returning player can start a fight.
-            if bosses.uses_camp_recovery(self.room.loc.id, mob.type_id):
-                self.regen_mob(mob, t)
-            mob.think(self, t)
+        self._defender_cache = {}
+        try:
+            for mob in list(self.mobs.values()):
+                if mob.target is not None and holdings.defender_friendly(self, mob, mob.target):
+                    if mob.aim is not None:
+                        mob.aim.cancel()
+                        mob.aim = None
+                        self.room.broadcast(('actionCancel', dict(id=mob.eid, stop_aim=1)))
+                    self.mob_release(mob)
+                # Settle quiet time before a returning player can start a fight.
+                if bosses.uses_camp_recovery(self.room.loc.id, mob.type_id):
+                    self.regen_mob(mob, t)
+                mob.think(self, t)
+        finally:
+            self._defender_cache = None
         self.calm(t)
         for f in fighters:
             if t >= f.regen_at:
@@ -2967,15 +3142,15 @@ class RoomCombat:
             mob.ap = mob.ap_max
 
     def within_fire(self, shooter, target, max_range):
-        """Whether a burst from shooter can reach target at all: it is here,
-        no farther than max_range, and no obstacle stands between (shot_wall,
-        the line burst itself flies). Nothing about the scatter: a round that
-        flies past within reach still flew past."""
+        """A present intended target in range, independently of cover/scatter.
+
+        The burst still traces obstacles before applying damage. This check
+        only decides whether the intended opponent reacts to the shot.
+        """
         if target is None or not target.present(self):
             return False
         width = self.room.loc.width
-        return (mobs.hex_distance(shooter.cell, target.cell, width) <= max_range
-                and shot_wall(self.room.loc, shooter.cell, target.cell) is None)
+        return mobs.hex_distance(shooter.cell, target.cell, width) <= max_range
 
     def after_hostile(self, attacker, target):
         """Bookkeeping after any shot or swing: the encounter of two players
@@ -3001,7 +3176,7 @@ class RoomCombat:
             # war over nothing -- and, standing next to him, "strike" him for
             # 0 (think() attacks whatever is in reach), which the client's
             # AUTO_SHOT answers with another shot at the box, for ever.
-            self.aggro(target, attacker, t)
+            self.aggro(target, attacker, t, retaliation=True)
 
     def mark_foe(self, fighter, foe):
         """A player was shot at or swung at by another: the one attacked is
@@ -3018,11 +3193,12 @@ class RoomCombat:
         fighter.foes.add(foe.eid)
         fighter.sess.send("lch", enemy=foe.eid)
 
-    def aggro(self, mob, fighter, t=None):
+    def aggro(self, mob, fighter, t=None, *, retaliation=False):
         """A mob picks a player: the room goes to war and the player's client
         paints the mob red (lch;enemy -> Location.setEnemy) and remembers it
         for autofire."""
-        if fighter.preparing():
+        if (fighter.preparing() or holdings.defender_friendly(self, mob, fighter)
+                or (not retaliation and holdings.warehouse_defender_passive(self, mob, fighter))):
             return
         t = now() if t is None else t
         mob.target = fighter
@@ -3088,6 +3264,21 @@ class RoomCombat:
             self.push_vitals(mob)
 
     def mob_attack(self, mob, target, t):
+        if holdings.defender_friendly(self, mob, target):
+            self.mob_release(mob)
+            return
+        if mob.stats.ranged and hasattr(mob.stats, 'balanced_modes'):
+            distance = mobs.hex_distance(mob.cell, target.cell, self.room.loc.width)
+            selected = battle_balance.mob_mode(mob.stats, distance)
+            if selected is None or selected[1] > mob.ap:
+                return
+            weapon, cost, delay = selected
+            mob.next_attack = t + delay + mobs.ATTACK_PAUSE
+            self.room.broadcast(('faAim', dict(id=mob.eid,
+                ang=mobs.direction(mob.cell, target.cell, self.room.loc.width), num_shots=weapon.num_shots)))
+            mob.aim = asyncio.get_running_loop().call_later(pace.paced(delay),
+                                                          self.mob_burst, mob, target, weapon, cost)
+            return
         st = mob.stats
         mob.next_attack = t + st.attack_time + mobs.ATTACK_PAUSE
         loop = asyncio.get_running_loop()
@@ -3109,14 +3300,17 @@ class RoomCombat:
         else:
             self.mob_strike(mob, target)
 
-    def mob_burst(self, mob, target, weapon):
+    def mob_burst(self, mob, target, weapon, ap_cost=None):
         mob.aim = None
         if not mob.alive:
+            return
+        if holdings.defender_friendly(self, mob, target):
+            self.room.broadcast(("actionCancel", dict(id=mob.eid, stop_aim=1)))
             return
         others = []
         h, s, hits, killed = self.burst(mob, target, target.cell, weapon,
                                         weapon.num_shots, others)
-        mob.ap = max(0, mob.ap - mob.stats.attack_ap)
+        mob.ap = max(0, mob.ap - (mob.stats.attack_ap if ap_cost is None else ap_cost))
         self.after_hostile(mob, target)
         if killed:
             self.kill(target, mob)
@@ -3127,6 +3321,9 @@ class RoomCombat:
     def mob_strike(self, mob, target):
         mob.aim = None
         if not mob.alive:
+            return
+        if holdings.defender_friendly(self, mob, target):
+            self.room.broadcast(("actionCancel", dict(id=mob.eid, stop_aim=1)))
             return
         st = mob.stats
         killed = False
@@ -3267,7 +3464,9 @@ class RoomCombat:
         # that is nothing to them. stray finds one within reach on each
         # bullet's own line; asking the whole line drew the rounds flying 30
         # hexes into a rock the gun could never reach.
-        wall = shot_wall(loc, shooter.cell, aim) if dist <= weapon.max_range else None
+        # Reuse the obstacle view for every pellet in this burst.
+        ground = _Sights(loc) if getattr(loc, 'shoot_over', None) or getattr(loc, 'bushes', None) else loc
+        wall = shot_wall(ground, shooter.cell, aim) if dist <= weapon.max_range else None
         tx, ty = mobs.real(aim, width)
         reach = target is not None and wall is None and dist <= weapon.max_range
         bodies = self.bodies(shooter, target, weapon) if live and wall is None else {}
@@ -3275,9 +3474,25 @@ class RoomCombat:
         window = cover_window(len(covers))
         depth = 2 if weapon.through else 1
         struck = {}                 # body -> [hp, sp, hits, sp left]
+        machinegun_limits = {}      # one impact-vitals snapshot per body/pull
+        friendly_defenders = {}     # live clan rights once per pull
+        body_width = TARGET_SIZE if weapon.hit_cap < 1 else None
         pairs = []
+        scatter_cone, scatter_dist = weapon.cone, dist
+        if weapon.hit_cap < 1:
+            # One native scatter draw, widened only where it would otherwise
+            # exceed the cap. At zero distance a virtual metre samples the
+            # same width; range, walls and flight still use the real distance.
+            scatter_dist = dist if dist > 0 else 1.0
+            scatter_cone = max(weapon.cone * dist, TARGET_SIZE / weapon.hit_cap) / scatter_dist
+        # Keep the native angular spread for flight. The cap's virtual width
+        # decides accuracy, not the ray's angle: otherwise aiming at nearby
+        # ground widens the ray and unfairly penalizes bodies farther away.
+        flight_scale = weapon.cone * dist / (scatter_cone * scatter_dist) if weapon.hit_cap < 1 else 1
         for k in range(weapon.num_shots):
-            offset = bullet_offset(weapon.cone, dist)
+            offset = bullet_offset(scatter_cone, scatter_dist)
+            flight_offset = offset * flight_scale
+            bush_hits = []
             if k >= live:
                 # An empty chamber: the pair was counted from faAim already.
                 pairs.append((("faMiss", miss_at(tx, ty)), []))
@@ -3286,28 +3501,41 @@ class RoomCombat:
                 pairs.append((("faWall", dict(hex=wall)), []))
                 continue
             if reach and on_target(offset, window):
-                behind, _end = flight(loc, shooter.cell, aim, offset,
-                                      weapon.max_range, bodies, past=dist)
+                behind, _end = flight(loc, shooter.cell, aim, flight_offset,
+                                      weapon.max_range, bodies, past=dist, bush_hits=bush_hits, ground=ground,
+                                      body_width=body_width)
                 chain = [target] + [b for b in behind if b not in covers]
             elif reach and on_target(offset):
                 # It would have hit, and the cover took it; through the
                 # cover it goes on along the line to the mark.
                 chain = covers + [target]
                 _end = None
+                if getattr(loc, 'bushes', None):
+                    flight(loc, shooter.cell, aim, flight_offset, weapon.max_range, bush_hits=bush_hits, ground=ground)
             else:
                 # Aimed at the ground, at a mark the gun does not reach, or
                 # past the mark: on to where it lands, max_range at the
                 # most, and into the first body on the way. Not into a
                 # cover: what it had to give the cover is the window above.
-                passed, _end = flight(loc, shooter.cell, aim, offset,
-                                      weapon.max_range, bodies)
+                passed, _end = flight(loc, shooter.cell, aim, flight_offset,
+                                      weapon.max_range, bodies, bush_hits=bush_hits, ground=ground,
+                                      body_width=body_width)
                 chain = [b for b in passed if b not in covers]
+            # The same scatter sample caps every collision, including free aim
+            # and stray rounds. A nearer body must not recover the miss tail
+            # merely because its hex is wider than the intended target.
+            if weapon.hit_cap < 1 and abs(offset) > scatter_cone * scatter_dist * weapon.hit_cap / 2:
+                chain = []
             chain = chain[:depth]
             if not chain:
                 pairs.append((_end, []))
                 continue
             fates = []
             for n, body in enumerate(chain):
+                # A captured clan's own guard still stops its bullet, but takes
+                # no harm, including free aim and a penetrating round.
+                if holdings.defender_friendly(self, body, shooter, cache=friendly_defenders):
+                    break
                 rec = struck.setdefault(body, [0, 0, 0, body.sp_now()])
                 d = mobs.hex_distance(shooter.cell, body.cell, width)
                 optimal = weapon.opt_lo <= d <= weapon.opt_hi
@@ -3322,7 +3550,17 @@ class RoomCombat:
                 if n:
                     dmg = max(1, int(dmg * THROUGH_SHARE)) if dmg > 0 else 0
                     st_dmg = max(1, int(st_dmg * THROUGH_SHARE)) if st_dmg > 0 else 0
+                # Foliage absorbs damage once per bullet, not once per hex.
+                # A bush beyond this body cannot protect it from the shot.
+                if bush_hits and bush_hits[0] <= d:
+                    dmg = max(1, int(dmg * BUSH_DAMAGE_SHARE)) if dmg > 0 else 0
+                    st_dmg = max(1, int(st_dmg * BUSH_DAMAGE_SHARE)) if st_dmg > 0 else 0
                 h, s = self.bullet_damage(shooter, body, weapon, dmg, st_dmg, crit, rec[3])
+                if body not in machinegun_limits:
+                    machinegun_limits[body] = machinegun_burst_limit(shooter, body, weapon)
+                limit = machinegun_limits[body]
+                if limit is not None:
+                    h = min(h, max(0, limit - rec[0]))
                 rec[0] += h
                 rec[1] += s
                 rec[2] += 1
@@ -3346,7 +3584,7 @@ class RoomCombat:
                 side.hit_exchanged(t)
 
     # --- death, corpse, bag, respawn ----------------------------------------------------
-    def kill(self, victim, killer, *, blueprint_killer_level=None):
+    def kill(self, victim, killer, *, blueprint_killer_level=None, killing_weapon_type=None):
         if eden_harvest.native_kill(self, victim, killer):
             return
         if victim.is_player:
@@ -3364,6 +3602,10 @@ class RoomCombat:
         mob.blueprint_killer_level = (
             (killer.level if blueprint_killer_level is None else blueprint_killer_level)
             if killer is not None and killer.is_player else None)
+        # Save the lethal shot's type, not whichever gun is held when the
+        # corpse fades. Melee kills intentionally keep a random A-OT calibre.
+        mob.box_player_kill = bool(killer is not None and killer.is_player)
+        mob.box_weapon_type = killing_weapon_type if mob.box_player_kill else None
         if getattr(self.room, 'motion', None) is not None:
             self.room.motion.advance()
         cell = (mob.walk_cell(now()) if getattr(mob, 'walk', None) is not None
@@ -3388,16 +3630,33 @@ class RoomCombat:
         # Before the ledger is settled and emptied: who brought it down is
         # who its quest rows of loot are rolled for (quest_wants).
         mob.quest_wants = self.quest_wants(mob, killer)
+        mob.loot_multiplier = RoomCombat.loot_multiplier(self, mob, killer)
+        mob.gold_loot_multiplier = RoomCombat.loot_multiplier(self, mob, killer, include_scanner=False)
         RoomCombat.materialize_loot(self, mob)
         # A warehouse's boss (holdings.py): who brought it down and for which
         # clan, as they stand now; the holding is settled when the corpse
-        # fades (corpse_gone). A database that cannot be read costs the
-        # capture and a line in the log, never the kill.
+        # fades (corpse_gone). A failed base settlement keeps its snapshot
+        # for one retry there; an unreadable snapshot never blocks the kill.
+        mob.capture = None
         try:
+            if mob.slot is not None and holdings.guard_site(self.room.loc.id, mob.type_id) is not None:
+                # Reuse the site's boss checkpoint before the corpse timer:
+                # a reconnect or restart must not resurrect cleared guards.
+                with storage.atomic(self.store.db):
+                    self.store.boss_killed(self.boss_spot(mob), mob.slot)
+                    if holdings.soldier_respawns(self.store, self.room.loc.id, mob.type_id):
+                        deadline = bosses.clock() + holdings.BASE_SOLDIER_RESPAWN
+                        self.store.boss_killed(self.boss_spot(mob) + ':respawn', deadline)
+                        mob.base_respawn_at = deadline
             mob.capture = holdings.snapshot(self, mob, killer)
+            base = holdings.base_for(self.room.loc.id, mob.type_id)
+            if base is not None:
+                if mob.capture is None:
+                    holdings.base_capture_unavailable(self, base)
+                else:
+                    holdings.settle(self, mob)
         except Exception:
-            mob.capture = None
-            log.exception("  !!    mob %d (%s) killed in %s: who killed it not read",
+            log.exception("  !!    mob %d (%s) killed in %s: capture not recorded",
                           mob.eid, mob.stats.name, self.room.loc.title)
         self.settle_xp(mob)
         # The killer's held rp_info goes out here, before calm() below can
@@ -3417,22 +3676,78 @@ class RoomCombat:
         # If it was the last one after anybody here, the fight is over now.
         self.calm()
 
+    def loot_multiplier(self, mob, killer, *, include_scanner=True):
+        """Random drops: scanner and the gap to the strongest contributor.
+
+        The damage ledger includes departed fighters. A low-level last hit
+        cannot turn a senior player's kill into a difficult-mob bonus.
+        """
+        # Persistent contributors need no live Session. Combatants without
+        # a character ID retain object keys; hit-time levels stay on the mob.
+        fighters = [f for f, row in mob.xp_ledger.items()
+                    if row[0] > 0 and getattr(f, 'is_player', False)]
+        if self is not None:
+            fighters += [s.combat for s in self.room.players
+                         if mob.xp_ledger.get(getattr(s, 'char_id', None), [0])[0] > 0]
+        recorded = any(row[0] > 0 and isinstance(key, int)
+                       for key, row in mob.xp_ledger.items())
+        if killer is not None and killer.is_player and killer not in fighters:
+            fighters.append(killer)
+        if mob.stats.role == 'object' or not (recorded or fighters):
+            return 1
+        level = max([getattr(mob, 'loot_level', 0)] + [f.level for f in fighters])
+        gap = mob.stats.level - level
+        if mob.stats.role == 'boss' and not include_scanner:
+            # Boss ingots are guaranteed by their table, never by a bonus.
+            return 1
+        reward = mobs.loot_level_factor(gap)
+        if reward <= 0:
+            return 0
+        scanner = (effects.multiplier(killer.sess, 'mob_drop')
+                   if include_scanner and killer is not None and killer.is_player else 1)
+        return reward * scanner
+
     def settle_xp(self, mob):
-        """The rest of the kill's price, to everyone who harmed the mob and is
-        still here, by their share of all the harm it took. Blows paid as they
-        landed against health and stamina together; a gun takes little
-        stamina, so its blows fall short of the price, and this closes the
-        gap, whichever weapon did the work."""
+        """One death's reward by actual damage, including regenerated pools.
+
+        Keep absent contributors in the denominator, without gifting their
+        share to the finisher. A returning character receives its old and new
+        contributions on the current live Fighter only; a closed Character
+        copy must never be paid or later saved over the returning one.
+        """
         ledger, mob.xp_ledger = mob.xp_ledger, {}
         total = sum(row[0] for row in ledger.values())
         if total <= 0:
             return
-        for fighter, (harm, paid, skill, spec) in ledger.items():
-            if getattr(fighter, "sess", None) not in self.room.players:
+        present = [sess for sess in self.room.players if not getattr(sess, "closed", False)]
+        by_char = {sess.char_id: sess.combat for sess in present
+                   if getattr(sess, "char_id", None) is not None
+                   and getattr(sess, "combat", None) is not None}
+        payments = {}
+        for contributor, row in ledger.items():
+            if len(row) < 6:
                 continue
-            owed = harm / total - paid
-            if owed > 1e-9:
-                fighter.credit_xp(skill, spec, owed, mob)
+            owner = row[5]
+            recipient = by_char.get(owner) if owner is not None else None
+            sess = getattr(contributor, "sess", None)
+            if (recipient is None and sess in present
+                    and getattr(sess, "char_id", None) == owner):
+                recipient = contributor
+            if recipient is None:
+                continue
+            for key, (harm, weighted) in row[4].items():
+                if weighted <= 0:
+                    continue
+                due = payments.setdefault(recipient, {})
+                bucket = due.setdefault(key, [0.0, 0.0])
+                bucket[0] += harm
+                bucket[1] += weighted
+        for fighter, buckets in payments.items():
+            for (skill, spec), (harm, weighted) in buckets.items():
+                fighter.credit_xp(skill, spec, harm / total, mob, reward=weighted / total)
+            ch = fighter.character()
+            if ch.char_id is not None:
+                ch.save(fighter.store)
 
     def quest_wants(self, mob, killer):
         """The things a quest still asks of those who brought the mob down
@@ -3446,9 +3761,14 @@ class RoomCombat:
         Empty for a creature with no quest rows, and nothing is asked then."""
         if not mobs.quest_table(mob.type_id):
             return frozenset()
-        fighters = [f for f in mob.xp_ledger
-                    if getattr(f, "sess", None) in self.room.players] \
-            if QUEST_LOOT_FOR_ALL_WHO_HARMED else []
+        fighters = []
+        if QUEST_LOOT_FOR_ALL_WHO_HARMED:
+            owners = {row[5] for row in mob.xp_ledger.values()
+                      if len(row) >= 6 and row[5] is not None}
+            fighters = [s.combat for s in self.room.players
+                        if getattr(s, 'char_id', None) in owners]
+            fighters += [f for f in mob.xp_ledger
+                         if getattr(f, "sess", None) in self.room.players]
         if killer is not None and killer.is_player and killer not in fighters:
             fighters.append(killer)
         out = set()
@@ -3492,7 +3812,7 @@ class RoomCombat:
                 mob.capture = None
                 log.exception("  !!    mob %d (%s) killed in %s: its holding not settled",
                               mob.eid, mob.stats.name, self.room.loc.title)
-        if bosses.keeps_hours(mob.type_id):
+        if bosses.keeps_hours(mob.type_id, self.room.loc.id):
             mob.away = True
             self.boss_killed(mob)
         elif mob in self.escorts and self.bosses:
@@ -3613,15 +3933,26 @@ class RoomCombat:
         bag holds the rest of its loot and no ingot."""
         rows = []
         thing = mob.stats.role == "object"
+        restricted = not thing and getattr(mob, 'loot_multiplier', 1) <= 0
         gold_ok = bosses.keeps_hours(mob.type_id)
         # What a timed event puts on top, by place (events.loot): a
         # prisoner's red armband in the uprising. An ore rock leaves its ore
         # beside the loot (production.yield_of).
-        for type_id, count in mobs.loot_for(mob.stats, RNG, mob.quest_wants,
+        native = mobs.loot_for(mob.stats, RNG, mob.quest_wants,
                               loc_id=self.room.loc.id,
-                              killer_level=getattr(mob, "blueprint_killer_level", None)) \
-                + events.loot(self.room.loc.id, mob.type_id, RNG) \
-                + production.yield_of(mob.type_id):
+                              ambush_camp=getattr(self.room, 'ambush', None),
+                              killer_level=getattr(mob, "blueprint_killer_level", None),
+                              multiplier=getattr(mob, "loot_multiplier", 1),
+                              gold_multiplier=getattr(mob, "gold_loot_multiplier", 1),
+                              box_player_kill=getattr(mob, 'box_player_kill', False),
+                              box_weapon_type=getattr(mob, 'box_weapon_type', None))
+        extra = events.loot(self.room.loc.id, mob.type_id, RNG) + production.yield_of(mob.type_id)
+        extra = [(t, n) for t, n in extra if thing or not mob_equipment_loot.kind_of(t)
+                 or (t in mob.quest_wants and mobs.personal_quest_item(t))]
+        for type_id, count in native + extra:
+            if (restricted and not (mob.stats.role == 'boss' and type_id in items.GOLD_INGOTS)
+                    and (type_id not in mob.quest_wants or not mobs.personal_quest_item(type_id))):
+                continue
             if items.out_of_game(type_id) or items.acquisition_blocked(type_id):
                 continue            # (P) or retired by name; see items.out_of_game
             if type_id in items.GOLD_INGOTS and not gold_ok:
@@ -3633,6 +3964,8 @@ class RoomCombat:
                 # creature's bag from being empty: nothing found, no bag.
                 continue
             fields = inventory.new_fields(type_id, count)
+            if not thing and not (type_id in mob.quest_wants and mobs.personal_quest_item(type_id)):
+                fields.update(mob_equipment_loot.worn_fields(type_id, RNG))
             root = fields.pop("root")
             rows.append(self.store.create_item(LOOT_OWNER, type_id, root, **fields))
         return rows
@@ -3699,6 +4032,7 @@ class RoomCombat:
         if mob.alive or mob.away:
             return
         mob.reset()
+        battle_balance.prepare_world_boss_defence(self, mob)
         mob._loot_materialized = False
         mob.cell = movement.get(self.room).free_cell(mob.home, exclude=mob)
         self.room.npcs[mob.eid] = rooms.NPC(mob.cell, mob.type_id, world.MOB)
@@ -3707,6 +4041,19 @@ class RoomCombat:
             sess.send_npc_info(mob.eid)
 
     # --- bosses and their hours ----------------------------------------------------------
+    def boss_slots(self, t):
+        """Weekly battle and ordinary occupation reuse distinct death checkpoints."""
+        due = {m.eid: bosses.slot_of(m.type_id, t, self.room.loc.id) for m in self.bosses}
+        base = holdings.base_for(self.room.loc.id)
+        if base is not None and holdings.battle_slot(base, t) is None:
+            # The battle's end identifies its occupation phase. Early rent
+            # payment must not restore a cleared wave before capture closes.
+            slot = holdings.occupation_slot(base, t)
+            for mob in self.bosses:
+                if mob.type_id in base.troops:
+                    due[mob.eid] = slot
+        return due
+
     def keep_hours(self):
         """The room's bosses in step with the clock (bosses.py).
 
@@ -3736,20 +4083,35 @@ class RoomCombat:
         Each boss keeps its own hours (bosses.slot_of): a warehouse's
         «Хозяин склада» comes once a day, the rest at the bosses' hours.
         """
+        holdings.reset_base(self)
         events.keep(self)
         if not self.bosses:
             return
         now = bosses.clock()
+        due_slots = self.boss_slots(now)
         for mob in self.bosses:
-            due = bosses.slot_of(mob.type_id, now)
+            due = due_slots[mob.eid]
+            base = holdings.base_for(self.room.loc.id, mob.type_id)
             if mob.away:
-                if due is not None and due != mob.slot:
+                deadline = getattr(mob, 'base_respawn_at', None)
+                if due is not None and (due != mob.slot or deadline is not None and now >= deadline):
                     self.boss_arrives(mob, due)
             elif not mob.alive:
                 continue
             elif due is not None:
                 if due != mob.slot:
-                    if (mob.slot is not None and not self.room.players
+                    guard = holdings.guard_site(self.room.loc.id, mob.type_id)
+                    if mob.slot is not None and (base is not None or guard is not None and guard.kind == 'base'):
+                        # A new battle must not inherit a previous-slot
+                        # defender kept wounded/in combat across the reset.
+                        if mob.aim is not None:
+                            mob.aim.cancel()
+                            mob.aim = None
+                        movement.get(self.room).forget(mob)
+                        self.room.broadcast(('actionCancel', dict(id=mob.eid, stop_aim=1)))
+                        self.boss_leaves(mob)
+                        self.boss_arrives(mob, due)
+                    elif (mob.slot is not None and not self.room.players
                             and mob.target is None and mob.aim is None):
                         self.boss_leaves(mob)
                         self.boss_arrives(mob, due)
@@ -3767,6 +4129,7 @@ class RoomCombat:
         """Its window open: back on its own cell, whole, the way a respawn
         does it, and its escort with it (escort_back)."""
         mob.slot, mob.away = due, False
+        mob.base_respawn_at = None
         self.respawn(mob)
         log.info("  ..    boss %d (%s) arrives in %s",
                  mob.eid, mob.stats.name, self.room.loc.title)
@@ -3833,11 +4196,12 @@ class RoomCombat:
         now = bosses.clock()
         # Each boss's own window (bosses.slot_of): a warehouse master's is
         # his day's hour.
-        due = {m.eid: bosses.slot_of(m.type_id, now) for m in self.bosses}
+        due = self.boss_slots(now)
         if all(d is None for d in due.values()):
             return
         try:
-            killed = read([self.boss_spot(m) for m in self.bosses])
+            killed = read([key for m in self.bosses
+                           for key in (self.boss_spot(m), self.boss_spot(m) + ':respawn')])
         except Exception:
             log.exception("  !!    the bosses killed in %s could not be read",
                           self.room.loc.title)
@@ -3845,6 +4209,12 @@ class RoomCombat:
         for mob in self.bosses:
             slot = due[mob.eid]
             if slot is not None and killed.get(self.boss_spot(mob)) == slot:
+                if holdings.soldier_respawns(self.store, self.room.loc.id, mob.type_id, now):
+                    deadline = killed.get(self.boss_spot(mob) + ':respawn')
+                    if deadline is not None and deadline >= slot:
+                        if now >= deadline:
+                            continue
+                        mob.base_respawn_at = deadline
                 mob.alive, mob.away, mob.slot = False, True, slot
                 self.room.npcs.pop(mob.eid, None)
                 log.info("  ..    boss %d (%s) of %s was killed in this window before"

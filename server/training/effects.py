@@ -1,159 +1,25 @@
-"""Timed combat effects for private clones; no live-account persistence."""
-import asyncio
-from dataclasses import dataclass
-from functools import lru_cache
-import json
-import math
-from pathlib import Path
-
+"""Private effects use the shared timers without touching real accounts."""
 import inventory
 import items
 import progression
 import storage
+import effects as ordinary_effects
 from training import items as training_items
-from training import config
-
-FIRST = config.EFFECT_FIRST
-MAX_EFFECTS = 32
-PATH = Path(__file__).resolve().parents[2] / 'data/training_effects.json'
-ARRAYS = {'attribs': 5, 'skills': 5, 'specs': 15}
-SCALARS = ('hp', 'sp', 'od', 'cp', 'ce', 'armor')
+from effects import FIRST, MAX_EFFECTS, ARRAYS, SCALARS, Active, zero
+from effects import Effects as BaseEffects
 
 
-@lru_cache(maxsize=1)
 def definitions():
-    raw = json.loads(PATH.read_text(encoding='utf-8'))['definitions']
-    result = {}
-    for key, value in raw.items():
-        type_id = int(key)
-        if not 0 < value['duration'] <= 86400 or not 0 <= value['interval'] <= value['duration']:
-            raise ValueError('Invalid training effect duration: ' + key)
-        bonus = value['bonuses']
-        if any(len(bonus[k]) != length for k, length in ARRAYS.items()):
-            raise ValueError('Invalid training effect array: ' + key)
-        numbers = [x for key in ARRAYS for x in bonus[key]] + [bonus[key] for key in SCALARS]
-        if any(isinstance(x, bool) or not isinstance(x, (int, float)) or not math.isfinite(x) or not 0 <= x <= 10000 for x in numbers):
-            raise ValueError('Invalid training effect value: ' + str(type_id))
-        result[type_id] = value
-    return result
+    return {t: value for t, value in ordinary_effects.definitions().items() if not value.get('self_only')}
 
 
 def definition(type_id):
     return definitions().get(training_items.source_type(type_id))
 
 
-def zero():
-    return dict(**{key: [0] * length for key, length in ARRAYS.items()},
-                **{key: 0 for key in SCALARS})
-
-
-@dataclass
-class Active:
-    source: int
-    started: float
-    deadline: float
-
-
-class Effects:
-    def __init__(self, session):
-        self.session = session
-        self.active = {}
-        self.bonus = zero()
-        self.timer = None
-
-    def close(self, notify=False):
-        if self.timer is not None:
-            self.timer.cancel()
-            self.timer = None
-        self.active.clear()
-        self.bonus = zero()
-        if notify:
-            self.refresh()
-
-    def check(self, source):
-        value = definitions()[source]
-        clock = asyncio.get_running_loop().time()
-        self.active = {key: active for key, active in self.active.items() if active.deadline > clock}
-        current = self.active.get(value['family'])
-        if current:
-            old = definitions()[current.source]['bonuses']
-            new = value['bonuses']
-            power = lambda bonus: sum(sum(bonus[k]) for k in ARRAYS) + sum(bonus[k] for k in SCALARS)
-            if power(old) > power(new):
-                raise ValueError('Уже действует более сильный эффект этого типа')
-        elif len(self.active) >= MAX_EFFECTS:
-            raise ValueError('Слишком много активных эффектов')
-
-    def add(self, source):
-        self.check(source)
-        value = definitions()[source]
-        clock = asyncio.get_running_loop().time()
-        old = self.active.get(value['family'])
-        started = old.started if old and old.source == source and value['interval'] else clock
-        self.active[value['family']] = Active(source, started, clock + value['duration'])
-        self.refresh()
-
-    def refresh(self):
-        if self.timer:
-            self.timer.cancel()
-            self.timer = None
-        clock = asyncio.get_running_loop().time()
-        self.active = {key: active for key, active in self.active.items() if active.deadline > clock}
-        total = zero()
-        next_event = None
-        for active in self.active.values():
-            value = definitions()[active.source]
-            interval = value['interval']
-            pulses = min(value['duration'] // interval, int((clock - active.started) // interval)) if interval else 1
-            for key in ARRAYS:
-                total[key] = [max(old, delta * pulses) for old, delta in zip(total[key], value['bonuses'][key])]
-            for key in SCALARS:
-                total[key] = max(total[key], value['bonuses'][key] * pulses)
-            event = active.deadline
-            if interval and pulses < value['duration'] // interval:
-                event = min(event, active.started + (pulses + 1) * interval)
-            next_event = event if next_event is None else min(next_event, event)
-        self.bonus = total
-        character = self.session.character()
-        character.training_effects = self
-        self.session.inv.refresh_gear(push=False)
-        if character.hp is not None:
-            character.hp = min(character.hp, character.hp_max)
-        if character.sp is not None:
-            character.sp = min(character.sp, character.sp_max)
-        self.session.combat.ap = min(self.session.combat.ap, character.ap_ceiling)
-        self.session.push_stats()
-        self.session.push_vitals()
-        self.session.combat.c_ap()
-        self.send_list()
-        if next_event is not None:
-            self.timer = asyncio.get_running_loop().call_later(max(0.01, next_event - clock), self.refresh)
-
-    def send_list(self):
-        self.session.send('e_list', mobi_id=0, effects=[FIRST + active.source for active in self.active.values()])
-
-    def static(self, effect_type):
-        source = effect_type - FIRST
-        value = definitions().get(source)
-        if value is None:
-            return False
-        bonus = value['bonuses']
-        params = dict(type=effect_type, name=items.STRING_ID_OFFSET + source,
-                      work_time=value['duration'] * 1000, update_delta=value['interval'] * 1000,
-                      max_hp=bonus['hp'], max_sp=bonus['sp'], max_od=bonus['od'],
-                      critical_probability=bonus['cp'], critical_evade=bonus['ce'], armor=bonus['armor'],
-                      mob_exp=1, pl_exp=1, mob_drop=1, pl_drop=1, res_icon=1, immob=0, stun=0)
-        for key, length in ARRAYS.items():
-            selected = {i for i, number in enumerate(bonus[key]) if number}
-            params[key + '_mask'], params[key] = progression.packed(bonus[key], selected, length)
-        self.session.send('e_si', **params)
-        return True
-
-    def dynamic(self, effect_type):
-        source = effect_type - FIRST
-        active = next((value for value in self.active.values() if value.source == source), None)
-        elapsed = int((asyncio.get_running_loop().time() - active.started) * 1000) if active else 0
-        self.session.send('e_di', mobi_id=0, type=effect_type, time=max(0, elapsed), immob=0, stun=0)
+class Effects(BaseEffects):
+    persistent = False
+    attribute = 'training_effects'
 
 
 def activate(fighter, uniq, target, ap_cost, peace_damage=None):

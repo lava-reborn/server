@@ -1,4 +1,4 @@
-"""Temporary stimulant refusal preserves items/AP while healing and trade remain available."""
+"""Unsupported stimulant refusal preserves items/AP; ordinary release buffs are available."""
 import asyncio
 import logging
 import os
@@ -14,12 +14,15 @@ import inventory
 import combat
 from testkit import check, fails
 
-check("temporary effects remain disabled", items.STIMULANT_EFFECTS_ENABLED, False)
-for t in (4918, 4938, 3114, 3116, 3210):
-    check("stimulant %d is blocked" % t, items.stimulant_unavailable(t), True)
+check("unsupported temporary effects remain disabled", items.STIMULANT_EFFECTS_ENABLED, False)
+for t in (4918, 4938, 3206, 3116, 3210, 3561):
+    check("ordinary stimulant %d is enabled" % t, items.stimulant_unavailable(t), False)
 for t in (6055, 6043, 6061, items.STARTER_ROUNDS):
     check("ordinary healing/ammo %d is not blocked" % t, items.stimulant_unavailable(t), False)
-check("purchase remains available at Gofus", 3114 in items.stock_for(1013, 188), True)
+check("Abri assistant sells city-rank afro Alpha II", 3116 in items.stock_for(1196, 188), True)
+check("Abri Gofus does not retain the archived off-rank Alpha I", 3114 in items.stock_for(1013, 188), False)
+check("Halfa assistant sells city-rank afro Alpha I", 4181 in items.stock_for(1196, 36), True)
+check("INTUX IV is not sold by the archived Halfa assistant", 3561 in items.stock_for(2015, 36), False)
 
 blocked = [t for t, (root, _name) in items.catalogue().items()
            if root == items.HEAL and items.stimulant_unavailable(t)]

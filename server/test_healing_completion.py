@@ -70,7 +70,7 @@ class HealingCompletion(unittest.IsolatedAsyncioTestCase):
         room.ws=True
         room.loc=NS(id=100)
         f.ap,f.ap_max,f.regen_at=0,100,1e9
-        mob=NS(type_id=1,ap=0,ap_max=100,think=lambda rc,t:None)
+        mob=NS(type_id=1,target=None,ap=0,ap_max=100,think=lambda rc,t:None)
         rc=combat.RoomCombat.__new__(combat.RoomCombat)
         rc.room,rc.mobs,rc.ap_last=room,{1:mob},100
         rc.fighters=lambda:[f]

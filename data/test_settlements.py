@@ -19,6 +19,7 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(os.path.dirname(HERE), "server"))
+import eden_map  # noqa: E402
 import world  # noqa: E402
 
 ADJACENT = 3
@@ -116,7 +117,16 @@ def main():
         m = re.match(r"^\| (\d{4},\d{4}) \| [^|]* \| (—|(\d+) «)", line)
         if m:
             rows[m.group(1)] = int(m.group(3)) if m.group(3) else None
-    assert len(rows) == len(tooltips), "report: %d rows for %d tooltip cells" % (len(rows), len(tooltips))
+    # The administrative Eden region has its own exact map. The ordinary
+    # heuristic placer deliberately excludes its four historical tooltips.
+    eden_hints = tooltips & set(eden_map.CELL_TO_LOC)
+    assert eden_hints == {(5857, 1928), (5857, 1930), (5858, 1929), (5859, 1930)}, eden_hints
+    for gx, gy in eden_hints:
+        assert world.location_at(gx + .5, gy + .5) == eden_map.CELL_TO_LOC[(gx, gy)]
+    report_cells = {cell_of(key) for key in rows}
+    assert report_cells == tooltips - eden_hints, \
+        "report: cells missing %s, unexpected %s" % (
+            sorted(tooltips - eden_hints - report_cells), sorted(report_cells - tooltips))
     for key, loc_id in table.items():
         if cell_of(key) not in tooltips:
             continue        # a verified quest place: the report rows are the tooltips

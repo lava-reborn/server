@@ -170,6 +170,24 @@ def shown(t):
     return names.ALL.get(OFF + t, "")
 
 
+# Accepted city ladder, pinned independently of shop_bands.stimulants.
+BUFFS = {
+    4: [4917, 4937],
+    8: [3112, 3115, 3201, 3205, 3208, 3209, 3468, 3471, 3474, 3789, 3897, 4181, 4918, 4919, 4920, 4921, 4922, 4923, 4938, 4939, 4940, 4941, 4942, 4943],
+    12: [3113, 3116, 3117, 3202, 3206, 3210, 3211, 3469, 3472, 3475, 3789, 3897, 4922, 4923, 4924, 4925, 4926, 4927, 4942, 4943, 4944, 4945, 4946, 4947],
+    16: [3114, 3118, 3119, 3203, 3207, 3212, 3213, 3470, 3473, 3476, 3826, 3897, 4926, 4927, 4928, 4929, 4930, 4931, 4946, 4947, 4948, 4949, 4950, 4951],
+    20: [3203, 3207, 3470, 3473, 3476, 3561, 3826, 3897, 4182, 4183, 4184, 4185, 4930, 4931, 4932, 4933, 4934, 4935, 4936, 4950, 4951, 4952, 4953, 4954, 4955, 4956],
+}
+BUFF_SELLERS = set()  # Stimulants moved to Gofus and assistants; tested separately.
+
+
+def buffs(trader, top):
+    if trader not in BUFF_SELLERS:
+        return []
+    currency = {207: True, 714: True, 716: False, 5239: False, 5240: True}.get(trader)
+    return [t for t in BUFFS[top] if currency is None or gold_only(t) == currency]
+
+
 # --- 1. the catalogue ------------------------------------------------------------------------
 print("the catalogue")
 WARES = shop_bands.wares()
@@ -338,14 +356,25 @@ check("the medicine sellers of data/shop_bands.json sell medicine alone, and one
 STALLS = {(p, t): items.stock_for(t, p) for p, types in AT.items() for t in types}
 wrong = {}
 where = {}
+def non_ammo(stock):
+    return [x for x in stock if items.root_of(x) != items.AMMO]
+
+
+def ammo(stock):
+    return sorted(x for x in stock if items.root_of(x) == items.AMMO)
+
+
 for (p, t), stall in STALLS.items():
     if t not in MEDICS:
         continue
     where.setdefault(t, []).append(p)
     _name, lo, hi = PLACE_CITY[p]
-    want = expect(MEDICS[t], lo, hi, shop_bands.only(t))
+    want = expect(MEDICS[t], lo, hi, shop_bands.only(t)) + buffs(t, hi)
     own = [x for x in items.stock_for(t) if not line_med(x)]
-    if stall != want + own:
+    # Medicine keeps its exact rank/currency order. Ammunition is now grouped
+    # separately by calibre, which the release's ammunition regressions pin.
+    expected = want + own
+    if non_ammo(stall) != non_ammo(expected) or ammo(stall) != ammo(expected):
         wrong[(p, t)] = (stall, want + own)
 check("every medicine seller at every place of its city: its city's tiers of its kinds, the band's"
       " and the one under it, tier by tier, afro before (G), in its one currency where the file"
@@ -366,14 +395,16 @@ for _title in _SUPPLY_TITLES:
     for _x in items.resolve_stock_title(_title):
         if _x in cat and items.root_of(_x) == items.AMMO and _x not in ROUNDS:
             ROUNDS.append(_x)
+LIVE_ROUNDS = sorted({t for t in ROUNDS if shop_bands.ammunition_order(t)[1] != 0}
+                     | set(range(6140, 6176)) | set(range(60011, 60022)))
 PINNED = {
     (26, 5225): [6055, 6061, BTR, 7100, 6056, 6062, ROSA, 7101],
     (176, 2180): [6055, 6061, BTR, 7100, 6056, 6062, ROSA, 7101, 6057, 6063, VILKA, 7102]
-    + ROUNDS,
+    + LIVE_ROUNDS,
     (159, 2181): [6057, 6063, VILKA, 7102, 6058, 6064, TUR, 7103, 6059, 6065, MAKS, 7104]
-    + ROUNDS,
+    + LIVE_ROUNDS,
     (177, 880): [6058, 6064, TUR, 7103, 6059, 6065, MAKS, 7104, 6060, 6066, SUPER, 7105]
-    + ROUNDS,
+    + LIVE_ROUNDS,
     (185, 5211): [6055, 6061, BTR, 7100, 6056, 6062, ROSA, 7101,
                   6043, 6898, 6049, 6904, 6044, 6899, 6050, 6905, 2178, 2184],
     (181, 5217): [6043, 6898, 6049, 6044, 6899, 6050, 2178, 2184],
@@ -393,18 +424,22 @@ PINNED = {
     (126, 1221): [6058, 6064, TUR, 7103, 6059, 6065, MAKS, 7104, 6060, 6066, SUPER, 7105],
     (126, 1222): [6046, 6901, 6052, 6907, 6047, 6902, 6053, 6908, 6048, 6903, 6054, 6909],
 }
+for (p, t), stock in PINNED.items():
+    at = next((i for i, x in enumerate(stock) if not line_med(x)), len(stock))
+    stock[at:at] = buffs(t, PLACE_CITY[p][2])
 check("the stalls pinned (DESIGN.md 2.2): Морис, Хасани, Люций, Магдалена, Снитке, Бартоломью,"
       " Торси, Мухсим, Джут at his three oases, Серхио, Фарюк, Донгола's grocer (the sack of"
       " beans of his article and the Фуль of «Старые приятели» after), Киплер, Курт; the valley"
       " truck's Йонас and the prisons'"
       " supply men, «Патроны и лекарства», the battle line of their town (the supply men their"
       " article's rounds after)",
-      {k: STALLS.get(k) for k in PINNED}, PINNED)
+      {k: (non_ammo(STALLS[k]), ammo(STALLS[k])) for k in PINNED},
+      {k: (non_ammo(stock), ammo(stock)) for k, stock in PINNED.items()})
 check("  ..the supply men's rounds: their own list (data/npcs.json), the same at the three"
       " prison yards, every calibre of the article, 49 types, each with a price",
       ([npcs.stock(t) == ROUNDS for t in (2180, 2181, 880)], len(ROUNDS),
        [x for x in ROUNDS if price(x) == (0, 0)], max(len(STALLS[k]) for k in PINNED)),
-      ([True] * 3, 49, [], 61))
+      ([True] * 3, 49, [], 84))
 check("  ..Донгола's grocer's own list (data/npcs.json) is the sack of beans and, since"
       " 2026-10-13, the Фуль «Старые приятели» and «Фуль ему!» send the player to buy «в местной"
       " лавке»: the «Коробка вяленого мяса» of his article is the food of ten of 12_15 (6901),"
@@ -428,6 +463,8 @@ print("coverage")
 COVERED_CITIES = tuple(c[0] for c in shop_bands.CITIES)
 on_sale = {}
 for (p, t), stall in STALLS.items():
+    if p in (609, 1443):
+        continue  # Base-wide battle tiers are checked in test_base_trade.
     for x in stall:
         if x in OF:
             on_sale.setdefault(PLACE_CITY[p][0], set()).add(x)
@@ -477,17 +514,20 @@ print()
 print("nothing out of the tiers")
 check("no medicine of the two lines on any stall of a city's place out of its city's tiers",
       sorted((p, t, x) for (p, t), s in STALLS.items() for x in s if line_med(x)
-             and (x not in OF or OF[x][1] not in tiers_of(*PLACE_CITY[p][1:]))), [])
+             and (x not in OF or OF[x][1] not in tiers_of(*PLACE_CITY[p][1:]))
+             and not (p in (609, 1443) and t in (1013, 2018)
+                      and x in OF and OF[x][0] == 'combat_meds')), [])
 check("  ..none on the stall of a trader of a city's place that is no medicine seller: Марат's"
       " and Шрам's at Абу-Хамед's station, whose lists the wiki's shifted links gave Киплер's"
       " and Курт's medicine, and Серхио's machine guns at Донгола's black market among them",
-      sorted((p, t) for (p, t), s in STALLS.items() if t not in MEDICS
+      sorted((p, t) for (p, t), s in STALLS.items() if t not in MEDICS and (p, t) not in ((609, 1013), (1443, 1013), (609, 2018), (1443, 2018))
              and any(line_med(x) for x in s)), [])
 check("  ..nor the May «Перевязочный Пакет» (26590) the name of Киплер's article tied to Марат"
       " (1219): his own list his pouches alone (2026-10-14, server/test_abuhamed_trade.py), his"
       " stall the town's sets and those",
       (npcs.stock(1219), [x for x in STALLS[(126, 1219)] if cat[x][0] == items.HEAL]),
-      ([3577, 3580, 5613, 3578, 3579], []))
+      ([3577, 3580, 5613, 3578, 3579, 3735, 3736, 3737, 3738, 3739, 3740, 5615,
+        3722, 3723, 3724, 3725, 3726], []))
 check("  ..the currencies of only: Джут's stalls gold alone, the grocers' afro alone",
       sorted({(t, gold_only(x)) for (p, t), s in STALLS.items() if shop_bands.only(t)
               for x in s if line_med(x)}),
@@ -521,7 +561,8 @@ check("«Пулеметы и патроны» (1208) stands at Донгола's 
       " link had given Серхио; Серхио sells no gun",
       (1208 in AT[103], STALLS[(103, 1208)],
        [x for x in STALLS[(103, 1214)] if items.root_of(x) != items.HEAL]),
-      (True, [24989, 24990, 25006, 25007, 6097, 6109, 6121, 6145, 6098, 6110, 6122, 6146], []))
+      (True, [24989, 24990, 25006, 25007, 6098, 6110, 6122, 6146, 6170, 6158, 60016,
+              6097, 6109, 6121, 6145, 6169, 6157, 60015], []))
 check("the four medics of Донгола and Абу-Хамед and the machine-gun trader by the original's rows"
       " (data/orig_names_manual.json: 62161, 62162, 62165, 62166, 50655)",
       {t: names.ALL.get(t) for t in (1214, 1215, 1221, 1222, 1208)},
@@ -698,6 +739,7 @@ async def main():
           buy(sess, stall.index(6056), inventory.UPD_BUY), ([0], [6056], 34, 0))
     check("  ..«Р.О.С.А. (G)» (6074) for its 0.02 ounces in gold, no afro",
           buy(sess, stall.index(ROSA), inventory.UPD_BUY_GOLD), ([0], [ROSA], 0, 2))
+    check("  ..INTUX is sold by Doctor Gofus, not the bandage merchant", 3112 in stall, False)
     check("  ..«20 доз В.И.Л.К.А. (G)» (7102) for 0.60 ounces",
           buy(sess, stall.index(7102), inventory.UPD_BUY_GOLD), ([0], [7102], 0, 60))
     check("  ..the wrong currency refused, nothing taken, nothing given: the bandage for gold, the"
@@ -723,6 +765,20 @@ async def main():
           bought,
           {76: (True, ([0], [6905], 0, 6), ([inventory.RES_REFUSED], [], 0, 0)),
            195: (True, ([0], [6906], 0, 11), ([inventory.RES_REFUSED], [], 0, 0))})
+
+    for place, trader, type_id, price in ((188, 1013, 3113, 105), (197, 1013, 3114, 210),
+                                        (127, 1013, 3561, 630)):
+        npc = goto(sess, place)[trader]
+        stall = window(sess, npc)
+        check("INTUX %d: medicine trader opens" % type_id,
+              acks(run(sess, "ss_create;s_type=1;target=%d;" % npc)), [0])
+        check("  ..original gold price is charged once, no afro",
+              buy(sess, stall.index(type_id), inventory.UPD_BUY_GOLD),
+              ([0], [type_id], 0, price))
+        check("  ..afro cannot buy a gold-only INTUX",
+              buy(sess, stall.index(type_id), inventory.UPD_BUY),
+              ([inventory.RES_REFUSED], [], 0, 0))
+        run(sess, "ss_upd;s_status=0;obj=x0;param=1;")
 
 
 try:

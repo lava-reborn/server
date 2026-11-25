@@ -127,13 +127,19 @@ _OWN_ICONS = None
 
 
 def own_icon(posix):
-    """The original's icon (a path under res/) that our own item type's
-    icon at res/<posix> is a copy of, or None when it is no such icon
-    (own_items.icons): what every release carries at that path
-    (client/build.py), and no res/ of the original has."""
+    """(Original res path, optional custom SWF) for an own-item icon, else None.
+
+    Both routes use the same metadata/assets as the client build.
+    """
     global _OWN_ICONS
     if _OWN_ICONS is None:
-        _OWN_ICONS = {p.lower(): like for p, like in own_items.icons(items.catalogue()).items()}
+        mine = own_items.load()
+        catalogue = items.catalogue()
+        paths = own_items.icons(catalogue, mine)
+        rows = own_items.rows(catalogue, mine)
+        _OWN_ICONS = {own_items.icon_path(*rows[t]).lower():
+                      (paths[own_items.icon_path(*rows[t])], own_items.custom_icon(rec))
+                      for t, rec in mine.items()}
     return _OWN_ICONS.get(posix.lower())
 
 
@@ -662,7 +668,8 @@ class Handler(BaseHTTPRequestHandler):
         # original's picture it copies, as every release ships it.
         like = own_icon(posix)
         if like is not None:
-            full = os.path.normpath(os.path.join(RES_ROOT, *like.split("/")))
+            source, custom = like
+            full = custom or os.path.normpath(os.path.join(RES_ROOT, *source.split("/")))
         if not os.path.isfile(full):
             self._send("not found", code=404)
             return

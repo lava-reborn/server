@@ -213,7 +213,8 @@ with open(os.path.join(os.path.dirname(HERE), "data", "holdings.json"), encoding
 check("  ..and the capturable sites' bosses (data/holdings.json) are masters: Вади-Хальфа's"
       " three and, since 2026-10-13, Донгола's, and, since 2026-10-14, Абу-Хамед's Центр",
       sorted((s["boss"], s["boss"] in bosses.WAREHOUSE_MASTERS)
-             for k, s in _sites.items() if not k.startswith("_")),
+             for k, s in _sites.items()
+             if not k.startswith("_") and s.get("kind", "warehouse") == "warehouse"),
       [(7448, True), (7449, True), (7450, True), (7451, True), (7452, True), (7453, True),
        (7454, True)])
 
@@ -325,7 +326,7 @@ class _Brain(object):
         self.room = type("R", (), {"loc": loc})()
         self.aggroed = 0
 
-    def nearest_fighter(self, cell, radius):
+    def nearest_fighter(self, cell, radius, mob=None):
         return object()
 
     def aggro(self, mob, fighter):
@@ -600,9 +601,9 @@ async def _master():
         NOW[0] = at(13)
         room = rooms.Room(loc, rooms.IdAllocator(), world.mob_types())
         rc = combat.RoomCombat(room, store)
-        check("Донгола's Северный склад has one boss keeping hours, its «Хозяин склада»",
-              [m.type_id for m in rc.bosses], [MASTER])
-        master = rc.bosses[0]
+        check("Донгола's Северный склад keeps its master and two guards on daily hours",
+              sorted(m.type_id for m in rc.bosses), [4828, 4828, MASTER])
+        master = next(m for m in rc.bosses if m.type_id == MASTER)
         eid = master.eid
         seat = _Seat()
         room.players[seat] = True

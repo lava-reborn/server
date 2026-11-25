@@ -126,15 +126,9 @@ on:
       - PROTOCOL.md
       - recon/**
       - data/quest_layout.json
+  # Required PR checks must report even when the last push changes prose only.
+  # Main keeps its prose filter above, so documentation never triggers deploy.
   pull_request:
-    paths-ignore:
-      - README.md
-      - TASKS.md
-      - UNDONE.md
-      - ROADMAP.md
-      - PROTOCOL.md
-      - recon/**
-      - data/quest_layout.json
 
 # A newer push to a branch makes the run for the older one moot: cancel it,
 # and free the runner. Not on main, where every run may end in a deploy:
@@ -372,6 +366,7 @@ jobs:
         env:
           LAVA_CI_PART: "1"
           PR_BASE_REF: ${{ github.base_ref }}
+          PR_HEAD_REF: ${{ github.head_ref }}
         run: |
           if [ -s "$HOME/impact/impact_map.json" ]; then
             cp "$HOME/impact/impact_map.json" tools/impact_map.json
@@ -380,13 +375,13 @@ jobs:
           fi
           # A dependent PR must validate the assembled stack, not a partial
           # impact selection. This also covers release-branch acceptance.
-          if [ "$PR_BASE_REF" != "main" ]; then
+          if [ "$PR_BASE_REF" != "main" ] || [[ "$PR_HEAD_REF" == release/* ]]; then
             python3 tools/suite.py --list > "$RUNNER_TEMP/pick.txt"
           else
             python3 tools/suite.py --affected --list --base origin/main > "$RUNNER_TEMP/pick.txt"
           fi
-          grep -vE '^(server|data|tools)/test_[^/]*\.py$' "$RUNNER_TEMP/pick.txt" || true
-          picked=$(grep -E '^(server|data|tools)/test_[^/]*\.py$' "$RUNNER_TEMP/pick.txt" \
+          grep -vE '^(server|data|tools|client)/test_[^/]*\.py$' "$RUNNER_TEMP/pick.txt" || true
+          picked=$(grep -E '^(server|data|tools|client)/test_[^/]*\.py$' "$RUNNER_TEMP/pick.txt" \
                    | xargs -rn1 basename | sed 's/[.]py$//' | grep -vx test_storage_pg | sort | paste -sd, -)
           echo "picked=$picked" >> "$GITHUB_OUTPUT"
           echo "part=true" >> "$GITHUB_OUTPUT"

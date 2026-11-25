@@ -13,6 +13,7 @@ from unittest.mock import patch
 
 import bosses
 import camp_elites
+import camp_loot
 import inventory
 import items
 import loot_rules
@@ -23,6 +24,14 @@ import rooms
 import world
 
 ROOT = Path(__file__).resolve().parents[1]
+FOLLOWUP = json.loads((ROOT / 'data/loot_rebalance.json').read_text(encoding='utf-8'))['followup_2026_11_23']
+
+
+def followup_delta(kind, currency):
+    """Explicit release adjustment, without discarding the old calibration."""
+    return FOLLOWUP['income_delta_175'].get(str(kind), {}).get(currency + '_175', 0)
+
+
 sys.path.insert(0, str(ROOT / 'data'))
 import build_camp_patrols as builder
 
@@ -48,7 +57,8 @@ def expected(k):
         out[seq[i]] += 1 / (hi - lo + 1)
     si = items.params_of(st.weapon_type_id) if st.weapon_type_id else None
     if si and st.ranged and si.get('comp_array'):
-        out[st.loot_ammo_type or si['comp_array'][0]] += sum(st.loot_ammo_count) / 2
+        ammo = st.loot_ammo_type or si['comp_array'][0]
+        out[mobs.standard_ammunition_types().get(ammo, ammo)] += sum(st.loot_ammo_count) / 2
     state = [1., 0., 0.]
     independent = mobs.independent_loot(k)
     for t, p, _ in mobs.loot_table(k):
@@ -58,7 +68,7 @@ def expected(k):
             q = p * sum(state[:2])
             state = [state[0] * (1-p), state[1] * (1-p) + state[0] * p,
                      state[2] + state[1] * p]
-        out[t] += q * mobs.count_of(k, t)
+        out[mobs.standard_ammunition_types().get(t, t)] += q * mobs.count_of(k, t)
     for group in mobs.one_of_groups(k):
         total = sum(w for t, w in group)
         for t, w in group:
@@ -71,6 +81,24 @@ def revenue(k):
     return (175 * sum(price(t) * n for t, n in loot.items()),
             175 * sum(mortimer.unit_gold(t) / 100 * n for t, n in loot.items())
             + loot.get(mortimer.SAND, 0))
+
+
+def carried_ammo_revenue(st, *, standard=True):
+    """Guaranteed rounds in 175 kills, independent of random economic rows."""
+    si = items.params_of(st.weapon_type_id) if st.weapon_type_id else None
+    if not si or not st.ranged or not si.get('comp_array'):
+        return 0
+    ammo = st.loot_ammo_type or si['comp_array'][0]
+    if standard:
+        ammo = mobs.standard_ammunition_types().get(ammo, ammo)
+    return 175 * price(ammo) * sum(st.loot_ammo_count) / 2
+
+
+def current_income_target(k, afro):
+    """Old budget plus carried-calibre and explicit approved loot changes."""
+    return (afro + carried_ammo_revenue(mobs.stats(k))
+            - carried_ammo_revenue(mobs.MobStats(k, balanced=False), standard=False)
+            + followup_delta(k, 'afro'))
 
 
 class LootRebalance(unittest.TestCase):
@@ -91,7 +119,9 @@ class LootRebalance(unittest.TestCase):
                 seen.add(row['type'])
                 self.assertTrue(mobs.droppable(row['type']))
                 self.assertTrue(0 < row['chance'] <= 1)
-                self.assertEqual(row['independent'], row['type'] == mortimer.SAND)
+                expected = (row['type'] == mortimer.SAND or row['type'] == 3159
+                            and str(k) in FOLLOWUP['emerald_chances'])
+                self.assertEqual(row['independent'], expected)
 
     @patch.object(loot_rules, 'QUEST_MATERIALS', frozenset())
     def test_real_patrol_composition_meets_the_income_targets(self):
@@ -107,24 +137,46 @@ class LootRebalance(unittest.TestCase):
                 total = sum(counts.values())
                 a = sum(revenue(k)[0] * n for k, n in counts.items()) / total
                 g = sum(revenue(k)[1] * n for k, n in counts.items()) / total
-                self.assertAlmostEqual(a, profile['afro'], delta=1)
-                self.assertAlmostEqual(g, profile['gold'], delta=.0001)
+                target = sum(current_income_target(k, profile['afro']) * n
+                             for k, n in counts.items()) / total
+                self.assertAlmostEqual(a, target, delta=1)
+                gold_adjustment = sum(followup_delta(k, 'gold') * n for k, n in counts.items()) / total
+                self.assertAlmostEqual(g, profile['gold'] + gold_adjustment, delta=.0001)
             else:
                 top = max(mobs.stats(k).level for k in counts)
                 for k in counts:
                     factor = 1 - .03 * (top - mobs.stats(k).level)
                     a, g = revenue(k)
-                    self.assertAlmostEqual(a, profile['afro'] * factor, delta=1)
-                    self.assertAlmostEqual(g, profile['gold'] * factor, delta=.0001)
+                    self.assertAlmostEqual(a, current_income_target(k, profile['afro'] * factor), delta=1)
+                    self.assertAlmostEqual(g, profile['gold'] * factor + followup_delta(k, 'gold'), delta=.0001)
 
-    def test_sa_base_income_is_105000_afro_and_1_2_gold(self):
+    def test_changed_calibre_uses_makeshift_ammo_and_preserves_quantity(self):
+        for kind in (840, 841):
+            with self.subTest(kind=kind):
+                original = mobs.MobStats(kind, balanced=False)
+                current = mobs.stats(kind)
+                compatible = items.params_of(current.weapon_type_id)['comp_array']
+                self.assertIn(current.loot_ammo_type, compatible)
+                current_quality = items.catalogue()[current.loot_ammo_type][1].rsplit('_', 1)[-1]
+                self.assertEqual(current_quality, 'KS')
+                self.assertEqual(current.loot_ammo_count, original.loot_ammo_count)
+                self.assertEqual(current.loot_ammo_count, (2, 6))
+                drops = mobs.carried(current, random.Random(kind))
+                self.assertEqual(items.catalogue()[drops[0][0]][1].rsplit('_', 1)[-1], 'ST')
+
+    def test_sa_base_income_keeps_105000_baseline_and_explicit_release_adjustment(self):
         profile = next(p for p in self.doc['targets'] if p['id'] == 'camp-263')
         counts = {int(k): n for k, n in profile['counts'].items()}
         total = sum(counts.values())
         a = sum(revenue(k)[0] * n for k, n in counts.items()) / total
         g = sum(revenue(k)[1] * n for k, n in counts.items()) / total
-        self.assertAlmostEqual(a, 105000, delta=1)
-        self.assertAlmostEqual(g, 1.2, delta=.0001)
+        carried_change = sum((carried_ammo_revenue(mobs.stats(k))
+                              - carried_ammo_revenue(mobs.MobStats(k, balanced=False), standard=False)) * n
+                             for k, n in counts.items()) / total
+        afro_adjustment = sum(followup_delta(k, 'afro') * n for k, n in counts.items()) / total
+        gold_adjustment = sum(followup_delta(k, 'gold') * n for k, n in counts.items()) / total
+        self.assertAlmostEqual(a - carried_change, 105000 + afro_adjustment, delta=1)
+        self.assertAlmostEqual(g, 1.2 + gold_adjustment, delta=.0001)
 
     def test_elite_roster_is_absent_from_every_patrol_and_not_officers(self):
         forbidden = ('командир', 'командер', 'полков', 'капитан', 'лейтенант', 'майор', 'казнач', 'бухгалтер')
@@ -175,11 +227,11 @@ class LootRebalance(unittest.TestCase):
         for kind in (305, 306, 307, 308):
             self.assertIn(6942, {t for t, _, _ in mobs.loot_table(kind)})
 
-    def test_drop_table_is_type_only_even_in_different_locations(self):
+    def test_economic_drop_table_is_type_only_apart_from_the_separate_camp_armour_roll(self):
         for kind in (20, 264, 838, 930):
             a = mobs.loot_for(mobs.stats(kind), random.Random(19), (), loc_id=34)
             b = mobs.loot_for(mobs.stats(kind), random.Random(19), (), loc_id=132)
-            self.assertEqual(a, b)
+            self.assertEqual(camp_loot.without_armour(a), camp_loot.without_armour(b))
 
     def test_existing_quest_marks_keep_their_kill_targets_and_carriers(self):
         for lid in camp_elites.locations():
@@ -197,14 +249,15 @@ class LootRebalance(unittest.TestCase):
                     if set(carriers) & before:
                         self.assertTrue(set(carriers) & after, (lid, q.type))
 
-    def test_sand_is_outside_cap_and_normal_random_rows_still_share_two_slots(self):
+    def test_sand_and_approved_emeralds_are_outside_the_two_ordinary_slots(self):
         for k in (836, 837, 838, 839, 840, 841, 930, 931):
             self.assertIn(mortimer.SAND, mobs.independent_loot(k))
             rng = random.Random(7)
             rng.random = lambda: 0
             drops = mobs.roll_table(k, rng)
             self.assertIn((mortimer.SAND, 1), drops)
-            self.assertLessEqual(len([t for t, n in drops if t != mortimer.SAND]), 2)
+            independent = mobs.independent_loot(k)
+            self.assertLessEqual(len([t for t, n in drops if t not in independent]), 2)
 
     def test_five_gold_valuables_expand_by_level_without_changing_quantity(self):
         for k, rows in loot_rules.records().items():

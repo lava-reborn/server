@@ -155,8 +155,8 @@ cd "$ROOT"
 PICKED=
 if [ "$SELECT" = 1 ]; then
   picked=$(python3 tools/suite.py "${pick_args[@]}") || { echo "$picked" >&2; exit 2; }
-  printf '%s\n' "$picked" | grep -vE '^(server|data|tools)/test_[^/]*\.py$'
-  PICKED=$(printf '%s\n' "$picked" | grep -E '^(server|data|tools)/test_[^/]*\.py$')
+  printf '%s\n' "$picked" | grep -vE '^(server|data|tools|client)/test_[^/]*\.py$'
+  PICKED=$(printf '%s\n' "$picked" | grep -E '^(server|data|tools|client)/test_[^/]*\.py$')
   if [ -z "$PICKED" ]; then
     echo "nothing to run"
     exit 0
@@ -217,7 +217,7 @@ fi
 # --save-map makes the map of them once the run is over.
 IMPACT=
 if [ "$RECORD" = 1 ]; then
-  IMPACT=$(mktemp -d /tmp/lava_impact.XXXXXX)
+  IMPACT=$(mktemp -d "${TMPDIR:-/tmp}/lava_impact.XXXXXX")
   export LAVA_IMPACT_OUT=$IMPACT LAVA_IMPACT_ROOT=$ROOT
   export PYTHONPATH=$ROOT/tools/impact${PYTHONPATH:+:$PYTHONPATH}
 fi
@@ -226,7 +226,7 @@ fi
 # under a folder named after the output directory: two runs side by side
 # (two worktrees, a rerun while another run goes on) do not share a file, and
 # a rerun does not start on what the failed attempt left.
-RUNTMP=/tmp/lava_suite_tmp.$(printf '%s' "$OUT" | cksum | cut -d' ' -f1)
+RUNTMP="${TMPDIR:-/tmp}/lava_suite_tmp.$(printf '%s' "$OUT" | cksum | cut -d' ' -f1)"
 
 # SUMMARY_FILE and SUFFIX let the rerun below keep its own record and its own
 # output beside the first ones, so both are there to read afterwards.

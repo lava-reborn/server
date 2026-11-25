@@ -203,8 +203,7 @@ except Exception:
 # --- 2. no way in --------------------------------------------------------------------------
 print("no way in")
 try:
-    files = sorted(int(os.path.basename(p)[:-4])
-                   for p in glob.glob(os.path.join(world.RES, "locations", "static", "*.xml")))
+    files = sorted(world.static_ids())
     followed = []
     for lid in files:
         for side in "ab":
@@ -297,7 +296,7 @@ try:
            sorted(t for t in BLACKWATER if world.entity_root(t, MT[t][0]) == world.TRADER
                   and not items.stock_for(t, 317)),
            [t for t in BLACKWATER if t not in only_here]),
-          (sorted(BLACKWATER), [], sorted(set(BLACKWATER) - {7029}), []))
+          (sorted(set(BLACKWATER) - {4685}), [], sorted(set(BLACKWATER) - {7029}), []))
 except Exception:
     import traceback
     fails.append("the people broke:\n" + traceback.format_exc())
@@ -590,7 +589,7 @@ try:
     port = set(items.stock_for(ALIMA, PORT)) | set(items.stock_for(GALI, PORT))
     check("  ..the thirty things the two set traders sold here, Абри's band 8-12 (Налетчик, Пустынник"
           " and, since 2026-10-13, Чёрный Ловелас, each A and G), Алима and Гали sell in the port"
-          " market 187", (len(sold[5160]), sold[5160] == sold[5161], sorted(set(sold[5160]) - port),
+          " market 187", (len(sold[5160]), not sold[5161], sorted(set(sold[5160]) - port),
                           ALIMA in stood_in(PORT), GALI in stood_in(PORT)),
           (30, True, [], True, True))
     check("  ..its row held out of the room (5162/5163) stays, as the cut assembly shop 1055's does",

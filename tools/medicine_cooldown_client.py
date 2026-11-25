@@ -2,6 +2,49 @@
 from avm_codegen import Compiler
 
 SOURCE = '''
+
+def __bfMedItemInit(obj):
+    # Keep HealItem's own healing API and reuse the native heap UI/weight.
+    lol.core.objects.HealItem.prototype.__proto__ = lol.core.objects.Heapable.prototype
+    this.max_count = obj.max_count or 1
+    this.size = this.size or 1
+    return this.__bfMedItemInitOrig(obj)
+
+def __bfMedQuantity():
+    op = this.currDDOperation
+    item = op.fromItem
+    if op and op.fromSlot == this.visavisBag_mc and op.toSlot == this.bag_mc and item.rootID == lol.core.objects.Item.HEAL_ITEM and item.getProp("max_count") > 1 and not op.heapNum:
+        this.separateItem = item
+        pan = this.createExchangePan(item, "Сколько штук купить?", this.trader.pmod, True, False)
+        pan.maxValue = Math.min(10, item.getProp("max_count"))
+        pan.addEventListener("exchange", this, this.exchangeAck)
+        pan.addEventListener("close", this, this.exchangeCancel)
+        return
+    return this.__bfMedQuantityOrig()
+
+def __bfMedBuy(item, count):
+    if item.rootID != lol.core.objects.Item.HEAL_ITEM or not (item.getProp("max_count") > 1):
+        return this.__bfMedBuyOrig(item, count)
+    n = 1
+    if count != None:
+        n = count
+    if n < 1 or n > 10 or n != Math.floor(n):
+        return this.applyTransfer(False)
+    code = lol.core.player.Trade.UPD_BUY
+    if item.getProp("g_cost") > 0:
+        code = lol.core.player.Trade.UPD_BUY_GOLD
+    index = item.tradeID.toString(16)
+    message = new(lol.server.mess.CSM_SSUpdate, code, new(lol.data.BigUINT, new(lol.data.BigUINTCluster, index)), n)
+    if this.XMC.Send(message):
+        lol.server.XMLCCallStack.addCall("cmdAck", this, this.transferAck)
+
+def __bfMedAmount(text):
+    item = this.item
+    if item and item.rootID == lol.core.objects.Item.HEAL_ITEM and item.getProp("max_count") > 1:
+        # showAmount uses numChar bitmap glyphs, not a text field. Spaces
+        # and Cyrillic letters have no frame and appear as extra zeroes.
+        text = String(item.getProp("size") or 1)
+    return this.__bfMedAmountOrig(text)
 def __bfMedHover():
     _global.__bfMedHintIcon = this
     lol.gpui.HintManager.showHint(_global.__bfMedDescription, 0, this._width)
@@ -67,7 +110,7 @@ def __bfMedTick():
             clearInterval(_global.__bfMedTimer)
         _global.__bfMedTimer = None
         return
-    # Stay alive only for these four seconds, including a collapsed panel.
+    # Stay alive only for the server's remaining cooldown, including a collapsed panel.
     # This also handles a canvas whose native constructor predates our hooks.
     if not _global.__bfMedTimer:
         _global.__bfMedTimer = setInterval(_global.__bfMedTick, 100)
@@ -106,7 +149,7 @@ def __bfMedTick():
 def __bfMedNotify(cmd):
     this.__bfMedNotifyOrig(cmd)
     if cmd.messID == "medCooldown":
-        _global.__bfMedUntil = getTimer() + Math.min(4000, Math.max(0, cmd.params.time_ms * 1))
+        _global.__bfMedUntil = getTimer() + Math.min(6000, Math.max(0, cmd.params.time_ms * 1))
         _global.__bfMedDescription = cmd.params.description
         _global.__bfMedTick()
 
@@ -141,6 +184,10 @@ def patches(Asm, undef):
     bodies = {name:(params,body) for name,params,body in functions}
     wraps=[]
     for path,method,keep,helper in (
+        (('core','objects','HealItem'),'initialize','__bfMedItemInitOrig','__bfMedItemInit'),
+        (('gpui','TradeInterface'),'tryToSendTransferToServer','__bfMedQuantityOrig','__bfMedQuantity'),
+        (('core','player','Trade'),'buy','__bfMedBuyOrig','__bfMedBuy'),
+        (('gpui','ItemContainer'),'showAmount','__bfMedAmountOrig','__bfMedAmount'),
         (('server','XMLConnection'),'sendNotification','__bfMedNotifyOrig','__bfMedNotify'),
         (('core','effects','DisplayFX'),'init','__bfMedInitOrig','__bfMedInit'),
         (('core','effects','DisplayFX'),'effectsUpdate','__bfMedEffectsOrig','__bfMedEffects'),

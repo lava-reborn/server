@@ -430,33 +430,34 @@ print()
 print("gold rounds")
 rounds = {t: items.params_of(t) for t, (root, _n) in cat.items() if root == items.AMMO}
 gold = sorted(t for t, p in rounds.items() if items.gold_round(p))
-check("43 kinds of round are gold -- priced in gold alone, not premium: (G) ЭК, ББ, СБ, ШК"
+check("59 kinds of round are gold -- priced in gold alone, not premium: (G) ЭК, ББ, СБ, ШК"
       " and the prison's (Q) ОТ", (len(gold), sorted({cat[t][1].split("_")[-2] if t != SHOCK
                                                       else "shock" for t in gold})),
-      (43, ["BB", "EK", "OT", "SB", "shock"]))
-check("  ..every one a hundredth of an ounce a round: a pack of sell_num at sell_num hundredths",
-      [t for t in gold if rounds[t]["g_cost"] != items.GOLD_AMMO_ROUND * rounds[t]["sell_num"]
+      (59, ["BB", "EK", "OT", "SB", "SHK", "shock"]))
+check("  ..BB/EK cost two hundredths per round; other gold types retain one hundredth",
+      [t for t in gold if rounds[t]["g_cost"] != (2 if cat[t][1].endswith(('_BB_G', '_EK_G')) else 1) * rounds[t]["sell_num"]
        or items.GOLD_AMMO_ROUND != 1], [])
 wiki = items.wiki()
 check("  ..in place of the wiki's 0.10 G (ЭК, ББ, ОТ, ШК) and 0.20 G (СБ) a round",
       sorted({(cat[t][1].split("_")[-2], wiki[t]["g_cost"]) for t in gold if t in wiki
               and t != SHOCK} | {("shock", wiki[SHOCK]["g_cost"])}),
       [("BB", 10), ("EK", 10), ("OT", 10), ("SB", 20), ("shock", 10)])
-check("  ..ЭК(G) 9мм: the pack of 20 was 2 G, now 0.20 G; the tooltip's 0.01 G",
+check("  ..ЭК(G) 9мм: 20 rounds cost 0.40 G; the tooltip shows 0.02 G per round",
       (rounds[6152]["g_cost"], rounds[6152]["sell_num"],
-       inventory.js_round(rounds[6152]["g_cost"] / float(rounds[6152]["sell_num"]))), (20, 20, 1))
-check("  ..bought at a hundredth a round, 5000 for 50 G",
+       inventory.js_round(rounds[6152]["g_cost"] / float(rounds[6152]["sell_num"]))), (40, 20, 2))
+check("  ..purchases use the selected ammunition price for every requested quantity",
       [inventory.buy_price(rounds[t], items.AMMO, n, True) for t in (6152, 6179, OT)
-       for n in (1, 7, 20, 5000)], [1, 7, 20, 5000] * 3)
+       for n in (1, 7, 20, 5000)], [2, 14, 40, 10000] + [1, 7, 20, 5000] * 2)
 check("the premium КС keep their 2 G a pack, out of the game; the 9мм даренные zero G"
       " and 20 afro; the stun bolts, the snowballs and «Бьют прямо в сердце» both prices",
       ([(rounds[t]["cost"], rounds[t]["g_cost"], rounds[t]["premium"]) for t in (6128, 6188)],
        [(rounds[t]["cost"], rounds[t]["g_cost"]) for t in (4780, 3819, 6201)]),
       ([(0, 200, 1), (20, 0, 0)], [(20, 20), (2000, 2000), (20000, 300)]))
-check("«Пистолеты и патроны» sells gold rounds at a hundredth a round",
+check("«Пистолеты и патроны»: selected gold rounds cost0.01G, BB/EK0.02G",
       [(t, inventory.buy_price(rounds[t], items.AMMO, 1, True))
        for t in items.stock_for(PISTOLS) if t in rounds and items.gold_round(rounds[t])],
-      [(t, 1) for t in items.stock_for(PISTOLS) if t in rounds and items.gold_round(rounds[t])])
+      [(t, 2 if items.catalogue()[t][1].endswith(('_BB_G', '_EK_G')) else 1)
+       for t in items.stock_for(PISTOLS) if t in rounds and items.gold_round(rounds[t])])
 
 
 # --- over the socket ---------------------------------------------------------------------------

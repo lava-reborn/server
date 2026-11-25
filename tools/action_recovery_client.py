@@ -207,6 +207,21 @@ def patches(Asm, undef):
     source = SOURCE
     for i, (path, method, keep, params) in enumerate(REQUESTS):
         args = ', '.join(params)
+        if method == 'fire':
+            source += f'''
+def __bfRequest{i}({args}):
+    # Keep the native acknowledgement latch; a repeated space must neither
+    # restart the aim bar nor enqueue another request/timer.
+    if this.coolDownBlock and this.useType == 16:
+        return
+    _global.__bfPendingInput = None
+    _global.__bfMoveIntent = None
+    if _global.__bfInputTimer:
+        clearInterval(_global.__bfInputTimer)
+    _global.__bfInputTimer = None
+    return this.{keep}({args})
+'''
+            continue
         stop_auto = ''
         if method in ('changePrimary', 'movePlayer'):
             # Stop repeat fire even before recovery starts, while still aiming.
@@ -219,6 +234,15 @@ def patches(Asm, undef):
             remember = '''    master = lol.core.Master.getInstance()
     _global.__bfMoveIntent = {"owner":this, "args":[cell, spliceNum], "location":master.currentLocation, "retried":False}
 '''
+            source += f'''
+def __bfRequest{i}({args}):
+{stop_auto}{remember}    _global.__bfPendingInput = None
+    if _global.__bfInputTimer:
+        clearInterval(_global.__bfInputTimer)
+    _global.__bfInputTimer = None
+    return this.{keep}({args})
+'''
+            continue
         source += f'''
 def __bfRequest{i}({args}):
 {stop_auto}{remember}    if _global.__bfDefer(this, "{keep}", [{args}]):

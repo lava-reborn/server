@@ -11,6 +11,75 @@ from testkit import run_cases
 
 
 class MedicineCooldownClient(unittest.TestCase):
+    def test_quantity_purchase_emits_one_native_request_and_one_ack_registration(self):
+        sent, ack, rejected = [], [], []
+        self.env['lol']['core']['objects'] = dict(Item=dict(HEAL_ITEM=2))
+        self.env['lol']['core']['player'] = dict(Trade=dict(UPD_BUY=1, UPD_BUY_GOLD=4))
+        self.env['lol']['server'] = dict(mess=dict(CSM_SSUpdate=lambda *args: args),
+                                        XMLCCallStack=dict(addCall=lambda *args:ack.append(args)))
+        self.env['lol']['data'] = dict(BigUINT=lambda value:value, BigUINTCluster=lambda value:value)
+        self.env['Math']['floor'] = math.floor
+        gold = [0]
+        item = dict(rootID=2, tradeID=dict(toString=lambda radix:'a'),
+                    getProp=lambda key:dict(max_count=10,g_cost=gold[0]).get(key))
+        trade = dict(XMC=dict(Send=lambda message:sent.append(message) or True), transferAck='ack',
+                     applyTransfer=rejected.append)
+        self.call('__bfMedBuy',trade,item,10)
+        gold[0]=5
+        self.call('__bfMedBuy',trade,item,3)
+        self.assertEqual(sent,[(1,'a',10),(4,'a',3)])
+        self.assertEqual(len(ack),2)
+        for n in (0,-1,11,1.5):
+            self.call('__bfMedBuy',trade,item,n)
+        self.assertEqual(len(sent),2)
+        self.assertEqual(rejected,[False]*4)
+
+    def test_heal_initialization_reuses_native_heap_without_changing_charged_packs(self):
+        objects = self.env['lol']['core']['objects'] = dict(HealItem=dict(prototype={}),
+                        Heapable=dict(prototype={'nativeHeap': True}), Item=dict(HEAL_ITEM=2))
+        seen = []
+        item = dict(__bfMedItemInitOrig=seen.append)
+        self.call('__bfMedItemInit', item, dict(max_count=10, use_count=1))
+        self.assertIs(objects['HealItem']['prototype']['__proto__'], objects['Heapable']['prototype'])
+        self.assertEqual((item['max_count'], item['size']), (10, 1))
+        pack = dict(__bfMedItemInitOrig=seen.append)
+        self.call('__bfMedItemInit', pack, dict(max_count=1, use_count=20))
+        self.assertEqual(pack['max_count'], 1)
+        self.assertEqual(seen[-1]['use_count'], 20)
+
+    def test_single_dose_trade_quantity_uses_existing_dialogue_once(self):
+        self.env['lol']['core']['objects'] = dict(Item=dict(HEAL_ITEM=2))
+        events, calls = [], []
+        pan = dict(addEventListener=lambda *args: events.append(args))
+        item = dict(rootID=2, getProp=lambda key: 10 if key=='max_count' else 0)
+        op = dict(fromSlot='stock', toSlot='bag', fromItem=item)
+        view = dict(currDDOperation=op, visavisBag_mc='stock', bag_mc='bag', trader=dict(pmod=1),
+                    createExchangePan=lambda *args: pan, exchangeAck='ack', exchangeCancel='cancel',
+                    __bfMedQuantityOrig=lambda: calls.append('native'))
+        self.call('__bfMedQuantity', view)
+        self.assertEqual(pan['maxValue'], 10)
+        self.assertEqual([event[0] for event in events], ['exchange','close'])
+        self.assertFalse(calls)
+        op['heapNum'] = 10
+        self.call('__bfMedQuantity', view)
+        self.assertEqual(calls, ['native'])
+
+    def test_single_dose_counter_uses_only_native_numeric_glyphs_and_keeps_charged_uses(self):
+        self.env['lol']['core']['objects'] = dict(Item=dict(HEAL_ITEM=2))
+        drawn = []
+        card = dict(item=dict(rootID=2, getProp=lambda key: dict(size=7,max_count=10).get(key)),
+                    __bfMedAmountOrig=drawn.append)
+        for count in (1, 3, 7, 10):
+            card['item']['getProp'] = lambda key, n=count: dict(size=n,max_count=10).get(key)
+            self.call('__bfMedAmount', card, '1/1')
+            self.assertEqual(drawn[-1], str(count))
+            # TextCharCreate's numChar atlas supports digits but no suffix
+            # " шт.": unknown characters leave the zero frame visible.
+            self.assertTrue(all(symbol in '0123456789' for symbol in drawn[-1]))
+        card['item']['getProp'] = lambda key: 1 if key=='max_count' else None
+        self.call('__bfMedAmount', card, '19/20')
+        self.assertEqual(drawn[-1], '19/20')
+
     def setUp(self):
         self.now=1000
         self.timers=[]
@@ -83,6 +152,24 @@ class MedicineCooldownClient(unittest.TestCase):
         self.assertEqual(len(self.created),1)
         self.assertEqual(len(self.timers),1)
         self.assertTrue(self.draw) # cross drawn only on creation
+
+    def test_full_server_cooldown_remains_visible_until_medicine_is_ready(self):
+        import battle_medicine
+        remaining = int(battle_medicine.COOLDOWN_SECONDS * 1000)
+        self.assertEqual(remaining, 6000)
+        self.call('__bfMedInit',self.view)
+        self.notify(remaining)
+        icon=self.created[0]
+        self.assertEqual(icon['EstimateTime']['text'],'00:06')
+        for stamp,text in ((3000,'00:04'),(5000,'00:02'),(6999,'00:01')):
+            self.now=stamp
+            self.call('__bfMedTick')
+            self.assertEqual(icon['EstimateTime']['text'],text)
+            self.assertEqual(self.removed,[])
+        self.now=7000
+        self.call('__bfMedTick')
+        self.assertEqual(self.removed,[icon])
+        self.assertIsNone(self.global_['__bfMedTimer'])
 
     def test_collapse_reopen_and_old_unload_preserve_deadline_and_new_view(self):
         self.call('__bfMedInit',self.view)

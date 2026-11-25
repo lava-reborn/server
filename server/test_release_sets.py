@@ -1,5 +1,6 @@
 """Declared armour levels, client warnings and gear-independent combat XP."""
 import json
+from itertools import product
 import logging
 import os
 from pathlib import Path
@@ -34,7 +35,9 @@ class ReleaseSets(unittest.TestCase):
         # complete A/G pairs; higher sets remain in the catalogue only.
         pieces = set(sets.ITEMS)
         marat = items.stock_for(1219, 126)
-        self.assertEqual(len(marat), 10)
+        self.assertEqual(len(marat), 22)
+        self.assertEqual(set(marat) & {3735, 3736, 3738, 5615, 3722, 3723, 3724, 3725, 3726},
+                         {3735, 3736, 3738, 5615, 3722, 3723, 3724, 3725, 3726})
         self.assertFalse(pieces.intersection(marat))
         expected = {t for t, ware in shop_bands.wares().items()
                     if ware[0] == 'sets' and 16 <= ware[1] <= 17}
@@ -87,6 +90,50 @@ class ReleaseSets(unittest.TestCase):
         set_release_rules.apply(doc['sets'])
         self.assertEqual(json.dumps(doc, sort_keys=True), before)
 
+    def test_echo_and_sturm_full_sets_have_the_approved_progression(self):
+        # Count actual item frames and cumulative K=2..5 bonuses, as worn.
+        expected = {10961: (215, 730, 460, 50, 32, 32),
+                    10965: (235, 845, 552, 55, 35, 35),
+                    11002: (250, 850, 610, 65, 34, 34),
+                    11004: (270, 953, 710, 75, 38, 38)}
+        for sid, values in expected.items():
+            rows = self.set_rows(sid)
+            bonus = inventory.gear_bonus(rows)
+            armour = sum(items.params_of(r['type_id'])['armor_class'] for r in rows)
+            self.assertEqual((bonus['hp'], bonus['st'], armour, bonus['od'],
+                              bonus['cp'], bonus['ce']), values, sid)
+
+    @staticmethod
+    def set_rows(sid):
+        return [dict(type_id=t, root=items.WEAR, slot=slot, brk=1)
+                for slot, t in zip(inventory.SET_SLOTS, sets.SETS[sid]['members'].values())]
+
+    def test_mixed_late_sets_do_not_exceed_complete_sturm(self):
+        for echo, sturm in ((10961, 11002), (10965, 11004)):
+            low, high = self.set_rows(echo), self.set_rows(sturm)
+            ceiling = inventory.gear_bonus(high)
+            for choices in product((0, 1), repeat=5):
+                rows = [(low, high)[pick][i] for i, pick in enumerate(choices)]
+                actual = inventory.gear_bonus(rows)
+                for key in sets.SCALARS:
+                    self.assertLessEqual(actual[key], ceiling[key], (echo, choices, key))
+
+    def test_partial_echo_bonuses_are_monotonic_and_broken_parts_do_not_count(self):
+        for sid in (10961, 10965):
+            rows = self.set_rows(sid)
+            full = inventory.gear_bonus(rows)
+            for choices in product((0, 1), repeat=5):
+                partial = [r for r, keep in zip(rows, choices) if keep]
+                actual = inventory.gear_bonus(partial)
+                for key in sets.SCALARS:
+                    self.assertLessEqual(actual[key], full[key], (sid, choices, key))
+                broken = [dict(r, brk=keep) for r, keep in zip(rows, choices)]
+                total = inventory.gear_bonus(broken)
+                counted = sets.bonuses([r['type_id'] for r in partial])
+                for key in sets.SCALARS:
+                    own = sum(items.params_of(r['type_id'])['bonus_' + key] for r in rows)
+                    self.assertEqual(total[key], own + counted[key], (sid, choices, key))
+
     def test_client_armour_has_no_level_warning(self):
         target = dict(currDDOperation=dict(fromItem=dict(rootID=items.WEAR)),
                       __armorSkillsOrig=lambda a, titles: 'weapon requirements')
@@ -102,7 +149,7 @@ class ReleaseSets(unittest.TestCase):
         self.assertEqual(execute(widescreen.fn_armor_skills().assemble(), env),
                          'weapon requirements')
 
-    def test_weapon_warning_uses_base_combat_skill_and_preserves_noncombat_warnings(self):
+    def test_weapon_warning_counts_effective_combat_skills(self):
         skills=[dict(value=0,level=100),dict(value=16,level=100),dict(value=0,level=5)]
         target=dict(currDDOperation=dict(fromItem=dict(rootID=items.FIRE_ARM)),
                     __armorSkillsOrig=lambda a,t: 'unchanged')
@@ -111,11 +158,16 @@ class ReleaseSets(unittest.TestCase):
         env=dict(this=target,arr=[None,17,3],titleArr=['Melee','Shooting','Medicine'],
                  lol=dict(core=dict(Master=master)))
         code=widescreen.fn_armor_skills().assemble()
+        self.assertEqual(execute(code,env),'')
+        skills[1]['level']=16
         self.assertEqual(execute(code,env),'<b>Shooting не ниже 17</b>\r')
         skills[1]['value']=17
+        skills[1]['level']=17
         self.assertEqual(execute(code,env),'')
         target['currDDOperation']['fromItem']['rootID']=items.COLD_ARM
         env['arr']=[6]
+        self.assertEqual(execute(code,env),'')
+        skills[0]['level']=5
         self.assertEqual(execute(code,env),'<b>Melee не ниже 6</b>\r')
         target['currDDOperation']['fromItem']['rootID']=items.WEAR
         self.assertEqual(execute(code,env),'')
@@ -128,7 +180,7 @@ class ReleaseSets(unittest.TestCase):
                 ch.skill[skill][0] = 16
                 ch.bonus_skills[skill] = bonus
                 ch.gain_xp = Mock(return_value=dict(attribs=set(), skills=set(), specs=set()))
-                f = NS(character=lambda: ch)
+                f = NS(character=lambda: ch, sess=NS())
                 target = NS(level=17, stats=NS(role='mob', xp_mult=1))
                 combat.Fighter.credit_xp(f, skill, None, 1.0, target)
                 values.append(ch.gain_xp.call_args.args[1])

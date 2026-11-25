@@ -174,12 +174,13 @@ def prepare(sources):
     prices = {}
     for source, target in copies.items():
         command, base = items.static_info(source)
+        from training import balance as training_balance
+        base = training_balance.before_release(source, copy.deepcopy(base))
         from training import legacy as training_legacy
         from training import ammo as training_ammo
         base = training_ammo.parameters(source, training_legacy.apply(source, copy.deepcopy(base)))
         prices[source] = (base.get('cost', 0) or 0, base.get('g_cost', 0) or 0,
                           (base.get('sell_num', 1) or 1) if items.root_of(source) == items.AMMO else 1)
-        from training import balance as training_balance
         params = training_balance.apply(source, candidate(base, overrides.get(str(source), {})))
         if source in training_legacy.CLASSIC:
             params = training_legacy.apply(source, params)
@@ -252,6 +253,11 @@ def prepare(sources):
         simulator_copies[source] = target
         profile_sources[target] = source
     validate_ammunition(frames, roots)
+    # Private profiles rewrite the source requirements after copying native
+    # frames. Ordinary level captions/gates would be stale in these copies.
+    for _command, params in frames.values():
+        for field in ('equip_level', 'equip_allowance', 'buff_level'):
+            params.pop(field, None)
     # Register generic catalogue hooks before publishing range indexes.
     sources_by_type = {t: s for s, t in copies.items()}
     sources_by_type.update(prototype_sources)

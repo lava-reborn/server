@@ -95,11 +95,11 @@ with io.open(os.path.join(DATA, "passages.json"), encoding="utf-8") as _fh:
 ALL_RETIRED = {int(k) for k in RETIRED["places"]}
 CUT_WHY = "The owner's cut of Абу-Хамед, 2026-10-14"
 CELLS = {451: (6184, 1973), 461: (6185, 1975), 462: (6184, 1977), 463: (6185, 1976), 519: (6185, 1978),
-         467: (6183, 1974), 527: (6185, 1977), 194: (6126, 1980), 118: (6154, 1963)}
+         467: (6183, 1974), 527: (6185, 1977), 194: (6126, 1980)}
 SMERSH = (254, 521, 656, 942, 1193)
 VES = (149, 333, 533, 343, 347, 351, 355, 359, 363, 367, 948, 949, 950, 1192)
 ZEON = (309, 310, 318, 926, 930, 947, 1186)
-OFF_CELL = (449,) + SMERSH + VES + ZEON + (609,)
+OFF_CELL = (449,) + SMERSH + VES + ZEON
 CUT = tuple(CELLS) + OFF_CELL
 # The cells with a name or a square and no place, wasteland as before.
 LABEL_ONLY = [(6184, 1974), (6184, 1976), (6126, 1981), (6174, 1946), (6175, 1946), (6081, 1975),
@@ -160,13 +160,13 @@ try:
     check("  ..the files stay, so a character saved inside still loads",
           [world.location(i).fn for i in CUT],
           ["AH_district1", "AH_district4", "AH_district7", "AH_district9", "AH_district13", "Sets_Market_AH",
-           "air_point_AH_map", "Clan_Base_A", "Clan_Base01", "AH_master_01", "Backdoor_Smersh",
+           "air_point_AH_map", "Clan_Base_A", "AH_master_01", "Backdoor_Smersh",
            "KB_Smersh_Block_Post", "Clan_Base_A_lvl2", "KB_Smersh_Sorting", "KB_Smersh_Bunker_glavaria_klana",
            "VES_KB_Enter", "VES_KB_Block_Post", "VES_KB_Backdoor", "VES_KB_point_01", "VES_KB_point_02",
            "VES_KB_point_03", "VES_KB_point_04", "VES_KB_point_06", "VES_KB_point_05", "VES_KB_point_07",
            "VES_KB_Sorting", "VES_KB_Lvl2_Transport", "VES_KB_lvl2_01", "VES_KB_Bunker_glavaria_klana",
            "KB_ZEON_Entr", "Backdoor_ZEON", "KB_ZEON_Block_post", "KB_ZEON_lvl2_01", "KB_ZEON_Lvl2_Transport",
-           "KB_ZEON_Sorting", "KB_ZEON_Bunker_glavaria_klana", "Clan_Base01_lvl2"])
+           "KB_ZEON_Sorting", "KB_ZEON_Bunker_glavaria_klana"])
     check("the neighbours stay: the station 126, the quarter 127, the centre 128, the road 129, the"
           " masters' camp 131, the port 446, the graveyard 71, the arena 1261",
           [table.get(c) for c in (STATION_CELL, (6183, 1975), (6183, 1976), (6184, 1975), (6183, 1977),
@@ -175,8 +175,8 @@ try:
     bases = sorted(i for i in world.static_ids()
                    if world.location(i).fn.startswith(("VES_KB", "KB_ZEON", "Backdoor_ZEON", "KB_Smersh",
                                                        "Backdoor_Smersh", "Clan_Base_A", "Clan_Base01")))
-    check("  ..and every file of the three clan bases and the abandoned one is out",
-          ([i for i in bases if i not in ALL_RETIRED], len(bases)), ([], 29))
+    check("  ..only the two approved bases and their bunkers are restored",
+          ([i for i in bases if i not in ALL_RETIRED], len(bases)), ([118, 609, 1442, 1443], 31))
 except Exception:
     import traceback
     fails.append("the places broke:\n" + traceback.format_exc())
@@ -185,8 +185,7 @@ except Exception:
 # --- 2. no way in --------------------------------------------------------------------------
 print("no way in")
 try:
-    files = sorted(int(os.path.basename(p)[:-4])
-                   for p in glob.glob(os.path.join(world.RES, "locations", "static", "*.xml")))
+    files = sorted(world.static_ids())
     followed = []
     for lid in files:
         for side in "ab":
@@ -310,7 +309,6 @@ try:
               (6126, 1980, "Собственность клана СМЕРШ:<br>ПОСТОРОННИМ ВХОД ВОСПРЕЩЁН! "),
               (6175, 1946, "Собственность клана ВЭС:<br>ПОСТОРОННИМ ВХОД ВОСПРЕЩЁН!"),
               (6082, 1975, "Собственность клана ZEON:<br>ПОСТОРОННИМ ВХОД ВОСПРЕЩЁН!"),
-              (6154, 1963, CLAN + " <BR>Захват возможен игроками 18 уровня при поддержке клана."),
               (6154, 1963, CLAN + "<br>Внимание!!! Необходимо прибывать за 15 минут до встречи с хозяином."),
               (6272, 1942, "Заброшенный склад<BR>Контролируеся группировкой Delta Force"),
               (6140, 1869, "Пустыня <br>Стоянка Инсара")}
@@ -318,7 +316,7 @@ try:
     hidden = {(e["x"], e["y"], e["was"]) for e in LABELS if e.get("hide")
               and e.get("why", "").startswith(mine)}
     check("the names Абу-Хамед's order hides are exactly the cut's, the clan bases' (the abandoned one's"
-          " two rows), the butchers', Delta Force's warehouse and Инсар's stop", sorted(hidden), sorted(HIDDEN))
+          " duplicate row), the butchers', Delta Force's warehouse and Инсар's stop", sorted(hidden), sorted(HIDDEN))
     check("  ..each of them the file's own text on its cell, so each is hidden on the map",
           sorted(c for c in HIDDEN if c not in rows_in(raw, BOX) or c in rows_in(out, BOX)), [])
     TEXTS = {(6183, 1975): "Жилой квартал Абу-Хамеда: <BR> Мастера: улучшение оружия (G)<br>Аукцион<br>"
@@ -347,10 +345,11 @@ try:
     want = [(x, y, retexts.get((x, y), t)) for x, y, t in rows_in(raw, BOX) if (x, y, t) not in hide_any]
     ours = {i for i in world.overlay_ids() if i >= world.FIRST_NEW_ID}
     added = {(e["x"], e["y"], e["text"]) for e in LABELS if e.get("add")
-             and world.settlements().get((e["x"], e["y"])) in ours}
+             and (world.settlements().get((e["x"], e["y"])) in ours
+                  or (e["x"], e["y"]) == (6083, 1957))}
     check("every other name over Абу-Хамед is the file's own, row for row (the places of ours aside)",
           [r for r in rows_in(out, BOX) if r not in added], want)
-    check("  ..of which there are twenty-nine", len(want), 29)
+    check("  ..twenty-nine original labels remain after relocating the base", len(want), 29)
     painted = map_cells.load()
     check("the squares of the hidden names with no place under them, and of the places the client has no"
           " file for, are painted over or bare, each decided (data/map_cells.json): the set upgrade's, the"
@@ -366,10 +365,10 @@ try:
           ("%d,%d" % OUTPOST_CHIEF in CELLS_DOC["cells"], "%d,%d" % OUTPOST_CHIEF in CELLS_DOC["bare"],
            OUTPOST_CHIEF in painted.cells, world.location_at(*OUTPOST_CHIEF) == world.pack(*OUTPOST_CHIEF)),
           (False, False, False, True))
-    check("  ..with the bases' letters: «База Смерш», «База ВЭС», «База Zeon», «Заброшенная база - бункер»,"
-          " «База Доктора \"Д\"»",
+    check("  ..with the retired bases' letters and the relocated abandoned bunker's old caption",
           sorted(c["was"] for c in CELLS_DOC["captions"] if CUT_WHY in c["why"]),
-          sorted(["База Смерш", "База ВЭС", "База Zeon", "Заброшенная база - бункер", "База Доктора \"Д\""]))
+          sorted(["База Смерш", "База ВЭС", "База Zeon", "База Доктора \"Д\"",
+                  "Заброшенная база - бункер"]))
 except Exception:
     import traceback
     fails.append("the names broke:\n" + traceback.format_exc())
@@ -382,9 +381,9 @@ try:
     check("Абу-Хамед's band of shops keeps the clothing market among its places, as Абри's keeps 378 and"
           " Донгола's 469: nobody opens its room; no other place of the cut is in it",
           (town["places"], sorted(set(town["places"]) & set(CUT))),
-          ([126, 127, 128, 129, 131, 177, 196, 446, 467], [467]))
+          ([126, 127, 128, 129, 131, 177, 196, 446, 467, 609], [467]))
     check("shop_bands reads the same: the airfield, the quarters and the clan bases are no town's",
-          [shop_bands.city(i) for i in (527, 451, 449, 194, 118)], [None] * 5)
+          [shop_bands.city(i) for i in (527, 451, 449, 194)], [None] * 4)
     HELD = {127: [5107, 7341, 7344], 126: [7247], 123: [6521], 131: [7339, 7342]}
     held = {}
     for r in SCHEDULE["held_out"]:
@@ -477,22 +476,24 @@ try:
     finally:
         logging.getLogger("lava").removeHandler(lines)
     chars = {n: st.character(c) for n, c in ids.items()}
-    moved = ("in467", "in451", "in519", "in449", "in527", "in194", "in1193", "in950", "in309", "in118",
-             "in609")
+    moved = ("in467", "in451", "in519", "in449", "in527", "in194", "in1193", "in950", "in309")
     check("whoever was in one of the cut's places is at the station 126, on its cell, off the map, with"
           " no cell of the old file",
           {n: (chars[n]["loc"], chars[n]["gx"], chars[n]["gy"], chars[n]["on_map"], chars[n]["pos"])
            for n in moved}, {n: (STATION, 6182, 1976, 0, None) for n in moved})
-    check("  ..a home in 467, 527 or 118 is the station now, the character left where he was",
+    check("the restored base and bunker are untouched by the old retirement migration",
+          [(chars[n]["loc"], chars[n]["pos"]) for n in ("in118", "in609")],
+          [(118, 77), (609, 77)])
+    check("  ..a home in 467 or 527 is the station now, the restored base's home stays",
           [(chars[n]["home_loc"], chars[n]["home_gx"], chars[n]["home_gy"], chars[n]["loc"])
            for n in ("home467", "home527", "home118")],
-          [(STATION, 6182, 1976, 127), (STATION, 6182, 1976, 446), (STATION, 6182, 1976, 196)])
+          [(STATION, 6182, 1976, 127), (STATION, 6182, 1976, 446), (118, 6183, 1974, 196)])
     check("  ..the one in Донгола's 469 (its own cut, run long ago) and the one at the station untouched",
           [(chars[n]["loc"], chars[n]["pos"]) for n in ("in469", "in126")], [(469, 77), (STATION, 77)])
     check("the journal is untouched", sorted(r["type"] for r in st.quests(keeper)), [119, 10120])
-    check("  ..and the log says so: eleven moved, three homes",
+    check("  ..and the log says so: nine moved, two homes",
           [ln for ln in lines.lines if accounts.ABUHAMED_CUT_FIX in ln
-           and "11 character(s) moved" in ln and "3 home(s) moved" in ln] != [], True)
+           and "9 character(s) moved" in ln and "2 home(s) moved" in ln] != [], True)
     check("  ..nothing left to do on a second pass", accounts.relocate_abuhamed_cut(st.db),
           dict(moved=0, homes=0))
     st.db.commit()

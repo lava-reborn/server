@@ -107,12 +107,12 @@ RIVER_ALL = {"5943,1722": 433, "5941,1697": 508, "5850,1850": 434, "5849,1851": 
              "5851,1991": 988, "6168,1988": 436, "6167,1989": 525, "6145,1993": 517}
 # Донгола's cut: the craftsmen, the clothing market, the ФСЦ airfield, Delta
 # Force's block post; and the 33 cells «Засада» of the quest file 389.
-DONGOLA = {"5876,2013": 455, "5878,2014": 460, "5878,2015": 518, "5878,2013": 469, "5879,2011": 530,
-           "5955,2032": 382}
+DONGOLA = {"5876,2013": 455, "5878,2014": 460, "5878,2015": 518, "5878,2013": 469,
+           "5879,2011": 530, "5955,2032": 382}
 # Абу-Хамед's cut: the five craftsmen's quarters, the clothing market, the ФСЦ
 # airfield, the clan base СМЕРШ's yard and the abandoned clan base.
 ABUHAMED = {"6184,1973": 451, "6185,1975": 461, "6184,1977": 462, "6185,1978": 519, "6185,1976": 463,
-            "6183,1974": 467, "6185,1977": 527, "6126,1980": 194, "6154,1963": 118}
+            "6183,1974": 467, "6185,1977": 527, "6126,1980": 194}
 AMBUSH = {"%d,%d" % c: 389 for c in [
     (5911, 2001), (5912, 2001), (5913, 2001), (5908, 2002), (5909, 2002), (5910, 2002), (5911, 2002),
     (5912, 2002), (5913, 2002), (5907, 2003), (5908, 2003), (5909, 2003), (5910, 2003), (5911, 2003),
@@ -125,6 +125,8 @@ INTENDED = dict(PREMIUM, **HALFA, **FSC, **ABRI, **RIVER, **ABRI_CLOTHES, **RIVE
 # map's squares on them are painted over: all but 6160,1975, whose square is
 # the pirates', and the cells «Засада», the Peacekeepers' wasteland.
 RETIRED_CELLS = {k: v for k, v in INTENDED.items() if k != "6160,1975" and k not in AMBUSH}
+# The original abandoned yard is restored at a new cell; its old marker is retired.
+RETIRED_CELLS['6154,1963'] = 118
 # Held by the cut of the camps across the river, as they were: 168 on its
 # cell, «Аванпост Северного Альянса» wasteland; and by the cut of everything
 # across the river «Ангар в джунглях» wasteland. As the clues gave them before
@@ -175,7 +177,7 @@ DONGOLA_OFF_CELL = ([448, 380, 381, 385, 386, 387, 388, 958, 959, 960, 1196,
 # abandoned clan base's bunker 609.
 ABUHAMED_OFF_CELL = [449, 254, 521, 656, 942, 1193,
                      149, 333, 533, 343, 347, 351, 355, 359, 363, 367, 948, 949, 950, 1192,
-                     309, 310, 318, 926, 930, 947, 1186, 609]
+                     309, 310, 318, 926, 930, 947, 1186]
 
 
 def load(name):

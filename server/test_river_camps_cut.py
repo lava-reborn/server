@@ -169,8 +169,7 @@ def place_ids(v):
     return [int(v)] if str(v).lstrip("-").isdigit() else []
 
 
-files = sorted(int(os.path.basename(p)[:-4])
-               for p in glob.glob(os.path.join(world.RES, "locations", "static", "*.xml")))
+files = sorted(world.static_ids())
 
 
 # --- 1. the places -------------------------------------------------------------------------
@@ -334,11 +333,12 @@ try:
           {t: [] for t in (7021, 7022, 7023, 7024)})
     traders = sorted(t for t in people if world.entity_root(t, MT[t][0]) == world.TRADER)
     stalls = {(i, t): items.stock_for(t, i) for i in CAMPS for t in traders if t in stood_in(i)}
-    check("the traders: Вади-Хальфа's three named, the others' under internal names; Абри's three and"
-          " two of Абу-Хамед's with empty stalls",
+    # The retired mixed counter 5707 also loses its blocked arrows/grenades.
+    # This is not a live shop: all four camps are unreachable above.
+    check("the retired traders keep their names; empty counters include the withdrawn ammunition stall",
           (sorted(t for t in traders if not names.ALL.get(t, "").startswith("Npc_")),
            sorted(t for (i, t), s in stalls.items() if not s)),
-          ([5705, 5706, 5707], [5708, 5709, 5710, 5714, 5716]))
+          ([5705, 5706, 5707], [5707, 5708, 5709, 5710, 5714, 5716]))
 except Exception:
     import traceback
     fails.append("the people broke:\n" + traceback.format_exc())

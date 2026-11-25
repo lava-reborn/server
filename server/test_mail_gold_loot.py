@@ -1,4 +1,4 @@
-"""Gold-loot mail policy: forged sends are atomic, old parcels remain claimable."""
+"""Gold-loot policy and Eden confinement preserve waiting letters and parcels."""
 import json
 import unittest
 from types import SimpleNamespace as NS
@@ -12,6 +12,8 @@ import inventory
 import items
 import mail
 import mortimer
+import progression
+import rooms
 from protocol import Repeated, decode
 from testkit import run_cases
 
@@ -50,9 +52,12 @@ class MailGoldLootTests(unittest.TestCase):
             with self.subTest(type_id=type_id):
                 self.assertFalse(mail.postable(type_id))
                 self.assertTrue(barter.tradable(type_id))
-        for type_id in (25567, 26075, 4363, 7006, 37679, 6946, 3159):
+        for type_id in (25567, 26075, 4363, 6140, 37679, 6946, 3159):
             with self.subTest(type_id=type_id):
                 self.assertTrue(mail.postable(type_id))
+        self.assertTrue(items.acquisition_blocked(7006))
+        self.assertNotIn(7006, mail.GOLD_LOOT_NOT_POSTABLE)
+        self.assertFalse(mail.postable(7006))
 
     def test_forged_send_is_refused_before_items_postage_or_money_leave(self):
         # These are all supported player parcel types, including express
@@ -103,7 +108,7 @@ class MailGoldLootTests(unittest.TestCase):
     def test_gold_equipment_and_ordinary_loot_still_send_with_each_parcel_type(self):
         self.s.char.gold = 10000
         self.s.char.save(self.store)
-        for type_id in (26075, 6946):
+        for type_id in (26075, 6946, 6140):
             for kind in (mail.LETTER, mail.LETTER_EXPRESS,
                          mail.TRADE, mail.TRADE_EXPRESS):
                 with self.subTest(type_id=type_id, kind=kind):
@@ -226,27 +231,122 @@ class EdenMailTests(unittest.TestCase):
                         self.assertEqual(self.frames, [('cmdAck', {'res': mail.RES_PARCEL_REFUSED})])
                         self.assertEqual(self.state(), before)
 
-    def test_mail_can_be_read_and_text_can_be_sent_on_eden(self):
+    def test_eden_text_and_clan_mail_are_refused_without_reading_or_postage(self):
         for location in sorted(eden.LOCATIONS):
             self.s.loc.id = location
             for item in (False, True):
                 letter = self.old_parcel(item=item)
-                before_items = self.inv.rows()
-                before_money = self.store.money(self.cid)
+                before = self.state()
                 self.frames.clear()
-                self.box.getml(dict(id=str(letter['id'])))
-                self.assertEqual([cmd for cmd, _ in self.frames], ['cmdAck', 'rcml'])
-                self.assertEqual(self.frames[0][1]['res'], mail.RES_OK)
-                self.assertEqual(self.inv.rows(), before_items)
-                self.assertEqual(self.store.money(self.cid), before_money)
-                self.assertEqual(self.store.mail_letter(letter['id'])['items_json'],
-                                 letter['items_json'])
+                self.s.cmd_getml(dict(id=str(letter['id'])))
+                self.assertEqual(self.frames, [('cmdAck', {'res': mail.RES_NO_LETTER})])
+                self.assertEqual(self.state(), before)
+                self.assertEqual(self.store.mail_letter(letter['id']), letter)
+            for kind in range(8):
+                with self.subTest(location=location, kind=kind):
+                    before = self.state()
+                    self.frames.clear()
+                    self.s.cmd_sndml(dict(to='Recipient', type=kind,
+                                         subj='text only', body='text only'))
+                    self.assertEqual(self.frames, [('cmdAck', {'res': mail.RES_PARCEL_REFUSED})])
+                    self.assertEqual(self.state(), before)
+
+    def test_eden_listings_and_online_arrivals_never_expose_subjects(self):
+        letter = self.old_parcel(item=False)
+        for location in sorted(eden.LOCATIONS):
+            self.s.loc.id = location
+            before = self.state()
+            for mode in (0, 1):
+                self.frames.clear()
+                self.s.cmd_chkml(dict(mode=mode))
+                self.assertEqual(self.frames, [
+                    ('cmdAck', {'res': mail.RES_OK}),
+                    ('lsml', dict(id=[], date=[], name=[], flag=[], subj=[]))])
             self.frames.clear()
-            self.box.sndml(dict(to='Recipient', type=mail.LETTER,
-                                subj='text only', body='text only'))
-            self.assertEqual(self.frames[0], ('cmdAck', {'res': mail.RES_OK}))
-            self.assertEqual(self.store.money(self.cid), (before_money[0] - mail.PRICES[0],
-                                                         before_money[1]))
+            self.s.cmd_chkml(dict(mode=255))
+            self.assertEqual(self.frames, [
+                ('cmdAck', {'res': mail.RES_OK}),
+                ('svml', dict(data=mail.PRICES, time=mail.TIMES))])
+            self.box.synced = True  # The inbox was already open before entry.
+            self.frames.clear()
+            self.box.arrived(letter)
+            self.assertEqual(self.frames, [])
+            self.assertFalse(self.box.synced)
+            self.assertEqual(self.state(), before)
+
+    def test_eden_global_map_and_active_sentence_block_every_mail_command(self):
+        letter = self.old_parcel(item=False)
+        for sentence in (False, True):
+            # A global-map session has no Eden local room; confinement must
+            # still use its actual coordinates or the active punishment.
+            self.s.loc.id = 36
+            self.s.on_map = True
+            self.s.gx, self.s.gy = eden.CELLS[eden.CENTER] if not sentence else (1, 1)
+            self.s.eden_sentence = {'active': True} if sentence else None
+            before = self.state()
+            for command, params, result in (
+                    ('getml', dict(id=str(letter['id'])), mail.RES_NO_LETTER),
+                    ('sndml', dict(to='Recipient', body='text'), mail.RES_PARCEL_REFUSED),
+                    ('uldml', dict(id=str(letter['id'])), mail.RES_PARCEL_REFUSED),
+                    ('rmvml', dict(id=str(letter['id'])), mail.RES_PARCEL_REFUSED)):
+                with self.subTest(sentence=sentence, command=command):
+                    self.frames.clear()
+                    getattr(self.s, 'cmd_' + command)(params)
+                    self.assertEqual(self.frames, [('cmdAck', {'res': result})])
+                    self.assertEqual(self.state(), before)
+
+    def test_suppressed_letters_are_available_after_release_without_duplicates(self):
+        letter = self.old_parcel(item=False)
+        self.s.loc.id = eden.CENTER
+        self.box.synced = True
+        self.box.arrived(letter)
+        self.assertFalse(self.box.synced)
+        self.s.loc.id = 36
+        self.frames.clear()
+        # Until a full refresh, another push would duplicate a letter in
+        # the appending inbox model once it fetches all waiting letters.
+        self.box.arrived(letter)
+        self.assertEqual(self.frames, [])
+        self.s.cmd_chkml(dict(mode=0))
+        self.assertEqual([cmd for cmd, _ in self.frames], ['cmdAck', 'lsml'])
+        self.assertEqual(self.frames[1][1]['subj'], ['old parcel'])
+        self.assertTrue(self.box.synced)
+        self.frames.clear()
+        self.s.cmd_getml(dict(id=str(letter['id'])))
+        self.assertEqual([cmd for cmd, _ in self.frames], ['cmdAck', 'rcml'])
+        self.assertEqual(self.frames[1][1]['body'], 'old parcel')
+        self.assertEqual(self.store.mail_letter(letter['id'])['read'], 1)
+
+    def test_outside_letter_is_stored_without_delivery_until_release(self):
+        sender = NS(char_id=self.recipient, loc=NS(id=36), nick='Recipient')
+        sender.char = progression.Character.load(self.store, self.recipient)
+        sender.char.afro = 1000
+        sender.char.save(self.store)
+        sender.character = lambda: sender.char
+        sender.inv = inventory.Inventory(sender, self.store)
+        sent = []
+        sender.send = lambda command, **p: sent.append((command, p))
+        sender.push_money = lambda: None
+        sender.say = sender.answer = lambda _text: None
+        directory = NS(by_pid=lambda pid: self.s if pid == rooms.player_id(self.cid) else None)
+        box = mail.Mail(sender, self.store, directory)
+        self.s.loc.id = eden.CENTER
+        self.box.synced = True
+        self.frames.clear()
+        box.sndml(dict(to='GoldTester', type=mail.LETTER,
+                       subj='outside subject', body='outside text'))
+        self.assertEqual(sent[0], ('cmdAck', {'res': mail.RES_OK}))
+        self.assertEqual(self.frames, [])
+        letter, = self.store.mail_inbox(self.cid)
+        self.assertEqual((letter['subject'], letter['body'], letter['read']),
+                         ('outside subject', 'outside text', 0))
+        self.assertFalse(self.box.synced)
+        self.s.loc.id = 36
+        self.s.cmd_chkml(dict(mode=0))
+        self.assertEqual(self.frames[1][1]['subj'], ['outside subject'])
+        self.frames.clear()
+        self.s.cmd_getml(dict(id=str(letter['id'])))
+        self.assertEqual(self.frames[1][1]['body'], 'outside text')
 
     def test_refusal_or_deletion_cannot_send_a_parcel_back_from_eden(self):
         for location in sorted(eden.LOCATIONS):

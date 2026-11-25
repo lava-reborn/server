@@ -22,6 +22,7 @@ and holds nothing else of the real map:
 
     LAVA_RES=<res with the original tiles> python3 server/test_map_cells.py
 """
+import copy
 import glob
 import hashlib
 import json
@@ -84,7 +85,7 @@ try:
     # Воину-Освободителю» and the butchers' black square with its «!».
     DONGOLA_SQ = {(5877, 2013), (5928, 1976), (5927, 1976), (5937, 2004), (5936, 2004), (5955, 2031),
                   (5955, 2030), (5956, 2030), (5956, 2031), (5876, 2004), (5881, 2005)}
-    LABEL_ONLY |= DONGOLA_SQ
+    LABEL_ONLY |= DONGOLA_SQ | {(6032, 1957), (6033, 1957)}
     # Абу-Хамед's (2026-10-14) adds twelve: «Улучшение сетов 17-20», the
     # butchers' black square with its «!», СМЕРШ's block post's green below
     # its base's, the clan bases ВЭС and ZEON and «База Доктора "Д"» two each,
@@ -111,12 +112,12 @@ try:
     # Донгола's cut (2026-10-13): the craftsmen 455, 460, 518, the clothing
     # market 469, the ФСЦ airfield 530 and Delta Force's block post 382, each
     # with its square.
-    DONGOLA_CUT = [(5876, 2013), (5878, 2014), (5878, 2015), (5878, 2013), (5879, 2011), (5955, 2032)]
+    DONGOLA_CUT = [(5876, 2013), (5878, 2014), (5878, 2015), (5878, 2013), (5879, 2011)]
     # Абу-Хамед's cut (2026-10-14): the craftsmen 451, 461, 462, 463, 519, the
     # clothing market 467, the ФСЦ airfield 527, the clan base СМЕРШ 194 and
     # the abandoned clan base 118, each with its square.
     ABUHAMED_CUT = [(6184, 1973), (6185, 1975), (6184, 1977), (6185, 1978), (6185, 1976), (6183, 1974),
-                    (6185, 1977), (6126, 1980), (6154, 1963)]
+                    (6185, 1977), (6126, 1980)]
     # Two retired places had no square of their own in the picture: Абри's ФСЦ
     # airfield 529 (its name over the river's dark bank) and Blackwater's block
     # post 317 (the base's square is on 5923,1838 beside it). The plan lists
@@ -138,7 +139,7 @@ try:
           sorted(retired),
           sorted([(5876, 2012), (5942, 1723), (5968, 1726), (5969, 1729), (5969, 1731), (5969, 1732),
                   (5970, 1727), (5970, 1732), (6182, 1975)] + ABRI_CUT + RIVER_CUT + RIVER_ALL
-                 + DONGOLA_CUT + ABUHAMED_CUT))
+                 + DONGOLA_CUT + ABUHAMED_CUT + [(5955, 2032), (6154, 1963)]))
     check("  ..and data/map_cells.json adds the fifty cells that had a name or a mark and no place:"
           " «Улучшение сетов 6-8», the KKND base, the kimberlite pipe, «Улучшение сетов 10-12», Абри's"
           " green mark, the second «Автосвалка», the two of Liberty by Абу-Хамед, Blackwater's, the"
@@ -237,14 +238,16 @@ try:
            ((49412, 15564, 49432, 15572), "База ВЭС", 15553, 15553),
            ((49412, 15572, 49432, 15581), "База ВЭС", 15553, 15553),
            ((48648, 15811, 48690, 15819), "База Zeon", 15806, 15806),
+           ((49773, 15576, 49845, 15584), "База Доктора \"Д\"", 15554, 15554),
+           ((49793, 15584, 49799, 15586), "База Доктора \"Д\"", 15554, 15554),
+           ((49818, 15584, 49822, 15586), "База Доктора \"Д\"", 15554, 15554),
+           ((49831, 15584, 49840, 15586), "База Доктора \"Д\"", 15554, 15554),
            ((49248, 15698, 49303, 15707), "Заброшенная база - бункер", 15808, 15808),
            ((49248, 15707, 49301, 15715), "Заброшенная база - бункер", 15808, 15808),
            ((49276, 15715, 49280, 15717), "Заброшенная база - бункер", 15808, 15808),
            ((49293, 15715, 49298, 15717), "Заброшенная база - бункер", 15808, 15808),
-           ((49773, 15576, 49845, 15584), "База Доктора \"Д\"", 15554, 15554),
-           ((49793, 15584, 49799, 15586), "База Доктора \"Д\"", 15554, 15554),
-           ((49818, 15584, 49822, 15586), "База Доктора \"Д\"", 15554, 15554),
-           ((49831, 15584, 49840, 15586), "База Доктора \"Д\"", 15554, 15554)])
+           ((48274, 15651, 48306, 15668), "База НейтралКлана", 15804, 15804),
+           ((48307, 15651, 48339, 15668), "База НейтралКлана", 15804, 15804)])
     check("the tiles a change can touch, a square's frame reaching a pixel past its cell: НИЛ-1's and the"
           " camp 429's, Halfa's two, KKND's and the two below it, the kimberlite pipe's, Абри's island"
           " camp's, Абри's, Blackwater's east of it, the two of Liberty by Абри, Абу-Хамед's two, Донгола's,"
@@ -255,8 +258,8 @@ try:
           " bases' (15039 the green mark, 15552 and 15553 ВЭС, 15554 Доктор «Д», 15806 ZEON, 15807 СМЕРШ,"
           " 15808 the abandoned base, 16062 and 16063 the nameless pair); Eden's town marker15543",
           plan.tiles(), [12726, 12982, 13753, 13754, 14010, 14011, 14266, 14267, 14531, 14774, 14775, 14777,
-                         15032, 15039, 15288, 15543, 15552, 15553, 15554, 15801, 15806, 15807, 15808, 15809, 15811,
-                         16054, 16055, 16057, 16062, 16063, 16064, 16311, 16314])
+                         15032, 15039, 15288, 15543, 15552, 15553, 15554, 15801, 15804, 15806, 15807, 15808, 15809, 15811,
+                         16054, 16055, 16057, 16062, 16063, 16064, 16311, 16314, 16569])
     # The camps across the river had each a war zone painted round them
     # (the owner, 2026-10-12: «ты с карты не убрал лагеря за рекой»): a red
     # tint over a circle 245 pixels across with dark blue arrows into it,
@@ -496,11 +499,23 @@ try:
         new = {M.tile_path(n): b for n, b in out.items()}
         after_canvas = M.Canvas(lambda p: new.get(p) or read(p))
         return dict(found=found, kept=kept, painted=painted, laid=laid, report=zreport + report, out=new,
+                    canvas=canvas,
                     blocks=blocks,
                     before=M.Canvas(read), after=after_canvas, before_sq=before_sq,
                     after_sq=M.Squares(after_canvas))
 
     r = run(made, made_plan)
+    clan_plan = M.Plan({}, [], {}, paint={(14, 20): ('clan', 'test base')})
+    clan_canvas = M.Canvas(made.get)
+    M.paint(clan_canvas, clan_plan)
+    clan_out, _blocks = clan_canvas.encode()
+    clan_tiles = {M.tile_path(n): raw for n, raw in clan_out.items()}
+    clan_after = M.Canvas(lambda path: clan_tiles.get(path) or made.get(path))
+    check('a relocated base is a native red square with a white centre',
+          M.Squares(clan_after).at(14, 20)[2], ('red', 'white'))
+    check('painting the same base twice does not alter the installed marker',
+          M.paint(clan_after, clan_plan),
+          ['14,20: a square is painted there already, left alone'])
     check("each square that goes is found, the clan base's a pixel high, the airfield's blue with its «!»;"
           " the cell with nothing on it says so",
           ({c: (sq[0] - 8 * c[0], sq[1] - 8 * c[1], sq[2]) for c, sq in r["found"].items()},
@@ -878,6 +893,7 @@ try:
         else:
             real = run(every, plan)
             odd = {(5984, 1759): (0, -1, ("red", "white")), (6265, 1821): (0, 0, ("black", "orange")),
+                   (6033, 1957): (0, 0, ("red", "white")),
                    (5970, 1727): (0, 0, ("blue", "white")), (5863, 1836): (0, 0, ("red",)),
                    (5906, 1888): (0, 0, ("red", "white")), (6248, 1979): (0, 0, ("red", "white")),
                    (5871, 2003): (0, 0, ("red", "white")), (6174, 1982): (0, 0, ("white",)),
@@ -933,7 +949,7 @@ try:
                   " 16062 and 16063 (the nameless pair) and the green mark's 15039",
                   sorted(real["out"]),
                   sorted(M.tile_path(n) for n in (13753, 13754, 14010, 14011, 14531, 14774, 14775, 14777, 15039,
-                                                  15288, 15552, 15553, 15554, 15801, 15806, 15807, 15808, 15809,
+                                                  15288, 15552, 15553, 15554, 15801, 15804, 15806, 15807, 15808, 15809,
                                                   15811, 16054, 16055, 16057, 16062, 16063, 16064, 16311,
                                                   16314)))
             check("no square is left on the hundred and five cells",
@@ -997,7 +1013,7 @@ try:
                   " coefficients (%d changed)" % count,
                   (stray, count > 0),
                   ({n: [] for n in (13753, 13754, 14010, 14011, 14531, 14774, 14775, 14777, 15039, 15288, 15552,
-                                    15553, 15554, 15801, 15806, 15807, 15808, 15809, 15811, 16054, 16055, 16057,
+                                    15553, 15554, 15801, 15804, 15806, 15807, 15808, 15809, 15811, 16054, 16055, 16057,
                                     16062, 16063, 16064, 16311, 16314)}, True))
             most, share = moved(real, every, shared_px)
             check("  ..and a pixel not painted in such a block moves by its rounding: %d at most, %.0f%% of those"
@@ -1040,7 +1056,7 @@ try:
                                      ("Частный остров / Господина ПэЖэ", 16055), ("База Хогвартс", 15801),
                                      ("База Врачи без границ", 16057), ("База Delta Force", 16314),
                                      ("База Смерш", 15807), ("База ВЭС", 15553), ("База Zeon", 15806),
-                                     ("Заброшенная база - бункер", 15808), ("База Доктора \"Д\"", 15554)]})
+                                     ("База Доктора \"Д\"", 15554), ("База НейтралКлана", 15804), ("Заброшенная база - бункер", 15808)]})
             def own_ground(rr, c):
                 """The share of the ground round a square (a band four pixels
                 wide outside its frame, after) of the square's own colours."""
@@ -1065,8 +1081,29 @@ try:
             check("  ..and every square is painted from a patch of photograph",
                   [line.strip() for line in real["report"] if "smooth" in line and not line.startswith("zone ")],
                   [])
-            out_real, _report = M.apply(read)
+            # The reconstruction above exercises erasure, before the separate
+            # layer that adds the green Eden marker to the original picture.
+            erase_plan = copy.copy(plan)
+            erase_plan.paint = {}
+            out_real, _report = M.apply(read, erase_plan)
             check("map_cells.apply gives these tiles", out_real == real["out"], True)
+            # Erasure and additions share a canvas, as the real serving/build
+            # path does. A second JPEG decode/encode would round shared tiles twice.
+            painted_canvas = real['canvas']
+            M.paint(painted_canvas, plan)
+            marker_tiles, _blocks = painted_canvas.encode()
+            marked = M.Canvas(lambda p: marker_tiles.get(int(os.path.basename(p)[:-4]))
+                              or out_real.get(p) or read(p))
+            check("Eden's town gets the green square over the original ground",
+                  M.Squares(marked).at(5858, 1929)[2], ('green',))
+            check("adding the town and base markers changes only their own tiles",
+                  sorted(n for n, raw in marker_tiles.items() if raw != out_real.get(M.tile_path(n))),
+                  sorted({M.tile_of(8 * x, 8 * y) for x, y in plan.paint}))
+            for cell in ((6083, 1957), (5926, 2068)):
+                check('the relocated base keeps the original clan marker at %s' % (cell,),
+                      M.Squares(marked).at(*cell)[2], ('red', 'white'))
+            full_out = dict(out_real)
+            full_out.update({M.tile_path(n): data for n, data in marker_tiles.items()})
 
             # The war zones of the camps across the river (the owner,
             # 2026-10-12: «ты с карты не убрал лагеря за рекой»).
@@ -1192,8 +1229,8 @@ try:
                    in_caption),
                   ([], [True, True]))
             check("a local run serves the same bytes (bootstrap_http)",
-                  (lambda served_: {p: served_.get(p) == data for p, data in out_real.items()})(M.Served(RES)),
-                  {p: True for p in out_real})
+                  (lambda served_: {p: served_.get(p) == data for p, data in full_out.items()})(M.Served(RES)),
+                  {p: True for p in full_out})
 
             # client/build.py's generated layer, over a store of the original tiles
             sys.path.insert(0, os.path.join(ROOT, "client"))
@@ -1211,7 +1248,7 @@ try:
             tiles_rel, _done = b.gen_map_tiles()
             shutil.rmtree(b.tmp, ignore_errors=True)
             check("a client release carries the same tiles (client/build.py, from the store)",
-                  tiles_rel == out_real, True)
+                  tiles_rel == full_out, True)
             print("  " + "\n  ".join(real["report"]))
 finally:
     shutil.rmtree(W, ignore_errors=True)

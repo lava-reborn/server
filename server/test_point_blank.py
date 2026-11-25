@@ -48,8 +48,8 @@ process, a real gun in the hand and ss_use as the client sends it:
     raise): the error log has it, with its traceback, and the burst still
     goes out -- every pair a miss, paid for as a miss -- for a player's
     shot and for a creature's alike; the next shot goes as ever;
-  * a fault in the line of fire Fighter.fire_now asks about before the
-    burst (shot_wall made to raise): the same, every pair a miss and paid;
+  * a fault tracing cover inside the burst (shot_wall made to raise):
+    the same, every pair a miss and paid;
   * a fault in applying the hits after the pairs went out (the dog's usrUp
     made to raise once): the shot is paid all the same, and a dog the
     burst brought down is killed, not left standing at 0.
@@ -196,18 +196,23 @@ async def shoot(sess, row, target, before=None):
     sess.combat.ap = sess.combat.ap_max
     sess.writer.frames.clear()
     where = "x0%08x" % target[1] if isinstance(target, tuple) else "x1%08x" % target
-    sess.handle(*decode("ss_use;type=16;obj=x%s;target=%s;"
-                        % (inventory.oid_of(row), where)))
-    if before is not None:
-        before()
-    for _ in range(40):
-        await asyncio.sleep(0.01)
-        aims = named(sess.writer.frames, "faAim")
-        closed = [p for n, p in sess.writer.frames
-                  if n == "faShot" and p.get("id") == 0 and p["status"] == 0]
-        if aims and len(closed) >= aims[0]["num_shots"]:
-            break
-    await asyncio.sleep(0.02)
+    # Flight/settlement faults require known hits, not a chance of passing.
+    # Native 95% accuracy remains intact; this fixture chooses the centre
+    # of its scatter draw, including while async aim resolution runs.
+    # A dead/missing body and a ground shot still produce genuine misses.
+    with patch.object(combat, "bullet_offset", return_value=0):
+        sess.handle(*decode("ss_use;type=16;obj=x%s;target=%s;"
+                            % (inventory.oid_of(row), where)))
+        if before is not None:
+            before()
+        for _ in range(40):
+            await asyncio.sleep(0.01)
+            aims = named(sess.writer.frames, "faAim")
+            closed = [p for n, p in sess.writer.frames
+                      if n == "faShot" and p.get("id") == 0 and p["status"] == 0]
+            if aims and len(closed) >= aims[0]["num_shots"]:
+                break
+        await asyncio.sleep(0.02)
     return list(sess.writer.frames)
 
 
@@ -344,29 +349,24 @@ async def main():
             check("  ..logged once", [r.name for r in records.records
                                      if r.levelname == "ERROR"], ["lava"])
 
-            # --- the line of fire asked before the burst; the hits applied after ----------
-            # Fighter.fire_now asks whether the rounds could reach the mark at
-            # all (RoomCombat.within_fire, the same shot_wall the resolver
-            # walks) before the burst, and applies the hits after its pairs
-            # went out. A fault in either was outside the guard: the first
-            # sent no pair at all, the second left the shot unpaid and its
-            # kill unsettled.
+            # --- the line traced in the burst; the hits applied after ----------
+            # Aggro uses range alone; cover is traced only in the resolver.
+            # A line fault still closes every pair and pays the failed shot.
             row = gun(sess, MG, MG_MODE, 30)
             records.records.clear()
             with patch.object(combat, "shot_wall", fault):
                 got = await shoot(sess, row, dog.eid)
-            check("a fault in the line of fire asked before the burst: nothing reaches "
+            check("a fault in the burst's line of fire: nothing reaches "
                   "the loop", unhandled(), [])
             check("  ..faAim's three pairs go out all the same, each a miss",
                   pairs_of(got), [("faShot", 1), ("faMiss", None), ("faShot", 0)] * 3)
             check("  ..paid as the miss it became: three rounds, 27 points, the c_ap",
                   (last(got, "ss_di_firearm", "ammo_count"), last(got, "c_ap", "ap")),
                   (27, sess.combat.ap_max - items.params_of(MG)["fire_costs"][MG_MODE]))
-            check("  ..the error log has it from the game, with its traceback: the "
-                  "question before the burst, then the burst's own line",
+            check("  ..the error log has the burst's failed trace once with its traceback",
                   [(r.name, r.exc_info is not None and r.exc_info[0].__name__)
                    for r in records.records if r.levelname == "ERROR"],
-                  [("lava", "RuntimeError")] * 2)
+                  [("lava", "RuntimeError")])
 
             def once(original):
                 """original, except that its first call raises."""

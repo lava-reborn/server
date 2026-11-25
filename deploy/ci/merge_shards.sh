@@ -25,7 +25,7 @@ if [ $# -ge 3 ]; then
   expected=$(printf '%s\n' "$3" | tr ',' '\n' | grep . | sort)
 else
   # What run_suite.sh runs: test_storage_pg is Postgres's, in its own job.
-  expected=$( { ls server/test_*.py | grep -v -e test_storage_pg; ls data/test_*.py tools/test_*.py; } \
+  expected=$( { ls server/test_*.py | grep -v -e test_storage_pg; ls data/test_*.py tools/test_*.py; ls client/test_*.py 2>/dev/null; } \
               | xargs -n1 basename | sed 's/[.]py$//' | sort)
 fi
 

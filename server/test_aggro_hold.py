@@ -90,7 +90,7 @@ class _Room(object):
 
 
 class _Store(object):
-    """An eligible gun with empty chambers, for the dry-burst provocation test."""
+    """An eligible gun with controlled rounds for the provocation checks."""
 
     def __init__(self):
         self.row = dict(uniq=0, char_id=0, type_id=25566,
@@ -106,6 +106,12 @@ class _Store(object):
 
 class _Inv(object):
     store = _Store()
+
+    def rows(self):
+        return []
+
+    def in_slot(self, slot):
+        return None
 
     def push_di(self, row):
         pass
@@ -319,11 +325,11 @@ async def _timer():
 
 
 async def _shot_short():
-    """A burst provokes only what it could reach: within the gun's range and
-    with a clear line (RoomCombat.within_fire). Every round here is a miss
-    (the store holds no gun, so the chambers click), which is the point: a
-    miss within reach still turns the dog, one that falls short or into a
-    wall does not. A fist from across the room provokes nothing either."""
+    """A paid burst in range provokes even through cover or on a miss.
+
+    A shot falling short, an empty chamber and a fist from across the room
+    provoke nothing. Damage and the hit-only exit timer remain independent.
+    """
     gun = combat.Weapon(num_shots=1, dmin=1, dmax=1, opt_lo=1, opt_hi=3, max_range=6,
                         piercing=1, cone=0, crit=0, skill=progression.SHOOTING, spec=None)
     clear = lambda c, lo, hi: (_open(c) and lo <= mobs.hex_distance(DOG_HOME, c, W) <= hi
@@ -336,10 +342,12 @@ async def _shot_short():
                    if _open(c) and mobs.stats(DOG).aggro < mobs.hex_distance(DOG_HOME, c, W) <= 6
                    and combat.shot_wall(LOC, c, DOG_HOME) is not None), None)
 
-    def fire_from(cell):
+    def fire_from(cell, rounds=1):
         room, rc, seat = _scene(cell)
         dog = _mob(rc, 1, DOG, DOG_HOME)
-        seat.combat.fire_now(0, dog, dog.cell, gun, 3)
+        seat.inv.store.row.update(ammo_count=rounds, brk=100)
+        with patch.object(combat, 'bullet_offset', return_value=100):
+            seat.combat.fire_now(0, dog, dog.cell, gun, 3)
         return dog.target is seat.combat, [p for n, p in seat.sent if n == "lch"]
 
     check("a shot at a dog %.0f hexes off, the gun reaching %d: it falls short and the"
@@ -350,8 +358,10 @@ async def _shot_short():
           fire_from(within), (True, [{"enemy": 1}]))
     check("there is a cell in range with a wall in the way", walled is not None, True)
     if walled is not None:
-        check("a burst into the wall in between does not turn it either",
-              fire_from(walled), (False, []))
+        check("a paid burst into the wall in between still turns it",
+              fire_from(walled), (True, [{"enemy": 1}]))
+    check("an empty chamber within range does not turn it",
+          fire_from(within, rounds=0), (False, []))
     room, rc, seat = _scene(within)
     seat.loc = LOC
     dog = _mob(rc, 1, DOG, DOG_HOME)

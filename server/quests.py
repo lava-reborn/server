@@ -200,6 +200,52 @@ import progression                 # no imports of its own; safe at load
 KILL_MOBS, BRING_L_OBJ, DEL_OBJ = "kill_mobs", "bring_l_obj", "del_obj"
 KINDS = (KILL_MOBS, BRING_L_OBJ, DEL_OBJ)
 
+# The lab's original experiment texts (49833..49850) name seven G pouches,
+# MOD A1, five equipment parts and a researcher kit. The personal daily part
+# and one server-wide completion per reset day are the owner's rules.
+LABORANT_NPC, LABORANT_LOC = 1407, 128
+LABORANT_DETAIL = 18300
+LABORANT_SPOT = "quest:1407:experiment"
+LABORANT_MOD = 3726
+LABORANT_PART = 3741
+LABORANT_RECIPES = {
+    18301: (3604, 3740), 18302: (3603, 3739), 18303: (3601, 3737),
+    18304: (5614, 5615), 18305: (3600, 3736), 18306: (3599, 3735),
+    18307: (3602, 3738),
+}
+LABORANT_MOD_UPGRADES = {18308: 3722, 18309: 3723, 18310: 3724, 18311: 3725}
+LABORANT_QUESTS = frozenset((LABORANT_DETAIL, *LABORANT_RECIPES, *LABORANT_MOD_UPGRADES))
+
+
+def laborant_available(store, day):
+    claimed = store.boss_kills([LABORANT_SPOT]).get(LABORANT_SPOT)
+    return claimed is None or claimed < day
+
+
+def laborant_wear(quest, inv):
+    """Final experiments create a factory-new pouch; A0 exchanges keep wear.
+
+    The final recipe spends a kit and five personal daily parts and uses
+    the shared daily experiment. Exchanging A0 for ordinary A1 is not that
+    experiment and must not repair its oldest unlocked bag ingredient.
+    """
+    recipe = LABORANT_RECIPES.get(quest.type)
+    upgrade = LABORANT_MOD_UPGRADES.get(quest.type)
+    if recipe is None and upgrade is None:
+        return None
+    import items
+    if recipe is not None:
+        factory = items.params_of(recipe[1])["max_break_abs"]
+        return factory, factory, factory
+    import inventory
+    import setcraft
+    new_abs = items.params_of(LABORANT_MOD)["max_break_abs"]
+    row = next(r for r in inv.rows() if r["type_id"] == upgrade
+               and r["slot"] == inventory.BAG and r["uniq"] not in inv.locked)
+    old_abs = items.params_of(upgrade)["max_break_abs"]
+    brk, top = setcraft.worn_as((row["brk"], row["max_break_cur"], old_abs), new_abs)
+    return brk, top, new_abs
+
 # String id layout (recon/analysis/quests.md 4.4): 2 000 000 + 4 * type + k.
 STRING_BASE = 2_000_000
 STRINGS_PER_QUEST = 4
@@ -306,6 +352,61 @@ def quests_path():
     a cap -- on NPCs that stand where it plays (test_quest_mechanics); like
     LAVA_PASSAGES it replaces the table rather than adding to it."""
     return os.environ.get("LAVA_QUESTS") or PATH
+
+
+def recover_cinema(store, char_id, at_loc=None):
+    """Repair lost, worthless intermediates without reopening a paid reward.
+
+    Called before the selected character's journal/inventory is sent. All
+    slots count, including the bank; history and existing items are retained.
+    The character lock also serializes this with quest hand-ins on Postgres.
+    """
+    import inventory
+    import storage
+    with storage.atomic(store.db):
+        if not store.lock_quest_character(char_id):
+            return []
+        state = {r['type'] for r in store.db.execute(
+            'SELECT type FROM char_quests_done WHERE char_id=? AND type BETWEEN 208 AND 218',
+            (char_id,)).fetchall()}
+        active = [r for r in store.quests(char_id) if 208 <= r['type'] <= 218]
+        if not state and not active:
+            return []
+        for row in active:
+            if row['type'] in state:
+                store.drop_quest(row['q_id'], char_id)
+        if state & {215, 218}:
+            return []  # A used, sold or lost final syringe is never replaced.
+        chosen = store.first_done(char_id, (212, 213))
+        if chosen is None:
+            branches = [r for r in active if r['type'] in (212, 213)]
+            if branches:
+                chosen = min(branches, key=lambda r: (r['taken_at'], r['q_id']))['type']
+        other = {212: {213, 216, 217, 218}, 213: {212, 214, 215}}.get(chosen, set())
+        for row in active:
+            if row['type'] in other:
+                store.drop_quest(row['q_id'], char_id)
+        carried = {r['type'] for r in store.quests(char_id)}
+        owned = {r['type_id'] for r in store.items_of(char_id)}
+        restored = []
+        steps = [(211, (212, 213), 3957), (212, (214,), 3958), (213, (216,), 3959)]
+        if at_loc is None:
+            at_loc = store.character(char_id)['loc']
+        if at_loc != 688:
+            # A death may send the player home before all four ghosts died.
+            # The existing quest passage must remain usable on that branch.
+            steps.append((216, (217,), 3959))
+        for producer, consumers, item in steps:
+            if not (producer in state or carried.intersection(consumers)) or state.intersection(consumers):
+                continue
+            if item in owned or set(consumers) <= other:
+                continue
+            fields = inventory.new_fields(item)
+            root = fields.pop('root')
+            store.create_item(char_id, item, root, **fields)
+            restored.append(item)
+            owned.add(item)
+        return restored
 
 
 def companion_paths(path):
@@ -867,6 +968,13 @@ TEMPORARILY_DISABLED_QUESTS = frozenset(range(943, 948)) | frozenset(range(960, 
 # Preserve lesson definitions and journal ids, but close all paid academy XP.
 # Quest 967 (knives for the unarmed teacher) and entry/exit 965/966 stay open.
 DISABLED_ACADEMY_LESSONS = frozenset(range(12000, 12075))
+# Replaced by one shared ingot payout per warehouse/day. Keep the old
+# definitions and journal ids so cancellation and NPC indices stay valid.
+REPLACED_WAREHOUSE_REWARDS = frozenset(range(765, 772))
+# Downward passages require the paid owner. The courtyard and the return
+# lifts remain open, including for a character who left the clan inside.
+CLAN_BASE_ENTRIES = frozenset((18201, 18203))
+CLAN_BASE_EXITS = frozenset((18202, 18204))
 
 
 
@@ -876,7 +984,8 @@ def acquisition_blocked(quest):
     Keep rows and journal instances intact so cancelling stays possible.
     Block the whole mixed reward rather than silently deleting a prize.
     """
-    if quest.type in TEMPORARILY_DISABLED_QUESTS or quest.type in DISABLED_ACADEMY_LESSONS:
+    if (quest.type in TEMPORARILY_DISABLED_QUESTS or quest.type in DISABLED_ACADEMY_LESSONS
+            or quest.type in REPLACED_WAREHOUSE_REWARDS):
         return True
     import items
     import craft
@@ -1141,9 +1250,9 @@ def kept_on_death(type_id):
     hands it over at the take (start_obj, START_OBJ_KEPT_ON_DEATH) -- or
     lends it, whatever the switch says -- or because one quest pays it and
     another asks for it and it is worth nothing away from them
-    (STEP_REWARD_KEPT_ON_DEATH)."""
+    (STEP_REWARD_KEPT_ON_DEATH). The lab's daily part is personal too."""
     t = int(type_id)
-    if t in _LENT or (START_OBJ_KEPT_ON_DEATH and t in _HANDED):
+    if t == LABORANT_PART or t in _LENT or (START_OBJ_KEPT_ON_DEATH and t in _HANDED):
         return True
     return STEP_REWARD_KEPT_ON_DEATH and t in _STEPS and _worthless(t)
 
@@ -1152,9 +1261,10 @@ def not_on_ground(type_id):
     """Whether a thing of this type may not be thrown on the ground because
     a quest hands it over at the take (start_obj, START_OBJ_NOT_ON_GROUND),
     or lends it, whatever the switch says -- whoever has it, and however it
-    came: Ян Дуглас's notes out of his bag are 41's notes too."""
+    came: Ян Дуглас's notes out of his bag are 41's notes too. Neither may
+    the lab's daily part be passed to another character through a bag."""
     t = int(type_id)
-    return t in _LENT or (START_OBJ_NOT_ON_GROUND and t in _HANDED)
+    return t == LABORANT_PART or t in _LENT or (START_OBJ_NOT_ON_GROUND and t in _HANDED)
 
 
 def lent(type_id):

@@ -304,7 +304,7 @@ def load(path=PATH, retired=RETIRED):
         c = _cell(key)
         if c in cells or c in keep:
             raise ValueError("map_cells: %s is both painted on and erased or kept" % key)
-        if not isinstance(e, dict) or e.get("colour") not in PALETTE or not e.get("why"):
+        if not isinstance(e, dict) or e.get("colour") not in (*PALETTE, 'clan') or not e.get("why"):
             raise ValueError("map_cells: painted %s needs a colour of %s and a why"
                              % (key, "/".join(sorted(PALETTE))))
         paint[c] = (e["colour"], e["why"])
@@ -1097,7 +1097,12 @@ def paint(canvas, plan):
             report.append("%d,%d: a square is painted there already, left alone" % c)
             continue
         px = 0
-        for (X, Y), rgb_ in sorted(square(c[0], c[1], PALETTE[colour]).items()):
+        pixels = square(c[0], c[1], PALETTE['red' if colour == 'clan' else colour])
+        if colour == 'clan':
+            for dy in range(3, 6):
+                for dx in range(3, 6):
+                    pixels[(CELL * c[0] + dx, CELL * c[1] + dy)] = PALETTE['white']
+        for (X, Y), rgb_ in sorted(pixels.items()):
             if canvas.original(X, Y) is not None:
                 canvas.put(X, Y, ycc(rgb_))
                 px += 1

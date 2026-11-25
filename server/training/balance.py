@@ -3,10 +3,26 @@ import copy
 from functools import lru_cache
 import math
 import re
+import json
+from pathlib import Path
 
 RATIOS = {'A': 1.0, 'P': 1.06, 'G': 1.12}
 INTELLECT_BASE = 5
 INTELLECT_DAMAGE_STEP = 0.01
+
+
+@lru_cache(maxsize=1)
+def before_release_data():
+    return json.loads((Path(__file__).resolve().parents[2] / 'data/combat_balance.json').read_text(encoding='utf-8'))
+
+
+def before_release(source, params):
+    for field, value in before_release_data()['previous_equipment'].get(str(source), {}).items():
+        if value is None:
+            params.pop(field, None)
+        else:
+            params[field] = copy.deepcopy(value)
+    return params
 
 
 def rounded(value):
@@ -58,7 +74,7 @@ def apply(source, params):
     from training import sets as training_sets
     base = afro_of(source)
     factor = RATIOS[line(source)]
-    reference = items.params_of(base) if base is not None else None
+    reference = before_release(base, copy.deepcopy(items.params_of(base))) if base is not None else None
     if (reference is not None and items.root_of(source) == items.FIRE_ARM
             and items.premium(source) and '_mod_' in items.catalogue()[source][1]
             and source not in items.wiki()):

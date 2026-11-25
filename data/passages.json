@@ -2075,6 +2075,7 @@
   }
  },
  "no_map": {
+  "688": {"why": "DESIGNED quest-only other-side cemetery: return to Vivek after defeating four ghost guardians."},
   "_": "Interiors left only by their own ways, never straight onto the global map: location -> why. The lcall's g_id carries the sublocation bit there, as a deadloc's does, so the client greys both map buttons out, and the server refuses chWorld to the map and /home (server/travel.py no_map, geo_id; server.py Session.cmd_chWorld, cmd_userMsg). A death still sends a player home. Their sides and quest ways work as anywhere. Each row says whether it is RECOVERED or DESIGNED.",
   "732": {
    "why": "DESIGNED. Берт Гаммер's bunker, TIR_00: the course (1682 and its lessons) is walked once, and a button to the map in the middle of it would lose it for good -- the lessons' givers stand in rooms only the lessons lead to. The ways out are the lesson on (351) and «Прервать обучение» (358), back to the market."
@@ -2294,10 +2295,18 @@
   },
   "694": {
    "why": "DESIGNED. «Джитинджи» (Test_6): as 690."
+  },
+  "609": {
+   "why": "DESIGNED restored clan-base interior: leave by native passage to the base entrance; no direct global-map shortcut from the bunker or inner yard."
+  },
+  "1443": {
+    "why": "DESIGNED restored clan-base interior: leave by native passage to the base entrance; no direct global-map shortcut from the bunker or inner yard."
   }
  },
  "walk_in": {},
  "quest": {
+  "70": [{"quest": 216, "cells": [[12, 54]], "target_loc_id": 688, "why": "RECOVERED quest destination and existing cemetery artwork; restored passage at Vivek, using the normal quest-way arrival rules."}],
+  "688": [{"quest": 217, "cells": [[31, 61]], "target_loc_id": 70, "why": "RECOVERED quest destination and existing cemetery artwork; restored passage at Vivek, using the normal quest-way arrival rules."}],
   "102": [
    {
     "quest": 146,
@@ -5450,6 +5459,186 @@
     "target_loc_id": 267,
     "why": "DESIGNED internal route from relocated sorter to foreman; no ordinary-world exit."
    }
+  ],
+  "118": [
+   {
+    "quest": 18201,
+    "cells": [
+     [
+      8,
+      28
+     ],
+     [
+      6,
+      29
+     ],
+     [
+      8,
+      29
+     ],
+     [
+      50,
+      35
+     ],
+     [
+      50,
+      36
+     ],
+     [
+      50,
+      37
+     ],
+     [
+      33,
+      70
+     ],
+     [
+      29,
+      72
+     ],
+     [
+      33,
+      72
+     ]
+    ],
+    "target_loc_id": 609,
+    "why": "RECOVERED original lift/bunker-service position and existing native quest-passage mechanism; DESIGNED restored connected graph approved 2026-11-22. No fee or item reward, no connection to other retired clan bases."
+   }
+  ],
+  "609": [
+   {
+    "quest": 18202,
+    "cells": [
+     [
+      6,
+      35
+     ],
+     [
+      7,
+      35
+     ],
+     [
+      8,
+      36
+     ],
+     [
+      44,
+      37
+     ],
+     [
+      49,
+      37
+     ],
+     [
+      45,
+      38
+     ],
+     [
+      36,
+      70
+     ],
+     [
+      31,
+      75
+     ],
+     [
+      33,
+      76
+     ]
+    ],
+    "target_loc_id": 118,
+    "why": "RECOVERED original lift/bunker-service position and existing native quest-passage mechanism; DESIGNED restored connected graph approved 2026-11-22. No fee or item reward, no connection to other retired clan bases."
+   }
+  ],
+  "1442": [
+    {
+      "quest": 18203,
+      "cells": [
+        [
+          8,
+          28
+        ],
+        [
+          6,
+          29
+        ],
+        [
+          8,
+          29
+        ],
+        [
+          50,
+          35
+        ],
+        [
+          50,
+          36
+        ],
+        [
+          50,
+          37
+        ],
+        [
+          33,
+          70
+        ],
+        [
+          29,
+          72
+        ],
+        [
+          33,
+          72
+        ]
+      ],
+      "target_loc_id": 1443,
+      "why": "DESIGNED same native lift geometry as original 118/609; returns only to this base."
+    }
+  ],
+  "1443": [
+    {
+      "quest": 18204,
+      "cells": [
+        [
+          6,
+          35
+        ],
+        [
+          7,
+          35
+        ],
+        [
+          8,
+          36
+        ],
+        [
+          44,
+          37
+        ],
+        [
+          49,
+          37
+        ],
+        [
+          45,
+          38
+        ],
+        [
+          36,
+          70
+        ],
+        [
+          31,
+          75
+        ],
+        [
+          33,
+          76
+        ]
+      ],
+      "target_loc_id": 1442,
+      "why": "DESIGNED same native lift geometry as original 118/609; returns only to this base."
+    }
   ]
  }
 }

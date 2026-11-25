@@ -275,31 +275,47 @@ check("  ..and the pieces' names are all names.py adds for them: sets.item_names
       {items.STRING_ID_OFFSET + t: n for t, (n, _w) in shown.items()})
 
 descs = sets.item_descs()
+
+
+def description_with_level(type_id, original):
+    """Keep the exact archived description, then the published level note."""
+    suffix = items.equipment_level_text(type_id)
+    return original + ("<br>" if original else "") + suffix if suffix else original
+
+
 check("every piece has a description of its own in the file", sorted(descs), sorted(ALL_TYPES))
-check("  ..and that is the text under its description id",
-      [t for t in ALL_TYPES if names.text(items.DESC_ID_OFFSET + t) != descs[t]], [])
+check("  ..and its exact original text plus level note is under the description id",
+      [t for t in ALL_TYPES if names.text(items.DESC_ID_OFFSET + t)
+       != description_with_level(t, descs[t])], [])
 check("  ..the wiki's, where the wiki has a page for the thing on the icon",
       [names.text(items.DESC_ID_OFFSET + by_name[n]) for n in (
           "shirt_Bs_M_LVL_0_A_mod00", "helm_Set_M_LVL_11_A_mod00", "helm_Bs_M_LVL_16_A_mod00")],
-      ["Этот древнейший предмет одежды, пришедший к нам из Южной Америки. Хорошо защищает от "
-       "солнца, ветра, песка и пыли.",
-       "Плотная повязка на голову, защищающая от солнца и песка.",
-       "Стальной армейский шлем времен первой мировой войны, сколько этого добра еще в песке лежит."])
+      [description_with_level(by_name[n], original) for n, original in zip(
+          ("shirt_Bs_M_LVL_0_A_mod00", "helm_Set_M_LVL_11_A_mod00", "helm_Bs_M_LVL_16_A_mod00"),
+          ("Этот древнейший предмет одежды, пришедший к нам из Южной Америки. Хорошо защищает от "
+           "солнца, ветра, песка и пыли.",
+           "Плотная повязка на голову, защищающая от солнца и песка.",
+           "Стальной армейский шлем времен первой мировой войны, сколько этого добра еще в песке лежит."))])
 check("  ..the original's row where it carries the wiki's very sentence: Панама, 22946, its "
       "Latin e made Cyrillic and its <br/> a space",
       [names.text(items.DESC_ID_OFFSET + by_name["helm_Bs_M_LVL_0_%s_mod00" % v]) for v in "AG"],
-      ["Легкая шляпа с упругими полями, выполненная в стиле милитари. Неплохо защищает от солнца."] * 2)
+      [description_with_level(by_name["helm_Bs_M_LVL_0_%s_mod00" % v],
+          "Легкая шляпа с упругими полями, выполненная в стиле милитари. Неплохо защищает от солнца.")
+       for v in "AG"])
 check("  ..and the original's where the wiki's page repeats another piece's line: Боты Красного "
       "Эхо, Армейские штаны, Броня Апокалипсиса",
       [names.text(items.DESC_ID_OFFSET + by_name[n]) for n in (
           "boots_Exzo_M_LVL_8_A_mod00", "pants_Bs_M_LVL_16_A_mod00", "armor_Exzo_M_LVL_20_A_mod00")],
-      ["Механизированные боты являются частью опорно-двигательного аппарата.",
-       "Классическая армейская одежда. Военные стали частью нового стиля постапокалиптической "
-       "моды - прочный материал, различные расцветки ткани, дешево и сердито.",
-       "Эта Броня сочетает в себе все преимущества различных модификаций Паладина."])
+      [description_with_level(by_name[n], original) for n, original in zip(
+          ("boots_Exzo_M_LVL_8_A_mod00", "pants_Bs_M_LVL_16_A_mod00", "armor_Exzo_M_LVL_20_A_mod00"),
+          ("Механизированные боты являются частью опорно-двигательного аппарата.",
+           "Классическая армейская одежда. Военные стали частью нового стиля постапокалиптической "
+           "моды - прочный материал, различные расцветки ткани, дешево и сердито.",
+           "Эта Броня сочетает в себе все преимущества различных модификаций Паладина."))])
 check("  ..the wiki's slip mended where it is one letter: 'ИИногда'",
       names.text(items.DESC_ID_OFFSET + by_name["helm_Exzo_M_LVL_16_A_mod00"]),
-      "Иногда кажется, что этот шлем самостоятельнее его обладателя.")
+      description_with_level(by_name["helm_Exzo_M_LVL_16_A_mod00"],
+          "Иногда кажется, что этот шлем самостоятельнее его обладателя."))
 check("  ..never one about the dead man who wore it before (Шлем Красного Эхо's wiki line, "
       "the original's Налетчик boots)",
       [t for t in ALL_TYPES if re.search(r"труп|смерти|не спасли|дырка", descs[t])], [])
@@ -324,6 +340,42 @@ check("the sets' descriptions: the original's row where it has one, the wiki set
        "Модификация известного сета", "Новый комплект брони для выполнения самых сложных боевых "
        "операций", "Паладин", "Апокалипсис сочетает в себе все преимущества различных "
        "модификаций Паладина"])
+
+# Historical numbers remain a compatibility contract for saved range profiles.
+# Audit that snapshot against the independent wiki/design rules below; the live
+# catalogue is checked separately against the pinned simulator snapshot.
+with open(os.path.join(HERE, '..', 'data', 'combat_balance.json'), encoding='utf-8') as fh:
+    LEGACY = json.load(fh)
+
+
+def historical_params(type_id):
+    params = dict(items.params_of(type_id))
+    # The archived wiki audit predates the two explicit early-G release steps.
+    early = {
+        10079: (0, 5, 3, 0, 1, 0), 10080: (0, 45, 1, 0, 0, 0),
+        10081: (0, 5, 7, 0, 0, 1), 10082: (0, 10, 1, 0, 0, 0),
+        10083: (0, 5, 1, 0, 0, 0),
+        10919: (2, 10, 8, 0, 1, 0), 10920: (2, 22, 2, 0, 1, 0),
+        10921: (2, 12, 30, 0, 1, 1), 10922: (2, 20, 2, 0, 0, 1),
+        10923: (2, 8, 2, 0, 0, 1),
+    }
+    if type_id in early:
+        params.update(zip(('bonus_hp', 'bonus_st', 'armor_class', 'bonus_od',
+                           'bonus_cp', 'bonus_ce'), early[type_id]))
+    params.update(LEGACY['previous_equipment'].get(str(type_id), {}))
+    return params
+
+
+def historical_frame(set_id):
+    frame = dict(sets.frame(set_id))
+    if set_id == 11193:
+        frame.update(bonus_3_st=5, bonus_4_st=8, bonus_4_od=3,
+                     bonus_4_ce=2, bonus_5_st=12, bonus_5_cp=2)
+    for count, fields in LEGACY['previous_sets'].get(str(set_id), {}).items():
+        for key, value in fields.items():
+            frame['bonus_%s_%s' % (count, key)] = value
+    return frame
+
 
 # --- numbers: the wiki's ---------------------------------------------------------------
 # Where the numbers come from: the wiki's own tables, data/wiki_items.json,
@@ -398,7 +450,7 @@ def need_of(p):
 
 def served(t):
     """The numbers of a served frame this test holds to a rule."""
-    p = items.static_info(t)[1]
+    p = historical_params(t)
     got = {key: p.get(key, 0) for _w, key in NUMBERS}
     got.update(cost=p.get("cost", 0), g_cost=p.get("g_cost", 0), need=need_of(p))
     return got
@@ -435,23 +487,23 @@ check("  ..and the frame carries no bonus the check above did not look at",
        if k.startswith("bonus_") and x and k not in {key_ for _w, key_ in NUMBERS}], [])
 check("  ..Кусковая броня 20 (A) / 23 (G), Бронежилет налетчика 47 / 54, Корпус Красного Эхо "
       "274 / 345, Броня Тёмного Эха 638 (the page's first column), Броня Апокалипсиса 1143",
-      [items.params_of(by_name[n])["armor_class"] for n in (
+      [historical_params(by_name[n])["armor_class"] for n in (
           "armor_Set_M_LVL_2_A_mod00", "armor_Set_M_LVL_2_G_mod00", "armor_Set_M_LVL_8_A_mod00",
           "armor_Set_M_LVL_8_G_mod00", "armor_Exzo_M_LVL_8_A_mod00", "armor_Exzo_M_LVL_8_G_mod00",
           "armor_Bs_U_LVL_16_Q_mod00", "armor_Exzo_M_LVL_20_G_mod00")],
       [20, 23, 47, 54, 274, 345, 638, 1143])
 check("prices too: the wiki's afro, its gold in hundredths (0.25 G is 25), a quest piece's afro",
-      [(items.params_of(by_name[n])["cost"], items.params_of(by_name[n])["g_cost"]) for n in (
+      [(historical_params(by_name[n])["cost"], historical_params(by_name[n])["g_cost"]) for n in (
           "helm_Set_M_LVL_2_A_mod00", "helm_Set_M_LVL_2_G_mod00", "armor_Set_M_LVL_8_A_mod00",
           "armor_Set_M_LVL_8_G_mod00", "helm_Set_M_LVL_11_G_mod00", "helm_Bs_U_LVL_16_Q_mod00")],
       [(1000, 0), (0, 25), (12000, 0), (0, 300), (0, 125), (200000, 0)])
 check("  ..and where a variant has no column, its price at the wiki's 4000 afro = 1 G",
-      [(items.params_of(by_name[n])["cost"], items.params_of(by_name[n])["g_cost"]) for n in (
+      [(historical_params(by_name[n])["cost"], historical_params(by_name[n])["g_cost"]) for n in (
           "helm_Set_M_LVL_11_A_mod00", "helm_Bs_M_LVL_0_G_mod00", "armor_Exzo_M_LVL_20_A_mod00")],
       [(5000, 0), (0, 13), (360000, 0)])
 check("  ..the four the pages get wrong, as their set pages' totals say: Очки налетчика (G) 2.5 G, "
       "Ботинки легионера (G) 7.5 G, Броня Штурм-М 210 000, Моторика Штурм-М 140 000",
-      {t: (items.params_of(t)["cost"], items.params_of(t)["g_cost"]) for t in DESIGNED_PRICE},
+      {t: (historical_params(t)["cost"], historical_params(t)["g_cost"]) for t in DESIGNED_PRICE},
       DESIGNED_PRICE)
 totals = {}
 for g in GROUPS:
@@ -464,7 +516,7 @@ for g in GROUPS:
             cur, x = price_of(cells[{"A": 0, "G": 2}[g["v"]] if len(cells) == 3 else 0])
             if (cur == "g") == (g["v"] == "G"):
                 key = "g_cost" if g["v"] == "G" else "cost"
-                totals[(g["word"], g["v"])] = (sum(items.params_of(t)[key] for t in g["types"]),
+                totals[(g["word"], g["v"])] = (sum(historical_params(t)[key] for t in g["types"]),
                                                half_up(x * 100) if cur == "g" else x)
 check("every set's pieces add up to its wiki page's price for the set",
       {k: v for k, v in totals.items() if v[0] != v[1]}, {})
@@ -531,8 +583,8 @@ check("  ..the G between the neighbours' G: Чёрный Ловелас's, and �
       from_gold, ["Чёрный Ловелас", "Дредноут", "Паладин"])
 check("  ..Броня Дредноута 806 armour for 280 000 afro, Броня Паладина (G) 975 for 80 G, "
       "Броня Чёрного Ловеласа 109 for 50 000, its (G) 130 for 12.50 G",
-      [(items.params_of(by_name[n])["armor_class"], items.params_of(by_name[n])["cost"],
-        items.params_of(by_name[n])["g_cost"]) for n in (
+      [(historical_params(by_name[n])["armor_class"], historical_params(by_name[n])["cost"],
+        historical_params(by_name[n])["g_cost"]) for n in (
           "armor_Exzo_M_LVL_18_A_mod00", "armor_Exzo_M_LVL_19_G_mod00", "armor_Bs_U_LVL_12_Q_mod00",
           "armor_Bs_U_LVL_12_G_mod00")],
       [(806, 280000, 0), (975, 0, 8000), (109, 50000, 0), (130, 0, 1250)])
@@ -596,7 +648,7 @@ check("the one requirement beyond Телосложение and Стрельба:
 # Красное Эхо (500 000 afro) above Штурм-М (700 000). Named, so a third one
 # is news. A gold piece is never weaker than the afro one of its rung.
 def total(group, key):
-    return sum(items.params_of(t).get(key, 0) for t in group)
+    return sum(historical_params(t).get(key, 0) for t in group)
 
 
 worse = []
@@ -618,7 +670,7 @@ pairs = [(ga, gg) for ga in GROUPS for gg in GROUPS
          if ga["word"] == gg["word"] and ga["v"] == "A" and gg["v"] == "G"]
 check("a G piece is never weaker than its A: armour and stamina",
       [(a, g) for ga, gg in pairs for a, g in zip(ga["types"], gg["types"])
-       if any(items.params_of(g).get(k, 0) < items.params_of(a).get(k, 0)
+       if any(historical_params(g).get(k, 0) < historical_params(a).get(k, 0)
               for k in ("armor_class", "bonus_st"))], [])
 
 # --- the frames ----------------------------------------------------------------
@@ -631,7 +683,7 @@ for k in sets.PIECES:
     READ |= {"bonus_%d_%s" % (k, key) for key in sets.SCALARS}
 bad = {}
 for st, s in sets.SETS.items():
-    p = sets.frame(st)
+    p = historical_frame(st)
     why = []
     if p["type"] != st:
         why.append("type %r" % p["type"])
@@ -761,7 +813,7 @@ for g in GROUPS:
     elif kind == "none":
         want[g["key"]] = frame_of(g, {})
 check("every frame with a wiki set page is that page's column, whole: type, figure, strings, "
-      "every K", {st: sets.frame(st) for st in want}, want)
+      "every K", {st: historical_frame(st) for st in want}, want)
 check("  ..the two free-form pages read whole, as their wikitext lists them",
       [text_bonus(p) for p in ("Снаряжение Чёрного Ловеласа", "Темное Эхо")],
       [{2: {"hp": 50, "st": 20}, 3: {"st": 55, "od": 20, "Ловкость": 1},
@@ -785,8 +837,8 @@ for g in GROUPS:
     designed_anchor[g["word"]] = (lo["word"], hi["word"])
     # A G whose pieces lie between the neighbours' G takes their G columns.
     v = "G" if g["v"] == "G" and g["word"] in from_gold else None
-    a = as_lines(sets.frame(lo["keys"][v] if v else list(lo["keys"].values())[0]))
-    b = as_lines(sets.frame(hi["keys"][v] if v else list(hi["keys"].values())[0]))
+    a = as_lines(historical_frame(lo["keys"][v] if v else list(lo["keys"].values())[0]))
+    b = as_lines(historical_frame(hi["keys"][v] if v else list(hi["keys"].values())[0]))
     per_k = {}
     for k in sets.PIECES:
         line = {}
@@ -803,13 +855,13 @@ check("Дредноут and Паладин, with no set page, between Тёмно
                         "Дредноут": ("Тёмное Эхо", "Апокалипсис"),
                         "Паладин": ("Тёмное Эхо", "Апокалипсис")})
 check("  ..every frame of theirs is the rule's",
-      {st: sets.frame(st) for st in designed_want}, designed_want)
+      {st: historical_frame(st) for st in designed_want}, designed_want)
 check("  ..Дредноут at five: +333 stamina, +17 crit, Ловкость 4, Телосложение 5, Восприятие 5",
-      as_lines(sets.frame(11016))[5],
+      as_lines(historical_frame(11016))[5],
       {"st": 333, "cp": 17, "Ловкость": 4, "Телосложение": 5, "Восприятие": 5})
 check("  ..Чёрный Ловелас at three: +10 stamina, +4 anti-crit, Ловкость 1 -- not Штурм-М's +20"
       " action points; at five +38 stamina, +4 action points, +8 crit and four attribute points",
-      [as_lines(sets.frame(st)).get(k) for st in (11120, 60000) for k in (3, 5)],
+      [as_lines(historical_frame(st)).get(k) for st in (11120, 60000) for k in (3, 5)],
       [{"st": 10, "ce": 4, "Ловкость": 1},
        {"st": 38, "od": 4, "cp": 8, "Сила": 1, "Телосложение": 2, "Восприятие": 1},
        {"st": 23, "ce": 4, "Ловкость": 2},
@@ -830,13 +882,13 @@ def power(st):
     s = sets.SETS[st]
     out = dict.fromkeys(POWER, 0)
     for t in s["members"].values():
-        p = items.params_of(t)
+        p = historical_params(t)
         for key in POWER[:5]:
             out[key] += p.get("bonus_" + key, 0)
-    for line in as_lines(sets.frame(st)).values():
+    for line in as_lines(historical_frame(st)).values():
         for key, x in line.items():
             out[key if key in POWER else "points"] += x
-    afro = sum(items.params_of(t)["cost"] + items.params_of(t)["g_cost"] * 40 for t in s["members"].values())
+    afro = sum(historical_params(t)["cost"] + historical_params(t)["g_cost"] * 40 for t in s["members"].values())
     return out, afro
 
 
@@ -867,13 +919,13 @@ check("  ..Чёрный Ловелас: 89 health, 346 stamina, 20 action points
       [(dict(hp=89, st=346, od=20, cp=17, ce=15, points=6), 167000),
        (dict(hp=109, st=417, od=26, cp=19, ce=17, points=7), 167000)])
 check("Беженец adds nothing, in either variant (Вещи Беженца has no bonus), and draws no figure",
-      [sets.frame(st) for st in (11218, 11221)],
+      [historical_frame(st) for st in (11218, 11221)],
       [dict(type=st, res=0, name=sets.NAME_ID_OFFSET + st, desc=sets.DESC_ID_OFFSET + st)
        for st in (11218, 11221)])
 check("Колонист[2] is the wiki's Вещи Колонистов: five pieces, +5 health, +1 crit, +1 anti-crit",
-      sets.frame(11167), dict(type=11167, res=102, name=7011167, desc=7111167,
+      historical_frame(11167), dict(type=11167, res=102, name=7011167, desc=7111167,
                               bonus_5_hp=5, bonus_5_cp=1, bonus_5_ce=1))
-f = sets.frame(11185)
+f = historical_frame(11185)
 check("Налетчик (A): strength at 3 pieces is attribute bit 0",
       (f["bonus_3_attribs_m"], f["bonus_3_attribs"]), (1, [1]))
 check("  ..strength and constitution at 5 are bits 0 and 2", (f["bonus_5_attribs_m"], f["bonus_5_attribs"]),
@@ -883,18 +935,18 @@ check("  ..and the rest of its column: 2, 3, 4 and 5 pieces as the wiki lists th
       dict(bonus_2_st=4, bonus_2_ce=2, bonus_3_st=10, bonus_3_od=6, bonus_4_hp=6,
            bonus_4_st=20, bonus_4_ce=3, bonus_5_st=35, bonus_5_cp=3))
 check("Налетчик (G): its own column -- constitution +2 at five",
-      (sets.frame(11187)["bonus_5_attribs"], sets.frame(11187)["bonus_3_od"]), ([1, 2], 10))
-f = sets.frame(11191)
+      (historical_frame(11187)["bonus_5_attribs"], historical_frame(11187)["bonus_3_od"]), ([1, 2], 10))
+f = historical_frame(11191)
 check("Странник: the wiki's one column in both variants, Интелект (sic) read as Интеллект",
-      (f["bonus_5_attribs_m"], f["bonus_5_attribs"], sets.frame(11193)["bonus_5_attribs_m"]),
+      (f["bonus_5_attribs_m"], f["bonus_5_attribs"], historical_frame(11193)["bonus_5_attribs_m"]),
       (4 | 8 | 16, [1, 1, 1], 4 | 8 | 16))
-f = sets.frame(10961)
+f = historical_frame(10961)
 check("Красное Эхо keeps melee at three pieces, but neither A nor G adds shooting at five",
       ((f["bonus_3_skills_m"], f["bonus_3_skills"]),
-       [(sets.frame(t).get("bonus_5_skills_m", 0), sets.frame(t).get("bonus_5_skills", []))
+       [(historical_frame(t).get("bonus_5_skills_m", 0), historical_frame(t).get("bonus_5_skills", []))
         for t in (10961, 10965)]), ((1, [1]), [(0, []), (0, [])]))
 check("an unknown set: its own type, the empty name, no description",
-      sets.frame(424242), dict(type=424242, res=0, name=quests.EMPTY_STRING_ID, desc=""))
+      historical_frame(424242), dict(type=424242, res=0, name=quests.EMPTY_STRING_ID, desc=""))
 check("and the empty name is one the client has", names.known(quests.EMPTY_STRING_ID), True)
 
 # --- what the gear asks: the bonuses of what is worn -----------------------------
@@ -903,7 +955,7 @@ print("bonuses")
 kol2 = list(sets.SETS[11167]["members"].values())
 check("all five of Колонист: the set's five-piece bonus",
       {k: v for k, v in sets.bonuses(kol2).items() if v and k in sets.SCALARS},
-      {"hp": 5, "cp": 1, "ce": 1})
+      {"hp": 8, "cp": 1, "ce": 1})
 check("four of them: nothing, the set has no four-piece line",
       sets.bonuses(kol2[:4]), sets.zero())
 nal8 = list(sets.SETS[11185]["members"].values())

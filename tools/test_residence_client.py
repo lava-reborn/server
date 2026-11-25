@@ -51,6 +51,26 @@ class ResidenceClient(unittest.TestCase):
         self.assertEqual(attrs["__residenceAt"],1000)
         self.assertEqual(env["gamer"]["premium"],0)
 
+    def test_server_status_experience_text_reaches_the_existing_icon_hint(self):
+        import progression
+        import residence
+        for level, bonus in ((1, 15), (2, 30)):
+            ch = progression.Character()
+            ch.premium = level
+            attrs = dict(max_weight=ch.max_weight(), __residenceInfoOrig=lambda obj: None)
+            env = self.env(attrs)
+            env.update(this=attrs, obj=dict(param=residence.frame(ch)))
+            execute(w.fn_residence_snapshot().assemble(), env)
+            hints = []
+            env['lol']['gpui'] = dict(HintManager=dict(showHint=hints.append))
+            pan = dict(maxWeight_txt={}, bonusWeight_txt={},
+                       premium_mc=dict(gotoAndStop=lambda frame: None), __weightLimitOrig=lambda: None)
+            env['this'] = pan
+            execute(w.fn_weight_limit().assemble(), env)
+            pan['premium_mc']['onRollOver'].invoke(pan['premium_mc'], [])
+            self.assertIn('+%d%% опыта' % bonus, hints[0])
+            self.assertEqual(env['gamer']['premium'], level)
+
     def dialog(self):
         env=self.env(dict(__residenceStatus=1,__residenceUntil=1999999999,__residenceText="P until tomorrow"))
         task=dict(typeID=2130,qID=17)

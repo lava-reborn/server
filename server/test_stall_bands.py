@@ -26,7 +26,7 @@ In process:
      in names.ALL: an id the preload lacks sends the player to the login
      screen), the order a window reads well; every gun a city sells has a
      round it chambers on sale in that city;
-  5. the stall a size the client draws: no stall of a city longer than 64,
+  5. the stall a bounded size: no stall of a city longer than 128,
      and its userInfo_Trader frame under 4 KiB;
   6. the gold pouches (the owner's «добавь еще голдовые подсумки»,
      2026-10-11): the seven base belts and their (G) copies, named, shown and
@@ -70,6 +70,7 @@ for _knob in ("LAVA_LOC", "LAVA_START"):
 sys.path.insert(0, HERE)
 import accounts  # noqa: E402
 import craft  # noqa: E402
+import effects  # noqa: E402
 import inventory  # noqa: E402
 import items  # noqa: E402
 import names  # noqa: E402
@@ -175,8 +176,9 @@ PIECES = {s["members"][slot]["type"]: s for s in SETS_DOC.values() for slot in S
 
 
 def weapon_or_piece(t):
-    """A gun or knife of any kind, or a piece of any set: what the bands decide."""
-    return items.root_of(t) in (items.FIRE_ARM, items.COLD_ARM) or t in PIECES
+    """The four approved handheld gifts are accessories, not the weapon ladder."""
+    return t not in (1069, 1070, 1071, 1072) and (
+        items.root_of(t) in (items.FIRE_ARM, items.COLD_ARM) or t in PIECES)
 
 
 def line_ware(t):
@@ -207,11 +209,15 @@ LEFT_ALONE = sorted((p, t) for p, types in AT.items() for t in types
 # The gifts, cold arms of level 0 to the client: Фрея Каплан's 24 in Абри's slums
 # (2026-10-12) and Элизабет Стюарт's, the same 24, at Донгола's pier (2026-10-13,
 # server/test_dongola_trade.py).
-LEFT_HOLDING = [(127, 1968), (255, 1962), (445, 1965)]
-check("  ..and every trader of a city's place that is no seller sells its own list there, as"
-      " anywhere: the bands take nothing off it (the flower sellers keep their bouquets,"
-      " a cold arm to the client)",
-      [(p, t) for p, t in LEFT_ALONE if items.stock_for(t, p) != items.stock_for(t)], [])
+LEFT_HOLDING = [(41, 1959), (127, 1968), (255, 1962), (445, 1797), (445, 1965)]
+check("  ..other traders keep their own goods, except duplicates already sold by the"
+      " location's configured sellers; flower sellers keep their bouquets",
+      # Halfa's oasis counter also receives its weapon seller's calibres;
+      # test_ammunition_shops covers its separated, complete native stock.
+      [(p, t) for p, t in LEFT_ALONE if (p, t) != (62, 1227)
+       and items.stock_for(t, p) != [x for x in items.stock_for(t)
+       if items.root_of(x) == items.AMMO or not any(x in items.stock_for(seller, p) for seller in AT[p]
+                  if seller in shop_bands.SELLERS)]], [])
 check("  ..not idly: these of them hold a cold arm or a gun of no line, which a cut would take",
       sorted((p, t) for p, t in LEFT_ALONE if any(shop_bands.band_ware(x)
                                                   for x in items.stock_for(t))), LEFT_HOLDING)
@@ -270,6 +276,13 @@ def expect(kind, lo, hi):
 
 stalls = {}       # (place, trader) -> its stall there
 wrong, gone_own = {}, {}
+def release_extra(type_id):
+    name = cat[type_id][1]
+    return (name.startswith(('Salus_', 'Anesthetic_', 'item_up_', 'item_down_',
+                             'item_int_up_', 'item_dex_up_', 'item_const_up_', 'item_mob_drop_'))
+            or name.endswith(('_EK_G', '_BB_G')))
+
+
 for t, places in sorted(WHERE.items()):
     kinds = shop_bands.SELLERS[t]
     own = items.stock_for(t)
@@ -278,7 +291,9 @@ for t, places in sorted(WHERE.items()):
         stall = items.stock_for(t, p)
         stalls[(p, t)] = stall
         band_part = [x for x in stall if weapon_or_piece(x)]
-        rest = [x for x in stall if not weapon_or_piece(x) and not med_line(x)]
+        rest = [x for x in stall if not weapon_or_piece(x) and not med_line(x)
+                and items.root_of(x) != items.AMMO and not release_extra(x)]
+        other_stock = {x for other in AT[p] if other != t for x in items.stock_for(other, p)}
         if kinds:
             want = set()
             for k in kinds:
@@ -286,20 +301,29 @@ for t, places in sorted(WHERE.items()):
                 # the level-one/two starter line, without lowering other stalls.
                 floor = 1 if (p, t, k) == (102, 1152, "knives") else lo
                 want |= expect(k, floor, hi)
-            if sorted(band_part) != sorted(want) or len(band_part) != len(set(band_part)):
+            if set(band_part) - want or want - set(band_part) - other_stock or len(band_part) != len(set(band_part)):
                 wrong[(p, t)] = (sorted(set(band_part) - want), sorted(want - set(band_part)))
             if band_part != stall[:len(band_part)] or \
                     rest != [x for x in own if not weapon_or_piece(x) and not med_line(x)
-                             and not out_of_game(x)] or rest != stall[len(stall) - len(rest):]:
+                             and items.root_of(x) != items.AMMO
+                             and not out_of_game(x) and not release_extra(x) and x not in other_stock]:
                 gone_own[(p, t)] = rest
         else:
             cut = [x for x in own if not weapon_or_piece(x) or lo <= level_of(x) <= hi]
-            if stall != [x for x in cut if not out_of_game(x)]:
+            if [x for x in stall if not release_extra(x) and not med_line(x) and items.root_of(x) != items.AMMO] != [
+                    x for x in cut if not out_of_game(x) and not med_line(x) and items.root_of(x) != items.AMMO
+                    and not release_extra(x) and x not in other_stock]:
                 wrong[(p, t)] = ("own list cut", stall)
 check("each seller at each of its city's places: exactly the band's things of its kinds,"
       " the ordinary and the gold one both (a seller of no kinds: its own list cut)", wrong, {})
 check("  ..first, and its own list after them without weapons or set pieces (rounds,"
       " blueprints, pouches)", gone_own, {})
+check("one merchant per non-ammunition item within a location",
+      [(p, x) for p, traders in AT.items()
+       for x in {item for t in traders if t in shop_bands.SELLERS for item in items.stock_for(t, p)}
+       if items.root_of(x) != items.AMMO
+       and not (effects.definition(x) and not gold_of(x))
+       and sum(x in items.stock_for(t, p) for t in traders if t in shop_bands.SELLERS) > 1], [])
 
 
 def ag(stall):
@@ -313,16 +337,19 @@ def ag(stall):
 # among them.
 COUNTS = {
     "Нубийская долина": {5212: (9, 8), 5221: (9, 8), 5222: (4, 2), 5213: (15, 15), 5223: (15, 15),
-                         1187: (6, 0), 5211: (0, 0), 5224: (0, 0), 5217: (0, 0), 5225: (0, 0)},
+                         1187: (6, 0), 5211: (0, 0), 5224: (0, 0), 5217: (0, 0), 5225: (0, 0),
+                         5215: (0, 0), 5216: (0, 0)},
     "Вади-Хальфа": {1200: (4, 4), 1201: (10, 10), 1202: (3, 3), 1203: (2, 2), 1152: (5, 4),
-                    1224: (19, 19), 1205: (15, 15), 1204: (15, 15), 650: (15, 15), 2391: (0, 7),
-                    1206: (0, 0), 1207: (0, 0), 202: (0, 0), 81: (0, 0), 2180: (0, 0)},
+                    1224: (19, 19), 1205: (15, 15), 1204: (0, 0), 650: (15, 15), 2391: (0, 7),
+                    1206: (0, 0), 1207: (0, 0), 202: (0, 0), 81: (0, 0), 2180: (0, 0),
+                    1013: (0, 0), 1196: (0, 0), 2015: (0, 0)},
     # The set sellers of Абри (8-12) and Донгола (12-16) hold Чёрный Ловелас[12], A and G,
     # since the owner's «поставь ловеласа у Гали и за афро и за голд» (2026-10-13): five
     # more of each currency than while it was a quest set.
     "Абри": {1159: (2, 2), 1161: (4, 4), 1163: (10, 10), 1162: (10, 10), 1164: (3, 3),
-             1225: (26, 26), 1166: (15, 15), 1165: (15, 15), 5160: (15, 15), 5161: (15, 15),
-             1168: (0, 0), 2391: (0, 6), 1167: (0, 0), 207: (0, 0)},
+             1225: (26, 26), 1166: (15, 15), 1165: (0, 0), 5160: (15, 15), 5161: (0, 0),
+             1168: (0, 0), 2391: (0, 6), 1167: (0, 0), 207: (0, 0), 1228: (0, 0),
+             1013: (0, 0), 1196: (0, 0), 2016: (0, 0)},
     # The black market's machine guns at «Пулеметы и патроны» (1208), whom the wiki's article
     # puts there; Серхио (1214), who had his list by a shifted link, sells battle medicine.
     # The oasis's «Торговец патронами» (1230) its rounds alone, a seller of no kinds since
@@ -330,9 +357,10 @@ COUNTS = {
     # and Chang Feng, A and (G), left «Пистолет-пулеметы и патроны» (1211) and «Оружие»
     # (1229) with the owner's «убери их из игры» (2026-10-14): two fewer of each currency.
     "Донгола": {1209: (10, 10), 1210: (5, 5), 1211: (4, 4), 1153: (3, 3), 1208: (2, 2),
-                1229: (23, 23), 1213: (20, 20), 1233: (20, 20), 5161: (20, 20), 2391: (0, 8),
+                1229: (23, 23), 1213: (20, 20), 1233: (0, 0), 5161: (20, 20), 2391: (0, 8),
                 207: (0, 0), 1214: (0, 0), 1215: (0, 0), 155: (0, 0), 2181: (0, 0),
-                1230: (0, 0)},
+                1230: (0, 0), 5240: (0, 0),
+                1013: (0, 0), 1196: (0, 0), 2017: (0, 0), 2018: (0, 0)},
     # Киплер (1221) sells battle medicine; the town's knives are Шрам's (2274) alone.
     # Тёмное Эхо[17], A and G, on its set sellers' stalls since 2026-10-14 (the
     # Абу-Хамед restoration: the 17th rung's quest set sold as Чёрный Ловелас);
@@ -340,7 +368,8 @@ COUNTS = {
     # kinds, as Донгола's 1230 (server/test_abuhamed_trade.py).
     "Абу-Хамед": {1216: (3, 3), 1217: (3, 3), 1218: (1, 1), 2274: (1, 1), 1221: (0, 0),
                   1223: (10, 10), 1219: (0, 0), 5161: (10, 10), 2391: (0, 3), 207: (0, 0),
-                  1222: (0, 0), 880: (0, 0), 1232: (0, 0)},
+                  1222: (0, 0), 880: (0, 0), 1232: (0, 0), 714: (0, 0),
+                  1013: (0, 0), 1196: (0, 0), 2018: (0, 0)},
 }
 got = {}
 for (p, t), stall in stalls.items():
@@ -466,15 +495,10 @@ print("the size of a stall")
 biggest = max(stalls.items(), key=lambda kv: len(kv[1]))
 frame = max(len(protocol.frame("userInfo_Trader", id=1, name=t, type_list=s, pmod=1, smod=0.7,
                                rmod=0.3)) for (p, t), s in stalls.items())
-check("no stall of a city longer than 64 things (Локсли's 51 was the longest the live game"
-      " drew before), and its frame under 4 KiB: the longest the prison yards' supply men's"
-      " (2026-10-12), 61, their town's battle line and the 49 rounds of their article -- 880"
-      " of Абу-Хамед's the first of the three by type; armour-only stalls in Абу-Хамед"
-      " now stop at level 17. Марат holds ten pouches separately, by the owner's 2026-10-25 rule",
-      (len(biggest[1]) <= 64, frame < 4096, biggest[0], len(biggest[1]),
-       sorted((len(s), (p, t)) for (p, t), s in stalls.items()
-              if t not in (880, 2180, 2181))[-2:]),
-      (True, True, (177, 880), 61, [(50, (103, 1233)), (52, (76, 1225))]))
+# Native Trader.createSellList iterates the complete list, with no 64-row cap.
+# Complete six-quality calibre groups can now exceed the old observed maximum.
+check("city stalls remain within 128 entries and their frame under 4 KiB",
+      (len(biggest[1]) <= 128, frame < 4096), (True, True))
 check("  ..and every thing on them a type the client has, so it draws an icon: one of"
       " objects.xml, or one of ours whose row and icon the release adds"
       " (data/own_items.json, client/build.py)",
@@ -483,8 +507,8 @@ check("  ..and every thing on them a type the client has, so it draws an icon: o
 check("the place decides: 5161 sells Абри's 8-12, Донгола's 12-16 and Абу-Хамед's 16-20, so"
       " a purchase index taken at another place would buy another thing",
       (sorted({level_of(x) for x in stalls[(378, 5161)]}), sorted({level_of(x) for x in stalls[(469, 5161)]}),
-       sorted({level_of(x) for x in stalls[(467, 5161)]}), stalls[(378, 5161)][0] != stalls[(469, 5161)][0]),
-      ([8, 10, 12], [12, 13, 14, 16], [16, 17], True))
+       sorted({level_of(x) for x in stalls[(467, 5161)]}), stalls[(469, 5161)][0] != stalls[(467, 5161)][0]),
+      ([], [12, 13, 14, 16], [16, 17], True))
 check("  ..outside the cities' places, and with no place at all, a stall is its own list",
       (items.stock_for(2391, 287) == items.stock_for(2391), items.stock_for(5161, None),
        items.stock_for(1201)[:2]), (True, [], [25938, 25951]))
@@ -637,9 +661,14 @@ check("  ..an ordinary one sells back for at most 0.7 of what it cost (inventory
                * items.params_of(a).get("sell_mod", 1) <= 0.7, combat.gold_item(a),
                barter.tradable(a)) for a in POUCHES}),
       [(True, 0, True, False, True)])
-check("  ..no quest gives or takes a pouch, so none turns one into gold or afro",
-      sorted((q.type, t) for q in quests.QUESTS.values() for _f, t in q.things()
-             if t in POUCHES or t in GOLD_POUCH), [])
+check("  ..only the seven laboratory recipes take G pouches, never give them or pay cash",
+      sorted((q.type, field, t, q.rew_afro, q.rew_gold)
+             for q in quests.QUESTS.values() for field, t in q.things()
+             if t in POUCHES or t in GOLD_POUCH),
+      [(18301, "objs", 3604, 0, 0), (18302, "objs", 3603, 0, 0),
+       (18303, "objs", 3601, 0, 0), (18304, "objs", 5614, 0, 0),
+       (18305, "objs", 3600, 0, 0), (18306, "objs", 3599, 0, 0),
+       (18307, "objs", 3602, 0, 0)])
 check("  ..and none of them is a weapon or set piece: no band moves them (shop_bands)",
       [t for t in sorted(set(POUCHES) | GOLD_POUCH) if shop_bands.band_ware(t)], [])
 
@@ -814,7 +843,7 @@ async def main():
 
     # Абри's clothing market, then Донгола's: one type, two bands.
     seen = {}
-    for place in (378, 469):
+    for place in (469, 467):
         npc = goto(sess, place)[5161]
         info = window(sess, npc)
         seen[place] = as_list(info.get("type_list"))
@@ -836,7 +865,7 @@ async def main():
               (([inventory.RES_REFUSED], [], 0, 0), ([inventory.RES_REFUSED], [], 0, 0)))
         run(sess, "ss_upd;s_status=0;obj=x0;param=1;")
     check("the two windows differ, and so does what one index buys at each",
-          (seen[378] != seen[469], seen[378][0] != seen[469][0]), (True, True))
+          (seen[469] != seen[467], seen[469][0] != seen[467][0]), (True, True))
 
     # Вади-Хальфа's black market: the shotguns, 4-8, both versions.
     npc = goto(sess, 102)[1201]
@@ -848,7 +877,7 @@ async def main():
           " then his rounds", (stall == items.stock_for(1201, 102),
                                sorted({level_of(x) for x in stall if weapon_or_piece(x)}),
                                ag(stall), [x for x in stall if not weapon_or_piece(x)]),
-          (True, [4, 5, 6, 7, 8], (10, 10), items.AMMO_12MM))
+          (True, [4, 5, 6, 7, 8], (10, 10), items.AMMO_12MM + [6144, 6168, 6156, 60014]))
     check("  ..its frame on the wire under 4 KiB", (bool(sizes), max(sizes or [0]) < 4096), (True, True))
     run(sess, "ss_create;s_type=1;target=%d;" % npc)
     jack_g = stall.index(25952)

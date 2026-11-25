@@ -643,7 +643,8 @@ class EdenHarvestTests(unittest.IsolatedAsyncioTestCase):
         self.assertFalse(self.palm.stats.can_attack)
         self.assertNotIn(self.palm, self.rc.bodies(self.f, None, weapon).values())
         # Pure real shot resolution at a palm hex has no target or collateral.
-        weapon = NS(num_shots=3, max_range=30, cone=0, through=False, at_players=True)
+        weapon = NS(num_shots=3, max_range=30, cone=0, hit_cap=1,
+                    through=False, at_players=True)
         pairs, struck = self.rc.resolve(self.f, None, self.palm.cell, weapon, 3)
         self.assertEqual(struck, {})
         self.assertEqual(len(pairs), 3)

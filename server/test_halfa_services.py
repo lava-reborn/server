@@ -54,6 +54,7 @@ with open(QUESTS_FILE, "w", encoding="utf-8") as fh:
 sys.path.insert(0, HERE)
 import accounts  # noqa: E402
 import auction  # noqa: E402
+import effects  # noqa: E402
 import items  # noqa: E402
 import names  # noqa: E402
 import npcs  # noqa: E402
@@ -129,7 +130,7 @@ try:
     check("Хамис, Рияд and Ваккас sell the town's band: Странник, Магриб and Налетчик, each"
           " in both versions; Ваккас then five belts, each with its (G) after it",
           (items.stock_for(1205, 102), items.stock_for(650, 52), items.stock_for(1204, 102)),
-          (town, town, town + belts))
+          (town, town, belts))
     check("  ..the belts by the original's names and the wiki's prices: the ordinary in"
           " afro, the (G) in gold alone",
           [(names.text(items.STRING_ID_OFFSET + t), items.params_of(t)["cost"],
@@ -141,9 +142,9 @@ try:
            ("Подсумки рукопашника", 40000, 0), ("Подсумки рукопашника (G)", 0, 800)])
     check("  ..each one a stall can show", [t for t in belts if not servable(t)], [])
     # Мортимер sells the ingots since 2026-10-09 (test_halfa_ingots).
-    check("Мортимер sells the ingots; Марк Клаус and Ольсен sell nothing; Бартоломью has the Фуль",
+    check("Мортимер sells the ingots; Марк Клаус four golden valentines; Ольсен nothing; Бартоломью the Фуль",
           (items.stock_for(MORTIMER), items.stock_for(1959), items.stock_for(431),
-           334 in items.stock_for(81)), ([INGOT_1, INGOT_5, INGOT_10], [], [], True))
+           334 in items.stock_for(81)), ([INGOT_1, INGOT_5, INGOT_10], [1069, 1070, 1071, 1072], [], True))
     guns = {tr: [items.params_of(t)["weapon_type"] for t in items.stock_for(tr, 102)
                  if items.root_of(t) == items.FIRE_ARM] for tr in (1201, 1202, 1203)}
     check("the gun stalls sell the models of their own class, and no assault rifle",
@@ -170,15 +171,16 @@ try:
           [both("Беженец[1]") + both("Колонист[2]") + both("Странник[4]") + both("Магриб[6]"),
            both("Налетчик[8]") + both("Пустынник[10]"),
            both("Налетчик[8]") + both("Пустынник[10]") + both("Чёрный Ловелас[12]"),
-           both("Налетчик[8]") + both("Пустынник[10]") + both("Чёрный Ловелас[12]"),
+           [],
            list(range(34480, 34485)) + list(range(34490, 34495))])
     check("the oasis: new models, the choice rounds and others, medicine",
           [len(items.stock_for(t, 62)) > 0 for t in (1224, 1227, 202)], [True] * 3)
     check("  ..the rounds are rounds, the medicine medicine: Снитке's the town's tiers of both"
-          " lines, afro and gold (shop_bands, 2026-10-12)",
+          " lines, afro and gold; stimulants moved to Gofus",
           ({items.root_of(t) for t in items.stock_for(1227)},
-           {items.root_of(t) for t in items.stock_for(202, 62)}, len(items.stock_for(202, 62))),
-          ({items.AMMO}, {items.HEAL}, 24))
+           {items.root_of(t) for t in items.stock_for(202, 62)}, len(items.stock_for(202, 62)),
+           sorted(set(items.stock_for(202, 62)) & set(effects.EXPERIENCE_UP))),
+          ({items.AMMO}, {items.HEAL}, 24, []))
     check("the lottery men sell their tickets; the gold one for gold alone",
           (items.stock_for(LOTTERY_MAN), items.stock_for(GOLD_LOTTERY),
            (items.params_of(GOLD_TICKET)["cost"], items.params_of(GOLD_TICKET)["g_cost"])),
@@ -381,7 +383,7 @@ def owned():
     out = {}
     for r in st.items_of(char_id()):
         out[r["type_id"]] = out.get(r["type_id"], 0) + (
-            r["count"] if r["root"] in items.HEAPABLE_ROOTS else 1)
+            r["count"] if items.heapable(r["type_id"]) else 1)
     st.close()
     return out
 
