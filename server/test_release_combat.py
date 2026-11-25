@@ -817,9 +817,9 @@ class ReleaseCatalogue(unittest.TestCase):
         target = NS(ap_max=100, balanced_modes=(affordable, unaffordable))
         self.assertEqual(battle_balance.mob_mode(target, 2)[1], 50)
 
-    def test_full_base_experience_starts_at_plus_two_with_variant_b(self):
+    def test_full_base_experience_starts_at_plus_two_with_approved_curve(self):
         for level in range(1, 17):
-            base = progression.mob_xp(level + 1, level) * progression.COMBAT_XP_LEVEL_MULTIPLIERS[level]
+            base = progression.COMBAT_XP_BASE[level]
             for gap, ratio in ((1, .85), (2, 1), (3, 1.1), (4, 1.2), (5, 1.2)):
                 with self.subTest(level=level, gap=gap):
                     self.assertAlmostEqual(progression.combat_mob_xp(level + gap, level), base * ratio)
@@ -1003,7 +1003,7 @@ class ReleaseCatalogue(unittest.TestCase):
             self.assertEqual(mobs.loot_for(st, Rng(), {3770, 2408}, killer_level=15), [(3770, 1)])
             self.assertEqual(mobs.loot_for(st, Rng(), (), killer_level=15), [])
 
-    def test_scanner_never_multiplies_gold_ingot_chance(self):
+    def test_level_factor_does_not_multiply_gold_ingot_chance_without_a_scanner(self):
         ingot = next(iter(items.GOLD_INGOTS))
         class Rng:
             def random(self):
@@ -1352,7 +1352,7 @@ class ReleaseCatalogue(unittest.TestCase):
         from training import catalog as private_catalog
         self.assertFalse(boosters.intersection(private_catalog.item_catalogue()))
 
-    def test_scanner_changes_probability_not_quantity_or_guaranteed_drop(self):
+    def test_level_factor_changes_probability_not_quantity_or_guaranteed_drop(self):
         rows = [(333, .1, True), (334, 1, False)]
         with patch.object(mobs, 'loot_table', return_value=rows), \
                 patch.object(mobs, 'independent_loot', return_value=set()), \

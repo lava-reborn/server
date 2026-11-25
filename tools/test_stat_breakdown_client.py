@@ -62,6 +62,16 @@ class StatBreakdown(unittest.TestCase):
             self.assertEqual(self.value(base, total), expected)
         self.assertEqual(self.value(None, 1), '')
 
+    def test_long_signed_pairs_stay_on_one_line_after_each_refresh(self):
+        field = dict(wordWrap=True, multiline=True, text='native')
+        for text in ('55.25 (+70)%', '28.5 (+64)%', '17.5 (+71.25)', '135 (+75)',
+                     '49 (+5)%', '1234.25 (-999.125)', '5'):
+            self.functions['__sbField'].invoke(None, [field, text])
+            self.assertEqual(field['text'], text)
+            self.assertFalse(field['wordWrap'])
+            self.assertFalse(field['multiline'])
+            self.assertEqual(field['autoSize'], 'right')
+
     def test_rank_and_experience_text_follow_trained_skill_not_bonus(self):
         for base in range(21):
             for delta in (-5, 0, 1, 5):
@@ -136,6 +146,8 @@ class StatBreakdown(unittest.TestCase):
             self.call('CharInterface', method, target)
             suffix = '%' if method == 'showMeleeEvade' else ''
             self.assertEqual(target[field]['value']['text'], self.value(base, total) + suffix)
+            self.assertFalse(target[field]['value']['wordWrap'])
+            self.assertFalse(target[field]['value']['multiline'])
         for kind in range(6):
             self.gamer['equipment']['primaryItem'] = dict(getProp=lambda key, k=kind: k)
             cp, ce = p.crit_chance(ch, kind)
@@ -144,6 +156,8 @@ class StatBreakdown(unittest.TestCase):
             self.call('CharInterface', 'showKrit', card)
             self.assertEqual(card['crit_txt']['text'], self.value(cp, cp + 32) + '%')
             self.assertEqual(card['critDodge_txt']['text'], self.value(ce, ce - 2) + '%')
+            self.assertFalse(card['crit_txt']['wordWrap'])
+            self.assertFalse(card['critDodge_txt']['multiline'])
 
 
 if __name__ == '__main__':

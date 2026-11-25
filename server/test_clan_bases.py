@@ -451,7 +451,8 @@ class ClanBases(unittest.TestCase):
         rc.after_hostile = Mock()
         with patch.object(mobs, 'adjacent', return_value=True), \
                 patch.object(target, 'present', return_value=True), \
-                patch.object(combat, 'roll', return_value=True):
+                patch.object(combat, 'roll', return_value=True), \
+                patch.object(combat, 'now', return_value=100):
             combat.Fighter.strike_now(fighter, target, None, (1, 1), combat.SPEC_BLADE, 0)
         target.apply_damage.assert_not_called()
         rc.melee_damage.assert_not_called()

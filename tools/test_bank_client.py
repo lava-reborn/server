@@ -123,6 +123,20 @@ class BankClient(unittest.TestCase):
         self.call('__bkDelta',bank,event)
         self.assertEqual(self.calls,[125])
 
+    def test_bank_buff_delta_updates_size_once_and_keeps_individual_bag_policy(self):
+        item = dict(rootID=2, heapSize=1, max_count=1)
+        def update(fields):
+            item['heapSize'] = fields['size']
+            self.calls.append(fields)
+        item['updateProperties'] = update
+        bank = dict(visavisBag=dict(getItem=lambda oid: item))
+        event = dict(param=dict(s_status=7, bank_delta='buff:2'))
+        self.call('__bkDelta', bank, event)
+        self.call('__bkDelta', bank, event)
+        self.assertEqual(self.calls, [dict(size=2.0)])
+        self.assertEqual(item['max_count'], 1)
+
+
     def test_filter_lookup_does_not_accumulate_modifier_entries(self):
         class Filter(Arr):
             def concat(self,other):

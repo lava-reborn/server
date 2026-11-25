@@ -37,7 +37,7 @@ class MobLootFollowup(unittest.TestCase):
             self.assertEqual(mobs.loot_level_factor(gap), expected)
         for gap, ratio in xp.items():
             self.assertAlmostEqual(progression.combat_mob_xp(10 + gap, 10),
-                                   progression.mob_price(11) * .95 * ratio)
+                                   progression.COMBAT_XP_BASE[10] * ratio)
 
     def test_departed_senior_and_scanner_use_the_same_native_loot_factor(self):
         class Fighter:
@@ -57,6 +57,26 @@ class MobLootFollowup(unittest.TestCase):
         target.xp_ledger = {senior: [100], low: [1]}
         target.loot_level = 0
         self.assertEqual(combat.RoomCombat.loot_multiplier(None, target, low), .25)
+
+    def test_both_scanners_triple_valuable_probability_once_until_expiry(self):
+        class Fighter:
+            is_player = True
+            level = 10
+        killer = Fighter()
+        target = NS(stats=NS(role='mob', level=11), xp_ledger={killer: [100]}, loot_level=10)
+        for source in effects.SCANNERS:
+            killer.sess = NS(effects=NS(active={'mob_drop': NS(source=source, deadline=10)}, clock=lambda: 0))
+            factor = combat.RoomCombat.loot_multiplier(None, target, killer)
+            self.assertEqual(factor, 3)
+            self.assertEqual(combat.RoomCombat.loot_multiplier(None, target, killer, include_scanner=False), 1)
+            with patch.object(mobs, 'loot_table', return_value=[(6950, .1, True)]), \
+                    patch.object(mobs, 'independent_loot', return_value=set()), \
+                    patch.object(mobs, 'count_of', return_value=1), \
+                    patch.object(mobs, 'one_of_groups', return_value=[]):
+                self.assertEqual(mobs.roll_table(82, FixedRandom(.299), factor, scanner_multiplier=3), [(6950, 1)])
+                self.assertEqual(mobs.roll_table(82, FixedRandom(.301), factor, scanner_multiplier=3), [])
+            killer.sess.effects.clock = lambda: 10
+            self.assertEqual(combat.RoomCombat.loot_multiplier(None, target, killer), 1)
 
     def test_minus_four_corpse_keeps_native_ammo_and_scales_each_rare_category_once(self):
         stats = mobs.stats(291)

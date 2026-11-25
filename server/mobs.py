@@ -653,7 +653,7 @@ def standard_ammunition(drops):
     return [(replacements.get(t, t), n) for t, n in drops]
 
 
-def roll_table(type_id, rng, multiplier=1, *, gold_multiplier=1, guarantee_ingots=False):
+def roll_table(type_id, rng, multiplier=1, *, gold_multiplier=1, guarantee_ingots=False, scanner_multiplier=1):
     """[(type_id, count)] off loot_table: every row rolled, so the dice
     spent do not depend on what came up, and the first MAX_DROPS successes
     kept. A row at SURE is certain: in the bag every time, without a die and
@@ -670,7 +670,8 @@ def roll_table(type_id, rng, multiplier=1, *, gold_multiplier=1, guarantee_ingot
     for t, chance, _valuable in loot_table(type_id):
         if chance >= SURE or (guarantee_ingots and t in items.GOLD_INGOTS):
             out.append((t, count_of(type_id, t)))
-        elif rng.random() < min(1, chance * (gold_multiplier if t in items.GOLD_INGOTS else multiplier)) \
+        elif rng.random() < min(1, chance * (gold_multiplier if t in items.GOLD_INGOTS else
+                multiplier / scanner_multiplier if items.scanner_quantity_item(t) else multiplier)) \
                 and (t in independent or kept < MAX_DROPS):
             out.append((t, count_of(type_id, t)))
             if t not in independent:
@@ -817,7 +818,7 @@ def loot_level_factor(gap):
 
 
 def loot_for(st, rng, wanted=(), *, loc_id=None, ambush_camp=None,
-             killer_level=None, multiplier=1, gold_multiplier=1,
+             killer_level=None, multiplier=1, gold_multiplier=1, scanner_multiplier=1,
              box_player_kill=False, box_weapon_type=None):
     """[(type_id, count)] for a corpse of this type: what it carried, then
     what its kind's table rolled, then the quest rows for what those who
@@ -836,12 +837,15 @@ def loot_for(st, rng, wanted=(), *, loc_id=None, ambush_camp=None,
         return out
     import bosses                  # late: keep module initialization separate
     blueprint = bosses.blueprint_for(loc_id, st.type_id)
-    # Scanner x3 and the level ladder (0.25..1.30) affect random
-    # drops only, never harvest/quest/event quantities.
+    # Scanner raises the quantity of afro-only common loot, and the chance
+    # of gold/equipment. Quests, objects, events and harvest stay separate.
+    scanner = min(3, max(1, scanner_multiplier)) if st.role != 'object' else 1
     multiplier = min(camp_loot.MAX_MULTIPLIER, multiplier) if st.role != 'object' else 1
-    ordinary = carried(st, rng, multiplier) + roll_table(st.type_id, rng, multiplier,
-                                                       gold_multiplier=gold_multiplier,
-                                                       guarantee_ingots=st.role == 'boss')
+    ordinary = carried(st, rng, multiplier / scanner) + roll_table(st.type_id, rng, multiplier,
+                         gold_multiplier=gold_multiplier * scanner, scanner_multiplier=scanner,
+                         guarantee_ingots=st.role == 'boss')
+    ordinary = [(t, math.floor(n * scanner) if items.scanner_quantity_item(t) else n)
+                for t, n in ordinary]
     if st.role == 'object':
         import camp_box_loot
         ordinary = camp_box_loot.replace(ordinary, st, rng, loc_id=loc_id,

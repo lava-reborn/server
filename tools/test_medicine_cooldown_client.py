@@ -102,6 +102,14 @@ class MedicineCooldownClient(unittest.TestCase):
         self.call('__bfMedAmount', card, '19/20')
         self.assertEqual(drawn[-1], '19/20')
 
+    def test_bank_only_buff_heap_draws_its_count_without_changing_bag_stack_limit(self):
+        drawn = []
+        card = dict(item=dict(rootID=2, getProp=lambda key: dict(size=7, max_count=1).get(key)),
+                    __bfMedAmountOrig=drawn.append)
+        self.call('__bfMedAmount', card, '1/1')
+        self.assertEqual(drawn, ['7'])
+
+
     def setUp(self):
         self.now=1000
         self.timers=[]

@@ -865,9 +865,9 @@ _CRIT = {
 
 def crit_chance(ch, weapon_type, card=True):
     """(crit %, anti-crit %) for a firearm of this type, showKrit 184-231,
-    with the gear's bonus_cp/bonus_ce on top as showKrit adds them (the
-    items in the eight slots, then the sets). Effects would come next; none
-    exist. None for anything the card does not compute, which is every
+    with gear and active effects in the character bonuses (the items
+    in the eight slots, then the sets). None for anything the card does
+    not compute, which is every
     non-firearm.
 
     card: the set the card counts twice counted twice (Character.card_cp),
@@ -923,9 +923,15 @@ GAP_SHARE = {0: 0.5, -1: 0.25}
 GREY_GAP = 2
 COMBAT_GAP_REWARD = (.85, 1.0, 1.1, 1.2)
 COMBAT_LOW_GAP_REWARD = (.70, .50, .30, .15)
-# Base skill level, never equipment/effect bonuses. Level 0 keeps its baseline;
-# levels 1..10 lose 5%, then the agreed B curve slows the late game.
-COMBAT_XP_LEVEL_MULTIPLIERS = (1.0,) + (.95,) * 10 + (.90, .80, .70, .60, .50, .45, .45)
+# Full ordinary +2 kill, indexed by the base skill (never gear/effects).
+# Approved moderate curve, 2026-11-25. Preserve the calculated fractions:
+# rounding XP here changes the agreed number of kills near level boundaries.
+COMBAT_XP_BASE = (
+    20, 23.75, 30.0751, 38.2775, 50.1567, 66.1157, 86.8385,
+    115.2115, 153.11, 203.2552, 252.58061816, 313.87619442,
+    390.04681411, 484.70231227, 602.32854883, 748.5,
+    930.14394069, 930.14394069,
+)
 COMBAT_XP_ZONE = timezone(timedelta(hours=3), "MSK")
 
 
@@ -971,27 +977,22 @@ def mob_xp(mob_level, player_level, share=1.0, xp_mult=1):
 
 
 def combat_mob_xp(mob_level, skill_level, share=1.0, xp_mult=1):
-    """Full base reward starts at +2, scaled by the base skill's B curve.
+    """Approved PvE curve; +2 pays the full base, +4 caps the gap bonus.
 
     Equal/-1/-2/-3 pay 70/50/30/15%; +1 pays 85%, +3/+4 110/120%.
-    Gaps above four pay no extra; -4 and lower pay zero.
-    Skill 17 stops advancing; specialisations retain the level-16 base.
-    Apply the level reduction after the spec cap, before shares/premium.
-    Mining keeps mob_xp.
+    Skill 17 trains only specialisations, using the level-16 base and a
+    normal +4 ceiling even for bosses. Mining keeps the legacy mob_xp.
     """
-    reference_level = min(skill_level, COMBAT_SKILL_CAP)
-    reward_level = min(reference_level, COMBAT_SKILL_CAP - 1)
-    spec_limit = mob_price(COMBAT_SKILL_CAP) * COMBAT_GAP_REWARD[-1]
+    reference_level = max(0, min(skill_level, COMBAT_SKILL_CAP))
     gap = mob_level - reference_level
-    ceiling = mob_xp(reward_level + 1, reward_level)
     if gap > 0:
-        base = ceiling * COMBAT_GAP_REWARD[min(gap, 4) - 1]
+        factor = COMBAT_GAP_REWARD[min(gap, 4) - 1]
     else:
-        base = ceiling * COMBAT_LOW_GAP_REWARD[-gap] if -gap < len(COMBAT_LOW_GAP_REWARD) else 0
-    whole = base * xp_mult
+        factor = COMBAT_LOW_GAP_REWARD[-gap] if -gap < len(COMBAT_LOW_GAP_REWARD) else 0
+    whole = COMBAT_XP_BASE[reference_level] * factor * xp_mult
     if skill_level >= COMBAT_SKILL_CAP:
-        whole = min(spec_limit, whole)
-    return whole * COMBAT_XP_LEVEL_MULTIPLIERS[max(0, reference_level)] * share
+        whole = min(COMBAT_XP_BASE[-1] * COMBAT_GAP_REWARD[-1], whole)
+    return whole * share
 
 
 # --- the fighter's skill from a kill of a player: DESIGNED ---------------------

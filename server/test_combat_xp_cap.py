@@ -51,13 +51,12 @@ class CombatXpCap(unittest.TestCase):
                 for share in (0, .125, .5, 1):
                     for mult in (.7, 1, 3):
                         ratio = {0:.70, -1:.50, -2:.30, -3:.15}.get(mob - level, 0)
-                        expected = p.mob_price(level + 1) * ratio * mult * p.COMBAT_XP_LEVEL_MULTIPLIERS[level] * share
+                        expected = p.COMBAT_XP_BASE[level] * ratio * mult * share
                         self.assertAlmostEqual(p.combat_mob_xp(mob, level, share, mult), expected)
 
     def test_spec_reward_rises_to_level_16_maximum_at_gap_four(self):
-        ceiling = 1996 * 1.2 * .45
-        self.assertAlmostEqual(ceiling, 1077.84)
-        expected = [1996 * ratio * .45 for ratio in (.70, .85, 1, 1.1, 1.2)]
+        ceiling = 930.14394069 * 1.2
+        expected = [930.14394069 * ratio for ratio in (.70, .85, 1, 1.1, 1.2)]
         for level in (17, 18, 19, 20):
             self.assertEqual([p.combat_mob_xp(17 + gap, level) for gap in range(5)], expected)
             for mob in (17, 18, 21, 30):
@@ -66,8 +65,8 @@ class CombatXpCap(unittest.TestCase):
                     self.assertAlmostEqual(p.combat_mob_xp(mob, level, 1, mult), full)
                     self.assertAlmostEqual(p.combat_mob_xp(mob, level, .25, mult), full / 4)
             self.assertEqual(p.combat_mob_xp(13, level), 0)
-            self.assertEqual(p.combat_mob_xp(15, level), 1996 * .30 * .45)
-        self.assertEqual(p.combat_mob_xp(16, 17), 1996 * .50 * .45)
+            self.assertEqual(p.combat_mob_xp(15, level), 930.14394069 * .30)
+        self.assertEqual(p.combat_mob_xp(16, 17), 930.14394069 * .50)
         for gap in range(-3, 9):
             self.assertEqual(p.combat_mob_xp(17 + gap, 17),
                              p.combat_mob_xp(16 + gap, 16))
@@ -188,8 +187,9 @@ class CombatXpCap(unittest.TestCase):
             mob = self.mob(17)
             f.award_xp(p.SHOOTING, spec, 1, mob)
             self.settle(mob, f)
-        self.assertEqual(self.spec_total(ch, spec), int(3 * 1996 * .70 * .45))
-        self.assertAlmostEqual(ch.xp_carry['spec', spec], .22)
+        total = 3 * 930.14394069 * .70
+        self.assertEqual(self.spec_total(ch, spec), int(total))
+        self.assertAlmostEqual(ch.xp_carry['spec', spec], total % 1)
 
     def test_unlearned_or_missing_spec_gets_no_reward_or_carry(self):
         f, ch, spec = self.fighter()

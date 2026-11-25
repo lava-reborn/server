@@ -209,6 +209,20 @@ for _type, (_root, _internal_name) in items.catalogue().items():
             _source = _AMMO_QUALITY_DESCS.get(_quality[1].upper()) if _quality else None
             ALL[_did] = ORIG_ITEM_DESCS.get(items.DESC_ID_OFFSET + _source, _AMMO_GENERIC) if _source else _AMMO_GENERIC
 
+# These four original gifts are hand items (COLD_ARM), not the MOD A0 belts.
+for _type_id, (_attribute, _amount) in items.HAND_VALENTINES.items():
+    _title = ("силе", "ловкости", "телосложению", "восприятию", "интеллекту")[_attribute]
+    ALL[items.DESC_ID_OFFSET + _type_id] = (
+        "Послание от любящего человека.<br>Держите валентинку в любой руке: "
+        f"она даёт +{_amount} к {_title}, пока находится в руке.")
+
+# Both scanner grades share the same loot policy; duration stays in the effect.
+for _type in (3789, 3826):
+    ALL[items.DESC_ID_OFFSET + _type] = (
+        'Увеличивает количество обычного лута за афро на 200%. '
+        'Для золотых ценностей, оружия, частей сетов и подсумков '
+        'повышает шанс выпадения на 200%. Количество снаряжения не меняется.')
+
 # Battle medicine states its AP cost inside the original HTML description.
 # Use the same final value as ss_si_heal / actual use, without rewriting the
 # text, price or restoration numbers. Built once for both text preloads.
@@ -280,6 +294,7 @@ _SEALED = False
 def seal():
     global _SEALED
     _SEALED = True
+
 
 
 def validate_strings(strings):

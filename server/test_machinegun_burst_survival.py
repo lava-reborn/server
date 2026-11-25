@@ -61,33 +61,50 @@ class MachinegunBurstSurvival(unittest.TestCase):
                 patch.object(combat.eden_harvest, 'before_native_damage'):
             return rc.burst(shooter, target, target.cell, weapon, weapon.num_shots)
 
-    def test_full_same_or_one_lower_player_survives_normal_and_critical_pull_then_dies(self):
-        for gap in (0, 1):
+    def test_healthy_player_keeps_thirty_percent_of_impact_hp_then_can_be_finished(self):
+        for gap in (-1, 0, 1, 2):
             for critical in (False, True):
-                with self.subTest(gap=gap, critical=critical):
-                    shooter, target = Player(16, 0), Player(16-gap)
-                    rc, weapon, frames = self.scene(shooter, target, critical=critical)
-                    hp = target.ch.hp_max
-                    h, s, hits, killed = self.burst(rc, shooter, target, weapon)
-                    self.assertEqual((h, hits, killed, target.ch.hp), (hp-1, 10, False, 1))
-                    self.assertEqual(sum(p['dmg'] for cmd, p in frames if cmd == 'faHit'), h)
-                    self.assertEqual(sum(p['sdmg'] for cmd, p in frames if cmd == 'faHit'), s)
-                    self.assertEqual(target.ch.sp, 0 if critical else target.ch.sp_max)
-                    self.assertTrue(self.burst(rc, shooter, target, weapon)[3])
-                    self.assertEqual(target.ch.hp, 0)
+                for hurt in (0, 1):
+                    with self.subTest(gap=gap, critical=critical, hurt=hurt):
+                        shooter, target = Player(16, 0), Player(16-gap)
+                        target.ch.hp -= hurt
+                        rc, weapon, frames = self.scene(shooter, target, critical=critical)
+                        hp = target.ch.hp
+                        damage = hp * 7 // 10
+                        h, s, hits, killed = self.burst(rc, shooter, target, weapon)
+                        self.assertEqual((h, hits, killed, target.ch.hp), (damage, 10, False, hp-damage))
+                        self.assertEqual(sum(p['dmg'] for cmd, p in frames if cmd == 'faHit'), h)
+                        self.assertEqual(sum(p['sdmg'] for cmd, p in frames if cmd == 'faHit'), s)
+                        self.assertTrue(self.burst(rc, shooter, target, weapon)[3])
+                        self.assertEqual(target.ch.hp, 0)
 
-    def test_injured_health_or_stamina_unrelated_levels_and_other_classes_stay_lethal(self):
-        for hp_hurt, sp_hurt, shooter_level, target_level, kind in (
-                (1,0,16,16,items.MACHINEGUN), (0,1,16,16,items.MACHINEGUN),
-                (0,0,16,14,items.MACHINEGUN), (0,0,15,16,items.MACHINEGUN),
-                (0,0,16,16,items.ASSAULT), (0,0,16,16,items.RIFLE),
-                (0,0,16,16,items.SHOTGUN)):
-            with self.subTest(hp=hp_hurt,sp=sp_hurt,levels=(shooter_level,target_level),kind=kind):
+    def test_exact_health_threshold_and_stamina_do_not_change_the_rule(self):
+        shooter, target = Player(16, 0), Player(16)
+        _, weapon, _ = self.scene(shooter, target)
+        for hp, expected in ((89, None), (90, None), (91, 63), (100, 70)):
+            for stamina in (0, 1, 100):
+                target.vitals = lambda: dict(hcur=hp, hmax=100, scur=stamina, smax=100)
+                self.assertEqual(combat.machinegun_burst_limit(shooter, target, weapon), expected)
+
+    def test_wounded_lower_level_and_other_classes_stay_lethal(self):
+        for shooter_level, target_level, kind, wounded in (
+                (16, 16, items.MACHINEGUN, True), (16, 13, items.MACHINEGUN, False),
+                (16, 12, items.MACHINEGUN, False), (16, 16, items.ASSAULT, False),
+                (16, 16, items.RIFLE, False), (16, 16, items.SHOTGUN, False)):
+            with self.subTest(levels=(shooter_level, target_level), kind=kind, wounded=wounded):
                 shooter, target = Player(shooter_level, 0), Player(target_level)
-                target.ch.hp = target.ch.hp_max-hp_hurt
-                target.ch.sp = target.ch.sp_max-sp_hurt
-                rc, weapon, _ = self.scene(shooter,target,kind=kind)
-                self.assertTrue(self.burst(rc,shooter,target,weapon)[3])
+                if wounded:
+                    target.ch.hp = target.ch.hp_max * 9 // 10
+                rc, weapon, _ = self.scene(shooter, target, kind=kind)
+                self.assertTrue(self.burst(rc, shooter, target, weapon)[3])
+
+    def test_final_ammo_bonus_cannot_bypass_the_burst_health_limit(self):
+        shooter, target = Player(16, 0), Player(16)
+        rc, weapon, _ = self.scene(shooter, target, critical=True)
+        weapon = weapon._replace(hp_multiplier=1.3, sp_multiplier=1.3)
+        hp = target.ch.hp
+        h, _, _, killed = self.burst(rc, shooter, target, weapon)
+        self.assertEqual((h, killed, target.ch.hp), (hp*7//10, False, hp-hp*7//10))
 
     def test_single_shot_and_player_to_mob_have_no_health_guard(self):
         shooter,target=Player(16,0),Player(16)
@@ -105,7 +122,7 @@ class MachinegunBurstSurvival(unittest.TestCase):
                 rc,weapon,frames=self.scene(shooter,target,critical=critical)
                 weapon=weapon._replace(skill=None,spec=None)
                 h,s,hits,killed=self.burst(rc,shooter,target,weapon)
-                self.assertEqual((h,killed,target.ch.hp),(target.ch.hp_max-1,False,1))
+                self.assertEqual((h,killed,target.ch.hp),(target.ch.hp_max*7//10,False,target.ch.hp_max-target.ch.hp_max*7//10))
                 self.assertEqual(sum(p['dmg'] for cmd,p in frames if cmd=='faHit'),h)
                 self.assertGreater(hits,1)
 

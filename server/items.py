@@ -68,6 +68,8 @@ LINK_CONFIDENCE = 0.5
 # Item.as:39-45. The root type decides which ss_si_* frame describes the item.
 FIRE_ARM, WEAR, HEAL, AMMO, TRASH, COLD_ARM, TROPHY = range(7)
 POISON_SYRINGE = 3552
+HAND_VALENTINES = {1069: (progression.STRENGTH, 3), 1070: (progression.AGILITY, 3),
+                   1071: (progression.PERCEPTION, 3), 1072: (progression.INTELLECT, 4)}
 
 SI_COMMAND = {
     FIRE_ARM: "ss_si_firearm",
@@ -86,6 +88,7 @@ ACT_FIRE, ACT_UNLOAD, ACT_USEMODE = 16, 32, 64
 
 # FireArm.as:38-43
 PISTOL, SHOTGUN, ASSAULT, RIFLE, MACHINEGUN, SMG = range(6)
+MACHINEGUN_DAMAGE_PERCENT = 105
 
 # Ammunition, by calibre. objects.xml carries two families under root 3: the
 # bare calibre records "_9mmNato", "_762x39", "_12mm", "_762x51" (ids 1, 8, 9,
@@ -576,7 +579,7 @@ def upgrade_blueprint_blocked(type_id):
 
 BATTLE_HEAL_AP_MULTIPLIER = 2.5
 BATTLE_HEAL_AFRO_AP_MULTIPLIER = 1.5
-GOLD_VALENTINES = (1069, 1070, 1071, 1072)
+GOLD_VALENTINES = tuple(HAND_VALENTINES)
 
 
 def battle_medicine(type_id):
@@ -1014,6 +1017,16 @@ GOLD_PRICE_ONLY = frozenset({1333}) | GOLD_LINE_BLUEPRINTS | frozenset(ARTICLE_G
 GOLD_AMMO_ROUND = 1
 
 
+@lru_cache(maxsize=None)
+def scanner_quantity_item(type_id):
+    """Ordinary afro-only loot; no equipment, quest goods or gold buyback."""
+    import mortimer
+    if root_of(type_id) in (FIRE_ARM, WEAR, COLD_ARM) or type_id in mortimer.VALUABLES:
+        return False
+    si = params_of(type_id) or {}
+    return bool(si.get('cost') and not (si.get('g_cost') or si.get('quest')))
+
+
 def gold_round(p):
     """Whether a frame of rounds is gold ammunition (GOLD_AMMO_ROUND)."""
     return p.get("g_cost", 0) > 0 and not p.get("cost") and not p.get("premium")
@@ -1347,6 +1360,12 @@ def static_info(type_id):
         for field, value in battle_balance.equipment_changes().get(type_id, {}).items():
             info[1][field] = list(value) if isinstance(value, list) else value
         if root_of(type_id) == FIRE_ARM:
+            if info[1]['weapon_type'] == MACHINEGUN and type_id in battle_balance.equipment_changes():
+                # Reviewed A/G/blueprint variants share the same small correction.
+                # Keep the item card and actual shot bounds identical.
+                for field in ('h_damage_min', 'h_damage_max'):
+                    info[1][field] = [(value * MACHINEGUN_DAMAGE_PERCENT + 50) // 100
+                                      for value in info[1][field]]
             compatible = info[1]['comp_array']
             info[1]['comp_array'] = list(dict.fromkeys(compatible + [SHOCK_ROUNDS[t]
                 for t in compatible if t in SHOCK_ROUNDS]))
@@ -1401,7 +1420,7 @@ def static_info(type_id):
     if info and root_of(type_id) == HEAL:
         name = catalogue()[type_id][1]
         single = (name.startswith(('Med_Battle_', 'Med_Pacific_'))
-                  and info[1].get('use_count') == 1)
+                  and info[1].get('use_count') == 1 and effects.definition(type_id) is None)
         info[1]['max_count'] = MEDICINE_STACK if single else 1
     if info:
         info[1].update(equipment_level_fields(type_id, info[1]))

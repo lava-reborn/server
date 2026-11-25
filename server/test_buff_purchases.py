@@ -72,6 +72,25 @@ class BuffPurchases(unittest.TestCase):
                     self.assertEqual(self.store.money(self.cid), tuple(expected))
         self.assertGreater(checked, 20)
 
+    def test_two_sequential_single_gold_purchases_keep_both_buffs_separate(self):
+        for type_id in effects.definitions():
+            si = items.params_of(type_id)
+            if items.root_of(type_id) != items.HEAL or not si or not si.get('g_cost'):
+                continue
+            with self.subTest(type_id=type_id):
+                self.assertEqual(si['max_count'], 1)
+                self.assertFalse(items.heapable(type_id))
+                before_money = self.store.money(self.cid)
+                before_ids = {row['uniq'] for row in self.inv.rows()}
+                for expected in (1, 2):
+                    self.assertEqual(self.buy(type_id, 1), [inventory.RES_OK])
+                    rows = [row for row in self.inv.rows() if row['uniq'] not in before_ids]
+                    self.assertEqual(len(rows), expected)
+                    self.assertTrue(all(row['slot'] == inventory.BAG and row['count'] == 1 for row in rows))
+                    self.assertEqual(self.store.money(self.cid)[1], before_money[1] - expected * si['g_cost'])
+                    self.assertEqual(self.s.char.gold, self.store.money(self.cid)[1])
+
+
     def test_second_item_failure_rolls_back_first_item_money_and_ledger(self):
         afro_buff = next(t for t in effects.definitions() if items.params_of(t).get('cost'))
         for type_id, gold in ((3561, True), (afro_buff, False)):

@@ -361,6 +361,7 @@ def weapon(weapon, character, row, ammo):
     import inventory
     import items
     import combat
+    weapon, ammo = combat.prepare_ammunition(weapon, ammo)
     missing = max(0, inventory.item_level(row['type_id']) - character.level) if row else 0
     accuracy = 1 - ORDINARY_LEVEL_ACCURACY * min(inventory.GEAR_LEVEL_ALLOWANCE, missing)
     spread = 1

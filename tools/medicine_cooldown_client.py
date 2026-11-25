@@ -43,7 +43,7 @@ def __bfMedBuy(item, count):
 
 def __bfMedAmount(text):
     item = this.item
-    if item and item.rootID == lol.core.objects.Item.HEAL_ITEM and item.getProp("max_count") > 1:
+    if item and item.rootID == lol.core.objects.Item.HEAL_ITEM and (item.getProp("max_count") > 1 or item.getProp("size") > 1):
         # showAmount uses numChar bitmap glyphs, not a text field. Spaces
         # and Cyrillic letters have no frame and appear as extra zeroes.
         text = String(item.getProp("size") or 1)

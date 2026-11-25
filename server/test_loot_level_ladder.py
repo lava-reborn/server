@@ -125,7 +125,7 @@ class LootLevelLadder(unittest.TestCase):
                                           multiplier=ordinary, gold_multiplier=gold), [(ingot, 1)])
             carried.assert_not_called()
 
-    def test_scanner_changes_only_ordinary_random_drop_rolls(self):
+    def test_scanner_does_not_change_common_roll_probability_or_guaranteed_gold(self):
         fighter = Fighter(14)
         target = self.mob(15, role='boss', fighter=fighter)
         ingot = next(iter(items.GOLD_INGOTS))
@@ -138,9 +138,9 @@ class LootLevelLadder(unittest.TestCase):
                     ordinary = combat.RoomCombat.loot_multiplier(None, target, fighter)
                     gold = combat.RoomCombat.loot_multiplier(None, target, fighter, include_scanner=False)
                     self.assertEqual(gold, 1)
-                    drops = mobs.roll_table(269, FixedRandom(.21), ordinary, gold_multiplier=gold,
+                    drops = mobs.roll_table(269, FixedRandom(.21), ordinary, gold_multiplier=gold * scanner, scanner_multiplier=scanner,
                                             guarantee_ingots=True)
-                    self.assertEqual(drops, [(ingot, 1)] if scanner == 1 else [(ingot, 1), (333, 1)])
+                    self.assertEqual(drops, [(ingot, 1)])
 
     def test_every_native_boss_ingot_kind_and_count_survives_at_any_killer_level(self):
         carriers = {int(type_id) for type_id, rows in mobs._loot_manual().items()

@@ -17,6 +17,8 @@ V2_FIRST_AID = 9
 class TrainingFighter(combat.Fighter):
     def prepare_weapon(self, weapon, ammo, row=None, mode=None):
         rules = self.sess.ground.rules
+        if rules.simulator_formulas or rules.ammo_modifiers:
+            weapon, ammo = combat.prepare_ammunition(weapon, ammo)
         if rules.simulator_formulas:
             if row is None:
                 row = self.sess.inv.in_slot(inventory.PRIMARY)

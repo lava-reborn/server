@@ -296,16 +296,31 @@ def pull(si, mode, ammo):
 # hit_cap bounds the ordinary player's accuracy through that same scatter;
 # the range's original rules and NPC attacks retain the default of 1.
 Weapon = namedtuple("Weapon", "num_shots dmin dmax opt_lo opt_hi max_range "
-                              "piercing cone crit skill spec through at_players sdmin sdmax hit_cap",
-                    defaults=(False, True, 0, 0, 1.0))
+                              "piercing cone crit skill spec through at_players sdmin sdmax hit_cap hp_multiplier sp_multiplier",
+                    defaults=(False, True, 0, 0, 1.0, 1.0, 1.0))
+
+
+def prepare_ammunition(weapon, ammo):
+    """Keep G-ammo damage outside base bounds and the critical chance."""
+    if not items.gold_round(ammo):
+        return weapon, ammo
+    prepared = weapon._replace(hp_multiplier=weapon.hp_multiplier * ammo.get('dam_mod', 1),
+                               sp_multiplier=weapon.sp_multiplier * ammo.get('st_mod', 1))
+    return prepared, dict(ammo, dam_mod=1, st_mod=1)
+
+
+def ammunition_damage(weapon, hp, sp, stamina_left):
+    """Apply bonuses once to resolved damage, with no bonus to absorbed HP."""
+    return (math.floor(hp * weapon.hp_multiplier + 1e-9),
+            min(max(0, stamina_left), math.floor(sp * weapon.sp_multiplier + 1e-9)))
 
 
 def machinegun_burst_limit(shooter, target, weapon):
-    """A full same-tier player survives one MG pull; later pulls stay lethal.
+    """Above 90% HP, leave at least 30% of impact HP after one MG pull.
 
-    Called once per struck body before applying the burst. Only health is
-    bounded: stamina damage, ammunition, AP, accuracy and criticals are paid
-    normally. Impact vitals prevent this from protecting an already hurt foe.
+    Players three or more levels below the shooter are excluded. Once hurt
+    to 90% or less the player may be finished normally. Check once per body;
+    stamina, accuracy, criticals, ammo and AP retain their own calculations.
     """
     if not target.is_player or weapon.num_shots <= 1:
         return None
@@ -317,12 +332,12 @@ def machinegun_burst_limit(shooter, target, weapon):
         params = items.params_of(type_id) if type_id is not None else None
         if not params or params.get('weapon_type') != items.MACHINEGUN:
             return None
-    if shooter.level - target.level not in (0, 1):
+    if shooter.level - target.level >= 3:
         return None
     vital = target.vitals()
-    if vital['hcur'] != vital['hmax'] or vital['scur'] != vital['smax']:
+    if vital['hcur'] * 10 <= vital['hmax'] * 9:
         return None
-    return max(0, vital['hmax'] - 1)
+    return vital['hcur'] * 7 // 10
 
 
 def checked_weapon(original, prepared):
@@ -332,6 +347,10 @@ def checked_weapon(original, prepared):
     if (isinstance(prepared.hit_cap, bool) or not isinstance(prepared.hit_cap, (int, float))
             or not math.isfinite(prepared.hit_cap) or not 0 < prepared.hit_cap <= 1):
         raise ValueError("Invalid prepared weapon field: hit_cap")
+    for field in ('hp_multiplier', 'sp_multiplier'):
+        value = getattr(prepared, field)
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value < 0:
+            raise ValueError("Invalid prepared weapon field: " + field)
     if prepared is original:
         return original
     for field in ('num_shots', 'skill', 'spec', 'through', 'at_players'):
@@ -993,7 +1012,7 @@ class Fighter:
         self.interception = None
         self.dead = False
         self.aim = None         # TimerHandle: a burst waiting for fire_times
-        self.aim_request = None  # Repeated clicks must not postpone this shot.
+        self.aim_started_at = None
         self.strike = None      # TimerHandle: a swing waiting for strike_time
         self.healing = None     # TimerHandle: a heal waiting for heal_time
         self.reloading = None   # TimerHandle: ammunition is applied on completion
@@ -1318,7 +1337,7 @@ class Fighter:
                 had = True
         if had_reload:
             self.sess.inv.cancel_reloads()
-        self.aim_request = None
+        self.aim_started_at = None
         self.action_revision = getattr(self, "action_revision", 0) + 1
         self.hostile_action = False
         if had and notify:
@@ -1359,8 +1378,8 @@ class Fighter:
         self.c_ap()
         return True
 
-    def commit_animation(self, params=None, shots=1):
-        duration = action_animation.duration_ms(self.sess, params, shots)
+    def commit_animation(self, params=None, shots=1, *, aimed_for=0):
+        duration = action_animation.duration_ms(self.sess, params, shots, aimed_for=aimed_for)
         self.recovery_until = now() + duration / 1000.0
         return duration
 
@@ -1727,8 +1746,8 @@ class Fighter:
     def use_fire(self, p):
         """type=16: a shot with the primary firearm, or a strike with a blade
         or the bare fist (obj=x0, ItemActivator.strike)."""
-        # A committed shot's cosmetic sequence must not delay the next aim.
-        # Healing/reloading/swaps keep their own committed-action checks.
+        # A new attack cannot replace an accepted aim/swing or overlap the
+        # committed animation. The native client keeps one deferred input.
         sess = self.sess
         rc = self.rc
         if rc is None or sess.on_map or self.dead:
@@ -1736,6 +1755,11 @@ class Fighter:
             return
         if self.preparing():
             self.ack(inventory.RES_NOT_READY)
+            return
+        if Fighter.refuse_recovery(self):
+            return
+        if self.aim is not None or self.strike is not None:
+            self.ack(inventory.RES_OK)
             return
         if not sess.loc.war:
             # The client refuses this itself in a peaceful location
@@ -1801,10 +1825,6 @@ class Fighter:
         if (row is not None and item_templates.source_type(row['type_id']) == items.POISON_SYRINGE
                 and (target is None or not target.is_player)):
             self.ack(inventory.RES_REFUSED)
-            return
-        if (row is not None and row['root'] == items.FIRE_ARM and self.aim is not None
-                and getattr(self, 'aim_request', None) == (row['uniq'], ttype, tid, row['cur_mode'])):
-            self.ack(inventory.RES_OK)
             return
         if eden_harvest.try_attack(self, row, target, hexcell):
             return
@@ -1877,7 +1897,7 @@ class Fighter:
         palm_cycle = eden_harvest.attack_cycle(rc, target)
         if palm_cycle is not None:
             args += (palm_cycle,)
-        self.aim_request = (row['uniq'], ttype, tid, row['cur_mode'])
+        self.aim_started_at = now()
         Fighter.schedule_action(self, revision, "aim",
             pace.paced(si.get("fire_times", [700])[mode] / 1000.0),
             self.fire_now, *args)
@@ -1889,10 +1909,12 @@ class Fighter:
         num_shots for a burst); what the magazine lost meanwhile leaves its
         share of the pairs empty."""
         self.aim = None
-        self.aim_request = None
+        began = getattr(self, 'aim_started_at', None)
+        self.aim_started_at = None
         rc = self.rc
         if rc is None or self.dead:
             return
+        aimed_for = max(0, now() - began) if began is not None else 0
         if palm_cycle is not None and not eden_harvest.same_cycle(rc, target, palm_cycle):
             Fighter.action_cancelled(self, stop_aim=True)
             self.c_ap()
@@ -1937,7 +1959,8 @@ class Fighter:
                     and not Fighter.allied(self, target))
         pool = target.hp if target is not None and not target.is_player else 0
         others = []
-        recovery_ms = Fighter.commit_animation(self, items.params_of(row['type_id']), weapon.num_shots)
+        recovery_ms = Fighter.commit_animation(self, items.params_of(row['type_id']),
+                                               weapon.num_shots, aimed_for=aimed_for)
         h, s, hits, killed = rc.burst(self, target, hexcell, weapon, live, others,
                                      recovery_ms=recovery_ms)
         if row is not None:
@@ -2080,8 +2103,7 @@ class Fighter:
                 # Commit the finite dose before damage/notifications. A failed
                 # reply or damage handler must not leave a reusable last dose.
                 sess.inv.wear(row, 1)
-        # Melee keeps its strike timing; only firearm release locks actions.
-        recovery_ms = 0
+        recovery_ms = Fighter.commit_animation(self, items.params_of(row['type_id']) if uniq is not None else None)
         aim_cell = target.cell if target is not None else hexcell
         killed = False
         reach = (target is not None and target.present(rc)
@@ -3557,6 +3579,7 @@ class RoomCombat:
                     dmg = max(1, int(dmg * BUSH_DAMAGE_SHARE)) if dmg > 0 else 0
                     st_dmg = max(1, int(st_dmg * BUSH_DAMAGE_SHARE)) if st_dmg > 0 else 0
                 h, s = self.bullet_damage(shooter, body, weapon, dmg, st_dmg, crit, rec[3])
+                h, s = ammunition_damage(weapon, h, s, rec[3])
                 if body not in machinegun_limits:
                     machinegun_limits[body] = machinegun_burst_limit(shooter, body, weapon)
                 limit = machinegun_limits[body]
@@ -3633,6 +3656,8 @@ class RoomCombat:
         mob.quest_wants = self.quest_wants(mob, killer)
         mob.loot_multiplier = RoomCombat.loot_multiplier(self, mob, killer)
         mob.gold_loot_multiplier = RoomCombat.loot_multiplier(self, mob, killer, include_scanner=False)
+        mob.scanner_multiplier = (effects.multiplier(killer.sess, 'mob_drop')
+                                  if killer is not None and killer.is_player else 1)
         RoomCombat.materialize_loot(self, mob)
         # A warehouse's boss (holdings.py): who brought it down and for which
         # clan, as they stand now; the holding is settled when the corpse
@@ -3945,6 +3970,7 @@ class RoomCombat:
                               killer_level=getattr(mob, "blueprint_killer_level", None),
                               multiplier=getattr(mob, "loot_multiplier", 1),
                               gold_multiplier=getattr(mob, "gold_loot_multiplier", 1),
+                              scanner_multiplier=getattr(mob, "scanner_multiplier", 1),
                               box_player_kill=getattr(mob, 'box_player_kill', False),
                               box_weapon_type=getattr(mob, 'box_weapon_type', None))
         extra = events.loot(self.room.loc.id, mob.type_id, RNG) + production.yield_of(mob.type_id)
@@ -3964,11 +3990,15 @@ class RoomCombat:
                 # ammunition box its rounds -- not the cigarette that keeps a
                 # creature's bag from being empty: nothing found, no bag.
                 continue
-            fields = inventory.new_fields(type_id, count)
-            if not thing and not (type_id in mob.quest_wants and mobs.personal_quest_item(type_id)):
-                fields.update(mob_equipment_loot.worn_fields(type_id, RNG))
-            root = fields.pop("root")
-            rows.append(self.store.create_item(LOOT_OWNER, type_id, root, **fields))
+            limit = (items.params_of(type_id) or {}).get('max_count', 1) if items.heapable(type_id) else 1
+            while count > 0:
+                amount = min(count, limit)
+                fields = inventory.new_fields(type_id, amount)
+                if not thing and not (type_id in mob.quest_wants and mobs.personal_quest_item(type_id)):
+                    fields.update(mob_equipment_loot.worn_fields(type_id, RNG))
+                root = fields.pop("root")
+                rows.append(self.store.create_item(LOOT_OWNER, type_id, root, **fields))
+                count -= amount
         return rows
 
     def close_bag(self, cell):

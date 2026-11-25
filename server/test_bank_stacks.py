@@ -1,5 +1,6 @@
 """Short real-database bank transactions: quantities, state, rollback and weight."""
 import unittest
+import uuid
 import logging
 logging.disable(logging.CRITICAL)
 from types import SimpleNamespace as NS
@@ -17,8 +18,8 @@ class BankStacks(unittest.TestCase):
     def setUp(self):
         self.store = accounts.Store(':memory:')
         self.addCleanup(self.store.close)
-        aid, _ = self.store.register('bank-stacks', 'test-only')
-        self.cid, _ = self.store.create_character(aid, 'BankStacks', 0, '1')
+        aid, _ = self.store.register('bank-' + uuid.uuid4().hex[:12], 'test-only')
+        self.cid, _ = self.store.create_character(aid, 'Bank' + uuid.uuid4().hex[:10], 0, '1')
         self.frames = []
         self.sess = NS(char_id=self.cid, send=lambda c, **p: self.frames.append((c,p)),
                        say=lambda text: None, character=lambda: NS(max_weight=lambda: 1_000_000))
@@ -42,6 +43,94 @@ class BankStacks(unittest.TestCase):
         self.assertEqual([(r['slot'],r['count']) for r in rows], [(inventory.BANK,150)])
         self.move(rows[0], 150, False)
         self.assertEqual(sorted(r['count'] for r in self.store.items_of(self.cid)), [50,100])
+
+    def test_every_timed_buff_consolidates_in_bank_and_returns_as_individual_bag_items(self):
+        import effects
+        for type_id in effects.definitions():
+            if items.root_of(type_id) != items.HEAL:
+                continue
+            with self.subTest(type_id=type_id):
+                self.assertFalse(items.heapable(type_id))
+                first = self.make(1, type_id=type_id)
+                second = self.make(1, type_id=type_id)
+                before_money = self.store.money(self.cid)
+                self.move(first, 1)
+                self.move(second, 1)
+                bank = [row for row in self.store.items_of(self.cid) if row['type_id'] == type_id]
+                self.assertEqual([(row['slot'], row['count']) for row in bank], [(inventory.BANK, 2)])
+                self.assertEqual(inventory.weight_of(bank[0]), items.params_of(type_id)['weight'] * 2)
+                self.move(bank[0], 1, False)
+                bank = next(row for row in self.store.items_of(self.cid) if row['type_id'] == type_id and row['slot'] == inventory.BANK)
+                self.move(bank, 1, False)
+                rows = [row for row in self.store.items_of(self.cid) if row['type_id'] == type_id]
+                self.assertEqual([(row['slot'], row['count']) for row in rows], [(inventory.BAG, 1)] * 2)
+                self.assertEqual({row['use_count'] for row in rows}, {first['use_count']})
+                self.assertEqual(self.store.money(self.cid), before_money)
+                for row in rows:
+                    self.store.delete_item(row['uniq'])
+
+    def test_buff_withdrawal_rollback_preserves_doses_character_and_request_retry(self):
+        row = self.make(4, inventory.BANK, 3561)
+        before = self.store.items_of(self.cid)
+        character = self.store.character(self.cid)
+        create = self.store.create_item
+        calls = []
+        def fail_second(*args, **kwargs):
+            calls.append(1)
+            if len(calls) == 2:
+                raise RuntimeError('second individual buff write failed')
+            return create(*args, **kwargs)
+        request = dict(obj=inventory.oid_of(row), bank_count=4, bank_expected=4, bank_request=1)
+        with patch.object(self.store, 'create_item', side_effect=fail_second), patch.object(inventory.log, 'exception'):
+            self.inv.bank_get(request)
+        self.assertEqual(self.store.items_of(self.cid), before)
+        self.assertEqual(self.store.character(self.cid), character)
+        self.assertEqual(self.frames, [('cmdAck', dict(res=inventory.RES_REFUSED))])
+        # A rolled-back request has no committed token: the same request may succeed once.
+        self.inv.bank_get(request)
+        self.inv.bank_get(request)
+        self.assertEqual([(r['slot'], r['count']) for r in self.store.items_of(self.cid)], [(inventory.BAG, 1)] * 4)
+        self.assertEqual(self.store.character(self.cid), character)
+
+    def test_legacy_withdrawal_cannot_put_a_bank_buff_heap_in_the_bag(self):
+        row = self.make(3, inventory.BANK, 3561)
+        self.inv.bank_legacy_transfer(dict(obj=inventory.oid_of(row)), False)
+        self.assertEqual(self.store.item(row['uniq']), row)
+        self.assertEqual(self.frames[-1], ('cmdAck', dict(res=inventory.RES_REFUSED)))
+
+
+    def test_buff_payment_and_instances_commit_or_roll_back_together_on_both_databases(self):
+        type_id = 3561
+        self.store.set_money(self.cid, 12345, 1_000_000)
+        ch = NS(afro=12345, gold=1_000_000, max_weight=lambda: 1_000_000)
+        self.sess.character = lambda: ch
+        self.sess.send_player_info = lambda: None
+        self.inv.trade = inventory.TradeSession(1, 1188, 36)
+        with patch.object(items, 'stock_for', return_value=[type_id]), \
+                patch.object(self.inv, 'current_trade_rates', return_value=dict(pmod=1, smod=.7, rmod=1)):
+            for _ in range(2):
+                self.inv.buy(dict(obj='0', param=1), inventory.UPD_BUY_GOLD)
+                self.assertEqual([p['res'] for c, p in self.frames if c == 'cmdAck'][-1], inventory.RES_OK)
+            rows = self.store.items_of(self.cid)
+            self.assertEqual([(row['slot'], row['count']) for row in rows], [(inventory.BAG, 1)] * 2)
+            self.assertEqual(self.store.money(self.cid), (12345, 1_000_000-2*items.params_of(type_id)['g_cost']))
+            before = self.store.money(self.cid)
+            create = self.store.create_item
+            writes = 0
+            def fail_second(*args, **kwargs):
+                nonlocal writes
+                writes += 1
+                if writes == 2:
+                    raise RuntimeError('second purchased buff failed')
+                return create(*args, **kwargs)
+            self.frames.clear()
+            with patch.object(self.store, 'create_item', side_effect=fail_second), \
+                    patch.object(inventory.log, 'exception'):
+                self.inv.buy(dict(obj='0', param=2), inventory.UPD_BUY_GOLD)
+            self.assertEqual(self.frames, [('cmdAck', dict(res=inventory.RES_REFUSED))])
+            self.assertEqual(self.store.money(self.cid), before)
+            self.assertEqual(self.store.items_of(self.cid), rows)
+            self.assertEqual((ch.afro, ch.gold), before)
 
     def test_partial_transfer_preserves_remaining_source_and_all_state(self):
         row = self.make(70, use_count=5)

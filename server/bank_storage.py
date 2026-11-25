@@ -1,4 +1,4 @@
-"""Atomic bank transfers and lossless consolidation of heapable items only."""
+"""Atomic bank transfers; temporary buffs form heaps only inside the bank."""
 from collections import namedtuple
 
 import items
@@ -17,7 +17,11 @@ class Refused(ValueError):
 
 def key(row):
     if not items.heapable(row['type_id']):
-        return None
+        if row['root'] != items.HEAL:
+            return None
+        import effects  # late: effects imports inventory's catalogue
+        if effects.definition(row['type_id']) is None:
+            return None
     return (row['type_id'], row['root']) + tuple(row[f] for f in STATE)
 
 
@@ -39,7 +43,7 @@ def _locked_rows(store, char_id, slot=None):
 
 
 def consolidate(store, char_id, bank_slot):
-    """Called before the initial bank list; never modifies worn/charged items."""
+    """Consolidate bank rows only; different charge/state records stay separate."""
     with storage.atomic(store.db):
         if not store.lock_quest_character(char_id):
             raise Refused('Персонаж не найден')

@@ -65,7 +65,7 @@ class ActionRecoveryClient(unittest.TestCase):
             figure['currentFrameNumber']=frame
             self.call('__bfDrainInput',None)
             self.assertNotIn('move',self.executed)
-        figure['__bfNextSequenceOrig']=lambda:figure.update(behavior='fire_out')
+        figure['__bfNextSequenceOrig']=lambda:figure.update(behavior='stand')
         self.call('__bfNextSequence',figure)
         self.assertEqual(self.executed.count('move'),1)
 
@@ -193,7 +193,7 @@ class ActionRecoveryClient(unittest.TestCase):
         self.assertEqual(self.executed,['stop-auto','swap'])
         self.assertEqual(self.timers,[])
 
-    def test_weapon_switch_waits_without_replaying_the_already_sent_next_shot(self):
+    def test_weapon_switch_replaces_only_the_queued_next_shot(self):
         self.global_['__bfRecoveryUntil']=500
         fire=dict(__bfRequestFireOrig=lambda a,b:self.executed.append('fire'))
         swap=dict(__bfRequestSwapOrig=lambda:self.executed.append('swap'))
@@ -202,10 +202,10 @@ class ActionRecoveryClient(unittest.TestCase):
         self.assertNotIn('swap',self.executed)
         self.now=500
         self.call('__bfDrainInput',None)
-        self.assertEqual(self.executed.count('fire'), 1)
+        self.assertEqual(self.executed.count('fire'), 0)
         self.assertEqual(self.executed.count('swap'),1)
 
-    def test_deferred_medicine_runs_on_final_firing_frame_without_waiting_for_fire_out(self):
+    def test_deferred_medicine_runs_after_the_complete_attack_sequence(self):
         scene,figure=self.fx.scene()
         figure.update(id=0,behavior='fire',animationEnabled=True,isActive=True,
                       onEnterFrame=True,__bfScene=scene)
@@ -222,10 +222,10 @@ class ActionRecoveryClient(unittest.TestCase):
         self.now=220
         self.call('__bfDrainInput',None)
         self.assertNotIn('last',self.executed)
-        # Actual firing is slower than the nominal server floor. Only its
-        # final frame releases the command; lowering does not add a wait.
+        # Actual rendering can be slower than the server floor. Finish both
+        # firing and lowering before releasing a queued action.
         self.now=240
-        figure['__bfNextSequenceOrig']=lambda:figure.update(behavior='fire_out')
+        figure['__bfNextSequenceOrig']=lambda:figure.update(behavior='stand')
         self.call('__bfNextSequence',figure)
         self.call('__bfDrainInput',None)
         self.assertEqual(self.executed.count('last'),1)
@@ -301,11 +301,11 @@ class ActionRecoveryClient(unittest.TestCase):
         self.assertEqual(self.executed[-1],(11,50,True))
         self.assertFalse(self.timers)
 
-    def test_auto_fire_does_not_wait_for_previous_cosmetic_sequence(self):
+    def test_auto_fire_waits_for_the_complete_previous_sequence(self):
         activator=dict(__bfRequestFireOrig=lambda a,b:self.executed.append('fire'))
         connection=dict(__bfRecoveryNotifyOrig=lambda cmd:self.call('__bfRequest1',activator,1,42))
         self.call('__bfRecoveryNotify',connection,dict(messID='faShot',params=dict(id=0,status=0,recovery_ms=440)))
-        self.assertEqual(self.executed, ['fire'])
+        self.assertEqual(self.executed, [])
         self.assertEqual(self.global_['__bfRecoveryUntil'],540)
         self.now=540
         self.call('__bfDrainInput',None)
@@ -322,8 +322,29 @@ class ActionRecoveryClient(unittest.TestCase):
         self.assertIsNone(self.global_.get('__bfPendingInput'))
         activator['coolDownBlock'] = False
         self.call('__bfRequest1', activator, 1, 42)
+        self.assertFalse(self.executed)
+        self.assertIsNotNone(self.global_['__bfPendingInput'])
+        self.now = 500
+        self.call('__bfDrainInput', None)
         self.assertEqual(self.executed, ['fire'])
-        self.assertFalse(self.timers)
+
+    def test_space_spam_waits_through_fire_out_and_sends_one_new_aim(self):
+        scene, figure = self.stalled_shot()
+        owner = dict(__bfRequestFireOrig=lambda *args: self.executed.append(args))
+        for target in range(100):
+            self.call('__bfRequest1', owner, 1, target)
+        self.assertEqual(len(self.timers), 1)
+        self.assertEqual(figure['__bfBursts'][0]['got'], 1)
+        self.now = 250
+        figure['behavior'] = 'fire_out'
+        self.call('__bfDrainInput', None)
+        self.assertFalse(self.executed)
+        figure['__bfNextSequenceOrig'] = lambda: figure.update(behavior='stand')
+        self.call('__bfNextSequence', figure)
+        self.call('__bfDrainInput', None)
+        self.assertEqual(self.executed, [(1, 99)])
+        self.assertEqual(self.fx.reported, [1])
+        self.assertIsNone(self.global_['__bfInputTimer'])
 
     def test_enemy_recovery_does_not_block_own_commands(self):
         connection=dict(__bfRecoveryNotifyOrig=lambda cmd:None)
@@ -385,14 +406,16 @@ class ActionRecoveryClient(unittest.TestCase):
         self.assertFalse(figure.get('__bfBursts'))
         self.assertFalse(self.call('__bfWaiting',None))
 
-    def test_fire_out_stand_and_disabled_rendering_do_not_hold_finished_attack(self):
+    def test_firing_and_lowering_hold_the_next_attack_but_stand_and_disabled_rendering_do_not(self):
         _,figure=self.fx.scene()
         figure.update(animationEnabled=True,isActive=True,onEnterFrame=True,
                       behavior='fire',__bfBursts=Arr([dict(got=1)]))
         self.global_['__bfOwnerFigure']=figure
         self.global_['__bfRecoveryUntil']=100
         self.assertTrue(self.call('__bfWaiting',None))
-        for behavior in ('fire_out','stand','run'):
+        figure['behavior'] = 'fire_out'
+        self.assertTrue(self.call('__bfWaiting', None))
+        for behavior in ('stand','run'):
             figure['behavior']=behavior
             self.assertFalse(self.call('__bfWaiting',None))
         figure['behavior']='fire'
@@ -417,7 +440,7 @@ class ActionRecoveryClient(unittest.TestCase):
                 self.now=200
                 self.call('__bfDrainInput',None)
                 self.assertNotIn(label,self.executed)
-                figure['__bfNextSequenceOrig']=lambda:figure.update(behavior='fire_out')
+                figure['__bfNextSequenceOrig']=lambda:figure.update(behavior='stand')
                 self.call('__bfNextSequence',figure)
                 self.call('__bfDrainInput',None)
                 self.assertEqual(self.executed.count(label),1)
