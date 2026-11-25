@@ -96,8 +96,9 @@ class ActionRecovery(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.case.store.item(self.gun['uniq'])['ammo_count'],7)
         self.assertIsNotNone(self.case.store.item(medicine['uniq']))
         with self.case.at(ends+1e-6):
-            self.a.move_in_location(dict(path=[0,1]))
-        self.assertIsNotNone(self.a.walk)
+            here = self.a.live_cell()
+            self.a.move_in_location(dict(path=[here, here+1]))
+            self.assertIsNotNone(self.a.walk)
 
     async def test_next_aim_waits_for_animation_then_starts_its_full_aim_time(self):
         _, _, when = self.complete_shot()

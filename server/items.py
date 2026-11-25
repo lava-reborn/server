@@ -1020,7 +1020,8 @@ GOLD_AMMO_ROUND = 1
 def scanner_quantity_item(type_id):
     """Ordinary afro-only loot; no equipment, quest goods or gold buyback."""
     import mortimer
-    if root_of(type_id) in (FIRE_ARM, WEAR, COLD_ARM) or type_id in mortimer.VALUABLES:
+    if (root_of(type_id) in (FIRE_ARM, WEAR, COLD_ARM)
+            or type_id in mortimer.VALUABLES or type_id == mortimer.SAND):
         return False
     si = params_of(type_id) or {}
     return bool(si.get('cost') and not (si.get('g_cost') or si.get('quest')))

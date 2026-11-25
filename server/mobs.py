@@ -27,6 +27,7 @@ from functools import lru_cache
 
 import camp_loot
 import mob_equipment_loot
+import mortimer
 import inventory
 import items
 import loot_rules
@@ -670,9 +671,14 @@ def roll_table(type_id, rng, multiplier=1, *, gold_multiplier=1, guarantee_ingot
     for t, chance, _valuable in loot_table(type_id):
         if chance >= SURE or (guarantee_ingots and t in items.GOLD_INGOTS):
             out.append((t, count_of(type_id, t)))
-        elif rng.random() < min(1, chance * (gold_multiplier if t in items.GOLD_INGOTS else
-                multiplier / scanner_multiplier if items.scanner_quantity_item(t) else multiplier)) \
-                and (t in independent or kept < MAX_DROPS):
+            continue
+        if t in items.GOLD_INGOTS:
+            factor = gold_multiplier
+        elif t in mortimer.VALUABLES or t == mortimer.SAND or items.scanner_quantity_item(t):
+            factor = multiplier / scanner_multiplier
+        else:
+            factor = multiplier
+        if rng.random() < min(1, chance * factor) and (t in independent or kept < MAX_DROPS):
             out.append((t, count_of(type_id, t)))
             if t not in independent:
                 kept += 1
@@ -838,11 +844,11 @@ def loot_for(st, rng, wanted=(), *, loc_id=None, ambush_camp=None,
     import bosses                  # late: keep module initialization separate
     blueprint = bosses.blueprint_for(loc_id, st.type_id)
     # Scanner raises the quantity of afro-only common loot, and the chance
-    # of gold/equipment. Quests, objects, events and harvest stay separate.
+    # of equipment. Gold valuables, quests, objects, events and harvest stay separate.
     scanner = min(3, max(1, scanner_multiplier)) if st.role != 'object' else 1
     multiplier = min(camp_loot.MAX_MULTIPLIER, multiplier) if st.role != 'object' else 1
     ordinary = carried(st, rng, multiplier / scanner) + roll_table(st.type_id, rng, multiplier,
-                         gold_multiplier=gold_multiplier * scanner, scanner_multiplier=scanner,
+                         gold_multiplier=gold_multiplier, scanner_multiplier=scanner,
                          guarantee_ingots=st.role == 'boss')
     ordinary = [(t, math.floor(n * scanner) if items.scanner_quantity_item(t) else n)
                 for t, n in ordinary]

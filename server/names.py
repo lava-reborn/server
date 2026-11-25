@@ -220,8 +220,8 @@ for _type_id, (_attribute, _amount) in items.HAND_VALENTINES.items():
 for _type in (3789, 3826):
     ALL[items.DESC_ID_OFFSET + _type] = (
         'Увеличивает количество обычного лута за афро на 200%. '
-        'Для золотых ценностей, оружия, частей сетов и подсумков '
-        'повышает шанс выпадения на 200%. Количество снаряжения не меняется.')
+        'Для оружия, частей сетов и подсумков повышает шанс выпадения на 200%. '
+        'Количество снаряжения не меняется. На дроп золотых ценностей не влияет.')
 
 # Battle medicine states its AP cost inside the original HTML description.
 # Use the same final value as ss_si_heal / actual use, without rewriting the

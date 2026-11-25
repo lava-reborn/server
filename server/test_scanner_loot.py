@@ -10,6 +10,7 @@ import combat
 import inventory
 import items
 import mob_equipment_loot
+import mortimer
 import mobs
 import names
 from testkit import run_cases
@@ -31,16 +32,16 @@ class FixedRandom:
 
 class ScannerLoot(unittest.TestCase):
     def test_only_common_afro_loot_can_have_quantity_increased(self):
-        for type_id in (41, 333, 334, 2258, 6092):
+        for type_id in (41, 333, 334, 6092):
             self.assertTrue(items.scanner_quantity_item(type_id), type_id)
-        for type_id in (6950, 6951, 6952, 6953, 6959, 3577, 26177, 1069, 3770, 3789, 3826,
+        for type_id in (2258, 6950, 6951, 6952, 6953, 6959, 3577, 26177, 1069, 3770, 3789, 3826,
                         *items.GOLD_INGOTS):
             self.assertFalse(items.scanner_quantity_item(type_id), type_id)
         for type_id, (root, _name) in items.catalogue().items():
             if root in (items.FIRE_ARM, items.WEAR, items.COLD_ARM):
                 self.assertFalse(items.scanner_quantity_item(type_id), type_id)
 
-    def test_common_quantity_gold_probability_and_quest_count_are_separate(self):
+    def test_common_quantity_gold_and_quest_count_are_separate(self):
         stats = NS(role='mob', type_id=82, level=11)
         ingot = next(iter(items.GOLD_INGOTS))
         rows = [(333, .1, False), (6950, .1, True), (ingot, .1, True), (334, mobs.SURE, False)]
@@ -58,12 +59,33 @@ class ScannerLoot(unittest.TestCase):
             self.assertEqual(loot(1, .05), {41: 2, 333: 2, 334: 2, 6950: 2, ingot: 2, 3770: 1})
             self.assertEqual(loot(3, .05), {41: 6, 333: 6, 334: 6, 6950: 2, ingot: 2, 3770: 1})
             self.assertEqual(loot(1, .15), {41: 2, 334: 2, 3770: 1})
-            self.assertEqual(loot(3, .15), {41: 6, 334: 6, 6950: 2, ingot: 2, 3770: 1})
+            self.assertEqual(loot(3, .15), {41: 6, 334: 6, 3770: 1})
             self.assertEqual(loot(3, .31), {41: 6, 334: 6, 3770: 1})
             stats.role = 'object'
             self.assertEqual(loot(3, .05), loot(1, .05))
             stats.role = 'boss'
             self.assertEqual(loot(3, .99)[ingot], 2)
+
+    def test_scanner_never_changes_any_gold_valuable_or_ingot_roll(self):
+        stats = NS(role='mob', type_id=82, level=11)
+        types = mortimer.VALUABLES | items.GOLD_INGOTS.keys() | {mortimer.SAND}
+        rows = [(type_id, .1, True) for type_id in sorted(types)]
+        with patch.object(mobs, 'carried', return_value=[]), \
+                patch.object(mobs, 'loot_table', return_value=rows), \
+                patch.object(mobs, 'independent_loot', return_value=types), \
+                patch.object(mobs, 'one_of_groups', return_value=[]), \
+                patch.object(mobs, 'quest_roll', return_value=[]), \
+                patch.object(bosses, 'blueprint_for', return_value=None), \
+                patch.object(mob_equipment_loot, 'roll', return_value=[]):
+            for gap_factor in (.75, 1, 1.3):
+                for scanner in (1, 3):
+                    for draw, expected in ((.1 * gap_factor - 1e-9, types),
+                                           (.1 * gap_factor + 1e-9, set())):
+                        with self.subTest(gap_factor=gap_factor, scanner=scanner, draw=draw):
+                            drops = mobs.loot_for(stats, FixedRandom(draw),
+                                multiplier=gap_factor * scanner, gold_multiplier=gap_factor,
+                                scanner_multiplier=scanner)
+                            self.assertEqual(dict(drops), dict.fromkeys(expected, 1))
 
     def test_each_equipment_category_gets_triple_probability_but_only_one_item(self):
         stats = mobs.stats(291)
@@ -97,7 +119,7 @@ class ScannerLoot(unittest.TestCase):
         for type_id in (3789, 3826):
             text = names.ALL[items.DESC_ID_OFFSET + type_id]
             for fragment in ('количество обычного лута за афро на 200%', 'шанс выпадения на 200%',
-                             'Количество снаряжения не меняется'):
+                             'Количество снаряжения не меняется', 'На дроп золотых ценностей не влияет'):
                 self.assertIn(fragment, text)
 
 
