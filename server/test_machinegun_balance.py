@@ -63,18 +63,26 @@ class MachinegunBalance(unittest.TestCase):
                            damage / max(seconds + reload, si['fire_costs'][mode] / (p.AP_REGEN / .6))))
         return tuple(max(score[index] for score in scores) for index in (0, 1))
 
-    def test_rpd_and_aug_accuracy_gains_stay_within_the_reviewed_limits(self):
-        # RPD was reduced slightly again; AUG keeps its approved correction.
-        # There is no requirement for either family to beat a nearby SMG.
-        for type_id, before, proposal, low, high in (
-                (24989, 115.5754, 151.2818, .32, .38),
-                (24990, 138.1986, 180.8674, .32, .38),
-                (25006, 92.0640, 155.4104, .65, .75),
-                (25007, 110.2080, 186.4257, .65, .75)):
-            with self.subTest(type_id=type_id):
-                gain = self.scores(type_id)[0] - before
-                self.assertGreaterEqual(gain, (proposal - before) * low)
-                self.assertLessEqual(gain, (proposal - before) * high)
+    def test_reviewed_dps_ladder_stays_below_the_unchanged_pkm17_anchor(self):
+        # Same complete attack/reload cycle as the agreed reference. Each
+        # mode uses its own optimal band; distance identities are checked below.
+        for variants, targets in (((24989, 25006, 25022), (150.7, 154.2, 183.5)),
+                                  ((24990, 25007, 7051, 25023, 7052),
+                                   (180, 185, 189, 221.6, 232.7))):
+            scores = [self.scores(type_id)[0] for type_id in variants]
+            self.assertEqual(scores, sorted(scores))
+            for type_id, score, target in zip(variants, scores, targets):
+                with self.subTest(type_id=type_id):
+                    self.assertAlmostEqual(score, target, delta=.5)
+        self.assertAlmostEqual(self.scores(7052, distance=7)[0], 232.7, delta=.5)
+
+    def test_bizon_comparison_preserves_distance_roles_instead_of_forcing_a_class_winner(self):
+        for bizon, rpd, aug in ((25540, 24989, 25006), (26177, 24990, 25007)):
+            with self.subTest(bizon=bizon):
+                self.assertGreater(self.scores(bizon, distance=4)[0], self.scores(aug, distance=4)[0])
+                self.assertGreater(self.scores(rpd, distance=12)[0], self.scores(bizon, distance=12)[0])
+                self.assertGreater(self.scores(aug, distance=18)[0], self.scores(rpd, distance=18)[0])
+                self.assertEqual(self.scores(bizon, distance=18)[0], 0)
 
     def test_pkm_tiers_follow_the_matching_gold_reference_by_five_percent(self):
         # The agreed reference uses the best mode in its optimal band,
@@ -106,7 +114,7 @@ class MachinegunBalance(unittest.TestCase):
             # These range blueprints deliberately retain an older private
             # profile; the ordinary game already had a newer spread table.
             original = prior_ordinary.get(type_id, before_release(type_id, dict(si))['target_size'])
-            self.assertEqual(si['target_size'], [round(x*f, 5) for x, f in zip(original, (.84, .87, .935))])
+            self.assertEqual(si['target_size'], [round(x*f, 5) for x, f in zip(original, (.7, .69, .935))])
             count += 1
         self.assertEqual(count, 24)
 

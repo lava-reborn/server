@@ -240,5 +240,167 @@ class BankStacks(unittest.TestCase):
         self.assertEqual((two_old,one_new),(34,33))
 
 
+    def test_scanner_and_intux_variants_remain_distinct_after_reopen_and_round_trip(self):
+        import effects
+        types = effects.SCANNERS + effects.EXPERIENCE_UP
+        for type_id in types:
+            self.make(2, inventory.BANK, type_id)
+            self.move(self.make(1, type_id=type_id), 1)
+        # Reopening is idempotent, including the serials advertised to the client.
+        before = self.store.items_of(self.cid)
+        for _ in range(3):
+            bank_storage.consolidate(self.store, self.cid, inventory.BANK)
+            self.assertEqual(self.store.items_of(self.cid), before)
+        self.assertEqual({r['type_id']: r['count'] for r in before}, dict.fromkeys(types, 3))
+        for row in before:
+            self.move(row, 3, False)
+        rows = self.store.items_of(self.cid)
+        for type_id in types:
+            group = [r for r in rows if r['type_id'] == type_id]
+            self.assertEqual([(r['slot'], r['count']) for r in group], [(inventory.BAG, 1)] * 3)
+        self.assertEqual(len({r['uniq'] for r in rows}), len(types) * 3)
+
+    def test_bank_buffs_have_no_catalogue_stack_cap_and_preserve_overflow(self):
+        import effects
+        self.inv.bank_max = lambda: 10**18
+        for type_id in effects.SCANNERS + effects.EXPERIENCE_UP:
+            with self.subTest(type_id=type_id):
+                first = self.make(bank_storage.MAX_COUNT - 1, inventory.BANK, type_id)
+                for _ in range(3):
+                    self.move(self.make(1, type_id=type_id), 1)
+                bank_storage.consolidate(self.store, self.cid, inventory.BANK)
+                rows = [r for r in self.store.items_of(self.cid) if r['type_id'] == type_id]
+                self.assertEqual([r['count'] for r in rows], [bank_storage.MAX_COUNT, 2])
+                self.assertEqual(rows[0]['uniq'], first['uniq'])
+                self.assertEqual(sum(r['count'] for r in rows), bank_storage.MAX_COUNT + 2)
+
+    def test_no_buff_state_field_is_lost_or_merged_with_a_different_state(self):
+        original = self.make(1, inventory.BANK, 3561)
+        for field in bank_storage.STATE:
+            row = self.make(1, type_id=3561)
+            self.store.update_item(row['uniq'], **{field: row[field] + 1})
+            row = self.store.item(row['uniq'])
+            self.move(row, 1)
+            self.assertEqual(self.store.item(row['uniq']), dict(row, slot=inventory.BANK))
+        bank_storage.consolidate(self.store, self.cid, inventory.BANK)
+        self.assertEqual(self.store.item(original['uniq']), original)
+        self.assertEqual(len(self.store.items_of(self.cid)), len(bank_storage.STATE) + 1)
+
+    def test_buying_every_buff_leaves_bank_untouched_and_charges_exact_delivered_quantity(self):
+        import effects
+        self.sess.send_player_info = lambda: None
+        self.inv.trade = inventory.TradeSession(1, 1188, 36)
+        ch = NS(afro=0, gold=0, max_weight=lambda: 1_000_000)
+        self.sess.character = lambda: ch
+        for type_id in effects.definitions():
+            si = items.params_of(type_id)
+            if items.root_of(type_id) != items.HEAL or not si:
+                continue
+            for gold in (False, True):
+                if not si.get('g_cost' if gold else 'cost'):
+                    continue
+                with self.subTest(type_id=type_id, gold=gold):
+                    self.store.set_money(self.cid, 100_000_000, 1_000_000)
+                    before_money = self.store.money(self.cid)
+                    ch.afro, ch.gold = before_money
+                    bank = self.make(5, inventory.BANK, type_id)
+                    before_ids = {r['uniq'] for r in self.store.items_of(self.cid)}
+                    with patch.object(items, 'stock_for', return_value=[type_id]), \
+                            patch.object(self.inv, 'current_trade_rates', return_value=dict(pmod=.9, smod=.7, rmod=1)):
+                        self.frames.clear()
+                        self.inv.buy(dict(obj='0', param=2), inventory.UPD_BUY_GOLD if gold else inventory.UPD_BUY)
+                    self.assertEqual([p['res'] for cmd, p in self.frames if cmd == 'cmdAck'], [inventory.RES_OK])
+                    bought = [r for r in self.store.items_of(self.cid) if r['uniq'] not in before_ids]
+                    self.assertEqual([(r['type_id'], r['slot'], r['count']) for r in bought],
+                                     [(type_id, inventory.BAG, 1)] * 2)
+                    self.assertEqual(self.store.item(bank['uniq']), bank)
+                    expected_money = list(before_money)
+                    expected_money[int(gold)] -= inventory.buy_price(si, items.HEAL, 2, gold, .9)
+                    self.assertEqual(self.store.money(self.cid), tuple(expected_money))
+                    self.assertEqual((ch.afro, ch.gold), tuple(expected_money))
+                    for row in bought:
+                        self.move(row, 1)
+                    bank = self.store.item(bank['uniq'])
+                    self.assertEqual(bank['count'], 7)
+                    self.move(bank, 2, False)
+                    rows = [r for r in self.store.items_of(self.cid) if r['type_id'] == type_id]
+                    self.assertEqual(sorted((r['slot'], r['count']) for r in rows),
+                                     sorted([(inventory.BANK, 5)] + [(inventory.BAG, 1)] * 2))
+                    self.assertEqual(self.store.money(self.cid), tuple(expected_money))
+                    for row in rows:
+                        self.store.delete_item(row['uniq'])
+
+    def test_forged_wrong_slot_locked_and_stale_buff_transfers_change_nothing(self):
+        row = self.make(5, inventory.BANK, 3561)
+        aid, _ = self.store.register('other-' + uuid.uuid4().hex[:12], 'test-only')
+        other, _ = self.store.create_character(aid, 'Other' + uuid.uuid4().hex[:10], 0, '1')
+        foreign = self.store.create_item(other, 3561, items.HEAL, slot=inventory.BANK, count=5)
+        forged = inventory.oid_of(dict(row, type_id=3789))
+        before = self.store.items_of(self.cid)
+        for obj, n, expected, putting in ((inventory.oid_of(foreign), 1, 5, False),
+                (forged, 1, 5, False), (inventory.oid_of(row), 1, 5, True),
+                (inventory.oid_of(row), 1, 4, False), (inventory.oid_of(row), 0, 5, False),
+                (inventory.oid_of(row), 6, 5, False)):
+            with self.subTest(obj=obj, n=n, expected=expected, putting=putting):
+                with self.assertRaises(bank_storage.Refused):
+                    bank_storage.transfer(self.inv, obj, n, expected, putting)
+                self.assertEqual(self.store.items_of(self.cid), before)
+        self.inv.locked.add(row['uniq'])
+        with self.assertRaises(bank_storage.Refused):
+            self.move(row, 1, False)
+        self.assertEqual(self.store.items_of(self.cid), before)
+        self.assertEqual(self.store.item(foreign['uniq']), foreign)
+
+    def test_same_token_cannot_be_reused_for_another_buff_or_direction(self):
+        first = self.make(1, type_id=3561)
+        second = self.make(1, type_id=3789)
+        request = dict(obj=inventory.oid_of(first), bank_count=1, bank_expected=1, bank_request=1)
+        self.inv.bank_put(request)
+        before = self.store.items_of(self.cid)
+        self.inv.bank_put(dict(request, obj=inventory.oid_of(second)))
+        self.inv.bank_get(request)
+        self.inv.bank_put(request)
+        self.assertEqual(self.store.items_of(self.cid), before)
+        self.assertEqual([p['res'] for cmd, p in self.frames if cmd == 'cmdAck'],
+                         [inventory.RES_OK, inventory.RES_REFUSED, inventory.RES_REFUSED, inventory.RES_OK])
+
+    def test_concurrent_withdrawals_of_one_buff_stack_commit_only_once(self):
+        from concurrent.futures import ThreadPoolExecutor
+        from pathlib import Path
+        import tempfile
+        import threading
+        # Two independent connections to the same database, also on SQLite.
+        with tempfile.TemporaryDirectory(prefix='lava-bank-race-') as temporary:
+            path = str(Path(temporary) / 'race.sqlite')
+            store = accounts.Store(path)
+            try:
+                aid, _ = store.register('race-' + uuid.uuid4().hex[:12], 'test-only')
+                cid, _ = store.create_character(aid, 'Race' + uuid.uuid4().hex[:10], 0, '1')
+                row = store.create_item(cid, 3561, items.HEAL, slot=inventory.BANK, count=5, use_count=1)
+                money = store.money(cid)
+                ready = threading.Barrier(2)
+                def withdraw():
+                    connection = accounts.Store(path)
+                    try:
+                        inv = inventory.Inventory(NS(char_id=cid, character=lambda: NS(max_weight=lambda: 1_000_000)), connection)
+                        ready.wait(timeout=15)
+                        try:
+                            bank_storage.transfer(inv, inventory.oid_of(row), 3, 5, False)
+                            return True
+                        except bank_storage.Refused:
+                            return False
+                    finally:
+                        connection.close()
+                with ThreadPoolExecutor(max_workers=2) as pool:
+                    futures = [pool.submit(withdraw) for _ in range(2)]
+                    self.assertEqual(sorted(f.result(timeout=30) for f in futures), [False, True])
+                rows = store.items_of(cid)
+                self.assertEqual(sorted((r['slot'], r['count']) for r in rows),
+                                 sorted([(inventory.BANK, 2)] + [(inventory.BAG, 1)] * 3))
+                self.assertEqual(store.money(cid), money)
+            finally:
+                store.close()
+
+
 if __name__ == '__main__':
     run_cases(BankStacks)
