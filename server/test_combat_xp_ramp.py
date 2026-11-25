@@ -1,20 +1,35 @@
 """Combat XP ramp endpoints, fractional shares and actual kill settlement."""
 import unittest
+from unittest.mock import patch
 
 import progression as p
 import test_combat_xp_cap as cap_tests
 
 
 class CombatXpRamp(unittest.TestCase):
+    def setUp(self):
+        calendar = patch.object(p, 'combat_calendar_multiplier', return_value=1)
+        calendar.start()
+        self.addCleanup(calendar.stop)
+
     def test_gap_rewards_increase_and_stop_at_four(self):
         for skill in range(17):
-            base = p.mob_price(skill + 1)
+            base = p.COMBAT_XP_BASE[skill]
             values = [p.combat_mob_xp(skill + gap, skill) for gap in range(5)]
-            self.assertEqual(values[0], base * .95)
-            for gap, factor in enumerate((1, 1.05, 1.15, 1.25), 1):
+            self.assertAlmostEqual(values[0], base * .70)
+            for gap, factor in enumerate((.85, 1, 1.1, 1.2), 1):
                 self.assertAlmostEqual(values[gap], base * factor)
                 self.assertGreater(values[gap], values[gap - 1])
-            self.assertEqual(p.combat_mob_xp(skill + 50, skill), base * 1.25)
+            self.assertAlmostEqual(p.combat_mob_xp(skill + 50, skill), base * 1.2)
+
+    def test_full_rewards_match_approved_moderate_curve_at_every_base_skill_level(self):
+        expected = (20, 23.75, 30.0751, 38.2775, 50.1567, 66.1157, 86.8385,
+                    115.2115, 153.11, 203.2552, 252.58061816, 313.87619442,
+                    390.04681411, 484.70231227, 602.32854883, 748.5,
+                    930.14394069, 930.14394069)
+        for skill, reward in enumerate(expected):
+            with self.subTest(skill=skill):
+                self.assertAlmostEqual(p.combat_mob_xp(skill + 2, skill), reward)
 
     def test_mob_multipliers_and_shares_apply_once(self):
         for skill in (0, 5, 12, 16):
@@ -28,8 +43,8 @@ class CombatXpRamp(unittest.TestCase):
         for skill in range(17):
             for mob in range(skill + 1):
                 for mult in (.7, 1, 3):
-                    ratio = {0:.95, -1:.75, -2:.5, -3:.25}.get(mob - skill, 0)
-                    expected = p.mob_price(skill + 1) * ratio * mult
+                    ratio = {0:.70, -1:.50, -2:.30, -3:.15}.get(mob - skill, 0)
+                    expected = p.COMBAT_XP_BASE[skill] * ratio * mult
                     self.assertAlmostEqual(p.combat_mob_xp(mob, skill, xp_mult=mult), expected)
 
     def test_legacy_noncombat_price_does_not_gain_a_ramp(self):

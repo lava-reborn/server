@@ -25,7 +25,9 @@ import os
 from collections import deque
 from functools import lru_cache
 
+import camp_loot
 import mob_equipment_loot
+import mortimer
 import inventory
 import items
 import loot_rules
@@ -652,7 +654,7 @@ def standard_ammunition(drops):
     return [(replacements.get(t, t), n) for t, n in drops]
 
 
-def roll_table(type_id, rng, multiplier=1, *, gold_multiplier=1, guarantee_ingots=False):
+def roll_table(type_id, rng, multiplier=1, *, gold_multiplier=1, guarantee_ingots=False, scanner_multiplier=1):
     """[(type_id, count)] off loot_table: every row rolled, so the dice
     spent do not depend on what came up, and the first MAX_DROPS successes
     kept. A row at SURE is certain: in the bag every time, without a die and
@@ -669,8 +671,14 @@ def roll_table(type_id, rng, multiplier=1, *, gold_multiplier=1, guarantee_ingot
     for t, chance, _valuable in loot_table(type_id):
         if chance >= SURE or (guarantee_ingots and t in items.GOLD_INGOTS):
             out.append((t, count_of(type_id, t)))
-        elif rng.random() < min(1, chance * (gold_multiplier if t in items.GOLD_INGOTS else multiplier)) \
-                and (t in independent or kept < MAX_DROPS):
+            continue
+        if t in items.GOLD_INGOTS:
+            factor = gold_multiplier
+        elif t in mortimer.VALUABLES or t == mortimer.SAND or items.scanner_quantity_item(t):
+            factor = multiplier / scanner_multiplier
+        else:
+            factor = multiplier
+        if rng.random() < min(1, chance * factor) and (t in independent or kept < MAX_DROPS):
             out.append((t, count_of(type_id, t)))
             if t not in independent:
                 kept += 1
@@ -811,12 +819,12 @@ def loot_level_factor(gap):
     """Random PvE loot only; XP and PvP death losses have separate rules."""
     if gap <= -5:
         return 0
-    return {-4: .25, -3: .5, -2: 1, -1: 1, 0: 1,
-            1: 1, 2: 1.05, 3: 1.15}.get(gap, 1.25)
+    return {-4: .25, -3: .5, -2: .75, -1: .80, 0: .90,
+            1: 1, 2: 1.10, 3: 1.20}.get(gap, 1.30)
 
 
 def loot_for(st, rng, wanted=(), *, loc_id=None, ambush_camp=None,
-             killer_level=None, multiplier=1, gold_multiplier=1,
+             killer_level=None, multiplier=1, gold_multiplier=1, scanner_multiplier=1,
              box_player_kill=False, box_weapon_type=None):
     """[(type_id, count)] for a corpse of this type: what it carried, then
     what its kind's table rolled, then the quest rows for what those who
@@ -835,12 +843,15 @@ def loot_for(st, rng, wanted=(), *, loc_id=None, ambush_camp=None,
         return out
     import bosses                  # late: keep module initialization separate
     blueprint = bosses.blueprint_for(loc_id, st.type_id)
-    # Scanner x3 and the level ladder (0.25..1.25) affect random
-    # drops only, never harvest/quest/event quantities.
-    multiplier = min(3.75, multiplier) if st.role != 'object' else 1
-    ordinary = carried(st, rng, multiplier) + roll_table(st.type_id, rng, multiplier,
-                                                       gold_multiplier=gold_multiplier,
-                                                       guarantee_ingots=st.role == 'boss')
+    # Scanner raises the quantity of afro-only common loot, and the chance
+    # of equipment. Gold valuables, quests, objects, events and harvest stay separate.
+    scanner = min(3, max(1, scanner_multiplier)) if st.role != 'object' else 1
+    multiplier = min(camp_loot.MAX_MULTIPLIER, multiplier) if st.role != 'object' else 1
+    ordinary = carried(st, rng, multiplier / scanner) + roll_table(st.type_id, rng, multiplier,
+                         gold_multiplier=gold_multiplier, scanner_multiplier=scanner,
+                         guarantee_ingots=st.role == 'boss')
+    ordinary = [(t, math.floor(n * scanner) if items.scanner_quantity_item(t) else n)
+                for t, n in ordinary]
     if st.role == 'object':
         import camp_box_loot
         ordinary = camp_box_loot.replace(ordinary, st, rng, loc_id=loc_id,

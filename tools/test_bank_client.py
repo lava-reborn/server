@@ -123,6 +123,52 @@ class BankClient(unittest.TestCase):
         self.call('__bkDelta',bank,event)
         self.assertEqual(self.calls,[125])
 
+    def test_bank_buff_delta_updates_size_once_and_keeps_individual_bag_policy(self):
+        item = dict(rootID=2, heapSize=1, max_count=1)
+        def update(fields):
+            item['heapSize'] = fields['size']
+            self.calls.append(fields)
+        item['updateProperties'] = update
+        bank = dict(visavisBag=dict(getItem=lambda oid: item))
+        event = dict(param=dict(s_status=7, bank_delta='buff:2'))
+        self.call('__bkDelta', bank, event)
+        self.call('__bkDelta', bank, event)
+        self.assertEqual(self.calls, [dict(size=2.0)])
+        self.assertEqual(item['max_count'], 1)
+
+
+    def test_mixed_scanner_and_intux_deltas_keep_distinct_ids_without_duplicate_rows(self):
+        rows = {}
+        def create(oid):
+            item = dict(id=oid, rootID=2, heapSize=1, max_count=1)
+            def update(fields):
+                item['heapSize'] = fields['size']
+                self.calls.append(('size', oid, fields['size']))
+            item['updateProperties'] = update
+            return item
+        bag = dict(getItem=lambda oid: rows.get(oid))
+        bank = dict(visavisBag=bag, createItem=create,
+                    addItem=lambda bag, item: rows.__setitem__(item['id'], item),
+                    removeItem=lambda bag, item: rows.pop(item['id']))
+        delta = dict(param=dict(s_status=7,
+                     bank_delta='scanner-short:200,scanner-long:50,intux-50:3,intux-70:2'))
+        self.call('__bkDelta', bank, delta)
+        first = dict(rows)
+        self.call('__bkDelta', bank, delta)
+        self.assertEqual(len(self.calls), 4)
+        self.assertEqual({oid: item['heapSize'] for oid, item in rows.items()},
+                         {'scanner-short': 200, 'scanner-long': 50, 'intux-50': 3, 'intux-70': 2})
+        self.assertTrue(all(rows[oid] is item for oid, item in first.items()))
+        self.assertTrue(all(item['max_count'] == 1 for item in rows.values()))
+        delta['param']['bank_delta'] = 'scanner-short:199,intux-50:0'
+        self.call('__bkDelta', bank, delta)
+        self.call('__bkDelta', bank, delta)
+        self.assertEqual(len(rows), 3)
+        self.assertEqual(len(self.calls), 5)
+        self.assertEqual(rows['scanner-short']['heapSize'], 199)
+        self.assertEqual(rows['scanner-long']['heapSize'], 50)
+        self.assertEqual(rows['intux-70']['heapSize'], 2)
+
     def test_filter_lookup_does_not_accumulate_modifier_entries(self):
         class Filter(Arr):
             def concat(self,other):

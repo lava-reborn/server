@@ -44,6 +44,8 @@ class BaseCaptureFeedback(unittest.IsolatedAsyncioTestCase):
             previous.timer = None
         self.base = holdings.site(key)
         self.now = SLOT + 10
+        self.combat_clock = max(combat.now(), self.s.combat.recovery_until)
+        self.enterContext(patch.object(combat, 'now', lambda: self.combat_clock))
         self.enterContext(patch.object(bosses, 'clock', lambda: self.now))
         self.enterContext(patch.object(server, 'CHEATS', True))
         for skill in self.s.char.skill:
@@ -86,11 +88,13 @@ class BaseCaptureFeedback(unittest.IsolatedAsyncioTestCase):
     def shoot(self, fighter):
         gun = fighter.sess.inv.in_slot(inventory.PRIMARY)
         fighter.ap = fighter.ap_max
+        self.combat_clock = max(self.combat_clock, fighter.recovery_until)
         fighter.use_fire(dict(obj=inventory.oid_of(gun), target='1%08x' % self.master.eid))
         self.assertIsNotNone(fighter.aim)
         args = fighter.aim._args[-1]
         fighter.aim.cancel()
         fighter.aim = None
+        self.combat_clock += items.params_of(gun['type_id'])['fire_times'][gun['cur_mode']] / 1000
         # Capture, rather than scatter, is under test. The real native action,
         # damage, consumption, ledger, kill and settlement paths remain active.
         with patch.object(combat, 'bullet_offset', return_value=0):
@@ -249,6 +253,7 @@ class BaseCaptureFeedback(unittest.IsolatedAsyncioTestCase):
         self.assertIsNone(guard.target)
         gun = self.s.inv.in_slot(inventory.PRIMARY)
         rounds = gun['ammo_count']
+        self.combat_clock = max(self.combat_clock, self.s.combat.recovery_until)
         self.s.writer.frames.clear()
         self.s.combat.use_fire(dict(obj=inventory.oid_of(gun), target='1%08x' % guard.eid))
         self.assertIsNone(self.s.combat.aim)

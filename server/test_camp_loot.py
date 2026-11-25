@@ -125,7 +125,7 @@ class CampArmourLoot(unittest.TestCase):
 
     def test_level_scanner_factor_is_applied_once_and_capped(self):
         for factor, chance in ((0, 0), (.25, .0025), (.95, .0095),
-                               (1, .01), (1.25, .0125), (3.75, .0375), (100, .0375)):
+                               (1, .01), (1.25, .0125), (3.75, .0375), (3.9, .039), (100, .039)):
             self.assertAlmostEqual(camp_loot.drop_chance(factor), chance)
         for factor in (-1, 0, float('nan'), float('inf')):
             rng = FixedRandom()

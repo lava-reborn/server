@@ -3,6 +3,7 @@ import copy
 import logging
 import os
 from types import SimpleNamespace as NS
+from unittest.mock import patch
 import unittest
 
 os.environ.pop('LAVA_DB_URL', None)
@@ -16,6 +17,11 @@ from testkit import run_cases
 
 
 class CombatXpCap(unittest.TestCase):
+    def setUp(self):
+        calendar = patch.object(p, 'combat_calendar_multiplier', return_value=1)
+        calendar.start()
+        self.addCleanup(calendar.stop)
+
     def fighter(self, level=17, premium=0, skill=p.SHOOTING, carry=0):
         ch = p.Character()
         ch.set_skill(skill, level)
@@ -39,29 +45,28 @@ class CombatXpCap(unittest.TestCase):
         level, xp, ceiling = ch.spec[spec]
         return sum(p.spec_xp_max(i) for i in range(level)) + xp
 
-    def test_equal_and_lower_rewards_use_the_plus_one_base_and_four_level_cutoff(self):
+    def test_equal_and_lower_rewards_use_the_scaled_base_and_four_level_cutoff(self):
         for level in range(17):
             for mob in range(level + 1):
                 for share in (0, .125, .5, 1):
                     for mult in (.7, 1, 3):
-                        ratio = {0:.95, -1:.75, -2:.5, -3:.25}.get(mob - level, 0)
-                        expected = p.mob_price(level + 1) * ratio * mult * share
+                        ratio = {0:.70, -1:.50, -2:.30, -3:.15}.get(mob - level, 0)
+                        expected = p.COMBAT_XP_BASE[level] * ratio * mult * share
                         self.assertAlmostEqual(p.combat_mob_xp(mob, level, share, mult), expected)
 
     def test_spec_reward_rises_to_level_16_maximum_at_gap_four(self):
-        ceiling = 1996 * 1.25
-        self.assertAlmostEqual(ceiling, 2495)
-        expected = [1996 * .95, 1996, 1996 * 1.05, 1996 * 1.15, 1996 * 1.25]
+        ceiling = 930.14394069 * 1.2
+        expected = [930.14394069 * ratio for ratio in (.70, .85, 1, 1.1, 1.2)]
         for level in (17, 18, 19, 20):
             self.assertEqual([p.combat_mob_xp(17 + gap, level) for gap in range(5)], expected)
             for mob in (17, 18, 21, 30):
                 for mult in (.7, 1, 3, 10):
                     full = min(ceiling, expected[min(mob - 17, 4)] * mult)
-                    self.assertEqual(p.combat_mob_xp(mob, level, 1, mult), full)
-                    self.assertEqual(p.combat_mob_xp(mob, level, .25, mult), full / 4)
+                    self.assertAlmostEqual(p.combat_mob_xp(mob, level, 1, mult), full)
+                    self.assertAlmostEqual(p.combat_mob_xp(mob, level, .25, mult), full / 4)
             self.assertEqual(p.combat_mob_xp(13, level), 0)
-            self.assertEqual(p.combat_mob_xp(15, level), 1996 * .5)
-        self.assertEqual(p.combat_mob_xp(16, 17), 1996 * .75)
+            self.assertEqual(p.combat_mob_xp(15, level), 930.14394069 * .30)
+        self.assertEqual(p.combat_mob_xp(16, 17), 930.14394069 * .50)
         for gap in range(-3, 9):
             self.assertEqual(p.combat_mob_xp(17 + gap, 17),
                              p.combat_mob_xp(16 + gap, 16))
@@ -79,7 +84,7 @@ class CombatXpCap(unittest.TestCase):
                     self.settle(mob, f)
                     self.assertEqual(ch.skill[skill], before)
                     self.assertEqual(self.spec_total(ch, spec),
-                                     int(2495 * (1 + p.PREMIUM_XP_BONUS[premium]) + 1e-9))
+                                     int(930.14394069 * 1.2 * (1 + p.PREMIUM_XP_BONUS[premium]) + 1e-9))
 
     def test_premium_is_applied_once_before_fractional_combat_carry(self):
         for level in (12, 17):
@@ -182,8 +187,9 @@ class CombatXpCap(unittest.TestCase):
             mob = self.mob(17)
             f.award_xp(p.SHOOTING, spec, 1, mob)
             self.settle(mob, f)
-        self.assertEqual(self.spec_total(ch, spec), int(3 * 1996 * .95))
-        self.assertAlmostEqual(ch.xp_carry['spec', spec], .6)
+        total = 3 * 930.14394069 * .70
+        self.assertEqual(self.spec_total(ch, spec), int(total))
+        self.assertAlmostEqual(ch.xp_carry['spec', spec], total % 1)
 
     def test_unlearned_or_missing_spec_gets_no_reward_or_carry(self):
         f, ch, spec = self.fighter()

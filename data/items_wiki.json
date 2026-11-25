@@ -89683,7 +89683,7 @@
     "variant": "G"
    },
    "bonus_act_time": 7200,
-   "bonus_od": 40,
+   "bonus_od": 20,
    "cost": 0,
    "desc_ru": "Повышает подвижность. Увеличивает запас ОД.",
    "exchang": 0,

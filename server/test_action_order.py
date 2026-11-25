@@ -52,7 +52,7 @@ class ActionOrder(unittest.IsolatedAsyncioTestCase):
             self.assertEqual((row['ammo_count'], row['brk'], f.ap), (10, 100, 100))
             combat.Fighter.cancel_pending(f)
 
-    async def test_target_change_only_resolves_last_attack(self):
+    async def test_target_change_preserves_the_already_accepted_attack(self):
         f, ch, room, used, events, row = self.attack_fixture()
         combat.Fighter.use_fire(f, dict(obj='weapon', target='000000001'))
         old = (f.aim._callback, f.aim._args)
@@ -63,7 +63,7 @@ class ActionOrder(unittest.IsolatedAsyncioTestCase):
         self.invoke(new)
         hits = [e for e in events if e[0] == 'resolved_fire']
         self.assertEqual(len(hits), 1)
-        self.assertEqual(hits[0][1][2], 2)
+        self.assertEqual(hits[0][1][2], 1)
 
     async def test_rejected_attack_keeps_heal(self):
         f, ch, room, used, events, row = self.attack_fixture()

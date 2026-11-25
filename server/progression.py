@@ -18,6 +18,7 @@ teacher, and that is the one part of this that has a command today.
 """
 import os
 import time
+from datetime import datetime, timedelta, timezone
 
 import storage
 
@@ -864,9 +865,9 @@ _CRIT = {
 
 def crit_chance(ch, weapon_type, card=True):
     """(crit %, anti-crit %) for a firearm of this type, showKrit 184-231,
-    with the gear's bonus_cp/bonus_ce on top as showKrit adds them (the
-    items in the eight slots, then the sets). Effects would come next; none
-    exist. None for anything the card does not compute, which is every
+    with gear and active effects in the character bonuses (the items
+    in the eight slots, then the sets). None for anything the card does
+    not compute, which is every
     non-firearm.
 
     card: the set the card counts twice counted twice (Character.card_cp),
@@ -920,8 +921,28 @@ KILLS_START = 5
 KILLS_GROWTH = 1.5
 GAP_SHARE = {0: 0.5, -1: 0.25}
 GREY_GAP = 2
-COMBAT_GAP_REWARD = (1.0, 1.05, 1.15, 1.25)
-COMBAT_LOW_GAP_REWARD = (.95, .75, .5, .25)
+COMBAT_GAP_REWARD = (.85, 1.0, 1.1, 1.2)
+COMBAT_LOW_GAP_REWARD = (.70, .50, .30, .15)
+# Full ordinary +2 kill, indexed by the base skill (never gear/effects).
+# Approved moderate curve, 2026-11-25. Preserve the calculated fractions:
+# rounding XP here changes the agreed number of kills near level boundaries.
+COMBAT_XP_BASE = (
+    20, 23.75, 30.0751, 38.2775, 50.1567, 66.1157, 86.8385,
+    115.2115, 153.11, 203.2552, 252.58061816, 313.87619442,
+    390.04681411, 484.70231227, 602.32854883, 748.5,
+    930.14394069, 930.14394069,
+)
+COMBAT_XP_ZONE = timezone(timedelta(hours=3), "MSK")
+
+
+def combat_calendar_multiplier(at=None):
+    """PvE weekend bonus, Saturday 00:00 through Monday 00:00 MSK.
+
+    Add its percentage to INTUX and residence; do not multiply bonuses.
+    The caller snapshots the result at damage time, not at kill settlement.
+    """
+    stamp = time.time() if at is None else at
+    return 1.5 if datetime.fromtimestamp(stamp, COMBAT_XP_ZONE).weekday() >= 5 else 1.0
 
 
 def kills_per_level(level):
@@ -956,25 +977,21 @@ def mob_xp(mob_level, player_level, share=1.0, xp_mult=1):
 
 
 def combat_mob_xp(mob_level, skill_level, share=1.0, xp_mult=1):
-    """Full base reward starts at +1; higher gaps pay 105/115/125%.
+    """Approved PvE curve; +2 pays the full base, +4 caps the gap bonus.
 
-    Equal/-1/-2/-3 targets pay 95/75/50/25% of that same base; -4 pays zero.
-    Gaps above four pay no extra.
-    Skill 17 stops advancing; specialisations retain the level-16 curve,
-    capped at one +4 reward before hit shares. Mining keeps mob_xp.
+    Equal/-1/-2/-3 pay 70/50/30/15%; +1 pays 85%, +3/+4 110/120%.
+    Skill 17 trains only specialisations, using the level-16 base and a
+    normal +4 ceiling even for bosses. Mining keeps the legacy mob_xp.
     """
-    reference_level = min(skill_level, COMBAT_SKILL_CAP)
-    reward_level = min(reference_level, COMBAT_SKILL_CAP - 1)
-    spec_limit = mob_price(COMBAT_SKILL_CAP) * COMBAT_GAP_REWARD[-1]
+    reference_level = max(0, min(skill_level, COMBAT_SKILL_CAP))
     gap = mob_level - reference_level
-    ceiling = mob_xp(reward_level + 1, reward_level)
     if gap > 0:
-        base = ceiling * COMBAT_GAP_REWARD[min(gap, 4) - 1]
+        factor = COMBAT_GAP_REWARD[min(gap, 4) - 1]
     else:
-        base = ceiling * COMBAT_LOW_GAP_REWARD[-gap] if -gap < len(COMBAT_LOW_GAP_REWARD) else 0
-    whole = base * xp_mult
+        factor = COMBAT_LOW_GAP_REWARD[-gap] if -gap < len(COMBAT_LOW_GAP_REWARD) else 0
+    whole = COMBAT_XP_BASE[reference_level] * factor * xp_mult
     if skill_level >= COMBAT_SKILL_CAP:
-        whole = min(spec_limit, whole)
+        whole = min(COMBAT_XP_BASE[-1] * COMBAT_GAP_REWARD[-1], whole)
     return whole * share
 
 

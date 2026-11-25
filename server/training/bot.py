@@ -241,7 +241,8 @@ def modes(ground, gun, distance):
             continue
         hit = combat.hit_probability(weapon.cone, distance, weapon.hit_cap)
         # Expected HP per time spent aiming/firing; no RNG or simulated shots.
-        duration = max(.1, (si['fire_times'][mode] + combat.action_animation.duration_ms(enemy, si, shots)) / 1000)
+        aim = si['fire_times'][mode] / 1000
+        duration = max(.1, aim + combat.action_animation.duration_ms(enemy, si, shots, aimed_for=aim) / 1000)
         score = shots * (weapon.dmin + weapon.dmax) / 2 * hit / duration
         choices.append((score, -si['fire_costs'][mode], -mode, mode))
     return max(choices)[3] if choices else None

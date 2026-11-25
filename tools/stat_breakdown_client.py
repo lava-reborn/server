@@ -17,6 +17,14 @@ def __sbValue(base, total):
         return String(base) + " (" + String(delta) + ")"
     return String(base)
 
+def __sbField(field, text):
+    # Native fields wrap long signed pairs into neighbouring stat rows.
+    # Let the right-aligned value grow left on one line instead.
+    field.wordWrap = False
+    field.multiline = False
+    field.text = text
+    field.autoSize = "right"
+
 def __sbSkillString(num):
     base = this.value
     if base == None:
@@ -62,8 +70,7 @@ def __sbCard(obj):
     while i < len(attrs.attribArray):
         field = this["attribute" + String(i)].value
         stat = attrs.attribArray[i]
-        field.text = _global.__sbValue(stat.value, stat.level)
-        field.autoSize = "right"
+        _global.__sbField(field, _global.__sbValue(stat.value, stat.level))
         i = i + 1
     if this.showArmorLevel:
         this.showArmorLevel()
@@ -91,23 +98,20 @@ def __sbArmor():
     attrs = lol.core.Master.getInstance().gamer.attributes
     base = (3 * attrs.attrib1.value + attrs.attrib3.value) / 4
     field = this.ArmorClassValue.value
-    field.text = _global.__sbValue(base, Number(field.text))
-    field.autoSize = "right"
+    _global.__sbField(field, _global.__sbValue(base, Number(field.text)))
 
 def __sbOD():
     this.__sbODOrig()
     attrs = lol.core.Master.getInstance().gamer.attributes
     field = this.od_value.value
-    field.text = _global.__sbValue(attrs.ap_max, Number(field.text))
-    field.autoSize = "right"
+    _global.__sbField(field, _global.__sbValue(attrs.ap_max, Number(field.text)))
 
 def __sbEvade():
     this.__sbEvadeOrig()
     attrs = lol.core.Master.getInstance().gamer.attributes
     base = attrs.attrib1.value + attrs.attrib3.value + attrs.skill0.value + attrs.spec1.value
     field = this.meleeEvade_value.value
-    field.text = _global.__sbValue(base, parseFloat(field.text)) + "%"
-    field.autoSize = "right"
+    _global.__sbField(field, _global.__sbValue(base, parseFloat(field.text)) + "%")
 
 def __sbCrit():
     this.__sbCritOrig()
@@ -127,10 +131,8 @@ def __sbCrit():
     spec = attrs.specArray[row[3]].value
     base = (attrs.attribArray[row[0]].value * row[1] + attrs.attrib3.value * row[2]) / 4 + attrs.skill1.value / 4 + spec
     anti = (attrs.attrib1.value + attrs.attrib3.value) / 2 + attrs.skill1.value / 2 + spec
-    this.crit_txt.text = _global.__sbValue(base, parseFloat(this.crit_txt.text)) + "%"
-    this.critDodge_txt.text = _global.__sbValue(anti, parseFloat(this.critDodge_txt.text)) + "%"
-    this.crit_txt.autoSize = "right"
-    this.critDodge_txt.autoSize = "right"
+    _global.__sbField(this.crit_txt, _global.__sbValue(base, parseFloat(this.crit_txt.text)) + "%")
+    _global.__sbField(this.critDodge_txt, _global.__sbValue(anti, parseFloat(this.critDodge_txt.text)) + "%")
 '''
 
 
@@ -152,4 +154,4 @@ def patches(Asm, undef):
         (('gpui', 'CharInterface'), 'showKrit', '__sbCritOrig', '__sbCrit'),
     ):
         wraps.append((path, method, keep, *bodies[helper]))
-    return dict(globals=[entry for entry in functions if entry[0] == '__sbValue'], wraps=tuple(wraps))
+    return dict(globals=[entry for entry in functions if entry[0] in ('__sbValue', '__sbField')], wraps=tuple(wraps))

@@ -16,7 +16,7 @@ def __bfWaiting():
     now = getTimer()
     serverWaiting = _global.__bfRecoveryUntil and now < _global.__bfRecoveryUntil
     figure = _global.__bfOwnerFigure
-    if figure and figure.behavior == "fire" and figure.onEnterFrame and figure.animationEnabled != False and figure.isActive != False and figure.is_default != True:
+    if figure and (figure.behavior == "fire" or figure.behavior == "fire_out") and figure.onEnterFrame and figure.animationEnabled != False and figure.isActive != False and figure.is_default != True:
         if figure.__bfBursts and len(figure.__bfBursts) > 0 and figure.__bfBursts[0].got > 0:
             bundle = figure.__bfBursts[0]
             observed = _global.__bfObservedFigure
@@ -207,18 +207,16 @@ def patches(Asm, undef):
     source = SOURCE
     for i, (path, method, keep, params) in enumerate(REQUESTS):
         args = ', '.join(params)
-        if method == 'fire':
+        if method in ('fire', 'strike'):
             source += f'''
 def __bfRequest{i}({args}):
     # Keep the native acknowledgement latch; a repeated space must neither
-    # restart the aim bar nor enqueue another request/timer.
+    # restart the aim/swing bar nor enqueue another request/timer.
     if this.coolDownBlock and this.useType == 16:
         return
-    _global.__bfPendingInput = None
     _global.__bfMoveIntent = None
-    if _global.__bfInputTimer:
-        clearInterval(_global.__bfInputTimer)
-    _global.__bfInputTimer = None
+    if _global.__bfDefer(this, "{keep}", [{args}]):
+        return
     return this.{keep}({args})
 '''
             continue

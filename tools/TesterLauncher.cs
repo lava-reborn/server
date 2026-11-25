@@ -280,6 +280,7 @@ static class TesterLauncher
                 "\"http://127.0.0.1:18080/res/main.swf?vversion=1\"") {
                 WorkingDirectory = root, UseShellExecute = false
             });
+            FlashContextMenu.Watch(game);
             play.Enabled = false;
             status.Text = "Игра запущена.";
         }

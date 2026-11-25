@@ -53,6 +53,8 @@ SUITES+=(stopwarn)
 # This suite deliberately honours LAVA_DB_URL; SQLite-only unit/race suites
 # remain in the ordinary shards.
 SUITES+=(holdings)
+# Buff purchase/delivery rollback and bank-only stacks use the production dialect too.
+SUITES+=(bank_stacks)
 mkdir -p "$OUT"
 : > "$OUT/results"
 rm -f "$OUT/results.rerun"

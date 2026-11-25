@@ -1296,6 +1296,7 @@ static class Launcher
             Say(cover.Lift);
             throw;
         }
+        FlashContextMenu.Watch(game);
         gameProc = game;
 
         Start(delegate
@@ -1708,6 +1709,7 @@ static class Launcher
         });
         // Nothing to hide here: this path goes to the client's own login
         // window on purpose, so the window only gets its name.
+        FlashContextMenu.Watch(game);
         GameWindow.Title(GameWindow.Find(game, 20000), TITLE, game);
     }
 

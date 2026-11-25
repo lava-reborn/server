@@ -71,9 +71,10 @@ def multiplier(session, name, *, bonus=0):
         values = [definitions()[active.source].get('modifiers', {}).get(name, 1)
                   for active in manager.active.values() if active.deadline > clock]
     if name in ('mob_exp', 'pl_exp'):
-        # Residence adds its percentage after the effect cap; reductions apply last.
-        return ((min(MAX_EXPERIENCE_MULTIPLIER, math.prod(value for value in values if value > 1)) + bonus)
-                * math.prod(value for value in values if value <= 1))
+        # INTUX is capped independently; additive weekend/residence bonuses
+        # follow it, then experience-reducing effects apply to the total.
+        boost = min(MAX_EXPERIENCE_MULTIPLIER, math.prod(value for value in values if value > 1))
+        return (boost + bonus) * math.prod(value for value in values if value <= 1)
     return math.prod(values)
 
 

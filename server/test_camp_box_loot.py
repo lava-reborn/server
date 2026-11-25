@@ -225,7 +225,7 @@ class CampBoxCorpse(unittest.TestCase):
 
     def test_actual_kill_saves_type_and_pre_xp_level_and_nonplayer_clears_them(self):
         async def exercise():
-            for killer in (NS(is_player=True, level=16, eid=7, count_kill=Mock(), release_stats=Mock()),
+            for killer in (NS(is_player=True, level=16, eid=7, sess=NS(), count_kill=Mock(), release_stats=Mock()),
                            NS(is_player=False, eid=8), None):
                 self.mob.reset()
                 room = NS(loc=NS(id=80, title='camp'), players=[], npcs={1: self.mob}, broadcast=Mock())

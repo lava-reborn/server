@@ -464,7 +464,7 @@ def weight_of(row):
     """Grams, the way WeightPan reads it: per piece, times the stack."""
     si = items.params_of(row["type_id"]) or {}
     w = si.get("weight", 0)
-    return w * row["count"] if items.heapable(row["type_id"]) else w
+    return w * row["count"] if row["root"] == items.HEAL or items.heapable(row["type_id"]) else w
 
 
 def fits(row, slot):
@@ -2332,8 +2332,9 @@ class Inventory:
 
         obj is the INDEX into the trader's type_list, in hex, not a type id
         (Trade.buy: tradeID.toString(16)). param is the number of rounds for
-        ammunition, up to a whole stack (5000), and 1 otherwise; the rounds
-        come as ONE new stack of that size, priced by buy_price. The client
+        ammunition (up to 5000), or medicine pieces (up to 10), and 1
+        otherwise. Stackable medicine arrives as one stack; buffs and
+        charged packs arrive as separate instances, priced by buy_price. The client
         adds nothing on res=0: the new instance arrives by
         ss_obj_status;status=1 and the balance by a full userInfo_Player,
         payment and item creation committing together from the persisted purse.
@@ -2359,9 +2360,9 @@ class Inventory:
         if si is None:
             self.ack(RES_NOT_FOUND)
             return
-        # The native quantity dialogue also serves single-dose medicine.
-        # Other goods retain one item per purchase, including charged packs.
-        if root == items.HEAL and items.heapable(type_id):
+        # Use one quantity for the quote, payment and delivered pieces.
+        # Buffs/charged packs stay individual items, never a truncated stack.
+        if root == items.HEAL:
             try:
                 valid = (not isinstance(requested, bool) and 1 <= n <= 10
                          and int(str(requested)) == n)
@@ -2370,9 +2371,10 @@ class Inventory:
             if not valid:
                 self.ack(RES_REFUSED)
                 return
-        if root != items.AMMO and not (root == items.HEAL and items.heapable(type_id)):
+        if root not in (items.AMMO, items.HEAL):
             n = 1
-        if not (1 <= n <= si.get("max_count", 1)):
+        limit = items.MEDICINE_STACK if root == items.HEAL else si.get("max_count", 1)
+        if not (1 <= n <= limit):
             self.ack(RES_REFUSED)
             return
         if code == UPD_BGPOINTS_BUY:
@@ -2421,7 +2423,10 @@ class Inventory:
                     afro -= price
                 with self.booked("shop_buy", type_id):
                     self.store.set_money(self.char_id, afro, gold)
-                row = self.create(type_id, n)
+                if items.heapable(type_id):
+                    bought = [self.create(type_id, n)]
+                else:
+                    bought = [self.create(type_id) for _ in range(n)]
         except storage.CommitError:
             self.close_after_uncertain_commit()
             return
@@ -2432,8 +2437,9 @@ class Inventory:
         ch = self.sess.character()
         ch.afro, ch.gold = afro, gold
         self.ack(RES_OK)
-        self.push_status(row, 1)
-        self.push_di(row)
+        for row in bought:
+            self.push_status(row, 1)
+            self.push_di(row)
         self.push_money()
 
     def sell(self, p):
@@ -2993,6 +2999,10 @@ class Inventory:
         except storage.CommitError:
             self.close_after_uncertain_commit()
             return
+        except Exception:
+            log.exception("Bank transfer failed for character %s", self.char_id)
+            self.ack(RES_REFUSED)
+            return
         recent[token] = signature
         if len(recent) > 64:
             del recent[next(iter(recent))]
@@ -3038,7 +3048,7 @@ class Inventory:
                 if self.total_weight() + weight_of(row) > self.carry_limit():
                     self.ack(RES_OVERLOAD)
                     return
-                if items.heapable(row['type_id']) and row['count'] > items.params_of(row['type_id'])['max_count']:
+                if bank_storage.key(row) is not None and row['count'] > items.params_of(row['type_id'])['max_count']:
                     self.sess.say('Обновите клиент, чтобы взять часть стопки')
                     self.ack(RES_REFUSED)
                     return

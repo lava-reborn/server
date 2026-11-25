@@ -12,18 +12,21 @@ def __bfMedItemInit(obj):
 
 def __bfMedQuantity():
     op = this.currDDOperation
+    if not op:
+        return this.__bfMedQuantityOrig()
     item = op.fromItem
-    if op and op.fromSlot == this.visavisBag_mc and op.toSlot == this.bag_mc and item.rootID == lol.core.objects.Item.HEAL_ITEM and item.getProp("max_count") > 1 and not op.heapNum:
+    if op.fromSlot == this.visavisBag_mc and op.toSlot == this.bag_mc and item.rootID == lol.core.objects.Item.HEAL_ITEM and not op.heapNum:
         this.separateItem = item
         pan = this.createExchangePan(item, "Сколько штук купить?", this.trader.pmod, True, False)
-        pan.maxValue = Math.min(10, item.getProp("max_count"))
+        pan.maxValue = 10
         pan.addEventListener("exchange", this, this.exchangeAck)
         pan.addEventListener("close", this, this.exchangeCancel)
         return
     return this.__bfMedQuantityOrig()
 
 def __bfMedBuy(item, count):
-    if item.rootID != lol.core.objects.Item.HEAL_ITEM or not (item.getProp("max_count") > 1):
+    points = item.getProp("bg_p_cost")
+    if item.rootID != lol.core.objects.Item.HEAL_ITEM or (points != None and not isNaN(points)):
         return this.__bfMedBuyOrig(item, count)
     n = 1
     if count != None:
@@ -40,7 +43,7 @@ def __bfMedBuy(item, count):
 
 def __bfMedAmount(text):
     item = this.item
-    if item and item.rootID == lol.core.objects.Item.HEAL_ITEM and item.getProp("max_count") > 1:
+    if item and item.rootID == lol.core.objects.Item.HEAL_ITEM and (item.getProp("max_count") > 1 or item.getProp("size") > 1):
         # showAmount uses numChar bitmap glyphs, not a text field. Spaces
         # and Cyrillic letters have no frame and appear as extra zeroes.
         text = String(item.getProp("size") or 1)

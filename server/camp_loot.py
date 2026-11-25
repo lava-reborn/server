@@ -9,7 +9,7 @@ import math
 
 
 BASE_CHANCE = .01
-MAX_MULTIPLIER = 3.75
+MAX_MULTIPLIER = 3.9  # strongest scanner (3) times the +4 level bonus (1.3)
 MAX_SET_LEVEL = 16
 NORTHERN_BASE = 263
 ECHO_LEVEL = 16

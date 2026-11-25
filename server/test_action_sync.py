@@ -659,23 +659,49 @@ class ActionSync(unittest.IsolatedAsyncioTestCase):
             timer.cancel()
             self.assertEqual(sum(e[0] == 'resolved_fire' for e in events), 1)
 
-    async def test_changed_mode_or_weapon_cannot_reuse_old_aim(self):
+    async def test_changed_mode_preserves_accepted_aim_and_applies_to_next_shot(self):
         f, s, room, events, row = self.fixture(25485)
         for spec in f.character().spec:
             spec[0] = 5
+        inv = self.movable_inventory(f, s, row)
         command = dict(obj='weapon', target='000000001')
         combat.Fighter.use_fire(f, command)
+        timer, revision = f.aim, f.action_revision
+        old = (timer._callback, timer._args)
+        inv.use_mode(dict(obj='weapon', target='1'))
+        self.assertEqual(row['cur_mode'], 1)
+        combat.Fighter.use_fire(f, command)
+        self.assertIs(f.aim, timer)
+        self.assertFalse(timer.cancelled())
+        self.assertEqual(f.action_revision, revision)
+        old[0](*old[1])
+        old[0](*old[1])
+        timer.cancel()
+        resolved = [e[1] for e in events if e[0] == 'resolved_fire']
+        self.assertEqual(len(resolved), 1)
+        self.assertEqual(resolved[0][3].num_shots, items.params_of(row['type_id'])['fire_mods'][0])
+        combat.Fighter.use_fire(f, command)
+        next_timer = f.aim
+        next_timer._callback(*next_timer._args)
+        next_timer.cancel()
+        resolved = [e[1] for e in events if e[0] == 'resolved_fire']
+        self.assertEqual(len(resolved), 2)
+        self.assertEqual(resolved[1][3].num_shots, items.params_of(row['type_id'])['fire_mods'][1])
+
+    async def test_weapon_change_invalidates_accepted_aim_and_saved_callback(self):
+        f, s, room, events, row = self.fixture(25485)
+        for spec in f.character().spec:
+            spec[0] = 5
+        combat.Fighter.use_fire(f, dict(obj='weapon', target='000000001'))
         timer = f.aim
         old = (timer._callback, timer._args)
-        row['cur_mode'] = 1
-        combat.Fighter.use_fire(f, command)
-        self.assertTrue(timer.cancelled())
-        self.assertIsNot(f.aim, timer)
         combat.Fighter.primary_changed(f)
+        self.assertTrue(timer.cancelled())
         self.assertIsNone(f.aim)
-        self.assertIsNone(f.aim_request)
+        self.assertIsNone(f.aim_started_at)
         old[0](*old[1])
         self.assertFalse(any(e[0] == 'resolved_fire' for e in events))
+
 if __name__ == '__main__':
     try:
         run_cases(ActionSync)

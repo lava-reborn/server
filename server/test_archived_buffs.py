@@ -87,7 +87,7 @@ class ArchivedBuffs(unittest.IsolatedAsyncioTestCase):
     def test_catalogue_preserves_archived_prices_doses_and_explicit_effects(self):
         for tid, cost, gold, duration, strength, od in (
                 (3474, 500, 0, 3600, 1, 0), (3475, 2500, 0, 3600, 3, 0),
-                (3476, 0, 50, 3600, 5, 0), (3897, 0, 10, 7200, 0, 40)):
+                (3476, 0, 50, 3600, 5, 0), (3897, 0, 10, 7200, 0, 20)):
             with self.subTest(item=tid):
                 si = items.params_of(tid)
                 self.assertEqual((si['cost'], si['g_cost'], si['weight'], si['use_count']),
@@ -97,6 +97,7 @@ class ArchivedBuffs(unittest.IsolatedAsyncioTestCase):
                 self.assertEqual((value['duration'], value['bonuses']['attribs'][0], value['bonuses']['od']),
                                  (duration, strength, od))
                 self.assertEqual(si['effects'], [effects.FIRST + tid])
+                self.assertEqual(si.get('bonus_od', 0), od)
                 self.assertFalse(items.stimulant_unavailable(tid))
         # The archive does not identify any effects/numbers for these long or
         # 100/150-OD variants. Do not silently invent stronger retail articles.
@@ -207,6 +208,11 @@ class ArchivedBuffs(unittest.IsolatedAsyncioTestCase):
 
     async def test_ap_dose_repeat_relog_expiry_never_refills_or_restarts_regeneration(self):
         manager = self.manager()
+        self.s.writer.frames.clear()
+        self.assertTrue(manager.static(effects.FIRST + 3897))
+        effect_card = next(value for name, value in
+                           (decode(frame[:-1]) for frame in self.s.writer.frames) if name == 'e_si')
+        self.assertEqual((effect_card['max_od'], effect_card['work_time']), (20, 7200000))
         f = self.s.combat
         f.amax_sent = self.s.char.ap_ceiling
         original_max = f.ap_max
@@ -216,17 +222,17 @@ class ArchivedBuffs(unittest.IsolatedAsyncioTestCase):
         effects.activate(f, row['uniq'], f, 6)
         packets = [decode(frame[:-1]) for frame in self.s.writer.frames]
         ceiling = [value for name, value in packets if name == 'c_ap' and 'amax' in value]
-        self.assertEqual(ceiling, [dict(ap=17, amax=original_max + 40)])
-        self.assertEqual((f.ap_max, f.ap, self.s.char.ap_ceiling), (original_max + 40, 17, original_max + 40))
+        self.assertEqual(ceiling, [dict(ap=17, amax=original_max + 20)])
+        self.assertEqual((f.ap_max, f.ap, self.s.char.ap_ceiling), (original_max + 20, 17, original_max + 20))
         self.assertIsNone(self.store.item(row['uniq']))
         deadline = manager.active['action_points'].deadline
         other = self.s.inv.create(3897)
         effects.activate(f, other['uniq'], f, 6)
-        self.assertEqual((f.ap_max, f.ap), (original_max + 40, 11))
+        self.assertEqual((f.ap_max, f.ap), (original_max + 20, 11))
         self.assertEqual(len(manager.active), 1)
         manager.close()
         manager.load()
-        self.assertEqual((f.ap_max, f.ap), (original_max + 40, 11))
+        self.assertEqual((f.ap_max, f.ap), (original_max + 20, 11))
         f.ap = f.ap_max
         deadline = manager.active['action_points'].deadline
         with patch.object(manager, 'clock', return_value=deadline + 1):
@@ -241,7 +247,7 @@ class ArchivedBuffs(unittest.IsolatedAsyncioTestCase):
         f.amax_sent = base + 12  # A previous room-entry ceiling retained after a gear change.
         f.ap = 19
         manager.add(3897)
-        self.assertEqual((f.ap_max, f.ap), (base + 52, 19))
+        self.assertEqual((f.ap_max, f.ap), (base + 32, 19))
         deadline = manager.active['action_points'].deadline
         with patch.object(manager, 'clock', return_value=deadline + 1):
             manager.refresh()
@@ -285,9 +291,9 @@ class ArchivedBuffs(unittest.IsolatedAsyncioTestCase):
                        skills=','.join(map(str, profile['skills'])),
                        specs=','.join(map(str, profile['specs'])), gear=''))
         self.assertEqual(g.clone.char.level, 10)
-        self.assertEqual(g.clone.training_effects.bonus['od'], 40)
-        self.assertEqual((g.clone.combat.ap, g.clone.combat.ap_max), (140, 140))
-        self.assert_ceiling_before_private_state(140)
+        self.assertEqual(g.clone.training_effects.bonus['od'], 20)
+        self.assertEqual((g.clone.combat.ap, g.clone.combat.ap_max), (120, 120))
+        self.assert_ceiling_before_private_state(120)
         self.assertFalse(self.store.effects_for(self.s.char_id))
 
     async def test_ap_private_clone_has_effect_without_touching_real_account(self):
@@ -299,7 +305,7 @@ class ArchivedBuffs(unittest.IsolatedAsyncioTestCase):
         f.ap = 17
         before = self.store.effects_for(self.s.char_id)
         manager.add(3897)
-        self.assertEqual((f.ap_max, f.ap), (initial + 40, 17))
+        self.assertEqual((f.ap_max, f.ap), (initial + 20, 17))
         self.assertEqual(self.store.effects_for(self.s.char_id), before)
         deadline = manager.active['action_points'].deadline
         with patch.object(manager, 'clock', return_value=deadline + 1):

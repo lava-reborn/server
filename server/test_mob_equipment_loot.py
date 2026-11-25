@@ -36,8 +36,8 @@ class EquipmentLoot(unittest.TestCase):
     def test_single_draw_uses_absolute_rates_with_one_result_only(self):
         options = (('armour', (10,), .01), ('weapon', (20,), .005), ('pouch', (30,), .005))
         with patch.object(equipment, 'categories', return_value=options):
-            for multiplier in (.25, .95, 1, 1.25, 3.75, 100):
-                factor = min(3.75, multiplier)
+            for multiplier in (.25, .95, 1, 1.25, 1.3, 3.75, 3.9, 100):
+                factor = min(3.9, multiplier)
                 for point, expected in ((0, 10), (.009999, 10), (.01, 20),
                                         (.014999, 20), (.015, 30), (.019999, 30), (.02, None)):
                     rng = FixedRandom(point * factor)

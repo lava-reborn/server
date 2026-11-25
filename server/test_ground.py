@@ -576,6 +576,7 @@ def given(c, cid, type_id):
 def in_window(c, cell):
     """Open the loot window on a cell, as a click on its bag does: the acks
     of ss_create and the oids behind the 0 divider of ss_get;slot=24."""
+    testkit.wait_recovery(c)
     c.send("ss_create;s_type=0;target=%d;" % cell)
     opened = acks(c.frames(0.5))
     c.send("ss_get;slot=24;")
@@ -591,6 +592,7 @@ def removed(frames):
 def throw(c, row, cell):
     """Drag a thing out of the equipment onto the ground (PersEquip.dropItem):
     a loot session on the player's own cell, then the thing into it."""
+    testkit.wait_recovery(c)
     c.send("ss_create;s_type=0;target=%d;" % cell)
     opened = acks(c.frames(0.5))
     c.send("ss_upd;s_status=2;obj=x%s;param=1;" % inventory.oid_of(row))
@@ -666,7 +668,7 @@ try:
             h.send("ss_use;type=16;obj=x%s;target=x1%08x;" % (inventory.oid_of(knife), bum))
             got = h.until(lambda f: f[0] == "c_ap"
                           or (f[0] == "cmdAck" and f[1]["res"] != 0), 3)
-            got += h.frames(0.2)
+            got += h.frames(0.2) + testkit.wait_recovery(h)
         else:
             got = h.frames(0.4)
         if [p for n, p in got if n == "lch" and p.get("dead") == bum]:
@@ -724,6 +726,7 @@ try:
         h.send("ss_use;type=16;obj=x%s;target=x1%08x;" % (inventory.oid_of(knife), VP))
         seen_h += h.until(lambda f: f[0] in ("caHit", "caMiss", "cmdAck") and
                           (f[0] != "cmdAck" or f[1].get("res") != 0), 3.0)
+        seen_h += testkit.wait_recovery(h)
         seen_v += v.frames(0.3)
         if any(n == "lch" and p.get("dead") == 0 for n, p in seen_v):
             break

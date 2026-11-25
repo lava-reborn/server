@@ -173,7 +173,7 @@ def __bkDelta(obj):
                 if not item:
                     item = this.createItem(parts[0])
                     this.addItem(this.visavisBag, item)
-                if item and (item.rootID == 3 or item.rootID == 4) and item.heapSize != Number(parts[1]):
+                if item and (item.rootID == 2 or item.rootID == 3 or item.rootID == 4) and item.heapSize != Number(parts[1]):
                     item.updateProperties({"size":Number(parts[1])})
         i = i + 1
 

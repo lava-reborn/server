@@ -18,7 +18,11 @@ import test_training_ground as fixtures
 
 
 class TimedItems(unittest.IsolatedAsyncioTestCase):
-    asyncSetUp = fixtures.TrainingGround.asyncSetUp
+    async def asyncSetUp(self):
+        calendar = patch.object(progression, 'combat_calendar_multiplier', return_value=1)
+        calendar.start()
+        self.addCleanup(calendar.stop)
+        await fixtures.TrainingGround.asyncSetUp(self)
     asyncTearDown = fixtures.TrainingGround.asyncTearDown
 
     async def test_local_bot_reused_ids_always_receive_info_then_real_bars(self):
@@ -688,6 +692,11 @@ class TimedItems(unittest.IsolatedAsyncioTestCase):
 
 
 class ReleaseCatalogue(unittest.TestCase):
+    def setUp(self):
+        calendar = patch.object(progression, 'combat_calendar_multiplier', return_value=1)
+        calendar.start()
+        self.addCleanup(calendar.stop)
+
     def test_live_rifle_armour_piercing_stamina_overflow_and_critical_damage(self):
         room = combat.RoomCombat.__new__(combat.RoomCombat)
         shooter = NS(is_player=True, character=lambda: NS(level=12))
@@ -808,10 +817,10 @@ class ReleaseCatalogue(unittest.TestCase):
         target = NS(ap_max=100, balanced_modes=(affordable, unaffordable))
         self.assertEqual(battle_balance.mob_mode(target, 2)[1], 50)
 
-    def test_full_base_experience_starts_at_plus_one_without_another_increase(self):
+    def test_full_base_experience_starts_at_plus_two_with_approved_curve(self):
         for level in range(1, 17):
-            base = progression.mob_xp(level + 1, level)
-            for gap, ratio in ((1, 1), (2, 1.05), (3, 1.15), (4, 1.25), (5, 1.25)):
+            base = progression.COMBAT_XP_BASE[level]
+            for gap, ratio in ((1, .85), (2, 1), (3, 1.1), (4, 1.2), (5, 1.2)):
                 with self.subTest(level=level, gap=gap):
                     self.assertAlmostEqual(progression.combat_mob_xp(level + gap, level), base * ratio)
                     self.assertAlmostEqual(progression.combat_mob_xp(level + gap, level, .25), base * ratio / 4)
@@ -994,7 +1003,7 @@ class ReleaseCatalogue(unittest.TestCase):
             self.assertEqual(mobs.loot_for(st, Rng(), {3770, 2408}, killer_level=15), [(3770, 1)])
             self.assertEqual(mobs.loot_for(st, Rng(), (), killer_level=15), [])
 
-    def test_scanner_never_multiplies_gold_ingot_chance(self):
+    def test_level_factor_does_not_multiply_gold_ingot_chance_without_a_scanner(self):
         ingot = next(iter(items.GOLD_INGOTS))
         class Rng:
             def random(self):
@@ -1161,7 +1170,7 @@ class ReleaseCatalogue(unittest.TestCase):
         target.stats.level = 14
         fighter.award_xp(progression.SHOOTING, spec, 1, target)
         character.set_skill(progression.SHOOTING, 10)
-        self.assertEqual(combat.RoomCombat.loot_multiplier(None, target, fighter), 1)
+        self.assertEqual(combat.RoomCombat.loot_multiplier(None, target, fighter), .90)
         mob = mobs.Mob(1, 258, 100)
         mob.loot_level = 14
         mob.reset()
@@ -1176,17 +1185,17 @@ class ReleaseCatalogue(unittest.TestCase):
         low, senior = Fighter(10), Fighter(14)
         mob = NS(stats=NS(level=13, role='mob'), xp_ledger={low: [100]})
         multiplier = lambda: combat.RoomCombat.loot_multiplier(None, mob, low)
-        self.assertEqual(multiplier(), 1.15)
+        self.assertEqual(multiplier(), 1.20)
         mob.stats.level = 14
-        self.assertEqual(multiplier(), 1.25)
-        for gap, reward in ((1, 1), (2, 1.05)):
+        self.assertEqual(multiplier(), 1.30)
+        for gap, reward in ((1, 1), (2, 1.10)):
             mob.stats.level = low.level + gap
             self.assertEqual(multiplier(), reward)
         mob.stats.level = 14
         with patch.object(effects, 'multiplier', return_value=3):
-            self.assertEqual(multiplier(), 3.75)
+            self.assertAlmostEqual(multiplier(), 3.9)
         mob.xp_ledger[senior] = [1]
-        self.assertEqual(multiplier(), 1)
+        self.assertEqual(multiplier(), .90)
         mob.stats.role = 'object'
         with patch.object(effects, 'multiplier', return_value=3):
             self.assertEqual(multiplier(), 1)
@@ -1343,7 +1352,7 @@ class ReleaseCatalogue(unittest.TestCase):
         from training import catalog as private_catalog
         self.assertFalse(boosters.intersection(private_catalog.item_catalogue()))
 
-    def test_scanner_changes_probability_not_quantity_or_guaranteed_drop(self):
+    def test_level_factor_changes_probability_not_quantity_or_guaranteed_drop(self):
         rows = [(333, .1, True), (334, 1, False)]
         with patch.object(mobs, 'loot_table', return_value=rows), \
                 patch.object(mobs, 'independent_loot', return_value=set()), \

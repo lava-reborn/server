@@ -462,6 +462,7 @@ def connect(timeout=None):
     return testkit.connect(PORT, srv, _log, timeout)
 
 
+@testkit.scene_client
 class Client:
     def __init__(self, sock):
         self.s = sock
@@ -593,6 +594,7 @@ try:
         """Fists at the dog until one lands: (the loop time it landed, as
         this side saw it, or None)."""
         for _ in range(10):
+            testkit.wait_recovery(c)
             c.send("ss_use;type=16;obj=x0;target=%s;" % entity(dog))
             got = c.until(lambda f: f[0] in ("caHit", "caMiss") and f[1].get("id", 0) == 0, 2)
             if [p for p in named(got, "caHit") if p.get("id", 0) == 0]:
@@ -601,6 +603,7 @@ try:
         return None
 
     def leave():
+        testkit.wait_recovery(c)
         c.send("chWorld;")
         got = c.frames(0.4)
         return [(n, p.get("res")) for n, p in got if n in ("cmdAck", "gmap", "lcall")]

@@ -356,15 +356,31 @@ def equipment_changes():
     return {int(key): row for key, row in raw['equipment'].items()}
 
 
+@lru_cache(maxsize=1)
+def weapon_hit_caps():
+    """Ordinary accuracy ceilings; the private range retains its frozen profile."""
+    raw = json.loads(PATH.with_name('combat_balance.json').read_text(encoding='utf-8'))
+    caps = {int(key): value for key, value in raw.get('weapon_hit_caps', {}).items()}
+    if (raw['source_commit'] != data()['source_commit']
+            or any(isinstance(value, bool) or not isinstance(value, (int, float))
+                   or not math.isfinite(value) or not 0 < value <= PLAYER_HIT_CAP
+                   for value in caps.values())):
+        raise ValueError('Invalid ordinary weapon accuracy ceiling')
+    return caps
+
+
 def weapon(weapon, character, row, ammo):
     """Ordinary equipment already holds the reviewed base damage and ranges."""
     import inventory
     import items
     import combat
+    weapon, ammo = combat.prepare_ammunition(weapon, ammo)
     missing = max(0, inventory.item_level(row['type_id']) - character.level) if row else 0
     accuracy = 1 - ORDINARY_LEVEL_ACCURACY * min(inventory.GEAR_LEVEL_ALLOWANCE, missing)
     spread = 1
+    hit_cap = PLAYER_HIT_CAP
     if row:
+        hit_cap = weapon_hit_caps().get(row['type_id'], hit_cap)
         params = items.params_of(row['type_id']) or {}
         kind = params.get('weapon_type')
         spec_index = combat.SPEC_OF_WEAPON.get(kind)
@@ -393,7 +409,7 @@ def weapon(weapon, character, row, ammo):
         sdmin=round(weapon.sdmin * power * stamina), sdmax=round(weapon.sdmax * power * stamina),
         max_range=math.floor(weapon.max_range * reach + 1e-9),
         cone=0 if ammo.get('acc_mod', 1) == 0 else weapon.cone * spread / accuracy,
-        hit_cap=PLAYER_HIT_CAP * accuracy)
+        hit_cap=hit_cap * accuracy)
 
 
 def melee(bounds, character, row):

@@ -1,4 +1,4 @@
-"""Random loot falls only from gap -3; XP/PvP retain their own ladders."""
+"""Random loot and combat XP follow their separate level ladders."""
 from types import SimpleNamespace as NS
 import unittest
 from unittest.mock import patch
@@ -29,15 +29,15 @@ class FixedRandom:
 
 class MobLootFollowup(unittest.TestCase):
     def test_explicit_loot_boundaries_do_not_reuse_the_xp_ladder(self):
-        ladder = {-10: 0, -5: 0, -4: .25, -3: .5, -2: 1, -1: 1,
-                  0: 1, 1: 1, 2: 1.05, 3: 1.15, 4: 1.25, 10: 1.25}
-        xp = {-5: 0, -4: 0, -3: .25, -2: .5, -1: .75, 0: .95,
-              1: 1, 2: 1.05, 3: 1.15, 4: 1.25}
+        ladder = {-10: 0, -5: 0, -4: .25, -3: .5, -2: .75, -1: .80,
+                  0: .90, 1: 1, 2: 1.10, 3: 1.20, 4: 1.30, 10: 1.30}
+        xp = {-5: 0, -4: 0, -3: .15, -2: .30, -1: .50, 0: .70,
+              1: .85, 2: 1, 3: 1.1, 4: 1.2}
         for gap, expected in ladder.items():
             self.assertEqual(mobs.loot_level_factor(gap), expected)
         for gap, ratio in xp.items():
             self.assertAlmostEqual(progression.combat_mob_xp(10 + gap, 10),
-                                   progression.mob_price(11) * ratio)
+                                   progression.COMBAT_XP_BASE[10] * ratio)
 
     def test_departed_senior_and_scanner_use_the_same_native_loot_factor(self):
         class Fighter:
@@ -51,12 +51,33 @@ class MobLootFollowup(unittest.TestCase):
             target.loot_level = 13
             self.assertEqual(combat.RoomCombat.loot_multiplier(None, target, low), 1.5)
             target.loot_level = 12
-            self.assertEqual(combat.RoomCombat.loot_multiplier(None, target, low), 3)
+            self.assertEqual(combat.RoomCombat.loot_multiplier(None, target, low), 2.25)
             target.loot_level = 15
             self.assertEqual(combat.RoomCombat.loot_multiplier(None, target, low), 0)
         target.xp_ledger = {senior: [100], low: [1]}
         target.loot_level = 0
         self.assertEqual(combat.RoomCombat.loot_multiplier(None, target, low), .25)
+
+    def test_both_scanners_keep_gold_probability_and_expire_normally(self):
+        class Fighter:
+            is_player = True
+            level = 10
+        killer = Fighter()
+        target = NS(stats=NS(role='mob', level=11), xp_ledger={killer: [100]}, loot_level=10)
+        for source in effects.SCANNERS:
+            killer.sess = NS(effects=NS(active={'mob_drop': NS(source=source, deadline=10)}, clock=lambda: 0))
+            factor = combat.RoomCombat.loot_multiplier(None, target, killer)
+            self.assertEqual(factor, 3)
+            self.assertEqual(combat.RoomCombat.loot_multiplier(None, target, killer, include_scanner=False), 1)
+            with patch.object(mobs, 'loot_table', return_value=[(6950, .1, True)]), \
+                    patch.object(mobs, 'independent_loot', return_value=set()), \
+                    patch.object(mobs, 'count_of', return_value=1), \
+                    patch.object(mobs, 'one_of_groups', return_value=[]):
+                self.assertEqual(mobs.roll_table(82, FixedRandom(.099), factor, scanner_multiplier=3), [(6950, 1)])
+                for draw in (.1, .101, .299):
+                    self.assertEqual(mobs.roll_table(82, FixedRandom(draw), factor, scanner_multiplier=3), [])
+            killer.sess.effects.clock = lambda: 10
+            self.assertEqual(combat.RoomCombat.loot_multiplier(None, target, killer), 1)
 
     def test_minus_four_corpse_keeps_native_ammo_and_scales_each_rare_category_once(self):
         stats = mobs.stats(291)

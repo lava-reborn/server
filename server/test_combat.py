@@ -772,8 +772,8 @@ _grc.room = type("R", (), {})()
 _grc.room.players = {_blade.sess: None}
 _dog.alive, _dog.hp = False, 0
 _grc.settle_xp(_dog)
-check("a knife at Ближний бой 0 against the level-1 dog: +1 pays 20 before its 0.7",
-      _shooter.skill[progression.MELEE][:2], [0, 14])
+check("a knife at Ближний бой 0: +1 pays 85% of 20, times the dog factor 0.7",
+      _shooter.skill[progression.MELEE][:2], [0, 11])
 _grey_dog = mobs.Mob(2, 82, 10)
 _blade.award_xp(progression.SHOOTING, 2, _whole, _grey_dog)
 _grey_dog.alive, _grey_dog.hp = False, 0
@@ -791,8 +791,8 @@ _by_blows = _gunner.skill[progression.SHOOTING][1]
 _grc.room.players = {_gun.sess: None}
 _gdog.alive, _gdog.hp = False, 0
 _grc.settle_xp(_gdog)
-check("a gun's shots pay nothing until death, then the solo price: 14, as for a knife",
-      (_by_blows, _gunner.skill[progression.SHOOTING][:2]), (0, [0, 14]))
+check("a gun's shots pay nothing until death, then the solo price: 11 plus carry, as for a knife",
+      (_by_blows, _gunner.skill[progression.SHOOTING][:2]), (0, [0, 11]))
 check("and the ledger is closed with the kill", _gdog.xp_ledger, {})
 # The one death payment produces one update. Holding a killing burst's stats
 # still postpones that update until the rest of the burst is complete.
@@ -807,9 +807,9 @@ _odog.alive, _odog.hp = False, 0
 _grc.settle_xp(_odog)
 check("  ..held through the kill: nothing yet", _onegun.sess.pushed, [])
 _onegun.release_stats()
-check("  ..released: one rp_info for the shooting skill, the whole 14 in it",
+check("  ..released: one rp_info for the shooting skill, the whole 11 in it",
       (_onegun.sess.pushed, _one.skill[progression.SHOOTING][:2]),
-      ([{"skills": {progression.SHOOTING}, "specs": set(), "attribs": set()}], [0, 14]))
+      ([{"skills": {progression.SHOOTING}, "specs": set(), "attribs": set()}], [0, 11]))
 check("  ..and a release with nothing held pushes nothing", (_onegun.release_stats(), _onegun.sess.pushed[1:]), (None, []))
 
 
@@ -924,6 +924,7 @@ def connect(timeout=None):
     return testkit.connect(PORT, srv, _log, timeout)
 
 
+@testkit.scene_client
 class Client:
     def __init__(self, sock):
         self.s = sock
@@ -1009,7 +1010,7 @@ PISTOL_SI = items.params_of(PISTOL)
 CLIP = PISTOL_SI["clip_size"]
 COST = PISTOL_SI["fire_costs"][0]
 # What holding it asks (inventory.item_level): the character's level below.
-# Keep the loot fixture within three levels of its level-one dog.
+# This lower-level dog exercises reduced XP and random-loot rewards.
 LEVEL = max(1, inventory.item_level(PISTOL) - inventory.GEAR_LEVEL_ALLOWANCE)
 # The blade: the first rung of the knives the stalls sell (knife_lvl1_A).
 KNIFE = 6229
@@ -1351,13 +1352,18 @@ try:
         if exit_tried or not [n for n, _ in frames if n in ("faHit", "caHit")]:
             return []
         exit_tried.append(True)
+        recovered = testkit.wait_recovery(c)
         c.send("chWorld;")
         got = c.frames(0.4)
         check("chWorld while the exit timer runs: res=39 and no gmap",
               [(n, p) for n, p in got if n in ("cmdAck", "gmap", "lcall")],
               [("cmdAck", {"res": 39})])
-        return got
+        return recovered + got
 
+    recovered = testkit.wait_recovery(c)
+    got += recovered
+    tracker.feed(recovered)
+    dog_cell = last_cell(recovered, dog, dog_cell)
     got = try_exit(got)
     tracker.feed(got)
     dog_cell = last_cell(got, dog, dog_cell)
@@ -1409,7 +1415,7 @@ try:
             check("reloaded mid-fight", ammo, CLIP)
         c.send("ss_use;type=16;obj=x%s;target=%s;" % (pistol, entity(dog)))
         got = c.until(lambda f: f[0] == "ss_di_firearm" or (f[0] == "cmdAck" and f[1]["res"] != 0), 3)
-        got += c.frames(0.2)
+        got += c.frames(0.2) + testkit.wait_recovery(c)
         if not [p for n, p in got if n == "lch" and p.get("dead") == dog]:
             got += try_exit(got)
         if got and got[-1][0] == 'caHit' and got[-1][1].get('id') == dog:
@@ -1443,7 +1449,7 @@ try:
             # The dog is at the player's side: a bare-handed strike, which
             # lands at once (strike_time 0) and costs 5 AP.
             c.send("ss_use;type=16;obj=x0;target=%s;" % entity(dog))
-            got = c.until(lambda f: f[0] == "c_ap", 2) + c.frames(0.2)
+            got = c.until(lambda f: f[0] == "c_ap", 2) + c.frames(0.2) + testkit.wait_recovery(c)
             tracker.feed(got)
             dog_cell = last_cell(got, dog, dog_cell)
             names_ = [n for n, _ in got]
@@ -1497,7 +1503,8 @@ try:
     paid = [p for n, p in tail if n == "rp_info" and p.get("xp_skills_mask", 0) & 2]
     check("the lower-level dog pays once on death, before the room leaves combat",
           [p['xp_skills'][0] for p in paid],
-          [int(progression.combat_mob_xp(dog_stats.level, LEVEL, xp_mult=dog_stats.xp_mult))])
+          [int(progression.combat_mob_xp(dog_stats.level, LEVEL, xp_mult=dog_stats.xp_mult)
+               * progression.combat_calendar_multiplier())])
     after_death = []
     if not any(n == "lch" and p.get("lostUser") == dog for n, p in tail):
         after_death = c.until(lambda f: f[0] == "lch" and f[1].get("lostUser") == dog, 4)
@@ -1527,15 +1534,22 @@ try:
     bag, loot = lst[:divider], lst[divider + 1:]
     check("the bag lists the player's things, a 0, then the loot",
           (pistol not in bag, rounds in bag, len(loot) >= 1), (True, True, True))
-    # What a dog leaves is meat for certain and the fang and the skin on a
-    # coin toss each (mobs.ANIMAL_LOOT), and the checks below need a second
-    # piece: a bag closes with its last one and code 2 has no bag to put it
-    # back into. LAVA_SEED decides the toss, so the dependency is stated here
-    # rather than surfacing as a puzzling frame mismatch further down.
-    check("the corpse holds more than one piece", len(loot) >= 2, True)
     kinds = sorted({inventory.parse_oid(o)[1] for o in loot})
     check("a dog leaves meat, and maybe a fang or a skin",
           all(k in (216, 217, 218) for k in kinds) and 216 in kinds, True)
+    # Keep a second item in the bag while taking and returning the meat.
+    # Its random fang/skin rolls depend on the level gap, not the fixture.
+    c.send("ss_upd;s_status=2;obj=x%s;param=1;" % rounds)
+    got = c.frames()
+    after += got
+    check("one carried round joins the corpse's existing bag",
+          only(got, "cmdAck", "ss_loot"), [("cmdAck", {"res": 0})])
+    c.send("ss_get;slot=24;")
+    got = c.frames()
+    after += got
+    lst = oids(named(got, "ss_ack")[0])
+    loot = lst[lst.index("0") + 1:]
+    check("the shared bag holds more than one item", len(loot) >= 2, True)
     c.send("ss_get_di;obj=x%s;" % loot[0])
     got = c.frames()
     after += got
@@ -1706,14 +1720,15 @@ try:
     # dies. Neither health nor stamina damage can award it while alive.
     mirror = progression.Character()
     mirror.skill[progression.MELEE] = [1, 0, progression.skill_xp_max(1)]
-    kill_reward = progression.combat_mob_xp(dog_stats.level, 1, xp_mult=dog_stats.xp_mult)
+    kill_reward = (progression.combat_mob_xp(dog_stats.level, 1, xp_mult=dog_stats.xp_mult)
+                   * progression.combat_calendar_multiplier())
     dog_hp = dog_stats.hp_max
     actual_harm, premature_xp, shooting_pushed, dead_frames = 0, 0, 0, None
     for attempt in range(80):
         if mobs.adjacent(pos, dog_cell, loc):
             c.send("ss_use;type=16;obj=x%s;target=%s;" % (knife, entity(dog)))
             got = c.until(lambda f: f[0] == "c_ap" or (f[0] == "cmdAck" and f[1]["res"] != 0), 2)
-            got += c.frames(0.2)
+            got += c.frames(0.2) + testkit.wait_recovery(c)
         else:
             got = c.frames(0.4)
         dog_cell = last_cell(got, dog, dog_cell)
@@ -1741,8 +1756,9 @@ try:
     check("and not one of them Стрельба", shooting_pushed, 0)
     c.send("rp_get_info;")
     rp = named(c.until(lambda f: f[0] == "rp_info"), "rp_info")[0]
-    check("the equal-level dog pays 95% of the +1 base 25, times its 0.7 (16 XP plus carry)",
-          (rp["a_skills"][0], rp["xp_skills"][0]), (1, 16))
+    check("the equal-level dog pays its base reward with the current calendar bonus",
+          (rp["a_skills"][0], rp["xp_skills"][0]),
+          (1, int(25 * .70 * .95 * .7 * progression.combat_calendar_multiplier())))
     check("to exactly one solo kill's price, without per-hit experience",
           [rp["a_skills"][0], rp["xp_skills"][0]], mirror.skill[progression.MELEE][:2])
     check("while Стрельба is where it was", (rp["a_skills"][1], rp["xp_skills"][1]), (6, 0))

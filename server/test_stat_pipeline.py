@@ -138,10 +138,10 @@ class StatPipeline(unittest.IsolatedAsyncioTestCase):
                     if si['weapon_type'] == items.RIFLE:
                         expected_cone *= .95
                     self.assertAlmostEqual(shot.cone, expected_cone)
-                    self.assertEqual(shot.hit_cap, .95)
+                    self.assertEqual(shot.hit_cap, battle_balance.weapon_hit_caps().get(gun, .95))
                     power = 1 + .03 * max(0, ch.attr(progression.INTELLECT) - 5)
-                    self.assertEqual(shot.dmin, max(1, round(si['h_damage_min'][mode] * power * ammo['dam_mod'])))
-                    self.assertEqual(shot.sdmin, round(si.get('st_damage_min', [0] * 3)[mode] * power * ammo['st_mod']))
+                    self.assertEqual(shot.dmin, max(1, round(si['h_damage_min'][mode] * power * (1 if items.gold_round(ammo) else ammo['dam_mod']))))
+                    self.assertEqual(shot.sdmin, round(si.get('st_damage_min', [0] * 3)[mode] * power * (1 if items.gold_round(ammo) else ammo['st_mod'])))
                     self.assertEqual(shot.max_range, int(si['max_range'][mode] * ammo['range_mod'] + 1e-9))
                     self.assertEqual(shot.piercing, ammo['piercing'])
                 finally:
@@ -166,7 +166,7 @@ class StatPipeline(unittest.IsolatedAsyncioTestCase):
                         shot = f.aim._args[-1][3]
                         power = 1 + .03 * max(0, ch.attr(progression.INTELLECT) - 5)
                         self.assertEqual((shot.dmin, shot.dmax), tuple(
-                            max(1, round(si[field][mode] * power * ammo['dam_mod']))
+                            max(1, round(si[field][mode] * power * (1 if items.gold_round(ammo) else ammo['dam_mod'])))
                             for field in ('h_damage_min', 'h_damage_max')))
                         self.assertEqual(shot.num_shots, si['fire_mods'][mode])
                     finally:
@@ -347,10 +347,13 @@ class StatPipeline(unittest.IsolatedAsyncioTestCase):
                 ammo = items.params_of(type_id)
                 shot = self.s.combat.prepare_weapon(weapon, ammo, None)
                 self.assertEqual((shot.dmin, shot.dmax),
-                                 (max(1, round(1000 * ammo['dam_mod'])), max(1, round(2000 * ammo['dam_mod']))))
+                                 (max(1, round(1000 * (1 if items.gold_round(ammo) else ammo['dam_mod']))), max(1, round(2000 * (1 if items.gold_round(ammo) else ammo['dam_mod'])))))
                 self.assertEqual((shot.sdmin, shot.sdmax),
-                                 (round(500 * ammo['st_mod']), round(1000 * ammo['st_mod'])))
+                                 (round(500 * (1 if items.gold_round(ammo) else ammo['st_mod'])), round(1000 * (1 if items.gold_round(ammo) else ammo['st_mod']))))
                 self.assertEqual(shot.max_range, int(10 * ammo['range_mod'] + 1e-9))
+                self.assertEqual(shot.hp_multiplier, ammo['dam_mod'] if items.gold_round(ammo) else 1)
+                self.assertEqual(shot.sp_multiplier, ammo['st_mod'] if items.gold_round(ammo) else 1)
+                self.assertEqual(shot.crit, weapon.crit)
 
     async def test_compatible_ammo_accuracy_piercing_and_damage_reach_actual_fire_timer(self):
         self.manager()
@@ -383,10 +386,60 @@ class StatPipeline(unittest.IsolatedAsyncioTestCase):
                         expected_cone *= .95
                     self.assertAlmostEqual(shot.cone, expected_cone)
                     intellect = 1 + .03 * max(0, ch.attr(progression.INTELLECT) - 5)
-                    self.assertEqual(shot.dmin, max(1, round(params['h_damage_min'][mode] * intellect * ammo['dam_mod'])))
-                    self.assertEqual(shot.dmax, max(1, round(params['h_damage_max'][mode] * intellect * ammo['dam_mod'])))
+                    self.assertEqual(shot.dmin, max(1, round(params['h_damage_min'][mode] * intellect * (1 if items.gold_round(ammo) else ammo['dam_mod']))))
+                    self.assertEqual(shot.dmax, max(1, round(params['h_damage_max'][mode] * intellect * (1 if items.gold_round(ammo) else ammo['dam_mod']))))
                 finally:
                     self.s.combat.cancel_timers()
+
+    async def test_real_fire_crit_subtracts_defenders_own_antikrit_once_for_every_class_and_ammo(self):
+        from types import SimpleNamespace as NS
+        guns = (25566, 25943, 25201, 25803, 24990, 26177)
+        rc = combat.RoomCombat.__new__(combat.RoomCombat)
+        for gun in guns:
+            params = items.params_of(gun)
+            for ammo_id in params['comp_array']:
+                f, ch, _, _, _, row = attack_fixture(gun)
+                for spec in ch.spec:
+                    spec[0] = 5
+                ch.effects = effects.zero()
+                ch.effects['cp'], ch.effects['ce'] = 12, 17
+                gear = sets.zero()
+                gear['cp'], gear['ce'] = 32, 10
+                ch.set_gear(gear, repeat=(2, 3))
+                row.update(ammo_type=ammo_id, ammo_count=100,
+                           cur_mode=items.first_mode(params['fire_mods']))
+                combat.Fighter.use_fire(f, dict(obj='weapon', target='000000005'))
+                try:
+                    self.assertIsNotNone(f.aim)
+                    weapon = f.aim._args[-1][3]
+                    self.assertEqual(weapon.crit, progression.crit_chance(ch, params['weapon_type'])[0])
+                    for enemy_gun in guns:
+                        defender = progression.Character()
+                        defender.set_skill(progression.SHOOTING, 16)
+                        for spec in defender.spec:
+                            spec[0] = 3
+                        for anti_bonus in (0, 20, 200):
+                            defender.effects = effects.zero()
+                            defender.effects['ce'] = 17
+                            defence = sets.zero()
+                            defence['ce'] = anti_bonus
+                            defender.set_gear(defence, repeat=(0, 3))
+                            target = NS(is_player=True, level=16, character=lambda: defender,
+                                primary=lambda: dict(root=items.FIRE_ARM, type_id=enemy_gun), armor=lambda: 148)
+                            target.crit_evade_ranged = lambda: combat.Fighter.crit_evade_ranged(target)
+                            expected_anti = progression.crit_chance(defender,
+                                items.params_of(enemy_gun)['weapon_type'])[1]
+                            self.assertEqual(target.crit_evade_ranged(), expected_anti)
+                            for optimal in (False, True):
+                                with patch.object(combat, 'roll', return_value=True) as roll:
+                                    self.assertTrue(rc.ranged_critical(f, target, weapon, optimal))
+                                expected = max(0, min(100, weapon.crit - expected_anti))
+                                roll.assert_called_once_with(expected if optimal else expected*.5)
+                            hp, sp = rc.bullet_damage(f, target, weapon, weapon.dmax,
+                                                     weapon.sdmax, True, 100)
+                            self.assertEqual((hp, sp), (weapon.dmax, min(100, weapon.dmax)))
+                finally:
+                    combat.Fighter.cancel_timers(f)
 
     async def test_all_declared_sets_count_each_part_and_each_threshold_once(self):
         slots = dict(helm=inventory.HEAD, shirt=inventory.CAMO, armor=inventory.ARMOR,

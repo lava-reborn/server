@@ -502,6 +502,17 @@ check("an ammunition card does not acquire an equipment-level requirement",
       items.equipment_level_text(386), "")
 _od = orig_texts.item_descs()
 def expected_item_description(t, original):
+    hand_gifts = {
+        1069: 'силе', 1070: 'ловкости', 1071: 'восприятию', 1072: 'интеллекту',
+    }
+    if t in hand_gifts:
+        amount = 4 if t == 1072 else 3
+        original = ('Послание от любящего человека.<br>Держите валентинку в любой руке: '
+                    f'она даёт +{amount} к {hand_gifts[t]}, пока находится в руке.')
+    if t in (3789, 3826):
+        original = ('Увеличивает количество обычного лута за афро на 200%. '
+                    'Для оружия, частей сетов и подсумков повышает шанс выпадения на 200%. '
+                    'Количество снаряжения не меняется. На дроп золотых ценностей не влияет.')
     if cat[t][0] == items.HEAL and cat[t][1].startswith('Med_Battle_'):
         original = re.sub(r'(Расход ОД:\s*</b>\s*)\d+(?:[.,]\d+)?',
                           lambda m: m.group(1) + format(items.params_of(t)['heal_cost'], 'g'), original)

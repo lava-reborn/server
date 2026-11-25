@@ -42,6 +42,32 @@ class ClientSuiteSelection(unittest.TestCase):
         selected = {Path(path).relative_to(ROOT).as_posix() for path in suite.suites()}
         self.assertFalse(required - selected, 'Warehouse/base capture regressions must reach CI')
 
+    def test_progression_weapon_and_buff_bank_regressions_are_included_in_ci(self):
+        required = {'server/test_action_recovery.py', 'server/test_action_sync.py',
+                    'server/test_mob_penetration.py', 'server/test_combat_xp_ramp.py',
+                    'server/test_weekend_experience.py', 'server/test_hand_valentines.py',
+                    'server/test_combat_xp_cap.py', 'server/test_aggro_hold.py',
+                    'server/test_ground.py', 'server/test_war_state.py', 'server/test_loot.py',
+                    'server/test_items.py', 'server/test_camp_box_loot.py',
+                    'server/test_eden_native_weapons.py',
+                    'server/test_buff_purchases.py', 'server/test_archived_buffs.py',
+                    'server/test_bank_stacks.py',
+                    'server/test_machinegun_burst_survival.py', 'server/test_machinegun_balance.py',
+                    'server/test_mob_loot_followup.py', 'server/test_release_combat.py',
+                    'server/test_scanner_loot.py', 'server/test_stat_pipeline.py',
+                    'tools/test_action_recovery_client.py', 'tools/test_bank_client.py',
+                    'tools/test_stat_breakdown_client.py',
+                    'tools/test_medicine_cooldown_client.py', 'tools/test_tester_launcher.py'}
+        selected = {Path(path).relative_to(ROOT).as_posix() for path in suite.suites()}
+        self.assertFalse(required - selected)
+
+
+    def test_buff_bank_transactions_are_also_scheduled_on_postgres(self):
+        postgres = (ROOT / 'deploy/ci/pg_suites.sh').read_text(encoding='utf-8')
+        groups = {name for group in re.findall(r'(?ms)^SUITES\+?=\((.*?)\)', postgres)
+                  for name in group.split()}
+        self.assertIn('bank_stacks', groups)
+
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory(prefix='lava_ci_selection_')
         self.addCleanup(self.temporary.cleanup)

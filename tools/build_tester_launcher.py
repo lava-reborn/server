@@ -20,6 +20,7 @@ def build(out):
         '/resource:' + str(ROOT / 'launcher/assets/hero.jpg') + ',hero',
         '/resource:' + str(ROOT / 'launcher/assets/logo.png') + ',logo',
         str(ROOT / 'launcher/Theme.cs'),
+        str(ROOT / 'launcher/FlashContextMenu.cs'),
         str(ROOT / 'tools/TesterLauncher.cs'),
     ], check=True)
     (out / 'Start.cmd').write_bytes(
