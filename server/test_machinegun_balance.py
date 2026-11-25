@@ -32,7 +32,7 @@ class MachinegunBalance(unittest.TestCase):
             sdmin=si.get('st_damage_min', [0]*3)[mode], sdmax=si.get('st_damage_max', [0]*3)[mode])
         return balance.weapon(original, self.ch, dict(type_id=type_id, cur_mode=mode), ammo)
 
-    def scores(self, type_id):
+    def scores(self, type_id, distance=None):
         si = items.params_of(type_id)
         ammo_id = next(t for t in si['comp_array'] if items.catalogue()[t][1].endswith('_EK_G'))
         ammo = items.params_of(ammo_id)
@@ -41,11 +41,12 @@ class MachinegunBalance(unittest.TestCase):
             if not shots:
                 continue
             weapon = self.weapon(type_id, mode, ammo)
-            distance = max(weapon.opt_lo, min(7, weapon.opt_hi))
-            hit = combat.hit_probability(weapon.cone, distance, weapon.hit_cap)
-            crit = balance.critical_chance(self.shooter, self.target, weapon.crit - 20, True, ordinary=True) / 100
-            low = (weapon.dmax - weapon.dmin) // 2 + weapon.dmin
-            slow = (weapon.sdmax - weapon.sdmin) // 2 + weapon.sdmin
+            sample = max(weapon.opt_lo, min(7, weapon.opt_hi)) if distance is None else distance
+            optimal = weapon.opt_lo <= sample <= weapon.opt_hi
+            hit = combat.hit_probability(weapon.cone, sample, weapon.hit_cap) if sample <= weapon.max_range else 0
+            crit = balance.critical_chance(self.shooter, self.target, weapon.crit - 20, optimal, ordinary=True) / 100
+            low = (weapon.dmax - weapon.dmin) // 2 + weapon.dmin if optimal else weapon.dmin
+            slow = (weapon.sdmax - weapon.sdmin) // 2 + weapon.sdmin if optimal else weapon.sdmin
             def mean(critical):
                 total = 0
                 for hp in range(low, weapon.dmax + 1):
@@ -62,28 +63,62 @@ class MachinegunBalance(unittest.TestCase):
                            damage / max(seconds + reload, si['fire_costs'][mode] / (p.AP_REGEN / .6))))
         return tuple(max(score[index] for score in scores) for index in (0, 1))
 
-    def test_accuracy_adjustments_keep_about_seventy_percent_of_the_previous_dps_gain(self):
-        # No requirement to beat a short-range SMG. Bound each family's own
-        # increase, using equal level/spec, EK G, full animation + renewed aim
-        # and amortized reload in both the historical and current scores.
-        for type_id, before, proposal in ((24989, 115.5754, 151.2818),
-                                          (24990, 138.1986, 180.8674),
-                                          (25006, 92.0640, 155.4104),
-                                          (25007, 110.2080, 186.4257)):
+    def test_rpd_and_aug_accuracy_gains_stay_within_the_reviewed_limits(self):
+        # RPD was reduced slightly again; AUG keeps its approved correction.
+        # There is no requirement for either family to beat a nearby SMG.
+        for type_id, before, proposal, low, high in (
+                (24989, 115.5754, 151.2818, .32, .38),
+                (24990, 138.1986, 180.8674, .32, .38),
+                (25006, 92.0640, 155.4104, .65, .75),
+                (25007, 110.2080, 186.4257, .65, .75)):
             with self.subTest(type_id=type_id):
                 gain = self.scores(type_id)[0] - before
-                self.assertGreaterEqual(gain, (proposal - before) * .65)
-                self.assertLessEqual(gain, (proposal - before) * .75)
+                self.assertGreaterEqual(gain, (proposal - before) * low)
+                self.assertLessEqual(gain, (proposal - before) * high)
 
-    def test_m249_and_both_available_pkm_tiers_receive_no_damage_boost(self):
-        # Post-defence ammo rounding may change the expectation slightly;
-        # both families retain their original catalogue damage bounds.
-        for type_id, before in ((25022, 171.1998), (25023, 207.6684),
-                                (7051, 121.6357), (7052, 192.8850)):
+    def test_pkm_tiers_follow_the_matching_gold_reference_by_five_percent(self):
+        # The agreed reference uses the best mode in its optimal band,
+        # including a new aim, the complete animation and amortized reload.
+        for pkm, reference in ((7051, 24990), (7052, 25023)):
+            with self.subTest(pkm=pkm):
+                ratio = self.scores(pkm)[0] / self.scores(reference)[0]
+                self.assertAlmostEqual(ratio, 1.05, delta=.002)
+
+    def test_afro_and_gold_m249_beat_matching_rpd_on_medium_and_long_ranges(self):
+        # Nearby fights may still favour RPD. The same fixed distance is
+        # used for all modes, with real non-optimal crit/damage and range.
+        for m249, rpd in ((25022, 24989), (25023, 24990)):
+            for distance in (7, 12, 18, 24):
+                with self.subTest(m249=m249, distance=distance):
+                    self.assertGreater(self.scores(m249, distance)[0], self.scores(rpd, distance)[0])
+
+    def test_all_m249_afro_and_gold_blueprints_receive_the_same_mode_corrections(self):
+        from training.balance import before_release
+        prior_ordinary = {25034: [.924, 1.123, 1.289], 25035: [.924, 1.123, 1.289]}
+        count = 0
+        for type_id, (_root, name) in items.catalogue().items():
+            if (not name.startswith('machine_gun_1_lvl_17') or items.premium(type_id)
+                    or items.root_of(type_id) != items.FIRE_ARM):
+                continue
+            si = items.params_of(type_id)
+            if si['weapon_type'] != items.MACHINEGUN:
+                continue
+            # These range blueprints deliberately retain an older private
+            # profile; the ordinary game already had a newer spread table.
+            original = prior_ordinary.get(type_id, before_release(type_id, dict(si))['target_size'])
+            self.assertEqual(si['target_size'], [round(x*f, 5) for x, f in zip(original, (.84, .87, .935))])
+            count += 1
+        self.assertEqual(count, 24)
+
+    def test_m249_and_pkm_keep_the_original_aim_times_and_ap_costs(self):
+        for type_id, times, costs in ((25022, [800, 800, 1000], [25, 32, 39]),
+                                      (25023, [800, 800, 1000], [25, 32, 39]),
+                                      (7051, [800, 800, 1200], [25, 30, 40]),
+                                      (7052, [800, 800, 1000], [25, 32, 39])):
             with self.subTest(type_id=type_id):
-                current = self.scores(type_id)[0]
-                self.assertGreater(current, before * .98)
-                self.assertLess(current, before * 1.02)
+                si = items.params_of(type_id)
+                self.assertEqual(si['fire_times'], times)
+                self.assertEqual(si['fire_costs'], costs)
 
     def test_reviewed_machinegun_variants_keep_their_original_table_damage(self):
         count = 0
