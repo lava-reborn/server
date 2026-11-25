@@ -1,7 +1,6 @@
-"""Analytic ordinary MG/SMG parity, catalogue bounds and single ammo scaling."""
+"""Analytic MG gain limits, original damage bounds and single ammo scaling."""
 from types import SimpleNamespace as NS
 import unittest
-from unittest.mock import patch
 
 import action_animation
 import battle_balance as balance
@@ -63,49 +62,52 @@ class MachinegunBalance(unittest.TestCase):
                            damage / max(seconds + reload, si['fire_costs'][mode] / (p.AP_REGEN / .6))))
         return tuple(max(score[index] for score in scores) for index in (0, 1))
 
-    def test_released_base_machineguns_keep_up_with_smg_without_excessive_sustained_damage(self):
-        # Equal training; one already engaged unshielded target, EK G, no cover,
-        # male model and each mode's optimal distance capped at seven hexes.
-        for smg, machineguns in ((25540, (24989, 25006, 25022)), (26177, (24990, 25007, 25023))):
-            baseline = self.scores(smg)
-            for machinegun in machineguns:
-                score = self.scores(machinegun)
-                for current, previous in zip(score, baseline):
-                    self.assertGreaterEqual(current, previous, machinegun)
-                    self.assertLess(current, previous * 1.4, machinegun)
+    def test_accuracy_adjustments_keep_about_seventy_percent_of_the_previous_dps_gain(self):
+        # No requirement to beat a short-range SMG. Bound each family's own
+        # increase, using equal level/spec, EK G, full animation + renewed aim
+        # and amortized reload in both the historical and current scores.
+        for type_id, before, proposal in ((24989, 115.5754, 151.2818),
+                                          (24990, 138.1986, 180.8674),
+                                          (25006, 92.0640, 155.4104),
+                                          (25007, 110.2080, 186.4257)):
+            with self.subTest(type_id=type_id):
+                gain = self.scores(type_id)[0] - before
+                self.assertGreaterEqual(gain, (proposal - before) * .65)
+                self.assertLessEqual(gain, (proposal - before) * .75)
 
-    def test_available_mg_modifications_stay_below_reviewed_smg_class_ceiling(self):
-        pools = {}
-        for type_id in balance.equipment_changes():
-            si = items.params_of(type_id)
-            if (items.root_of(type_id) != items.FIRE_ARM
-                    or si['weapon_type'] not in (items.SMG, items.MACHINEGUN)
-                    or items.premium(type_id) or items.acquisition_blocked(type_id)):
-                continue
-            pools.setdefault((si['weapon_type'], bool(si['g_cost'])), []).append(self.scores(type_id))
-        self.assertGreaterEqual(sum(len(pools[items.MACHINEGUN, gold]) for gold in (False, True)), 30)
-        for gold in (False, True):
-            ceilings = [max(score[index] for score in pools[items.SMG, gold]) for index in (0, 1)]
-            for score in pools[items.MACHINEGUN, gold]:
-                for value, ceiling in zip(score, ceilings):
-                    self.assertLess(value, ceiling * 1.4)
+    def test_m249_and_both_available_pkm_tiers_receive_no_damage_boost(self):
+        # Post-defence ammo rounding may change the expectation slightly;
+        # both families retain their original catalogue damage bounds.
+        for type_id, before in ((25022, 171.1998), (25023, 207.6684),
+                                (7051, 121.6357), (7052, 192.8850)):
+            with self.subTest(type_id=type_id):
+                current = self.scores(type_id)[0]
+                self.assertGreater(current, before * .98)
+                self.assertLess(current, before * 1.02)
 
-    def test_uniform_damage_correction_covers_all_catalogued_machinegun_variants(self):
+    def test_reviewed_machinegun_variants_keep_their_original_table_damage(self):
         count = 0
-        for type_id in balance.equipment_changes():
+        for type_id, record in balance.equipment_changes().items():
             si = items.params_of(type_id)
             if items.root_of(type_id) != items.FIRE_ARM or si['weapon_type'] != items.MACHINEGUN:
                 continue
-            # Disable the one shared policy to recover the exact same variant,
-            # including its own blueprint and range. No hard-coded copies.
-            with patch.object(items, 'MACHINEGUN_DAMAGE_PERCENT', 100):
-                previous = items.params_of(type_id)
             for field in ('h_damage_min', 'h_damage_max'):
-                self.assertEqual(si[field], [(value * 105 + 50) // 100 for value in previous[field]])
-            self.assertEqual(si['fire_mods'], previous['fire_mods'])
-            self.assertEqual(si['fire_costs'], previous['fire_costs'])
-            count += 1
-        self.assertGreaterEqual(count, 70)
+                if field in record:
+                    self.assertEqual(si[field], record[field], (type_id, field))
+                    count += 1
+        self.assertGreaterEqual(count, 100)
+
+    def test_pkm_all_five_tiers_keep_the_pre_release_damage_bounds(self):
+        fixtures = {7051: ([24, 24, 18], [72, 60, 90]),
+                    7052: ([29, 32, 37], [81, 84, 103]),
+                    7082: ([36, 30, 30], [132, 126, 138]),
+                    7053: ([46, 42, 54], [118, 114, 102]),
+                    7054: ([78, 66, 60], [138, 114, 108])}
+        for type_id, (minimum, maximum) in fixtures.items():
+            with self.subTest(type_id=type_id):
+                si = items.params_of(type_id)
+                self.assertEqual(si['h_damage_min'], minimum)
+                self.assertEqual(si['h_damage_max'], maximum)
 
     def test_gold_ammo_changes_final_damage_without_changing_bounds_or_crit(self):
         for type_id in (25566, 25943, 25201, 25803, 24990, 26177):

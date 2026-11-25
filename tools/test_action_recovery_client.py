@@ -311,22 +311,33 @@ class ActionRecoveryClient(unittest.TestCase):
         self.call('__bfDrainInput',None)
         self.assertEqual(self.executed,['fire'])
 
-    def test_repeated_space_keeps_native_ack_latch_without_queue_or_timer(self):
-        self.global_['__bfRecoveryUntil'] = 500
-        activator = dict(coolDownBlock=True, useType=16,
-                         __bfRequestFireOrig=lambda *args: self.executed.append('fire'))
-        for _ in range(1000):
-            self.call('__bfRequest1', activator, 1, 42)
-        self.assertFalse(self.executed)
-        self.assertFalse(self.timers)
-        self.assertIsNone(self.global_.get('__bfPendingInput'))
-        activator['coolDownBlock'] = False
-        self.call('__bfRequest1', activator, 1, 42)
-        self.assertFalse(self.executed)
-        self.assertIsNotNone(self.global_['__bfPendingInput'])
-        self.now = 500
-        self.call('__bfDrainInput', None)
-        self.assertEqual(self.executed, ['fire'])
+    def test_repeated_attack_keeps_native_ack_latch_during_aim_and_recovery(self):
+        for index, method in ((1, '__bfRequestFireOrig'), (2, '__bfRequestStrikeOrig')):
+            for recovering in (False, True):
+                with self.subTest(index=index, recovering=recovering):
+                    self.call('__bfClearInput', None)
+                    self.executed.clear()
+                    self.timers.clear()
+                    self.now = 100
+                    self.global_['__bfRecoveryUntil'] = 500 if recovering else 0
+                    activator = dict(coolDownBlock=True, useType=16)
+                    activator[method] = lambda *args: self.executed.append(args)
+                    for target in range(1000):
+                        self.call('__bfRequest' + str(index), activator, 1, target)
+                    # No native aim/swing bar restart, retarget, queue or timer.
+                    self.assertFalse(self.executed)
+                    self.assertFalse(self.timers)
+                    self.assertIsNone(self.global_.get('__bfPendingInput'))
+                    activator['coolDownBlock'] = False
+                    self.call('__bfRequest' + str(index), activator, 1, 42)
+                    if recovering:
+                        self.assertFalse(self.executed)
+                        self.assertIsNotNone(self.global_['__bfPendingInput'])
+                        self.assertEqual(len(self.timers), 1)
+                        self.now = 500
+                        self.call('__bfDrainInput', None)
+                        self.call('__bfDrainInput', None)
+                    self.assertEqual(self.executed, [(1, 42)])
 
     def test_space_spam_waits_through_fire_out_and_sends_one_new_aim(self):
         scene, figure = self.stalled_shot()

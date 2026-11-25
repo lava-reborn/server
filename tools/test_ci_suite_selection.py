@@ -43,7 +43,8 @@ class ClientSuiteSelection(unittest.TestCase):
         self.assertFalse(required - selected, 'Warehouse/base capture regressions must reach CI')
 
     def test_progression_weapon_and_buff_bank_regressions_are_included_in_ci(self):
-        required = {'server/test_action_recovery.py', 'server/test_combat_xp_ramp.py',
+        required = {'server/test_action_recovery.py', 'server/test_action_sync.py',
+                    'server/test_mob_penetration.py', 'server/test_combat_xp_ramp.py',
                     'server/test_weekend_experience.py', 'server/test_hand_valentines.py',
                     'server/test_buff_purchases.py', 'server/test_bank_stacks.py',
                     'server/test_machinegun_burst_survival.py', 'server/test_machinegun_balance.py',

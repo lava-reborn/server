@@ -88,7 +88,6 @@ ACT_FIRE, ACT_UNLOAD, ACT_USEMODE = 16, 32, 64
 
 # FireArm.as:38-43
 PISTOL, SHOTGUN, ASSAULT, RIFLE, MACHINEGUN, SMG = range(6)
-MACHINEGUN_DAMAGE_PERCENT = 105
 
 # Ammunition, by calibre. objects.xml carries two families under root 3: the
 # bare calibre records "_9mmNato", "_762x39", "_12mm", "_762x51" (ids 1, 8, 9,
@@ -1360,12 +1359,6 @@ def static_info(type_id):
         for field, value in battle_balance.equipment_changes().get(type_id, {}).items():
             info[1][field] = list(value) if isinstance(value, list) else value
         if root_of(type_id) == FIRE_ARM:
-            if info[1]['weapon_type'] == MACHINEGUN and type_id in battle_balance.equipment_changes():
-                # Reviewed A/G/blueprint variants share the same small correction.
-                # Keep the item card and actual shot bounds identical.
-                for field in ('h_damage_min', 'h_damage_max'):
-                    info[1][field] = [(value * MACHINEGUN_DAMAGE_PERCENT + 50) // 100
-                                      for value in info[1][field]]
             compatible = info[1]['comp_array']
             info[1]['comp_array'] = list(dict.fromkeys(compatible + [SHOCK_ROUNDS[t]
                 for t in compatible if t in SHOCK_ROUNDS]))

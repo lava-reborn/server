@@ -207,11 +207,11 @@ def patches(Asm, undef):
     source = SOURCE
     for i, (path, method, keep, params) in enumerate(REQUESTS):
         args = ', '.join(params)
-        if method == 'fire':
+        if method in ('fire', 'strike'):
             source += f'''
 def __bfRequest{i}({args}):
     # Keep the native acknowledgement latch; a repeated space must neither
-    # restart the aim bar nor enqueue another request/timer.
+    # restart the aim/swing bar nor enqueue another request/timer.
     if this.coolDownBlock and this.useType == 16:
         return
     _global.__bfMoveIntent = None
