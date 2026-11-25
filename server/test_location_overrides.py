@@ -149,7 +149,12 @@ try:
     # --- data/exits_sides.json: the rows of ours alone ------------------------------------------
     print("exits_sides rows")
     es_copy = os.path.join(W, "exits_sides.json")
-    shutil.copy(os.path.join(ROOT, "data", "exits_sides.json"), es_copy)
+    # The generator emits canonical LF. Keep the same fixture on Windows,
+    # where Git can otherwise convert the checked-out JSON to CRLF.
+    with io.open(os.path.join(ROOT, "data", "exits_sides.json"), encoding="utf-8") as fh:
+        fixture = fh.read().encode("utf-8")
+    with open(es_copy, "wb") as fh:
+        fh.write(fixture)
     before = read(es_copy)
     check("rows_for([]) writes the table back byte for byte", (B.rows_for([], out=es_copy), read(es_copy) == before),
           ([], True))

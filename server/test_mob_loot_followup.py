@@ -58,7 +58,7 @@ class MobLootFollowup(unittest.TestCase):
         target.loot_level = 0
         self.assertEqual(combat.RoomCombat.loot_multiplier(None, target, low), .25)
 
-    def test_both_scanners_triple_valuable_probability_once_until_expiry(self):
+    def test_both_scanners_keep_gold_probability_and_expire_normally(self):
         class Fighter:
             is_player = True
             level = 10
@@ -73,8 +73,9 @@ class MobLootFollowup(unittest.TestCase):
                     patch.object(mobs, 'independent_loot', return_value=set()), \
                     patch.object(mobs, 'count_of', return_value=1), \
                     patch.object(mobs, 'one_of_groups', return_value=[]):
-                self.assertEqual(mobs.roll_table(82, FixedRandom(.299), factor, scanner_multiplier=3), [(6950, 1)])
-                self.assertEqual(mobs.roll_table(82, FixedRandom(.301), factor, scanner_multiplier=3), [])
+                self.assertEqual(mobs.roll_table(82, FixedRandom(.099), factor, scanner_multiplier=3), [(6950, 1)])
+                for draw in (.1, .101, .299):
+                    self.assertEqual(mobs.roll_table(82, FixedRandom(draw), factor, scanner_multiplier=3), [])
             killer.sess.effects.clock = lambda: 10
             self.assertEqual(combat.RoomCombat.loot_multiplier(None, target, killer), 1)
 

@@ -93,12 +93,44 @@ class MachinegunBalance(unittest.TestCase):
                 self.assertAlmostEqual(ratio, 1.05, delta=.002)
 
     def test_afro_and_gold_m249_beat_matching_rpd_on_medium_and_long_ranges(self):
-        # Nearby fights may still favour RPD. The same fixed distance is
-        # used for all modes, with real non-optimal crit/damage and range.
+        # Use the same fixed distance for all modes, with real non-optimal
+        # critical chance, damage and range.
         for m249, rpd in ((25022, 24989), (25023, 24990)):
             for distance in (7, 12, 18, 24):
                 with self.subTest(m249=m249, distance=distance):
                     self.assertGreater(self.scores(m249, distance)[0], self.scores(rpd, distance)[0])
+
+    def test_m249_beats_matching_rpd_at_close_range_with_and_without_blueprints(self):
+        for m249, rpd in ((25022, 24989), (25023, 24990),
+                          (25025, 24992), (25026, 24993),
+                          (40086, 24995), (40088, 24996),
+                          (25025, 25001), (25026, 25002)):
+            for distance in (1, 2, 3, 4):
+                with self.subTest(m249=m249, rpd=rpd, distance=distance):
+                    self.assertGreater(self.scores(m249, distance)[0], self.scores(rpd, distance)[0])
+
+    def test_gold_m249_damage_blueprint_exceeds_pkm17_by_five_percent(self):
+        # Keep both the agreed optimal-band reference and actual close fights.
+        for distance in (None, 1, 2, 3, 4, 7):
+            with self.subTest(distance=distance):
+                ratio = self.scores(25026, distance)[0] / self.scores(7052, distance)[0]
+                self.assertAlmostEqual(ratio, 1.05, delta=.001)
+        self.assertGreater(self.scores(25026, 4)[0], self.scores(40088, 4)[0])
+
+    def test_accuracy_ceilings_cover_all_rpd_blueprints_without_changing_other_weapons(self):
+        expected = {type_id for type_id, (_root, name) in items.catalogue().items()
+                    if name.startswith('machine_gun_1_lvl_16')
+                    and '_mob' not in name and not items.premium(type_id)}
+        caps = balance.weapon_hit_caps()
+        self.assertEqual(set(caps), expected | {7052})
+        for type_id in expected:
+            self.assertEqual(caps[type_id], .83)
+        for type_id, cap in ((24990, .83), (7052, .905), (25026, .95), (26177, .95)):
+            with self.subTest(type_id=type_id):
+                self.assertEqual(self.weapon(type_id, 2, {}).hit_cap, cap)
+        # An older weapon still receives the existing over-level penalty.
+        self.ch.set_skill(p.SHOOTING, 15)
+        self.assertAlmostEqual(self.weapon(24990, 2, {}).hit_cap, .83 * .95)
 
     def test_all_m249_afro_and_gold_blueprints_receive_the_same_mode_corrections(self):
         from training.balance import before_release
@@ -114,7 +146,13 @@ class MachinegunBalance(unittest.TestCase):
             # These range blueprints deliberately retain an older private
             # profile; the ordinary game already had a newer spread table.
             original = prior_ordinary.get(type_id, before_release(type_id, dict(si))['target_size'])
-            self.assertEqual(si['target_size'], [round(x*f, 5) for x, f in zip(original, (.7, .69, .935))])
+            expected = [round(x*f, 5) for x, f in zip(original, (.7, .69, .935))]
+            if type_id in (25025, 25026, 40107, 40109):
+                expected = {25025: [.7573, .89112, 1.38959],
+                            25026: [.7573, .89112, 1.38959],
+                            40107: [0.7573, 0.89112, 1.38959],
+                            40109: [0.7573, 0.89112, 1.38959]}[type_id]
+            self.assertEqual(si['target_size'], expected)
             count += 1
         self.assertEqual(count, 24)
 

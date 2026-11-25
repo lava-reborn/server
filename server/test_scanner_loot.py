@@ -115,6 +115,37 @@ class ScannerLoot(unittest.TestCase):
             self.assertEqual(mobs.loot_for(stats, FixedRandom(), multiplier=3,
                                           scanner_multiplier=3), [(26177, 1)])
 
+    def test_actual_camp_and_mine_tables_keep_gold_unchanged_and_triple_common_quantity(self):
+        import json
+        import random
+        from pathlib import Path
+        profiles = json.loads((Path(__file__).resolve().parents[1]
+                               / 'data/loot_rebalance.json').read_text(encoding='utf-8'))['targets']
+        gold = mortimer.VALUABLES | items.GOLD_INGOTS.keys() | {mortimer.SAND}
+        for profile in profiles:
+            loc_id = int(profile['id'].split('-')[1])
+            for kind in map(int, profile['counts']):
+                stats = mobs.stats(kind)
+                for gap in (.75, .90, 1, 1.10, 1.30):
+                    for seed in range(4):
+                        with self.subTest(profile=profile['id'], kind=kind, gap=gap, seed=seed):
+                            results = []
+                            for scanner in (1, 3):
+                                drops = mobs.loot_for(stats, random.Random(seed), loc_id=loc_id,
+                                    killer_level=stats.level - 1, multiplier=gap * scanner,
+                                    gold_multiplier=gap, scanner_multiplier=scanner)
+                                count = Counter()
+                                for type_id, amount in drops:
+                                    count[type_id] += amount
+                                results.append(count)
+                            plain, scanned = results
+                            self.assertEqual({t: n for t, n in plain.items() if t in gold},
+                                             {t: n for t, n in scanned.items() if t in gold})
+                            common = {t for t in plain.keys() | scanned.keys()
+                                      if items.scanner_quantity_item(t)}
+                            self.assertEqual({t: scanned[t] for t in common},
+                                             {t: plain[t] * 3 for t in common})
+
     def test_both_descriptions_explain_quantity_and_equipment_exceptions(self):
         for type_id in (3789, 3826):
             text = names.ALL[items.DESC_ID_OFFSET + type_id]
