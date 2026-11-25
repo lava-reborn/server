@@ -23,6 +23,9 @@ from testkit import run_cases
 
 class DamageXp(unittest.TestCase):
     def setUp(self):
+        calendar = patch.object(p, 'combat_calendar_multiplier', return_value=1)
+        calendar.start()
+        self.addCleanup(calendar.stop)
         self.fixture = CombatXpCap()
         self.serial = 0
 
@@ -313,7 +316,7 @@ class DamageXpPersistence(unittest.IsolatedAsyncioTestCase):
                 with patch.object(current.char, 'save', wraps=current.char.save) as save:
                     combat.RoomCombat.settle_xp(rc, mob)
                 save.assert_called_once_with(case.store)
-                reward = p.combat_mob_xp(13, 12)
+                reward = p.combat_mob_xp(13, 12) * p.combat_calendar_multiplier()
                 self.assertEqual(current.char.skill[p.SHOOTING][1], int(reward))
                 self.assertEqual(old_character.skill[p.SHOOTING][1], 0)
                 stored = p.Character.load(case.store, char_id)

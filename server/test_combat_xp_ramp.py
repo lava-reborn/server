@@ -1,11 +1,17 @@
 """Combat XP ramp endpoints, fractional shares and actual kill settlement."""
 import unittest
+from unittest.mock import patch
 
 import progression as p
 import test_combat_xp_cap as cap_tests
 
 
 class CombatXpRamp(unittest.TestCase):
+    def setUp(self):
+        calendar = patch.object(p, 'combat_calendar_multiplier', return_value=1)
+        calendar.start()
+        self.addCleanup(calendar.stop)
+
     def test_gap_rewards_increase_and_stop_at_four(self):
         for skill in range(17):
             base = p.mob_price(skill + 1) * p.COMBAT_XP_LEVEL_MULTIPLIERS[skill]

@@ -18,7 +18,11 @@ import test_training_ground as fixtures
 
 
 class TimedItems(unittest.IsolatedAsyncioTestCase):
-    asyncSetUp = fixtures.TrainingGround.asyncSetUp
+    async def asyncSetUp(self):
+        calendar = patch.object(progression, 'combat_calendar_multiplier', return_value=1)
+        calendar.start()
+        self.addCleanup(calendar.stop)
+        await fixtures.TrainingGround.asyncSetUp(self)
     asyncTearDown = fixtures.TrainingGround.asyncTearDown
 
     async def test_local_bot_reused_ids_always_receive_info_then_real_bars(self):
@@ -688,6 +692,11 @@ class TimedItems(unittest.IsolatedAsyncioTestCase):
 
 
 class ReleaseCatalogue(unittest.TestCase):
+    def setUp(self):
+        calendar = patch.object(progression, 'combat_calendar_multiplier', return_value=1)
+        calendar.start()
+        self.addCleanup(calendar.stop)
+
     def test_live_rifle_armour_piercing_stamina_overflow_and_critical_damage(self):
         room = combat.RoomCombat.__new__(combat.RoomCombat)
         shooter = NS(is_player=True, character=lambda: NS(level=12))

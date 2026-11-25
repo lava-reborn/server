@@ -18,6 +18,7 @@ teacher, and that is the one part of this that has a command today.
 """
 import os
 import time
+from datetime import datetime, timedelta, timezone
 
 import storage
 
@@ -925,6 +926,17 @@ COMBAT_LOW_GAP_REWARD = (.70, .50, .30, .15)
 # Base skill level, never equipment/effect bonuses. Level 0 keeps its baseline;
 # levels 1..10 lose 5%, then the agreed B curve slows the late game.
 COMBAT_XP_LEVEL_MULTIPLIERS = (1.0,) + (.95,) * 10 + (.90, .80, .70, .60, .50, .45, .45)
+COMBAT_XP_ZONE = timezone(timedelta(hours=3), "MSK")
+
+
+def combat_calendar_multiplier(at=None):
+    """PvE weekend floor, Saturday 00:00 through Monday 00:00 MSK.
+
+    Compare with INTUX before adding residence; do not multiply the two.
+    The caller snapshots the result at damage time, not at kill settlement.
+    """
+    stamp = time.time() if at is None else at
+    return 1.5 if datetime.fromtimestamp(stamp, COMBAT_XP_ZONE).weekday() >= 5 else 1.0
 
 
 def kills_per_level(level):

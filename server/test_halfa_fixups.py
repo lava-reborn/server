@@ -324,6 +324,7 @@ def xp_for(mob_type):
     rc = SimpleNamespace(room=SimpleNamespace(players=[shooter.sess]))
     combat.RoomCombat.settle_xp(rc, target)
     expected = (progression.combat_mob_xp(target.level, 0, xp_mult=st.xp_mult)
+                * progression.combat_calendar_multiplier()
                 if combat.OBJECTS_PAY_XP or st.role != "object" else 0)
     check("  ..%d: the solo death pays its one reward" % mob_type,
           ch.skill[progression.SHOOTING][1], int(expected + 1e-9))

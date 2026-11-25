@@ -3,6 +3,7 @@ import copy
 import logging
 import os
 from types import SimpleNamespace as NS
+from unittest.mock import patch
 import unittest
 
 os.environ.pop('LAVA_DB_URL', None)
@@ -16,6 +17,11 @@ from testkit import run_cases
 
 
 class CombatXpCap(unittest.TestCase):
+    def setUp(self):
+        calendar = patch.object(p, 'combat_calendar_multiplier', return_value=1)
+        calendar.start()
+        self.addCleanup(calendar.stop)
+
     def fighter(self, level=17, premium=0, skill=p.SHOOTING, carry=0):
         ch = p.Character()
         ch.set_skill(skill, level)

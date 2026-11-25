@@ -1497,7 +1497,8 @@ try:
     paid = [p for n, p in tail if n == "rp_info" and p.get("xp_skills_mask", 0) & 2]
     check("the lower-level dog pays once on death, before the room leaves combat",
           [p['xp_skills'][0] for p in paid],
-          [int(progression.combat_mob_xp(dog_stats.level, LEVEL, xp_mult=dog_stats.xp_mult))])
+          [int(progression.combat_mob_xp(dog_stats.level, LEVEL, xp_mult=dog_stats.xp_mult)
+               * progression.combat_calendar_multiplier())])
     after_death = []
     if not any(n == "lch" and p.get("lostUser") == dog for n, p in tail):
         after_death = c.until(lambda f: f[0] == "lch" and f[1].get("lostUser") == dog, 4)
@@ -1706,7 +1707,8 @@ try:
     # dies. Neither health nor stamina damage can award it while alive.
     mirror = progression.Character()
     mirror.skill[progression.MELEE] = [1, 0, progression.skill_xp_max(1)]
-    kill_reward = progression.combat_mob_xp(dog_stats.level, 1, xp_mult=dog_stats.xp_mult)
+    kill_reward = (progression.combat_mob_xp(dog_stats.level, 1, xp_mult=dog_stats.xp_mult)
+                   * progression.combat_calendar_multiplier())
     dog_hp = dog_stats.hp_max
     actual_harm, premature_xp, shooting_pushed, dead_frames = 0, 0, 0, None
     for attempt in range(80):
@@ -1741,8 +1743,9 @@ try:
     check("and not one of them Стрельба", shooting_pushed, 0)
     c.send("rp_get_info;")
     rp = named(c.until(lambda f: f[0] == "rp_info"), "rp_info")[0]
-    check("the equal-level dog pays 70% of base 25, times level factor 0.95 and dog factor 0.7",
-          (rp["a_skills"][0], rp["xp_skills"][0]), (1, 11))
+    check("the equal-level dog pays its base reward with the current calendar bonus",
+          (rp["a_skills"][0], rp["xp_skills"][0]),
+          (1, int(25 * .70 * .95 * .7 * progression.combat_calendar_multiplier())))
     check("to exactly one solo kill's price, without per-hit experience",
           [rp["a_skills"][0], rp["xp_skills"][0]], mirror.skill[progression.MELEE][:2])
     check("while Стрельба is where it was", (rp["a_skills"][1], rp["xp_skills"][1]), (6, 0))
