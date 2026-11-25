@@ -440,11 +440,13 @@ def __gcBuy(item, count):
         this.applyTransfer(False)
         return
     n = 1
-    if item.rootID == 3 or (item.rootID == 2 and (item.getProp("max_count") or 1) > 1):
+    if item.rootID == 3:
         n = count
         if n == None:
             n = item.getProp("size")
-    if not n or n <= 0 or isNaN(n) or n != Math.floor(n):
+    elif item.rootID == 2 and count != None:
+        n = count
+    if not n or n <= 0 or isNaN(n) or n != Math.floor(n) or (item.rootID == 2 and n > 10):
         this.applyTransfer(False)
         return
     total = _global.__gcBuyTotal(price, n, pan.trader.pmod, item.rootID, True)

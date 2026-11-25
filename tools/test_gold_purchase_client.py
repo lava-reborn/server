@@ -70,7 +70,8 @@ class GoldPurchaseClient(unittest.TestCase):
         self.assertEqual(self.bought, [(item['typeID'], 7)])
 
     def buy(self, item=None):
-        self.methods['buy'].invoke(self.trade, [item if item is not None else self.item(), 99])
+        item = item if item is not None else self.item()
+        self.methods['buy'].invoke(self.trade, [item, 1 if item['rootID'] == 2 else 99])
 
     def answer(self, word='КУПИТЬ', success=True, dialog=None):
         dialog = dialog if dialog is not None else self.trade['__gcBuyDialog']
@@ -93,6 +94,29 @@ class GoldPurchaseClient(unittest.TestCase):
                 self.answer()
                 self.assertEqual(self.bought, [(25218, 1)])
                 self.assertIsNone(self.trade['__gcBuyPending'])
+
+    def test_two_nonstackable_buffs_confirm_both_units_and_matching_total(self):
+        for pmod, total in ((1, '12.6 G'), (.9, '11.34 G')):
+            with self.subTest(pmod=pmod):
+                self.setUp()
+                self.pan['trader']['pmod'] = pmod
+                item = self.item(root=2, gold=630, type_id=3561)
+                self.pan['trader']['type_list'][9] = 3561
+                item['props'].update(max_count=1, size=1, name='Инъекция INTUX IV')
+                self.methods['buy'].invoke(self.trade, [item, 2])
+                dialog = self.trade['__gcBuyDialog']
+                self.assertIn(total, dialog['label'])
+                self.assertIn('Количество: 2.', dialog['label'])
+                self.answer()
+                self.answer(dialog=dialog)
+                self.assertEqual(self.bought, [(3561, 2)])
+
+    def test_buff_quantity_is_validated_before_confirmation(self):
+        for n in (0, -1, 11, 1.5, float('nan')):
+            self.methods['buy'].invoke(self.trade, [self.item(root=2), n])
+        self.assertEqual(self.windows_opened, [])
+        self.assertEqual(self.bought, [])
+        self.assertEqual(self.failed, [False] * 5)
 
     def test_real_trade_wrapper_uses_name_property_and_not_itemname(self):
         item = self.item(gold=13)

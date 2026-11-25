@@ -19,13 +19,14 @@ class MedicineCooldownClient(unittest.TestCase):
                                         XMLCCallStack=dict(addCall=lambda *args:ack.append(args)))
         self.env['lol']['data'] = dict(BigUINT=lambda value:value, BigUINTCluster=lambda value:value)
         self.env['Math']['floor'] = math.floor
-        gold = [0]
+        gold, maximum = [0], [10]
         item = dict(rootID=2, tradeID=dict(toString=lambda radix:'a'),
-                    getProp=lambda key:dict(max_count=10,g_cost=gold[0]).get(key))
+                    getProp=lambda key:dict(max_count=maximum[0],g_cost=gold[0]).get(key))
         trade = dict(XMC=dict(Send=lambda message:sent.append(message) or True), transferAck='ack',
                      applyTransfer=rejected.append)
         self.call('__bfMedBuy',trade,item,10)
         gold[0]=5
+        maximum[0]=1
         self.call('__bfMedBuy',trade,item,3)
         self.assertEqual(sent,[(1,'a',10),(4,'a',3)])
         self.assertEqual(len(ack),2)
@@ -33,6 +34,14 @@ class MedicineCooldownClient(unittest.TestCase):
             self.call('__bfMedBuy',trade,item,n)
         self.assertEqual(len(sent),2)
         self.assertEqual(rejected,[False]*4)
+
+    def test_point_priced_medicine_keeps_native_currency_handling(self):
+        self.env['lol']['core']['objects'] = dict(Item=dict(HEAL_ITEM=2))
+        calls = []
+        item = dict(rootID=2, getProp=lambda key: 50 if key == 'bg_p_cost' else None)
+        trade = dict(__bfMedBuyOrig=lambda *args: calls.append(args))
+        self.call('__bfMedBuy', trade, item, 2)
+        self.assertEqual(calls, [(item, 2)])
 
     def test_heal_initialization_reuses_native_heap_without_changing_charged_packs(self):
         objects = self.env['lol']['core']['objects'] = dict(HealItem=dict(prototype={}),
@@ -64,6 +73,19 @@ class MedicineCooldownClient(unittest.TestCase):
         self.call('__bfMedQuantity', view)
         self.assertEqual(calls, ['native'])
 
+    def test_nonstackable_buff_uses_purchase_quantity_without_changing_stack_limit(self):
+        self.env['lol']['core']['objects'] = dict(Item=dict(HEAL_ITEM=2))
+        events = []
+        pan = dict(addEventListener=lambda *args: events.append(args))
+        item = dict(rootID=2, getProp=lambda key: 1)
+        view = dict(currDDOperation=dict(fromSlot='stock', toSlot='bag', fromItem=item),
+                    visavisBag_mc='stock', bag_mc='bag', trader=dict(pmod=1),
+                    createExchangePan=lambda *args: pan, exchangeAck='ack', exchangeCancel='cancel')
+        self.call('__bfMedQuantity', view)
+        self.assertEqual(pan['maxValue'], 10)
+        self.assertEqual(item['getProp']('max_count'), 1)
+        self.assertEqual([event[0] for event in events], ['exchange', 'close'])
+
     def test_single_dose_counter_uses_only_native_numeric_glyphs_and_keeps_charged_uses(self):
         self.env['lol']['core']['objects'] = dict(Item=dict(HEAL_ITEM=2))
         drawn = []
@@ -90,6 +112,7 @@ class MedicineCooldownClient(unittest.TestCase):
         self.hints=[]
         self.global_={}
         self.env=dict(_global=self.global_,getTimer=lambda:self.now,String=str,
+                      isNaN=lambda n: n is None or math.isnan(float(n)),
                       Math=dict(ceil=math.ceil,min=min,max=max),
                       setInterval=lambda fn,ms:self.timers.append((fn,ms)) or len(self.timers),
                       clearInterval=self.cleared.append,
