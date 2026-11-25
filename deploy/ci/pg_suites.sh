@@ -55,6 +55,8 @@ SUITES+=(stopwarn)
 SUITES+=(holdings)
 # Buff purchase/delivery rollback and bank-only stacks use the production dialect too.
 SUITES+=(bank_stacks)
+# Online-only buff time uses the same migration and checkpoint SQL in production.
+SUITES+=(effect_clock_storage)
 mkdir -p "$OUT"
 : > "$OUT/results"
 rm -f "$OUT/results.rerun"

@@ -1,5 +1,6 @@
 """Release boundaries: timed items, fractional XP, loot and purchase prices."""
 import copy
+import time
 from datetime import datetime
 from types import SimpleNamespace as NS
 import unittest
@@ -422,8 +423,12 @@ class TimedItems(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(copy.deepcopy(self.s.char).__dict__, self.s.char.__dict__)
         deadline = manager.active['experience_down'].deadline
         manager.close()
-        manager.load()
-        self.assertEqual(manager.active['experience_down'].deadline, deadline)
+        remaining = deadline - manager.clock()
+        resumed_at = time.time()
+        with patch.object(manager, 'clock', return_value=resumed_at):
+            manager.load()
+        deadline = manager.active['experience_down'].deadline
+        self.assertAlmostEqual(deadline - resumed_at, remaining, delta=1e-6)
         with patch.object(manager, 'clock', return_value=deadline + 1):
             manager.refresh()
             self.assertEqual(effects.multiplier(self.s, 'mob_exp'), 1)
@@ -682,8 +687,12 @@ class TimedItems(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(self.store.effects_for(self.s.char_id)), 1)
         deadline += 600
         manager.close()
-        manager.load()
-        self.assertEqual(manager.active['experience_up'].deadline, deadline)
+        remaining = deadline - manager.clock()
+        resumed_at = time.time()
+        with patch.object(manager, 'clock', return_value=resumed_at):
+            manager.load()
+        deadline = manager.active['experience_up'].deadline
+        self.assertAlmostEqual(deadline - resumed_at, remaining, delta=1e-6)
         self.assertEqual(effects.multiplier(self.s, 'mob_exp'), 1.7)
         with patch.object(manager, 'clock', return_value=deadline + 1):
             manager.refresh()

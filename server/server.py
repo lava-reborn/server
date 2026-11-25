@@ -809,6 +809,9 @@ class Session:
             training_ground.suspend(self)
         if self.closed and (not force or self.linger is None):
             return
+        active = getattr(self, 'effects', None)
+        if active is not None:
+            active.pause()
         if not force and not self.closed and self.should_linger():
             self.closed = True
             self.linger = asyncio.get_running_loop().call_later(
@@ -1279,6 +1282,11 @@ class Session:
                              c["name"])
                     old.close()
                     if old.linger is not None:
+                        # Rebase persisted buffs before taking over the socket:
+                        # a failed SQL write must leave the old body recoverable.
+                        active = getattr(old, "effects", None)
+                        if active is not None:
+                            active.resume()
                         old.linger.cancel()
                         old.linger = None
                         old.writer, old.peer = self.writer, self.peer
@@ -5568,6 +5576,8 @@ def publish_online():
             gx=int(sess.gx or 0), gy=int(sess.gy or 0),
             since=int(getattr(sess, "since", time.time()))))
     STORE.set_online(rows)
+    # Persist online time in one batch, not a write per buff or per hit.
+    STORE.checkpoint_effects([row["char_id"] for row in rows])
 
 
 async def drain_admin_actions():

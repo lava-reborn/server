@@ -474,6 +474,33 @@ class EdenHarvestTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(self.amounts(), {t: before[t] + int(t == expected)
                                               for t in harvest.REWARDS})
 
+    async def test_labelled_sorter_plots_give_only_their_own_bananas_and_leaves(self):
+        for loc_id, banana in harvest.SORTER_REWARDS.items():
+            with self.subTest(loc=loc_id):
+                expected_sorter = {eden.BAD_BANANA: 1786, eden.GREEN_BANANA: 1788,
+                                   eden.GOOD_BANANA: 1787}[banana]
+                self.assertTrue(any(r['type'] == expected_sorter
+                                    for r in world.placements().get(loc_id, ())))
+                self.s.loc = world.location(loc_id)
+                self.s.room.loc = self.s.loc
+                before = self.amounts()
+                rng = random.Random(1)
+                with patch.object(harvest, 'RNG', rng), \
+                        patch.object(rng, 'random', return_value=.5), \
+                        patch.object(rng, 'randint', return_value=1700), \
+                        patch.object(rng, '_randbelow', side_effect=iter(range(8))):
+                    for _ in range(8):
+                        self.reset_cycle()
+                        for _hit in range(3):
+                            self.click()
+                            self.finish()
+                after = self.amounts()
+                delta = {t: after[t] - before[t] for t in harvest.REWARDS}
+                self.assertEqual(delta, {t: 6 if t == banana else 2 if t == eden.PALM_LEAF else 0
+                                         for t in harvest.REWARDS})
+                self.assertEqual(eden.TICKET_QUOTA,
+                                 {eden.GREEN_TICKET: 100, eden.GOOD_TICKET: 1000, eden.BAD_TICKET: 75})
+
     async def test_real_weighted_choice_delivers_four_ripe_two_leaves_and_other_bananas(self):
         # Exercise Random.choice itself and the real transaction/publication
         # path. Supply each equally likely entropy index once, instead of

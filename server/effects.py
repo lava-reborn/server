@@ -3,6 +3,7 @@ import asyncio
 from dataclasses import dataclass
 from functools import lru_cache
 import json
+import logging
 import math
 import time
 from pathlib import Path
@@ -11,6 +12,8 @@ import items
 import progression
 import storage
 import item_templates
+
+log = logging.getLogger("lava")
 
 FIRST = 90000
 MAX_EFFECTS = 32
@@ -116,22 +119,75 @@ class Effects:
 
     def __init__(self, session):
         self.session = session
+        self.char_id = session.char_id
         self.active = {}
         self.bonus = zero()
         self.timer = None
+        self._paused_at = None
 
     def clock(self):
+        if self._paused_at is not None:
+            return self._paused_at
         return time.time() if self.persistent else asyncio.get_running_loop().time()
 
     def load(self):
+        self._paused_at = None
         if self.persistent:
-            for row in self.session.combat.store.effects_for(self.session.char_id):
-                value = definitions().get(row['source'])
-                if value and row['deadline'] > self.clock():
-                    self.active[value['family']] = Active(row['source'], row['started'], row['deadline'])
+            store, char_id = self.session.combat.store, self.char_id
+            clock = self.clock()
+            active = {}
+            with storage.atomic(store.db):
+                for row in store.effects_for(char_id):
+                    value = definitions().get(row['source'])
+                    # Legacy rows have no checkpoint: preserve only their
+                    # remaining real-time interval at the first new login.
+                    anchor = row['checkpoint_at'] if row['checkpoint_at'] is not None else clock
+                    if value and row['deadline'] > anchor:
+                        shift = clock - anchor
+                        current = Active(row['source'], row['started'] + shift, row['deadline'] + shift)
+                        active[value['family']] = current
+                        store.put_effect(char_id, value['family'], current.source,
+                                         current.started, current.deadline, checkpoint_at=clock)
+                    else:
+                        store.db.execute('DELETE FROM char_effects WHERE char_id=? AND family=?',
+                                         (char_id, row['family']))
+            self.active = active
+        self.refresh(notify=False)
+
+    def pause(self):
+        """Stop at socket loss, including a body awaiting combat logout."""
+        if not self.persistent or self._paused_at is not None:
+            return
+        self._paused_at = self.clock()
+        if self.timer is not None:
+            self.timer.cancel()
+            self.timer = None
+        if self.active:
+            try:
+                self.session.combat.store.checkpoint_effects([self.char_id], self._paused_at)
+            except Exception:
+                # The heartbeat checkpoint remains usable after a failed
+                # disconnect write; never prevent room/socket cleanup.
+                log.exception('Saving paused effects failed for character %s', self.char_id)
+
+    def resume(self):
+        if self._paused_at is None:
+            return
+        clock = time.time()
+        shift = clock - self._paused_at
+        active = {family: Active(row.source, row.started + shift, row.deadline + shift)
+                  for family, row in self.active.items()}
+        store = self.session.combat.store
+        with storage.atomic(store.db):
+            for family, row in active.items():
+                store.put_effect(self.char_id, family, row.source, row.started,
+                                 row.deadline, checkpoint_at=clock)
+        self.active = active
+        self._paused_at = None
         self.refresh(notify=False)
 
     def close(self, notify=False):
+        self.pause()
         if self.timer is not None:
             self.timer.cancel()
             self.timer = None
@@ -175,6 +231,8 @@ class Effects:
             self.timer.cancel()
             self.timer = None
         clock = self.clock()
+        if self.persistent and self.active and self._paused_at is None:
+            self.session.combat.store.checkpoint_effects([self.char_id], clock)
         self.active = {key: active for key, active in self.active.items() if active.deadline > clock}
         total = zero()
         next_event = None
@@ -212,7 +270,7 @@ class Effects:
             else:
                 fighter.c_ap()
             self.send_list()
-        if next_event is not None:
+        if next_event is not None and self._paused_at is None:
             self.timer = asyncio.get_running_loop().call_later(max(0.01, next_event - clock), self.refresh)
 
     def send_list(self):
@@ -297,7 +355,7 @@ def activate(fighter, uniq, target, ap_cost, peace_damage=None):
         old = receiver.active.get(effect['family'])
         started = old.started if old and old.source == source and effect['interval'] else clock
         fighter.store.put_effect(target.sess.char_id, effect['family'], source, started,
-                                 clock + effect['duration'])
+                                 clock + effect['duration'], checkpoint_at=clock)
         left = row['use_count'] - 1
         if left > 0:
             fighter.store.update_item(uniq, use_count=left)

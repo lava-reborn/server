@@ -2,8 +2,9 @@
 
 Palms have 5000 HP. The dedicated tool follows its own damage frame without
 character bonuses; other weapons retain ordinary combat timing and costs.
-Ripe bananas have 50% of the resource chance, leaves 25%, and green/bad
-bananas 12.5% each.
+The three labelled sorter plots yield their own banana colour (75%) or
+a leaf (25%). Unlabelled plots keep the mixed pool: ripe 50%, leaves 25%,
+and green/bad bananas 12.5% each.
 A fixed 15% miss chance is a designed server rule, not recovered historical
 balance. Swing timing and AP cost follow the tool's static item frame.
 The finishing worker owns one ground resource for this visit. A felled palm
@@ -32,6 +33,14 @@ REWARDS = (eden.GOOD_BANANA, eden.GREEN_BANANA, eden.BAD_BANANA, eden.PALM_LEAF)
 REWARD_POOL = ((eden.GOOD_BANANA,) * 4 + (eden.GREEN_BANANA, eden.BAD_BANANA)
                + (eden.PALM_LEAF,) * 2)
 RNG = random.Random()
+# The current west/east/south sorter cells shown on the global map.
+SORTER_REWARDS = {1383: eden.BAD_BANANA, 1384: eden.GREEN_BANANA, 1385: eden.GOOD_BANANA}
+
+
+def reward_pool(loc_id):
+    """Keep the leaf share; a labelled plot must not give another colour."""
+    banana = SORTER_REWARDS.get(loc_id)
+    return (banana,) * 6 + (eden.PALM_LEAF,) * 2 if banana is not None else REWARD_POOL
 
 
 def respawn_seconds():
@@ -256,7 +265,7 @@ def native_kill(rc, target, fighter):
                     why = 'Сбор доступен только назначенному на плантацию персонажу.'
             if not why:
                 if target._eden_reward is None:
-                    target._eden_reward = RNG.choice(REWARD_POOL)
+                    target._eden_reward = RNG.choice(reward_pool(rc.room.loc.id))
                 ground, due, expires = _create_ground(
                     fighter, rc, target, target._eden_reward, sentence)
     except Exception as exc:
@@ -342,7 +351,7 @@ def _complete(fighter, rc, target, uniq, cost, token, cycle):
                     # Remember the hidden result across a failed write so a
                     # retry cannot reroll it by provoking a database error.
                     if target._eden_reward is None:
-                        target._eden_reward = RNG.choice(REWARD_POOL)
+                        target._eden_reward = RNG.choice(reward_pool(rc.room.loc.id))
                     reward = target._eden_reward
                     sentence = eden.assigned(fighter.store, sess.char_id)
                     ground, due, expires = _create_ground(fighter, rc, target, reward, sentence)
