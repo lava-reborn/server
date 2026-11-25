@@ -84,7 +84,7 @@ class CombatXpCap(unittest.TestCase):
                     self.settle(mob, f)
                     self.assertEqual(ch.skill[skill], before)
                     self.assertEqual(self.spec_total(ch, spec),
-                                     int(1077.84 * (1 + p.PREMIUM_XP_BONUS[premium]) + 1e-9))
+                                     int(930.14394069 * 1.2 * (1 + p.PREMIUM_XP_BONUS[premium]) + 1e-9))
 
     def test_premium_is_applied_once_before_fractional_combat_carry(self):
         for level in (12, 17):

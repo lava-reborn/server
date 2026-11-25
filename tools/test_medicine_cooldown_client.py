@@ -98,7 +98,7 @@ class MedicineCooldownClient(unittest.TestCase):
             # TextCharCreate's numChar atlas supports digits but no suffix
             # " шт.": unknown characters leave the zero frame visible.
             self.assertTrue(all(symbol in '0123456789' for symbol in drawn[-1]))
-        card['item']['getProp'] = lambda key: 1 if key=='max_count' else None
+        card['item']['getProp'] = lambda key: dict(max_count=1, size=1).get(key)
         self.call('__bfMedAmount', card, '19/20')
         self.assertEqual(drawn[-1], '19/20')
 
@@ -124,7 +124,8 @@ class MedicineCooldownClient(unittest.TestCase):
                       Math=dict(ceil=math.ceil,min=min,max=max),
                       setInterval=lambda fn,ms:self.timers.append((fn,ms)) or len(self.timers),
                       clearInterval=self.cleared.append,
-                      lol=dict(core=dict(effects=dict(DisplayFX=dict(BUFF_WIDTH=44))),
+                      lol=dict(core=dict(effects=dict(DisplayFX=dict(BUFF_WIDTH=44)),
+                                         objects=dict(Item=dict(HEAL_ITEM=2))),
                                gpui=dict(HintManager=dict(showHint=lambda *a:self.hints.append(a),
                                                           closeHint=lambda:self.hints.append('closed')))))
         self.functions={}

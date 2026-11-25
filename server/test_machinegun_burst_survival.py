@@ -16,6 +16,7 @@ class Player:
     def __init__(self, level, cell=1):
         self.ch = progression.Character()
         self.ch.set_skill(progression.SHOOTING, level)
+        self.ch.hp, self.ch.sp = self.ch.hp_max, self.ch.sp_max
         self.level = level
         self.cell = cell
         self.eid = cell + 100

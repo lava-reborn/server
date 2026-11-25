@@ -105,6 +105,7 @@ class EdenNativeWeaponTests(unittest.IsolatedAsyncioTestCase):
         self.attack(None)
         self.assertLess(self.palm.hp, 5000)
         self.assertEqual(self.f.ap, self.f.ap_max - combat.FIST_AP)
+        self.case.clock = self.f.recovery_until
         row = self.weapon('blade')
         hp, ap = self.palm.hp, self.f.ap
         with patch.object(combat, 'roll', return_value=False):
@@ -137,6 +138,11 @@ class EdenNativeWeaponTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.f.ap, self.f.ap_max - si['fire_costs'][mode])
         self.assertGreater(self.f.recovery_until, self.case.clock)
         hp = self.palm.hp
+        self.attack(live)
+        self.assertEqual([p['res'] for c, p in self.frames if c == 'cmdAck'][-1], inventory.RES_NOT_READY)
+        self.assertEqual(self.store.item(row['uniq']), live)
+        self.assertEqual(self.palm.hp, hp)
+        self.case.clock = self.f.recovery_until
         self.attack(live)
         self.assertEqual([p['res'] for c, p in self.frames if c == 'cmdAck'][-1], inventory.RES_OK)
         next_shot = self.case.pending

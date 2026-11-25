@@ -81,7 +81,7 @@ class LootLevelLadder(unittest.TestCase):
                 mobs.loot_for(stats, rng, {3770}, killer_level=14, multiplier=multiplier)
                 carried.assert_called_once_with(stats, rng, multiplier)
                 table.assert_called_once_with(411, rng, multiplier, gold_multiplier=1,
-                                               guarantee_ingots=False)
+                                               scanner_multiplier=1, guarantee_ingots=False)
                 quest.assert_called_once_with(411, {3770}, rng)
 
     def test_guaranteed_carried_table_and_one_of_drops_and_quest_chances_stay_native(self):

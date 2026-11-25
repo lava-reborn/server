@@ -2405,8 +2405,8 @@ class Fighter:
         return (progression.combat_mob_xp(
             target.level, ch.skill[skill][0], share, getattr(st, "xp_mult", 1))
             * effects.multiplier(self.sess, 'mob_exp',
-                                 bonus=progression.PREMIUM_XP_BONUS[ch.premium_level()],
-                                 minimum=progression.combat_calendar_multiplier()))
+                                 bonus=(progression.PREMIUM_XP_BONUS[ch.premium_level()]
+                                        + progression.combat_calendar_multiplier() - 1)))
 
     def credit_xp(self, skill, spec, share, target, *, reward=None):
         """Pay a settled share, or an explicit damage-time reward snapshot.

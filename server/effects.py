@@ -63,7 +63,7 @@ def zero():
                 **{key: 0 for key in SCALARS})
 
 
-def multiplier(session, name, *, bonus=0, minimum=1):
+def multiplier(session, name, *, bonus=0):
     manager = getattr(session, 'effects', None)
     values = []
     if manager is not None:
@@ -71,10 +71,10 @@ def multiplier(session, name, *, bonus=0, minimum=1):
         values = [definitions()[active.source].get('modifiers', {}).get(name, 1)
                   for active in manager.active.values() if active.deadline > clock]
     if name in ('mob_exp', 'pl_exp'):
-        # PvE may supply a weekend floor. INTUX and that floor do not stack;
-        # residence adds its percentage afterwards, reductions apply last.
+        # INTUX is capped independently; additive weekend/residence bonuses
+        # follow it, then experience-reducing effects apply to the total.
         boost = min(MAX_EXPERIENCE_MULTIPLIER, math.prod(value for value in values if value > 1))
-        return (max(minimum, boost) + bonus) * math.prod(value for value in values if value <= 1)
+        return (boost + bonus) * math.prod(value for value in values if value <= 1)
     return math.prod(values)
 
 

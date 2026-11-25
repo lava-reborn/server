@@ -936,9 +936,9 @@ COMBAT_XP_ZONE = timezone(timedelta(hours=3), "MSK")
 
 
 def combat_calendar_multiplier(at=None):
-    """PvE weekend floor, Saturday 00:00 through Monday 00:00 MSK.
+    """PvE weekend bonus, Saturday 00:00 through Monday 00:00 MSK.
 
-    Compare with INTUX before adding residence; do not multiply the two.
+    Add its percentage to INTUX and residence; do not multiply bonuses.
     The caller snapshots the result at damage time, not at kill settlement.
     """
     stamp = time.time() if at is None else at

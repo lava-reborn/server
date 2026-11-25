@@ -206,6 +206,7 @@ def connect(timeout=None):
     return testkit.connect(PORT, srv, _log, timeout)
 
 
+@testkit.scene_client
 class Client:
     def __init__(self, sock):
         self.s = sock
@@ -358,7 +359,7 @@ try:
                 c.send("ss_use;type=16;obj=x%s;target=%s;" % (knife, entity(target)))
                 got = c.until(lambda f: f[0] == "c_ap"
                               or (f[0] == "cmdAck" and f[1]["res"] != 0), 3)
-                got += c.frames(0.2)
+                got += c.frames(0.2) + testkit.wait_recovery(c)
             else:
                 got = c.frames(0.4)
             if [p for n, p in got if n == "lch" and p.get("dead") == target]:
