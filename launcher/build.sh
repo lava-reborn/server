@@ -114,6 +114,6 @@ csc -nologo -noconfig -nostdlib -deterministic -target:winexe -platform:anycpu -
   -out:"$OUT/LavaReborn.exe" \
   "$HERE/Theme.cs" "$HERE/Icons.cs" "$HERE/Controls.cs" "$HERE/Panels.cs" "$HERE/MainForm.cs" \
   "$HERE/Dialogs.cs" "$HERE/Prefs.cs" "$HERE/Notice.cs" \
-  "$HERE/Creds.cs" "$HERE/GameProbe.cs" "$HERE/GameWindow.cs" "$HERE/LocalServer.cs" \
+  "$HERE/Creds.cs" "$HERE/GameProbe.cs" "$HERE/GameWindow.cs" "$HERE/FlashContextMenu.cs" "$HERE/LocalServer.cs" \
   "$HERE/Release.cs" "$HERE/Sync.cs" "$HERE/TextsCheck.cs" "$W/Launcher.generated.cs"
 echo "build.sh: $OUT/LavaReborn.exe, build $BUILD ($VERSION), $(stat -c %s "$OUT/LavaReborn.exe") bytes, sha256 $(sha256sum < "$OUT/LavaReborn.exe" | cut -c1-16)"

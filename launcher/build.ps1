@@ -187,6 +187,7 @@ $sources = @(
   (Join-Path $here "Creds.cs"),
   (Join-Path $here "GameProbe.cs"),
   (Join-Path $here "GameWindow.cs"),
+  (Join-Path $here "FlashContextMenu.cs"),
   (Join-Path $here "LocalServer.cs"),
   (Join-Path $here "Release.cs"),
   (Join-Path $here "Sync.cs"),

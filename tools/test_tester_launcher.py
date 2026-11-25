@@ -63,7 +63,8 @@ class TesterLauncherChecks
             subprocess.run([
                 str(compiler), '/nologo', '/main:TesterLauncherChecks',
                 '/out:' + str(target), str(ROOT / 'tools/TesterLauncher.cs'),
-                str(ROOT / 'launcher/Theme.cs'), str(checks),
+                str(ROOT / 'launcher/Theme.cs'),
+                str(ROOT / 'launcher/FlashContextMenu.cs'), str(checks),
             ], check=True, capture_output=True)
             result = subprocess.run([str(target)], check=True, capture_output=True,
                                     creationflags=subprocess.CREATE_NO_WINDOW, timeout=15)
