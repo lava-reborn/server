@@ -808,10 +808,10 @@ class ReleaseCatalogue(unittest.TestCase):
         target = NS(ap_max=100, balanced_modes=(affordable, unaffordable))
         self.assertEqual(battle_balance.mob_mode(target, 2)[1], 50)
 
-    def test_full_base_experience_starts_at_plus_one_without_another_increase(self):
+    def test_full_base_experience_starts_at_plus_two_with_variant_b(self):
         for level in range(1, 17):
-            base = progression.mob_xp(level + 1, level)
-            for gap, ratio in ((1, 1), (2, 1.05), (3, 1.15), (4, 1.25), (5, 1.25)):
+            base = progression.mob_xp(level + 1, level) * progression.COMBAT_XP_LEVEL_MULTIPLIERS[level]
+            for gap, ratio in ((1, .85), (2, 1), (3, 1.1), (4, 1.2), (5, 1.2)):
                 with self.subTest(level=level, gap=gap):
                     self.assertAlmostEqual(progression.combat_mob_xp(level + gap, level), base * ratio)
                     self.assertAlmostEqual(progression.combat_mob_xp(level + gap, level, .25), base * ratio / 4)
@@ -1161,7 +1161,7 @@ class ReleaseCatalogue(unittest.TestCase):
         target.stats.level = 14
         fighter.award_xp(progression.SHOOTING, spec, 1, target)
         character.set_skill(progression.SHOOTING, 10)
-        self.assertEqual(combat.RoomCombat.loot_multiplier(None, target, fighter), 1)
+        self.assertEqual(combat.RoomCombat.loot_multiplier(None, target, fighter), .90)
         mob = mobs.Mob(1, 258, 100)
         mob.loot_level = 14
         mob.reset()
@@ -1176,17 +1176,17 @@ class ReleaseCatalogue(unittest.TestCase):
         low, senior = Fighter(10), Fighter(14)
         mob = NS(stats=NS(level=13, role='mob'), xp_ledger={low: [100]})
         multiplier = lambda: combat.RoomCombat.loot_multiplier(None, mob, low)
-        self.assertEqual(multiplier(), 1.15)
+        self.assertEqual(multiplier(), 1.20)
         mob.stats.level = 14
-        self.assertEqual(multiplier(), 1.25)
-        for gap, reward in ((1, 1), (2, 1.05)):
+        self.assertEqual(multiplier(), 1.30)
+        for gap, reward in ((1, 1), (2, 1.10)):
             mob.stats.level = low.level + gap
             self.assertEqual(multiplier(), reward)
         mob.stats.level = 14
         with patch.object(effects, 'multiplier', return_value=3):
-            self.assertEqual(multiplier(), 3.75)
+            self.assertAlmostEqual(multiplier(), 3.9)
         mob.xp_ledger[senior] = [1]
-        self.assertEqual(multiplier(), 1)
+        self.assertEqual(multiplier(), .90)
         mob.stats.role = 'object'
         with patch.object(effects, 'multiplier', return_value=3):
             self.assertEqual(multiplier(), 1)

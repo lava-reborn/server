@@ -920,8 +920,11 @@ KILLS_START = 5
 KILLS_GROWTH = 1.5
 GAP_SHARE = {0: 0.5, -1: 0.25}
 GREY_GAP = 2
-COMBAT_GAP_REWARD = (1.0, 1.05, 1.15, 1.25)
-COMBAT_LOW_GAP_REWARD = (.95, .75, .5, .25)
+COMBAT_GAP_REWARD = (.85, 1.0, 1.1, 1.2)
+COMBAT_LOW_GAP_REWARD = (.70, .50, .30, .15)
+# Base skill level, never equipment/effect bonuses. Level 0 keeps its baseline;
+# levels 1..10 lose 5%, then the agreed B curve slows the late game.
+COMBAT_XP_LEVEL_MULTIPLIERS = (1.0,) + (.95,) * 10 + (.90, .80, .70, .60, .50, .45, .45)
 
 
 def kills_per_level(level):
@@ -956,12 +959,13 @@ def mob_xp(mob_level, player_level, share=1.0, xp_mult=1):
 
 
 def combat_mob_xp(mob_level, skill_level, share=1.0, xp_mult=1):
-    """Full base reward starts at +1; higher gaps pay 105/115/125%.
+    """Full base reward starts at +2, scaled by the base skill's B curve.
 
-    Equal/-1/-2/-3 targets pay 95/75/50/25% of that same base; -4 pays zero.
-    Gaps above four pay no extra.
-    Skill 17 stops advancing; specialisations retain the level-16 curve,
-    capped at one +4 reward before hit shares. Mining keeps mob_xp.
+    Equal/-1/-2/-3 pay 70/50/30/15%; +1 pays 85%, +3/+4 110/120%.
+    Gaps above four pay no extra; -4 and lower pay zero.
+    Skill 17 stops advancing; specialisations retain the level-16 base.
+    Apply the level reduction after the spec cap, before shares/premium.
+    Mining keeps mob_xp.
     """
     reference_level = min(skill_level, COMBAT_SKILL_CAP)
     reward_level = min(reference_level, COMBAT_SKILL_CAP - 1)
@@ -975,7 +979,7 @@ def combat_mob_xp(mob_level, skill_level, share=1.0, xp_mult=1):
     whole = base * xp_mult
     if skill_level >= COMBAT_SKILL_CAP:
         whole = min(spec_limit, whole)
-    return whole * share
+    return whole * COMBAT_XP_LEVEL_MULTIPLIERS[max(0, reference_level)] * share
 
 
 # --- the fighter's skill from a kill of a player: DESIGNED ---------------------

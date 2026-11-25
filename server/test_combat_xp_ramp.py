@@ -8,13 +8,20 @@ import test_combat_xp_cap as cap_tests
 class CombatXpRamp(unittest.TestCase):
     def test_gap_rewards_increase_and_stop_at_four(self):
         for skill in range(17):
-            base = p.mob_price(skill + 1)
+            base = p.mob_price(skill + 1) * p.COMBAT_XP_LEVEL_MULTIPLIERS[skill]
             values = [p.combat_mob_xp(skill + gap, skill) for gap in range(5)]
-            self.assertEqual(values[0], base * .95)
-            for gap, factor in enumerate((1, 1.05, 1.15, 1.25), 1):
+            self.assertAlmostEqual(values[0], base * .70)
+            for gap, factor in enumerate((.85, 1, 1.1, 1.2), 1):
                 self.assertAlmostEqual(values[gap], base * factor)
                 self.assertGreater(values[gap], values[gap - 1])
-            self.assertEqual(p.combat_mob_xp(skill + 50, skill), base * 1.25)
+            self.assertAlmostEqual(p.combat_mob_xp(skill + 50, skill), base * 1.2)
+
+    def test_level_reduction_matches_variant_b_at_every_base_skill_level(self):
+        expected = [1] + [.95] * 10 + [.90, .80, .70, .60, .50, .45, .45]
+        for skill, factor in enumerate(expected):
+            with self.subTest(skill=skill):
+                self.assertAlmostEqual(p.combat_mob_xp(skill + 2, skill),
+                                       p.mob_price(min(skill, 16) + 1) * factor)
 
     def test_mob_multipliers_and_shares_apply_once(self):
         for skill in (0, 5, 12, 16):
@@ -28,8 +35,8 @@ class CombatXpRamp(unittest.TestCase):
         for skill in range(17):
             for mob in range(skill + 1):
                 for mult in (.7, 1, 3):
-                    ratio = {0:.95, -1:.75, -2:.5, -3:.25}.get(mob - skill, 0)
-                    expected = p.mob_price(skill + 1) * ratio * mult
+                    ratio = {0:.70, -1:.50, -2:.30, -3:.15}.get(mob - skill, 0)
+                    expected = p.mob_price(skill + 1) * ratio * mult * p.COMBAT_XP_LEVEL_MULTIPLIERS[skill]
                     self.assertAlmostEqual(p.combat_mob_xp(mob, skill, xp_mult=mult), expected)
 
     def test_legacy_noncombat_price_does_not_gain_a_ramp(self):

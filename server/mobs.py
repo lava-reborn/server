@@ -25,6 +25,7 @@ import os
 from collections import deque
 from functools import lru_cache
 
+import camp_loot
 import mob_equipment_loot
 import inventory
 import items
@@ -811,8 +812,8 @@ def loot_level_factor(gap):
     """Random PvE loot only; XP and PvP death losses have separate rules."""
     if gap <= -5:
         return 0
-    return {-4: .25, -3: .5, -2: 1, -1: 1, 0: 1,
-            1: 1, 2: 1.05, 3: 1.15}.get(gap, 1.25)
+    return {-4: .25, -3: .5, -2: .75, -1: .80, 0: .90,
+            1: 1, 2: 1.10, 3: 1.20}.get(gap, 1.30)
 
 
 def loot_for(st, rng, wanted=(), *, loc_id=None, ambush_camp=None,
@@ -835,9 +836,9 @@ def loot_for(st, rng, wanted=(), *, loc_id=None, ambush_camp=None,
         return out
     import bosses                  # late: keep module initialization separate
     blueprint = bosses.blueprint_for(loc_id, st.type_id)
-    # Scanner x3 and the level ladder (0.25..1.25) affect random
+    # Scanner x3 and the level ladder (0.25..1.30) affect random
     # drops only, never harvest/quest/event quantities.
-    multiplier = min(3.75, multiplier) if st.role != 'object' else 1
+    multiplier = min(camp_loot.MAX_MULTIPLIER, multiplier) if st.role != 'object' else 1
     ordinary = carried(st, rng, multiplier) + roll_table(st.type_id, rng, multiplier,
                                                        gold_multiplier=gold_multiplier,
                                                        guarantee_ingots=st.role == 'boss')

@@ -38,8 +38,8 @@ class LootLevelLadder(unittest.TestCase):
 
     def test_every_level_boundary_with_and_without_a_scanner(self):
         fighter = Fighter()
-        ladder = {-10: 0, -5: 0, -4: .25, -3: .5, -2: 1, -1: 1,
-                  0: 1, 1: 1, 2: 1.05, 3: 1.15, 4: 1.25, 5: 1.25, 10: 1.25}
+        ladder = {-10: 0, -5: 0, -4: .25, -3: .5, -2: .75, -1: .80,
+                  0: .90, 1: 1, 2: 1.10, 3: 1.20, 4: 1.30, 5: 1.30, 10: 1.30}
         for gap, expected in ladder.items():
             target = self.mob(fighter.level + gap, fighter=fighter)
             for scanner in (1, 3):
@@ -55,7 +55,7 @@ class LootLevelLadder(unittest.TestCase):
         target = self.mob(14, fighter=low)
         target.xp_ledger = {123: [100], low: [1]}
         target.loot_level = 14
-        self.assertEqual(combat.RoomCombat.loot_multiplier(None, target, low), 1)
+        self.assertEqual(combat.RoomCombat.loot_multiplier(None, target, low), .90)
         target.loot_level = 19
         with patch.object(effects, 'multiplier', return_value=3):
             self.assertEqual(combat.RoomCombat.loot_multiplier(None, target, low), 0)
