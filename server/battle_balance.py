@@ -355,7 +355,7 @@ def critical(shooter, target, chance, optimal=True, *, ordinary=False):
     return combat.roll(critical_chance(shooter, target, chance, optimal, ordinary=ordinary))
 
 
-def pvp_critical_chance(cp, ce, temporary_cp=0, temporary_ce=0, optimal=True, *, ceiling=50):
+def pvp_critical_chance(cp, ce, temporary_cp=0, temporary_ce=0, optimal=True):
     """Permanent investment follows the difference; temporary ratings taper.
 
     The soft limit keeps every A/G grade distinct, unlike clipping all
@@ -363,13 +363,13 @@ def pvp_critical_chance(cp, ce, temporary_cp=0, temporary_ce=0, optimal=True, *,
     """
     cp, ce = max(0, cp), max(0, ce)
     x = (cp - ce - 4.82) / 8
-    base = min(ceiling, 3 + 8 * (max(x, 0) + math.log1p(math.exp(-abs(x)))))
+    base = min(90, 3 + 8 * (max(x, 0) + math.log1p(math.exp(-abs(x)))))
 
     def boost(temporary):
         extra = max(0, temporary)
         return 1 + .1 * extra / (10 + extra)
 
-    chance = max(3, min(ceiling, base * boost(temporary_cp) / boost(temporary_ce)))
+    chance = max(3, min(90, base * boost(temporary_cp) / boost(temporary_ce)))
     return chance if optimal else chance / 2
 
 
@@ -390,7 +390,7 @@ def melee_critical(shooter, target, chance, *, ordinary=False):
         temporary_cp = progression.temporary_crit(shooter.character(), melee=True)[0]
         temporary_ce = progression.temporary_crit(target.character(), melee=True)[1]
         return combat.roll(pvp_critical_chance(chance + evade - temporary_cp,
-                           evade - temporary_ce, temporary_cp, temporary_ce, ceiling=100))
+                           evade - temporary_ce, temporary_cp, temporary_ce))
     return critical(shooter, target, chance, ordinary=ordinary)
 
 

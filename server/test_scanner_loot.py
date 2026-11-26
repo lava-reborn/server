@@ -1,5 +1,7 @@
 """Scanner quantity/probability boundaries and durable, lossless corpse creation."""
 from collections import Counter
+import json
+from pathlib import Path
 from types import SimpleNamespace as NS
 import unittest
 from unittest.mock import patch
@@ -165,6 +167,33 @@ class ScannerLoot(unittest.TestCase):
                             self.assertEqual({t: scanned[t] for t in common},
                                              {t: plain[t] * items.scanner_quantity_multiplier(t,3) for t in common})
 
+    def test_native_camp_and_mine_tables_can_emit_each_configured_equipment_category(self):
+        profiles = json.loads((Path(__file__).resolve().parents[1]
+                               / 'data/loot_rebalance.json').read_text(encoding='utf-8'))['targets']
+        seen = set()
+        for profile in profiles:
+            loc_id = int(profile['id'].split('-')[1])
+            for type_id in map(int, profile['counts']):
+                stats = mobs.stats(type_id)
+                threshold = 0
+                for kind, types, chance in mob_equipment_loot.categories(stats, loc_id):
+                    midpoint = threshold + chance / 2
+                    threshold += chance
+                    if not types:
+                        continue
+                    seen.add(kind)
+                    for scanner in (1, 3):
+                        with self.subTest(profile=profile['id'], mob=type_id,
+                                          category=kind, scanner=scanner):
+                            drops = mobs.loot_for(stats, FixedRandom(midpoint * scanner),
+                                loc_id=loc_id, killer_level=stats.level - 1,
+                                multiplier=scanner, scanner_multiplier=scanner)
+                            gear = [(t, n) for t, n in drops if mob_equipment_loot.kind_of(t)]
+                            self.assertEqual(gear, [(types[0], 1)])
+                            self.assertFalse(items.out_of_game(types[0]))
+                            self.assertFalse(items.acquisition_blocked(types[0]))
+        self.assertEqual(seen, {'armour', 'weapon', 'pouch'})
+
     def test_both_descriptions_explain_quantity_and_equipment_exceptions(self):
         for type_id in (3789, 3826):
             text = names.ALL[items.DESC_ID_OFFSET + type_id]
@@ -174,6 +203,44 @@ class ScannerLoot(unittest.TestCase):
 
 
 class ScannerLootStorage(unittest.IsolatedAsyncioTestCase):
+    async def test_native_equipment_survives_corpse_storage_pickup_and_repeated_materialization(self):
+        store = accounts.Store(':memory:')
+        self.addCleanup(store.close)
+        account_id, _ = store.register('equipment-loot', 'test-only')
+        char_id, _ = store.create_character(account_id, 'EquipmentLoot', 0, '1')
+        stats = mobs.stats(291)
+        threshold = 0
+        categories = mob_equipment_loot.categories(stats, 84)
+        self.assertTrue(all(types for _kind, types, _chance in categories))
+        for kind, types, chance in categories:
+            midpoint = threshold + chance / 2
+            threshold += chance
+            for scanner in (1, 3):
+                with self.subTest(category=kind, scanner=scanner):
+                    mob = NS(type_id=stats.type_id, stats=stats, cell=42, quest_wants=(),
+                             blueprint_killer_level=stats.level - 1, loot_multiplier=scanner,
+                             gold_loot_multiplier=1, scanner_multiplier=scanner)
+                    rc = NS(store=store, room=NS(loc=NS(id=84)), place=(84, 0, 0),
+                            add_to_bag=lambda *args: None)
+                    rc.drop_loot = lambda target: combat.RoomCombat.drop_loot(rc, target)
+                    with patch.object(combat, 'RNG', FixedRandom(midpoint * scanner)):
+                        combat.RoomCombat.materialize_loot(rc, mob)
+                        rows = store.items_of(combat.LOOT_OWNER)
+                        gear = [r for r in rows if mob_equipment_loot.kind_of(r['type_id'])]
+                        self.assertEqual([r['type_id'] for r in gear], [types[0]])
+                        row = gear[0]
+                        self.assertEqual(row['count'], 1)
+                        self.assertGreater(row['brk'], 0)
+                        self.assertLess(row['max_break_cur'], items.params_of(types[0])['max_break_abs'])
+                        serials = [r['uniq'] for r in rows]
+                        store.pick_up(serials, char_id, inventory.BAG)
+                        before = store.items_of(char_id)
+                        combat.RoomCombat.materialize_loot(rc, mob)
+                    self.assertEqual(store.items_of(combat.LOOT_OWNER), [])
+                    self.assertEqual(store.items_of(char_id), before)
+                    self.assertEqual(store.item(row['uniq'])['char_id'], char_id)
+                    self.assertEqual(store.on_ground(combat.LOOT_OWNER), [])
+
     async def test_overflow_nonheap_items_and_ground_are_atomic_and_idempotent(self):
         store = accounts.Store(':memory:')
         self.addCleanup(store.close)

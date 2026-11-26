@@ -30,8 +30,22 @@ class PvPCriticalBalance(unittest.TestCase):
                 for attack, defence in ((0, 0), (30, 0), (0, 30), (10000, 10000)):
                     chance = balance.pvp_critical_chance(cp, ce, attack, defence)
                     self.assertGreaterEqual(chance, 3)
-                    self.assertLessEqual(chance, 50)
+                    self.assertLessEqual(chance, 90)
                     self.assertEqual(balance.pvp_critical_chance(cp, ce, attack, defence, False), chance / 2)
+
+    def test_ninety_percent_limit_is_applied_after_enemy_anticrit_and_temporary_bonuses(self):
+        self.assertEqual(balance.pvp_critical_chance(300, 0, 30), 90)
+        self.assertEqual(balance.pvp_critical_chance(300, 0, 30, optimal=False), 45)
+        self.assertEqual(balance.pvp_critical_chance(300, 1000), 3)
+        self.assertLess(balance.pvp_critical_chance(300, 1000, 30), 4)
+        unbuffed = balance.pvp_critical_chance(100, 40)
+        defended = balance.pvp_critical_chance(100, 80)
+        self.assertGreater(unbuffed, 50)
+        self.assertLess(unbuffed, 90)
+        self.assertLess(defended, unbuffed)
+        self.assertGreater(balance.pvp_critical_chance(100, 80, 30), defended)
+        self.assertLess(balance.pvp_critical_chance(100, 80, 0, 30), defended)
+        self.assertAlmostEqual(balance.pvp_critical_chance(100, 80, 30, 30), defended)
 
     def test_permanent_growth_has_full_weight_and_temporary_power_tapers(self):
         base = balance.pvp_critical_chance(100, 80)
@@ -120,7 +134,7 @@ class PvPCriticalBalance(unittest.TestCase):
         with patch.object(combat, 'roll', side_effect=lambda chance: chance):
             current = balance.melee_critical(a, b, raw, ordinary=True)
             self.assertEqual(current, balance.pvp_critical_chance(combat.melee_crit(ch,1),
-                                                               combat.melee_crit_evade(victim), ceiling=100))
+                                                               combat.melee_crit_evade(victim)))
             self.assertEqual(balance.melee_critical(a, b, raw), max(0, min(100, raw)))
 
     def test_temporary_intellect_keeps_a_positive_but_bounded_damage_and_healing_bonus(self):
