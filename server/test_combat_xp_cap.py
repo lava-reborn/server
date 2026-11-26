@@ -50,7 +50,7 @@ class CombatXpCap(unittest.TestCase):
             for mob in range(level + 1):
                 for share in (0, .125, .5, 1):
                     for mult in (.7, 1, 3):
-                        ratio = {0:890/1100, -1:.50, -2:.30, -3:.15}.get(mob - level, 0)
+                        ratio = {0:890/1100, -1:.70, -2:.30, -3:.15}.get(mob - level, 0)
                         expected = p.COMBAT_XP_BASE[level] * ratio * mult * share
                         self.assertAlmostEqual(p.combat_mob_xp(mob, level, share, mult), expected)
 
@@ -66,7 +66,7 @@ class CombatXpCap(unittest.TestCase):
                     self.assertAlmostEqual(p.combat_mob_xp(mob, level, .25, mult), full / 4)
             self.assertEqual(p.combat_mob_xp(13, level), 0)
             self.assertEqual(p.combat_mob_xp(15, level), 1366.945003018 * .30)
-        self.assertEqual(p.combat_mob_xp(16, 17), 1366.945003018 * .50)
+        self.assertEqual(p.combat_mob_xp(16, 17), 1366.945003018 * .70)
         for gap in range(-3, 9):
             self.assertEqual(p.combat_mob_xp(17 + gap, 17),
                              p.combat_mob_xp(16 + gap, 16))

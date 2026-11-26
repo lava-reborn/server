@@ -938,7 +938,7 @@ KILLS_GROWTH = 1.5
 GAP_SHARE = {0: 0.5, -1: 0.25}
 GREY_GAP = 2
 COMBAT_GAP_REWARD = (980 / 1100, 1.0, 1.1, 1.2)
-COMBAT_LOW_GAP_REWARD = (890 / 1100, .50, .30, .15)
+COMBAT_LOW_GAP_REWARD = (890 / 1100, .70, .30, .15)
 # Full ordinary +2 kill, indexed by the base skill (never gear/effects).
 # Owner anchors, 2026-11-26: skill 15 pays 890/980/1100 for +0/+1/+2.
 # Base relief enters in thirds at 11/12/13; levels 0..10 keep their base.
@@ -999,7 +999,7 @@ def combat_mob_xp(mob_level, skill_level, share=1.0, xp_mult=1):
     """Approved PvE curve; +2 pays the full base, +4 caps the gap bonus.
 
     Equal/+1 follow the 890/980-to-1100 anchors; -1/-2/-3 pay
-    50/30/15% of base, and +3/+4 retain 110/120%.
+    70/30/15% of base, and +3/+4 retain 110/120%.
     Skill 17 trains only specialisations, using the level-16 base and a
     normal +4 ceiling even for bosses. Mining keeps the legacy mob_xp.
     """

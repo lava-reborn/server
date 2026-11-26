@@ -40,9 +40,21 @@ class CombatXpRamp(unittest.TestCase):
         for skill in range(17):
             for mob in range(skill + 1):
                 for mult in (.7, 1, 3):
-                    ratio = {0:890/1100, -1:.50, -2:.30, -3:.15}.get(mob - skill, 0)
+                    ratio = {0:890/1100, -1:.70, -2:.30, -3:.15}.get(mob - skill, 0)
                     expected = p.COMBAT_XP_BASE[skill] * ratio * mult
                     self.assertAlmostEqual(p.combat_mob_xp(mob, skill, xp_mult=mult), expected)
+
+    def test_minus_one_gains_forty_percent_while_lower_rewards_fall_to_zero(self):
+        for level in range(1, 18):
+            base = p.COMBAT_XP_BASE[level]
+            for share in (.125, .5, 1):
+                previous = base * .5 * share
+                self.assertAlmostEqual(p.combat_mob_xp(level - 1, level, share), previous * 1.4)
+            self.assertLess(p.combat_mob_xp(level - 1, level), p.combat_mob_xp(level, level))
+        for level in range(4, 18):
+            rewards = [p.combat_mob_xp(level + gap, level) for gap in range(-4, 1)]
+            self.assertEqual(rewards[0], 0)
+            self.assertTrue(all(a < b for a, b in zip(rewards, rewards[1:])))
 
     def test_legacy_noncombat_price_does_not_gain_a_ramp(self):
         self.assertEqual(p.mob_xp(1, 0), 20)
@@ -52,7 +64,7 @@ class CombatXpRamp(unittest.TestCase):
     def test_split_hits_settlement_and_repeat_do_not_lose_or_duplicate_xp(self):
         fixture = cap_tests.CombatXpCap()
         for skill in (p.SHOOTING, p.MELEE):
-            for gap in range(1, 5):
+            for gap in range(-3, 5):
                 f, ch, spec = fixture.fighter(12, skill=skill)
                 whole, expected_ch, expected_spec = fixture.fighter(12, skill=skill)
                 reward = p.combat_mob_xp(12 + gap, 12)

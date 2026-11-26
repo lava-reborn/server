@@ -31,7 +31,7 @@ class MobLootFollowup(unittest.TestCase):
     def test_explicit_loot_boundaries_do_not_reuse_the_xp_ladder(self):
         ladder = {-10: 0, -5: 0, -4: .25, -3: .5, -2: .75, -1: .80,
                   0: .90, 1: 1, 2: 1.10, 3: 1.20, 4: 1.30, 10: 1.30}
-        xp = {-5: 0, -4: 0, -3: .15, -2: .30, -1: .50, 0: 890/1100,
+        xp = {-5: 0, -4: 0, -3: .15, -2: .30, -1: .70, 0: 890/1100,
               1: 980/1100, 2: 1, 3: 1.1, 4: 1.2}
         for gap, expected in ladder.items():
             self.assertEqual(mobs.loot_level_factor(gap), expected)
