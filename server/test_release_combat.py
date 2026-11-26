@@ -621,7 +621,7 @@ class TimedItems(unittest.IsolatedAsyncioTestCase):
     async def test_experience_boosters_apply_gain_keep_skill_cap_and_downward_effect(self):
         manager = self.manager()
         fixture = xp_fixture.CombatXpCap()
-        for type_id, multiplier in ((3112, 1.1), (3113, 1.3), (3114, 1.5), (3561, 1.9)):
+        for type_id, multiplier in ((3112, 1.1), (3113, 1.3), (3114, 1.5), (3561, 1.7)):
             with self.subTest(type_id=type_id):
                 manager.add(type_id)
                 self.assertEqual(len(manager.active), 1)
@@ -648,21 +648,21 @@ class TimedItems(unittest.IsolatedAsyncioTestCase):
                     else:
                         self.assertEqual(fixture.spec_total(character, spec), int(expected))
                         self.assertAlmostEqual(skill_xp + character.xp_carry[progression.SHOOTING], expected)
-        # Repeated or stale duplicate positive effects cannot exceed +90%.
+        # Repeated or stale duplicate positive effects cannot exceed +70%.
         manager.add(3561)
         manager.active['stale_duplicate'] = manager.active['experience_up']
-        self.assertEqual(effects.multiplier(self.s, 'mob_exp'), 1.9)
-        self.assertAlmostEqual(effects.multiplier(self.s, 'mob_exp', bonus=.3), 2.2)
+        self.assertEqual(effects.multiplier(self.s, 'mob_exp'), 1.7)
+        self.assertAlmostEqual(effects.multiplier(self.s, 'mob_exp', bonus=.3), 2.0)
         manager.active.pop('stale_duplicate')
         manager.add(3206)
-        self.assertAlmostEqual(effects.multiplier(self.s, 'mob_exp'), .38)
+        self.assertAlmostEqual(effects.multiplier(self.s, 'mob_exp'), .34)
         f, character, spec = fixture.fighter(12)
         f.sess.effects = manager
         target = fixture.mob(14)
         f.award_xp(progression.SHOOTING, spec, 25, target)
         self.assertEqual(character.skill[progression.SHOOTING][1], 0)
         fixture.settle(target, f)
-        expected = progression.combat_mob_xp(14, 12) * .38
+        expected = progression.combat_mob_xp(14, 12) * .34
         self.assertAlmostEqual(character.skill[progression.SHOOTING][1]
                                + character.xp_carry[progression.SHOOTING], expected)
 
@@ -693,7 +693,7 @@ class TimedItems(unittest.IsolatedAsyncioTestCase):
             manager.load()
         deadline = manager.active['experience_up'].deadline
         self.assertAlmostEqual(deadline - resumed_at, remaining, delta=1e-6)
-        self.assertEqual(effects.multiplier(self.s, 'mob_exp'), 1.9)
+        self.assertEqual(effects.multiplier(self.s, 'mob_exp'), 1.7)
         with patch.object(manager, 'clock', return_value=deadline + 1):
             manager.refresh()
             self.assertEqual(effects.multiplier(self.s, 'mob_exp'), 1)
@@ -1353,7 +1353,7 @@ class ReleaseCatalogue(unittest.TestCase):
             self.assertEqual(boosters.intersection(shop_bands.stimulants(top)), expected)
             self.assertFalse(boosters.intersection(shop_bands.stimulants(top, 'afro')))
             self.assertEqual(boosters.intersection(shop_bands.stimulants(top, 'gold')), expected)
-        for type_id, percent, price in ((3112, 10, 28), (3113, 30, 105), (3114, 50, 210), (3561, 90, 630)):
+        for type_id, percent, price in ((3112, 10, 28), (3113, 30, 105), (3114, 50, 210), (3561, 70, 630)):
             self.assertFalse(items.stimulant_unavailable(type_id))
             self.assertEqual(effects.definition(type_id)['modifiers']['mob_exp'], 1 + percent / 100)
             self.assertEqual(effects.definition(type_id)['duration'], 1800)
@@ -1366,16 +1366,16 @@ class ReleaseCatalogue(unittest.TestCase):
         from training import catalog as private_catalog
         self.assertFalse(boosters.intersection(private_catalog.item_catalogue()))
 
-    def test_intux_iv_description_and_effect_agree_on_ninety_percent(self):
+    def test_intux_iv_description_and_effect_agree_on_seventy_percent(self):
         import names
-        self.assertEqual(items.wiki()[3561]['exp_mobs_pct'], 90)
-        self.assertEqual(items.wiki()[3561]['exp_players_pct'], 90)
+        self.assertEqual(items.wiki()[3561]['exp_mobs_pct'], 70)
+        self.assertEqual(items.wiki()[3561]['exp_players_pct'], 70)
         params = items.params_of(3561)
         description = names.ALL[params['desc']]
-        self.assertIn('90%', description)
-        self.assertNotIn('70%', description)
+        self.assertIn('70%', description)
+        self.assertNotIn('90%', description)
         self.assertEqual(effects.definition(3561)['modifiers'],
-                         dict(mob_exp=1.9, pl_exp=1.9, mob_drop=1))
+                         dict(mob_exp=1.7, pl_exp=1.7, mob_drop=1))
 
     def test_level_factor_changes_probability_not_quantity_or_guaranteed_drop(self):
         rows = [(333, .1, True), (334, 1, False)]

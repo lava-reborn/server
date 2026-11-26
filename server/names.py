@@ -125,8 +125,6 @@ ALL.update(REAL_NAMES)
 ALL.update(QUEST_STRINGS)
 ALL.update(TRANSPORT_STRINGS)
 ALL.update(SET_STRINGS)
-ALL[items.DESC_ID_OFFSET + 3561] = (
-    f"Увеличивает получаемое количество опыта на {items.INTUX_IV_EXPERIENCE}%.")
 
 
 # The developers' own weapon (items.ADMIN_GUN) has an internal name and no

@@ -318,7 +318,7 @@ class StatPipeline(unittest.IsolatedAsyncioTestCase):
                 [ch.attr(i) for i in range(progression.ATTRIBS)])
         for source in (4917, 4937, 3115, 3208, 3468, 3471):
             manager.add(source)
-        expected = (base[0] + 3, base[1] + 6 + 4,
+        expected = (base[0] + 35, base[1] + 65 + 4,
                     (base[2][0] + 6 + 2, base[2][1] + 4 + .5),
                     [base[3][0], base[3][1] + 1, base[3][2], base[3][3], base[3][4] + 1])
         for _ in range(10):

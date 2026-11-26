@@ -227,14 +227,14 @@ class CombatClient(unittest.TestCase):
         self.env['lol']['display'] = dict(DisplaySprite=dict(create=lambda *args:
             dict(display=lambda *args: icons.append(args))))
         scanner = self.effect(mob_drop=3, name='Сканер', res_icon=1)
-        xp = self.effect(mob_exp=1.9, player_exp=1.9, name='INTUX IV', res_icon=2)
+        xp = self.effect(mob_exp=1.7, player_exp=1.7, name='INTUX IV', res_icon=2)
         self.call('__bfEffectsInfo', panel, Arr([scanner, None, xp]), Arr([100, 0, 75]), True, True)
         self.assertEqual([t['effect_name']['htmlText'] for t in titles], ['Сканер', 'INTUX IV'])
         self.assertEqual([t['effect_prob']['htmlText'] for t in titles],
                          ['Вероятность срабатывания: 100', 'Вероятность срабатывания: 75'])
         self.assertEqual(rows, [('Время действия', '1800000'), ('Бонус\rк луту с мобов', '+200%'),
-                                ('Время действия', '1800000'), ('Бонус\rк опыту с мобов', '+90%'),
-                                ('Бонус\rк опыту с игроков', '+90%')])
+                                ('Время действия', '1800000'), ('Бонус\rк опыту с мобов', '+70%'),
+                                ('Бонус\rк опыту с игроков', '+70%')])
         self.assertEqual((panel['arrItem'], panel['arrLine']), (titles, lines))
         self.assertEqual(icons, [('0_effect_icon', 1), ('2_effect_icon', 2)])
         self.assertEqual(calls, ['unlisten', 'remove', 'style', 'align'])

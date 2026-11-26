@@ -30,19 +30,42 @@ class ArchivedBuffs(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(manager.static(effects.FIRST + 4932))
         card = next(data for cmd, data in (decode(frame[:-1]) for frame in self.s.writer.frames)
                     if cmd == 'e_si')
-        self.assertEqual((card['max_hp'], card['work_time']), (19, 4800 * 1000))
+        self.assertEqual((card['max_hp'], card['work_time']), (225, 4800 * 1000))
         row = self.s.inv.create(4932)
         effects.activate(fighter, row['uniq'], fighter, 0)
         self.assertIsNone(self.store.item(row['uniq']))
-        self.assertEqual(self.s.char.hp_max, baseline + 19)
+        self.assertEqual(self.s.char.hp_max, baseline + 225)
         active = next(iter(manager.active.values()))
         self.assertEqual(active.deadline - active.started, 4800)
         manager.close()
         manager.load()
-        self.assertEqual(self.s.char.hp_max, baseline + 19)
+        self.assertEqual(self.s.char.hp_max, baseline + 225)
         with patch.object(manager, 'clock', return_value=active.deadline + 1):
             manager.refresh()
         self.assertEqual(self.s.char.hp_max, baseline)
+
+    async def test_original_health_and_stamina_caps_replace_weaker_doses_and_expire_once(self):
+        manager = self.manager()
+        ch = self.s.char
+        base_hp, base_sp = ch.hp_max, ch.sp_max
+        manager.add(4917)
+        manager.add(4937)
+        self.assertEqual((ch.hp_max, ch.sp_max), (base_hp + 35, base_sp + 65))
+        manager.add(4936)
+        manager.add(4956)
+        self.assertEqual(set(manager.active), {'max_health', 'max_stamina'})
+        for _ in range(3):
+            self.s.inv.refresh_gear(push=False)
+            manager.refresh(notify=False)
+            self.assertEqual((ch.hp_max, ch.sp_max), (base_hp + 300, base_sp + 600))
+        ch.hp, ch.sp = ch.hp_max, ch.sp_max
+        deadline = max(row.deadline for row in manager.active.values())
+        with patch.object(manager, 'clock', return_value=deadline + 1):
+            manager.refresh()
+        self.assertFalse(manager.active)
+        self.assertEqual((ch.hp_max, ch.sp_max, ch.hp, ch.sp), (base_hp, base_sp, base_hp, base_sp))
+        self.s.inv.refresh_gear(push=False)
+        self.assertEqual((ch.hp_max, ch.sp_max), (base_hp, base_sp))
 
     async def test_alpha_changes_only_crit_and_omega_only_anticrit_in_real_fights(self):
         manager = self.manager()
@@ -119,7 +142,7 @@ class ArchivedBuffs(unittest.IsolatedAsyncioTestCase):
         manager = self.manager()
         fighter = self.s.combat
         self.s.char.skill[p.SHOOTING][0] = 17
-        for type_id in (3476, 4932):
+        for type_id in (3476, 4932, 4956):
             for slot in (inventory.BAG, *inventory.HAND_SLOTS):
                 with self.subTest(type_id=type_id, slot=slot):
                     for active in tuple(manager.active.values()):
@@ -131,6 +154,7 @@ class ArchivedBuffs(unittest.IsolatedAsyncioTestCase):
                     self.assertEqual(self.store.item(row['uniq'])['slot'], slot)
                     self.s.writer.frames.clear()
                     before_hp = self.s.char.hp_max
+                    before_sp = self.s.char.sp_max
                     before_strength = self.s.char.attr(p.STRENGTH)
                     fighter.ap = fighter.ap_max
                     fighter.use_heal(dict(obj=inventory.oid_of(row)), inventory.USE_IDLE)
@@ -142,8 +166,10 @@ class ArchivedBuffs(unittest.IsolatedAsyncioTestCase):
                     self.assertEqual(len(manager.active), 1)
                     if type_id == 3476:
                         self.assertEqual(self.s.char.attr(p.STRENGTH), before_strength + 3)
+                    elif type_id == 4932:
+                        self.assertEqual(self.s.char.hp_max, before_hp + 225)
                     else:
-                        self.assertEqual(self.s.char.hp_max, before_hp + 19)
+                        self.assertEqual(self.s.char.sp_max, before_sp + 600)
                     before = dict(manager.active)
                     before_ap = fighter.ap
                     fighter.heal_now(*callback_args)
@@ -364,7 +390,7 @@ class GofusStock(unittest.TestCase):
         frame = next(params for cmd, params in viewer.frames if cmd == 'userInfo_Trader')
         self.assertEqual((frame['can_trade'], frame['type_list']), (1, [4919, 4939]))
         self.assertTrue(frame['give_quests'])  # Original doctor's quests remain.
-        for tid, bonus in ((4919, ('hp', 6)), (4939, ('sp', 15))):
+        for tid, bonus in ((4919, ('hp', 75)), (4939, ('sp', 150))):
             params = items.params_of(tid)
             self.assertEqual((params['cost'], params['g_cost'], params['buff_level']), (0, 8, 0))
             definition = effects.definition(tid)

@@ -32,18 +32,30 @@ class WeekendExperience(unittest.TestCase):
     def test_calendar_intux_and_residence_add_then_reductions_apply(self):
         for stamp, calendar in ((FRIDAY, 1), (SATURDAY, 1.5)):
             for residence in (0, .15, .30):
-                for source, boost in ((None, 1), (3112, 1.1), (3113, 1.3), (3114, 1.5), (3561, 1.9)):
+                for source, boost in ((None, 1), (3112, 1.1), (3113, 1.3), (3114, 1.5), (3561, 1.7)):
                     for reduction, factor in ((None, 1), (3205, .5), (3206, .2), (3207, .01)):
                         s = session(source, reduction)
                         got = effects.multiplier(s, 'mob_exp',
                                                  bonus=residence + p.combat_calendar_multiplier(stamp) - 1)
-                        self.assertAlmostEqual(got, (calendar + boost - 1 + residence) * factor)
+                        self.assertAlmostEqual(got, min(2.25, calendar + boost - 1 + residence) * factor)
                         # PvP and other callers retain their previous, non-calendar rule.
                         self.assertAlmostEqual(effects.multiplier(s, 'pl_exp', bonus=residence),
                                                (boost + residence) * factor)
         s = session(3561)
         s.effects.active['duplicate'] = NS(source=3561, deadline=10)
-        self.assertEqual(effects.multiplier(s, 'mob_exp', bonus=.3 + .5), 2.7)
+        self.assertEqual(effects.multiplier(s, 'mob_exp', bonus=.3 + .5), 2.25)
+
+    def test_total_server_cap_applies_before_reductions_and_leaves_other_rewards_unchanged(self):
+        for name in ('mob_exp', 'pl_exp'):
+            for bonus, expected in ((0, 1.7), (.3, 2), (.5, 2.2),
+                                    (.55, 2.25), (.65, 2.25), (.8, 2.25), (10, 2.25)):
+                with self.subTest(name=name, bonus=bonus):
+                    self.assertAlmostEqual(effects.multiplier(session(3561), name, bonus=bonus), expected)
+                    for source, factor in ((3205, .5), (3206, .2), (3207, .01)):
+                        self.assertAlmostEqual(effects.multiplier(session(3561, source), name, bonus=bonus),
+                                               expected * factor)
+            self.assertEqual(effects.multiplier(session(), name, bonus=10), 2.25)
+        self.assertEqual(effects.multiplier(session(3789), 'mob_drop', bonus=10), 3)
 
     def test_calendar_applies_to_the_approved_base_without_extra_weekday_reduction(self):
         for level in range(18):
@@ -69,30 +81,30 @@ class WeekendExperience(unittest.TestCase):
                         with patch.object(p.time, 'time', return_value=stamp):
                             reward = f.xp_reward(p.SHOOTING, 1, target)
                         self.assertAlmostEqual(reward, p.combat_mob_xp(level + gap, level, xp_mult=role)
-                                               * (2.7 if stamp == SATURDAY else 2.2))
+                                               * (2.25 if stamp == SATURDAY else 2.0))
         f, ch, spec = fixture.fighter(15, 2)
         f.sess.effects = session(3561).effects
         with patch.object(p.time, 'time', return_value=SATURDAY):
-            self.assertAlmostEqual(f.xp_reward(p.SHOOTING, 1, fixture.mob(19)), 3564)
+            self.assertAlmostEqual(f.xp_reward(p.SHOOTING, 1, fixture.mob(19)), 2970)
 
     def test_approved_kill_counts_for_every_transition_and_requested_bonus_combination(self):
         expected = (
-            ((7, 6), (6, 6), (5, 5)),
-            ((10, 9), (10, 9), (8, 7)),
-            ((16, 14), (15, 13), (12, 11)),
-            ((24, 22), (22, 20), (18, 16)),
-            ((37, 33), (33, 30), (27, 24)),
-            ((56, 50), (51, 45), (41, 36)),
-            ((84, 75), (76, 68), (61, 55)),
-            ((126, 112), (114, 102), (92, 82)),
-            ((189, 168), (172, 153), (138, 123)),
-            ((304, 271), (276, 246), (222, 198)),
-            ((423, 377), (384, 342), (309, 276)),
-            ((599, 534), (545, 485), (438, 391)),
-            ((861, 767), (783, 697), (630, 561)),
-            ((1386, 1234), (1260, 1122), (1014, 903)),
-            ((2230, 1986), (2027, 1806), (1632, 1454)),
-            ((3087, 2750), (2806, 2500), (2259, 2012)),
+            ((7, 6), (6, 6), (6, 5)),
+            ((10, 9), (10, 9), (9, 8)),
+            ((16, 14), (15, 13), (13, 12)),
+            ((24, 22), (22, 20), (20, 18)),
+            ((37, 33), (33, 30), (30, 27)),
+            ((56, 50), (51, 45), (45, 40)),
+            ((84, 75), (76, 68), (68, 61)),
+            ((126, 112), (114, 102), (102, 91)),
+            ((189, 168), (172, 153), (153, 137)),
+            ((304, 271), (276, 246), (246, 220)),
+            ((423, 377), (384, 342), (343, 305)),
+            ((599, 534), (545, 485), (486, 433)),
+            ((861, 767), (783, 697), (698, 622)),
+            ((1386, 1234), (1260, 1122), (1124, 1001)),
+            ((2230, 1986), (2027, 1806), (1808, 1611)),
+            ((3087, 2750), (2806, 2500), (2503, 2230)),
         )
         for level, row in enumerate(expected, 1):
             for (premium, source), counts in zip(((0, 3114), (1, 3114), (1, 3561)), row):
@@ -107,7 +119,7 @@ class WeekendExperience(unittest.TestCase):
         self.assertEqual(effects.multiplier(session(), 'mob_exp', bonus=.15 + .5), 1.65)
 
     def test_weekend_and_intux_have_explicit_additive_totals(self):
-        expected = {3114: (2, 2.15, 2.3), 3561: (2.4, 2.55, 2.7)}
+        expected = {3114: (2, 2.15, 2.25), 3561: (2.2, 2.25, 2.25)}
         for source, totals in expected.items():
             for premium, total in enumerate(totals):
                 f, _ch, _spec = CombatXpCap().fighter(15, premium)
@@ -121,13 +133,13 @@ class WeekendExperience(unittest.TestCase):
         for stamp, calendar in ((FRIDAY, 1), (SATURDAY, 1.5)):
             for level in (1, 4, 5, 10, 11, 15, 17):
                 for premium, residence in ((0, 0), (1, .15), (2, .30)):
-                    for source, boost in ((None, 1), (3112, 1.1), (3113, 1.3), (3114, 1.5), (3561, 1.9)):
+                    for source, boost in ((None, 1), (3112, 1.1), (3113, 1.3), (3114, 1.5), (3561, 1.7)):
                         f, ch, spec = fixture.fighter(level, premium)
                         f.sess.effects = session(source).effects
                         with patch.object(p.time, 'time', return_value=stamp):
                             for _ in range(100):
                                 f.credit_xp(p.SHOOTING, spec, .01, fixture.mob(level + 4))
-                        reward = p.combat_mob_xp(level + 4, level) * (calendar + boost - 1 + residence)
+                        reward = p.combat_mob_xp(level + 4, level) * min(2.25, calendar + boost - 1 + residence)
                         self.assertEqual(fixture.spec_total(ch, spec), int(reward + 1e-9))
                         self.assertAlmostEqual(ch.xp_carry['spec', spec],
                                                max(0, reward - int(reward + 1e-9)))
@@ -145,7 +157,7 @@ class WeekendExperience(unittest.TestCase):
     def test_crossing_midnight_pays_damage_time_price_without_repricing_or_double_settlement(self):
         fixture = CombatXpCap()
         saturday = datetime(2026, 11, 28, tzinfo=p.COMBAT_XP_ZONE).timestamp()
-        for source, boost in ((None, 1), (3113, 1.3), (3561, 1.9)):
+        for source, boost in ((None, 1), (3113, 1.3), (3561, 1.7)):
             f, ch, spec = fixture.fighter(15, 2)
             f.sess.effects = session(source).effects
             target = fixture.mob(19)
@@ -156,7 +168,7 @@ class WeekendExperience(unittest.TestCase):
                 fixture.settle(target, f)
                 before = (ch.skill[p.SHOOTING][:], ch.spec[spec][:], dict(ch.xp_carry))
                 fixture.settle(target, f)
-            expected = p.combat_mob_xp(19, 15) * ((boost + .3) * .99 + (boost + .5 + .3) * .01)
+            expected = p.combat_mob_xp(19, 15) * (min(2.25, boost + .3) * .99 + min(2.25, boost + .5 + .3) * .01)
             self.assertAlmostEqual(ch.skill[p.SHOOTING][1] + ch.xp_carry[p.SHOOTING], expected)
             self.assertEqual((ch.skill[p.SHOOTING], ch.spec[spec], ch.xp_carry), before)
 
@@ -165,10 +177,10 @@ class WeekendExperience(unittest.TestCase):
             for gap in range(-3, 5):
                 for role in (.7, 1, 3):
                     for residence in (0, .15, .30):
-                        for boost in (1, 1.1, 1.3, 1.5, 1.9):
+                        for boost in (1, 1.1, 1.3, 1.5, 1.7):
                             previous_reward, previous_kills = 0, 0
                             for level in range(max(1, 1 - gap), 17):
-                                reward = p.combat_mob_xp(level + gap, level, xp_mult=role) * (calendar + boost - 1 + residence)
+                                reward = p.combat_mob_xp(level + gap, level, xp_mult=role) * min(2.25, calendar + boost - 1 + residence)
                                 kills = math.ceil(p.skill_xp_max(level) / reward)
                                 self.assertGreater(reward, previous_reward)
                                 self.assertGreaterEqual(kills, previous_kills)

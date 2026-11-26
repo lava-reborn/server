@@ -137,7 +137,7 @@ class DamageXp(unittest.TestCase):
         self.assertAlmostEqual(self.skill_xp(ch), p.combat_mob_xp(14, 12))
 
     def test_damage_time_intux_residence_and_reduction_apply_once(self):
-        for source, boost in ((3112, .1), (3113, .3), (3114, .5), (3561, .9)):
+        for source, boost in ((3112, .1), (3113, .3), (3114, .5), (3561, .7)):
             for premium, residence in ((0, 0), (1, .15), (2, .3)):
                 for reduction, factor in ((None, 1), (3205, .5), (3206, .2), (3207, .01)):
                     with self.subTest(source=source, premium=premium, reduction=reduction):

@@ -52,6 +52,7 @@ class ClientSuiteSelection(unittest.TestCase):
                     'server/test_items.py', 'server/test_camp_box_loot.py',
                     'server/test_eden_native_weapons.py',
                     'server/test_buff_purchases.py', 'server/test_archived_buffs.py',
+                    'server/test_buff_progression.py',
                     'server/test_base_trade.py', 'server/test_eden_ticket_storage.py',
                     'server/test_eden_quests.py', 'server/test_shop_prices.py',
                     'server/test_bank_stacks.py', 'server/test_online_effects.py',

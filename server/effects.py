@@ -24,7 +24,8 @@ SCALARS = ('hp', 'sp', 'od', 'cp', 'ce', 'armor')
 EXPERIENCE_UP = (3112, 3113, 3114, 3561)
 EXPERIENCE_DOWN = (3201, 3202, 3203, 3205, 3206, 3207)
 SCANNERS = (3789, 3826)
-MAX_EXPERIENCE_MULTIPLIER = 1 + items.INTUX_IV_EXPERIENCE / 100
+MAX_EXPERIENCE_MULTIPLIER = 1.7
+MAX_TOTAL_EXPERIENCE_MULTIPLIER = 2.25
 
 
 @lru_cache(maxsize=1)
@@ -75,9 +76,10 @@ def multiplier(session, name, *, bonus=0):
                   for active in manager.active.values() if active.deadline > clock]
     if name in ('mob_exp', 'pl_exp'):
         # INTUX is capped independently; additive weekend/residence bonuses
-        # follow it, then experience-reducing effects apply to the total.
+        # follow it under the server-wide cap, then reductions apply.
         boost = min(MAX_EXPERIENCE_MULTIPLIER, math.prod(value for value in values if value > 1))
-        return (boost + bonus) * math.prod(value for value in values if value <= 1)
+        return min(MAX_TOTAL_EXPERIENCE_MULTIPLIER, boost + bonus) * math.prod(
+            value for value in values if value <= 1)
     return math.prod(values)
 
 
