@@ -159,6 +159,25 @@ class OnlineEffects(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(set(manager.active), {'Дофрамин'})
         self.assertEqual(manager.active['Дофрамин'].deadline - self.now, 3000)
 
+    async def test_failed_last_expiry_then_logout_before_heartbeat_cannot_restore_the_dose(self):
+        manager = self.manager()
+        self.activate(3115)
+        self.now += 600
+        with patch.object(self.store, 'checkpoint_effects', side_effect=RuntimeError('SQL unavailable')):
+            manager.refresh(notify=False)
+        self.assertFalse(manager.active)
+        self.assertIsNone(manager.timer)
+        self.assertEqual(len(self.store.effects_for(self.s.char_id)), 1)
+        # The DB recovers, but this player leaves before the next heartbeat.
+        self.s.close(force=True)
+        self.assertEqual(self.store.effects_for(self.s.char_id), [])
+        self.now += 86400
+        manager.load()
+        self.assertFalse(manager.active)
+        self.assertEqual(self.s.char.bonus_cp, 0)
+        self.assertEqual(manager.bonus, effects.zero())
+        self.assertFalse(any(row['type_id'] == 3115 for row in self.s.inv.rows()))
+
     async def test_effect_delta_and_normal_gear_recount_do_not_double_or_erase_bonuses(self):
         manager = self.manager()
         baseline = self.s.char.bonus_cp

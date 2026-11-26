@@ -164,13 +164,14 @@ class Effects:
         if self.timer is not None:
             self.timer.cancel()
             self.timer = None
-        if self.active:
-            try:
-                self.session.combat.store.checkpoint_effects([self.char_id], self._paused_at)
-            except Exception:
-                # The heartbeat checkpoint remains usable after a failed
-                # disconnect write; never prevent room/socket cleanup.
-                log.exception('Saving paused effects failed for character %s', self.char_id)
+        # A failed expiry write may leave rows after the last in-memory
+        # effect is gone. Flush those too, before this player leaves heartbeat.
+        try:
+            self.session.combat.store.checkpoint_effects([self.char_id], self._paused_at)
+        except Exception:
+            # The heartbeat checkpoint remains usable after a failed
+            # disconnect write; never prevent room/socket cleanup.
+            log.exception('Saving paused effects failed for character %s', self.char_id)
 
     def resume(self):
         if self._paused_at is None:

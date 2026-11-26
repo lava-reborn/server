@@ -1,5 +1,11 @@
 """Hand gifts: actual inventory moves, temporary stats and unchanged saved progress."""
+import json
+import time
 import unittest
+
+import accounts
+import auction
+import mail
 from unittest.mock import patch
 
 import combat
@@ -87,6 +93,78 @@ class HandValentines(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(args[10], row['uniq'])
             self.case.store.update_item(row['uniq'], slot=inventory.BAG)
 
+    async def test_old_parcels_can_be_read_claimed_and_equipped_without_relogin(self):
+        store = self.case.store
+        parcels = []
+        for index, type_id in enumerate(items.HAND_VALENTINES):
+            row = self.s.inv.create(type_id)
+            snap = dict(mail.snapshot(row), root=items.WEAR)
+            store.delete_item(row['uniq'])
+            kind = mail.TRADE if index % 2 else mail.LETTER
+            letter = store.mail_send(self.s.char_id, self.s.char_id, kind,
+                                      'old gift', 'old gift', 25 if kind == mail.TRADE else 0,
+                                      0, json.dumps([snap]))
+            parcels.append((letter, snap))
+        self.assertTrue(accounts.run_once(store.db, inventory.HAND_VALENTINE_SNAPSHOTS_FIX,
+                                          inventory.repair_hand_valentine_snapshots))
+        for letter, snap in parcels:
+            with self.subTest(type_id=snap['type_id']):
+                frames = []
+                before = store.money(self.s.char_id)
+                with patch.object(self.s, 'send', side_effect=lambda cmd, **data: frames.append((cmd, data))):
+                    self.s.mail.getml(dict(id=str(letter['id'])))
+                    info = next(data for cmd, data in frames if cmd == 'rcml')
+                    self.assertEqual(inventory.parse_oid(info['items'][0])[2], items.COLD_ARM)
+                    self.s.mail.uldml(dict(id=str(letter['id'])))
+                received = [r for r in self.s.inv.rows() if r['type_id'] == snap['type_id']]
+                self.assertEqual(len(received), 1)
+                row = received[0]
+                self.assertEqual((row['root'], row['count'], row['brk'], row['max_break_cur']),
+                                 (items.COLD_ARM, snap['count'], snap['brk'], snap['max_break_cur']))
+                self.assertEqual(store.money(self.s.char_id), (before[0] - letter['afro'], before[1]))
+                self.s.handle('ss_move', dict(obj=inventory.oid_of(row),
+                              **{'from': inventory.BAG, 'to': inventory.SECONDARY}))
+                self.assertEqual(store.item(row['uniq'])['slot'], inventory.SECONDARY)
+                attribute, amount = items.HAND_VALENTINES[row['type_id']]
+                self.assertEqual(self.s.char.attr(attribute), self.s.char.attrib[attribute] + amount)
+                money = store.money(self.s.char_id)
+                self.s.mail.uldml(dict(id=str(letter['id'])))
+                self.assertEqual(store.money(self.s.char_id), money)
+                self.assertEqual(len([r for r in self.s.inv.rows() if r['type_id'] == row['type_id']]), 1)
+                self.s.handle('ss_move', dict(obj=inventory.oid_of(row),
+                              **{'from': inventory.SECONDARY, 'to': inventory.BAG}))
+
+    async def test_old_auction_lot_keeps_matching_wire_ids_and_returns_a_usable_gift(self):
+        store = self.case.store
+        row = self.s.inv.create(1070)
+        store.db.execute('UPDATE items SET root=? WHERE uniq=?', (items.WEAR, row['uniq']))
+        store.db.commit()
+        snap = mail.snapshot(store.item(row['uniq']))
+        now = time.time()
+        lot = store.auction_list(row['uniq'], self.s.char_id, dict(
+            type_id=1070, root=items.WEAR, item_json=json.dumps(snap),
+            seller=self.s.char_id, seller_name=self.s.nick, currency=auction.GOLD,
+            start_bid=100, buyout=200, fee=0, hours=24, created_at=int(now), ends_at=now + 86400))
+        accounts.run_once(store.db, inventory.HAND_VALENTINE_SNAPSHOTS_FIX,
+                          inventory.repair_hand_valentine_snapshots)
+        current = store.auction_lot(lot['id'])
+        house = auction.Auction(self.s, store, self.s.mail.directory)
+        frames = []
+        with patch.object(self.s, 'send', side_effect=lambda cmd, **data: frames.append((cmd, data))):
+            house.send_lot(current, now)
+        wire_id = next(data['obj'] for cmd, data in frames if cmd == 'ah_lot')
+        self.assertEqual(inventory.parse_oid(wire_id), (row['uniq'], 1070, items.COLD_ARM))
+        self.assertEqual(house.find_lot(wire_id)['id'], lot['id'])
+        self.assertEqual(frames[-1][0], 'ss_di_coldarm')
+        returned = store.auction_close(lot['id'], auction.give_back(current, 'return', 'return'))
+        self.s.mail.uldml(dict(id=str(returned[0]['id'])))
+        received = next(r for r in self.s.inv.rows() if r['type_id'] == 1070)
+        self.s.handle('ss_move', dict(obj=inventory.oid_of(received),
+                      **{'from': inventory.BAG, 'to': inventory.SECONDARY}))
+        self.assertEqual(store.item(received['uniq'])['slot'], inventory.SECONDARY)
+        self.assertEqual(store.item(received['uniq'])['root'], items.COLD_ARM)
+        self.assertIsNone(store.auction_close(lot['id'], auction.give_back(current, 'again', 'again')))
+
     async def test_legacy_belt_and_bank_rows_are_repaired_without_replacing_items(self):
         rows = []
         for type_id, slot in zip(items.HAND_VALENTINES, (inventory.BELT, inventory.BAG, inventory.BANK, inventory.SECONDARY)):
@@ -133,7 +211,9 @@ class HandValentines(unittest.IsolatedAsyncioTestCase):
 
     async def test_stale_catalogue_root_does_not_turn_hand_gifts_into_belts(self):
         import own_items
-        table = dict(items.catalogue())
+        # Rebuild from original rows only: the released catalogue already
+        # includes own_items, which must not be reintroduced as native types.
+        table = own_items.originals(dict(items.catalogue()))
         for type_id in items.HAND_VALENTINES:
             table[type_id] = (items.WEAR, table[type_id][1])
         with patch.object(items, '_CATALOGUE', None), \

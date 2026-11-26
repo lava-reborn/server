@@ -43,7 +43,7 @@ class EdenGiftTests(unittest.TestCase):
         self.assertEqual(self.fixture.hand_in(qid), [0])
         return qid
 
-    def test_first_purchase_pays_exactly_15000_and_creates_five_valid_ticket_stacks(self):
+    def test_first_purchase_pays_exactly_15000_and_creates_one_valid_ticket_stack(self):
         self.fixture.fund(afro=15000, gold=123)
         self.assertEqual(self.s.eden_sentence['visit'], 1)
         self.assertTrue(self.s.quest_available(self.q))
@@ -56,7 +56,7 @@ class EdenGiftTests(unittest.TestCase):
         self.assertEqual(self.store.money(self.cid), (0, 123))
         self.assertEqual(self.s.inv.bag_pieces().get(eden.GOOD_TICKET), 500)
         rows = [r for r in self.store.items_of(self.cid) if r["type_id"] == eden.GOOD_TICKET]
-        self.assertEqual(sorted(r["count"] for r in rows), [100] * 5)
+        self.assertEqual([r["count"] for r in rows], [500])
         self.assertEqual(self.store.quests_done_since(self.cid, 0, [GIFT]), 1)
         self.assertFalse(any(command == "q_sys" for command, _params in self.fixture.frames))
         self.assertEqual(self.fixture.hand_in(qid), [server.RES_NO_SUCH])
@@ -181,30 +181,36 @@ class EdenGiftTests(unittest.TestCase):
         self.assertEqual(self.s.character().attr(progression.STRENGTH), strength + 50)
         self.assertEqual(self.s.inv.carry_limit(), capacity + 100000)
 
-    def test_failure_partway_through_ticket_stacks_rolls_back_then_pays_once(self):
+    def test_failure_after_ticket_heap_update_rolls_back_then_pays_once(self):
         self.fixture.fund(afro=15000)
+        heap = self.s.inv.give_pieces(eden.GOOD_TICKET, 7)[0]
         self.assertEqual(self.fixture.take(GIFT), [0])
         qid = self.fixture.taken_id(GIFT)
-        original_create = self.store.create_item
-        created = []
+        original_update = self.store.update_item
+        changed = []
 
-        def fail_third_stack(char_id, type_id, root, **fields):
-            if type_id == eden.GOOD_TICKET:
-                created.append(type_id)
-                if len(created) == 3:
-                    raise RuntimeError("injected failure creating the third ticket stack")
-            return original_create(char_id, type_id, root, **fields)
+        def fail_after_reward_merge(uniq, **fields):
+            result = original_update(uniq, **fields)
+            if uniq == heap['uniq'] and fields.get('count') == 507:
+                changed.append(fields['count'])
+                raise RuntimeError("injected failure after merging gift coupons")
+            return result
 
-        with patch.object(self.store, "create_item", side_effect=fail_third_stack):
+        with patch.object(self.store, "update_item", side_effect=fail_after_reward_merge):
             self.assertEqual(self.fixture.hand_in(qid), [1])
-        self.assertEqual(len(created), 3)
+        self.assertEqual(changed, [507])
         self.assertEqual(self.store.money(self.cid), (15000, 0))
-        self.assertNotIn(eden.GOOD_TICKET, self.s.inv.bag_pieces())
+        self.assertEqual(self.store.item(heap['uniq']), heap)
+        self.assertEqual(self.s.inv.bag_pieces().get(eden.GOOD_TICKET), 7)
         self.assertIsNotNone(self.store.quest(qid))
         self.assertFalse(self.store.quest_done(self.cid, GIFT))
         self.assertEqual(self.fixture.hand_in(qid), [0])
         self.assertEqual(self.store.money(self.cid), (0, 0))
-        self.assertEqual(self.s.inv.bag_pieces().get(eden.GOOD_TICKET), 500)
+        self.assertEqual(self.store.item(heap['uniq'])['count'], 507)
+        self.assertEqual(len([r for r in self.s.inv.rows() if r['type_id'] == eden.GOOD_TICKET]), 1)
+        self.assertEqual(self.fixture.hand_in(qid), [server.RES_NO_SUCH])
+        self.assertEqual(self.store.money(self.cid), (0, 0))
+        self.assertEqual(self.s.inv.bag_pieces().get(eden.GOOD_TICKET), 507)
 
 
 if __name__ == "__main__":

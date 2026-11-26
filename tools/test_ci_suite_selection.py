@@ -46,6 +46,7 @@ class ClientSuiteSelection(unittest.TestCase):
         required = {'server/test_action_recovery.py', 'server/test_action_sync.py',
                     'server/test_mob_penetration.py', 'server/test_combat_xp_ramp.py',
                     'server/test_weekend_experience.py', 'server/test_hand_valentines.py',
+                    'server/test_hand_gift_storage.py', 'server/test_mail_gold_loot.py', 'server/test_auction.py',
                     'server/test_combat_xp_cap.py', 'server/test_release_pouches.py',
                     'server/test_aggro_hold.py', 'server/test_gear.py',
                     'server/test_ground.py', 'server/test_war_state.py', 'server/test_loot.py',
@@ -82,6 +83,7 @@ class ClientSuiteSelection(unittest.TestCase):
         self.assertIn('bank_stacks', groups)
         self.assertIn('effect_clock_storage', groups)
         self.assertIn('eden_ticket_storage', groups)
+        self.assertIn('hand_gift_storage', groups)
         self.assertIn('storage_pg', groups)
 
     def setUp(self):

@@ -164,8 +164,10 @@ class DamageXp(unittest.TestCase):
         f.sess.effects = NS(active={3561: NS(source=3561, deadline=10)}, clock=lambda: 0)
         self.hit(f, mob, 1)
         self.room(f).settle_xp(mob)
-        self.assertAlmostEqual(self.skill_xp(ch), p.combat_mob_xp(14, 12) * 1.012)
-        self.assertAlmostEqual(self.spec_xp(ch, spec), p.combat_mob_xp(14, 12) * 1.012)
+        # First 99% at base rate, last 1% with INTUX IV +70% and residence +30%.
+        expected = p.combat_mob_xp(14, 12) * (.99 + .01 * 2)
+        self.assertAlmostEqual(self.skill_xp(ch), expected)
+        self.assertAlmostEqual(self.spec_xp(ch, spec), expected)
         f, ch, spec = self.fighter()
         ch.forget_spec(spec)
         mob = self.mob()

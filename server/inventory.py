@@ -396,6 +396,48 @@ def new_fields(type_id, count=1):
 # database at the server's start (server.main, accounts.run_once), letters
 # and lots included, as accounts.relink_heals does its types.
 OFFLINE_GIFTS_FIX = "admin-offline-gifts-2026-09-29"
+HAND_VALENTINE_SNAPSHOTS_FIX = "hand-valentine-snapshots-2026-11-26"
+
+
+def repair_hand_valentine_snapshots(db):
+    """Repair old parcels/lots before any client receives their item IDs.
+
+    Called through accounts.run_once: snapshots, auction root and the
+    migration marker commit together. No owner, quantity or price changes.
+    """
+    for table, column in (("mail", "items_json"), ("auction_lots", "item_json")):
+        if table == "auction_lots":
+            types = tuple(sorted(items.HAND_VALENTINES))
+            marks = ','.join('?' for _ in types)
+            rows = db.execute('SELECT id,type_id,root,' + column + ' FROM auction_lots'
+                              ' WHERE type_id IN (' + marks + ')', types).fetchall()
+        else:
+            rows = db.execute("SELECT id,items_json FROM mail WHERE items_json <> '[]'").fetchall()
+        for row in rows:
+            try:
+                snapshots = json.loads(row[column] or "[]")
+            except (TypeError, ValueError):
+                continue
+            if table == 'auction_lots' and (not isinstance(snapshots, dict)
+                    or snapshots.get('type_id') != row['type_id']):
+                continue
+            records = [snapshots] if isinstance(snapshots, dict) else snapshots
+            if not isinstance(records, list):
+                continue
+            changed = False
+            for snapshot in records:
+                if (isinstance(snapshot, dict) and isinstance(snapshot.get('type_id'), int)
+                        and snapshot['type_id'] in items.HAND_VALENTINES
+                        and snapshot.get('root') != items.COLD_ARM):
+                    snapshot['root'] = items.COLD_ARM
+                    changed = True
+            if table == 'auction_lots':
+                if changed or row['root'] != items.COLD_ARM:
+                    db.execute('UPDATE auction_lots SET root=?,item_json=? WHERE id=?',
+                               (items.COLD_ARM, json.dumps(snapshots), row['id']))
+            elif changed:
+                db.execute('UPDATE mail SET items_json=? WHERE id=?',
+                           (json.dumps(snapshots), row['id']))
 
 
 def unfilled(row):

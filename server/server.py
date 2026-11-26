@@ -5270,6 +5270,12 @@ async def main():
                          inventory.fill_offline_gifts):
         log.info("filled the admin panel's offline gifts (%s)",
                  inventory.OFFLINE_GIFTS_FIX)
+    # Old parcels and auction lots are snapshots, outside a login inventory.
+    # Repair both their IDs and the lot's class before accepting any clients.
+    if accounts.run_once(STORE.db, inventory.HAND_VALENTINE_SNAPSHOTS_FIX,
+                         inventory.repair_hand_valentine_snapshots):
+        log.info("repaired old valentine parcels and lots (%s)",
+                 inventory.HAND_VALENTINE_SNAPSHOTS_FIX)
     # From the first socket on, the error log takes no more than twenty
     # records of one kind a minute: anybody can send unknown commands by
     # the thousand. Everything above went in whole (errlog.serving).

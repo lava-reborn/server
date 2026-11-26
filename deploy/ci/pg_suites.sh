@@ -59,6 +59,8 @@ SUITES+=(bank_stacks)
 SUITES+=(effect_clock_storage)
 # Plantation coupon migration and reward delivery use the production dialect too.
 SUITES+=(eden_ticket_storage)
+# Legacy parcel/auction gift-class migration and rollback.
+SUITES+=(hand_gift_storage)
 mkdir -p "$OUT"
 : > "$OUT/results"
 rm -f "$OUT/results.rerun"
