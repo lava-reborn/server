@@ -1284,6 +1284,13 @@ CINEMA_FINISH_REPLACEMENT = (
     'Его нельзя отремонтировать или восстановить.')
 
 
+# Live prison rewards differ from the archive only in these reviewed phrases.
+PRISON_REWARD_START_REPLACEMENTS = {
+    167: ('<b>2 талона</b>', '<b>1 талон</b>'),
+    168: ('полагается 15000<Br>', 'полагается 233 500 афро.<Br>'),
+}
+
+
 def build_quests(texts, rows):
     index = QuestIndex(texts)
     out, unverified = {}, {}
@@ -1303,6 +1310,9 @@ def build_quests(texts, rows):
             # reviewed finite-PvP sentence. Never rewrite orig_misc.json.
             matched = dict(row, finish=row['finish'].replace(
                 CINEMA_FINISH_REPLACEMENT[1], CINEMA_FINISH_REPLACEMENT[0]))
+        prison_reward = PRISON_REWARD_START_REPLACEMENTS.get(qtype) if 'start' in own else None
+        if prison_reward:
+            matched = dict(matched, start=row['start'].replace(prison_reward[1], prison_reward[0]))
         ids = match_quest(index, matched)
         if ids is None and "start" in own and qtype in VERIFIED:
             # The matcher finds a row by its start, and a start of the row's
@@ -1336,6 +1346,10 @@ def build_quests(texts, rows):
             if cinema_finish and key == 'finish':
                 if row[key] != original.replace(*CINEMA_FINISH_REPLACEMENT):
                     raise SystemExit('quest %d: unreviewed syringe finish' % qtype)
+                continue
+            if prison_reward and key == 'start':
+                if row[key] != original.replace(*prison_reward):
+                    raise SystemExit('quest %d: unreviewed prison reward start' % qtype)
                 continue
             if qtype in (158, 636, 884) and key == "start":
                 original = original.replace("12:00", "13:00").replace("16:00", "17:00").replace("23:00", "21:00")

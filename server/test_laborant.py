@@ -6,6 +6,7 @@ import tempfile
 import threading
 import time
 import unittest
+from datetime import datetime
 from types import SimpleNamespace as NS
 from unittest.mock import patch
 
@@ -39,7 +40,8 @@ class Laborant(unittest.TestCase):
         self.store = accounts.Store(":memory:")
         self.addCleanup(self.store.close)
         self.enterContext(patch.object(server, "STORE", self.store))
-        self.now = int(time.time())
+        # Start after the daily capture, so results do not depend on CI wall time.
+        self.now = int(datetime(2026, 11, 26, 20, 5, tzinfo=bosses.ZONE).timestamp())
         self.enterContext(patch.object(time, "time", lambda: self.now))
         self.enterContext(patch.object(bosses, "clock", lambda: self.now))
         account, _ = self.store.register("lab-test", "local-password")
@@ -120,8 +122,17 @@ class Laborant(unittest.TestCase):
         s.handle("q_co", dict(q_id=qid, mob=self.lab() if mob is None else mob, obj_idx=0))
         return [p["res"] for n, p in s.frames if n == "cmdAck"]
 
-    def advance_day(self):
+    def advance_day(self, *, recapture=False):
         self.now = server.Session.day_start(self.now) + 86400
+        if recapture:
+            # Independent recipe scenarios need ownership in each new cycle.
+            # Do not alter the lab's daily claim or the warehouse reward ledger.
+            site = holdings.site('wh_ah_center')
+            holdings.reset_warehouses(self.store)
+            if holdings.holder(self.store, site) is None:
+                slot = holdings.warehouse_reset_at(self.now)
+                self.assertEqual(self.store.holding_capture(
+                    site.key, self.clan, slot, self.cid, slot + 1), (None, 'ok'))
         events.keep(self.rc)
 
     def test_local_lab_retry_resets_only_own_current_detail_and_shared_craft(self):
@@ -517,7 +528,7 @@ class Laborant(unittest.TestCase):
                 self.assertEqual(self.finish(qid, mob=old_lab), [server.RES_NO_SUCH])
                 self.assertEqual(self.store.boss_kills([quests.LABORANT_SPOT]),
                                  {quests.LABORANT_SPOT: float(self.s.day_start())})
-                self.advance_day()
+                self.advance_day(recapture=True)
                 self.assertNotEqual(self.lab(), old_lab)
 
     def test_player_menu_detail_and_each_recipe_complete_through_advertised_indices(self):
@@ -561,7 +572,26 @@ class Laborant(unittest.TestCase):
                 self.assertFalse(any(n.type_id == quests.LABORANT_NPC for n in self.room.npcs.values()))
                 self.assertEqual(request('q_status', q_type=kind)[-1][1]['status'], 0)
                 self.assertEqual(request('q_co', mob=eid, q_id=qid)[-1][1]['res'], server.RES_NO_SUCH)
-                self.advance_day()
+                self.advance_day(recapture=True)
+
+    def test_laboratory_daily_return_does_not_extend_expired_warehouse_ownership(self):
+        self.assertEqual(self.finish(self.ready()), [0])
+        claims = self.store.boss_kills([quests.LABORANT_SPOT])
+        self.advance_day()
+        self.assertTrue(self.s.quest_available(quests.get(18307)))
+        self.advance_day()  # A further 20:00 warehouse reset has now passed.
+        site = holdings.site('wh_ah_center')
+        self.assertTrue(any(n.type_id == quests.LABORANT_NPC for n in self.room.npcs.values()))
+        self.assertIsNone(holdings.holder(self.store, site))
+        self.assertFalse(self.s.quest_available(quests.get(18307)))
+        holdings.reset_warehouses(self.store)
+        self.assertIsNone(self.store.holding(site.key))
+        self.assertEqual(self.store.boss_kills([quests.LABORANT_SPOT]), claims)
+        slot = holdings.warehouse_reset_at(self.now)
+        self.assertEqual(self.store.holding_capture(
+            site.key, self.clan, slot, self.cid, slot + 1), (None, 'ok'))
+        self.assertTrue(self.s.quest_available(quests.get(18307)))
+        self.assertEqual(self.finish(self.ready(18307)), [0])
 
     def test_changing_warehouse_owner_cannot_reopen_server_wide_daily_craft(self):
         qid = self.ready()
@@ -770,7 +800,7 @@ class Laborant(unittest.TestCase):
                     factory = items.params_of(output)['max_break_abs']
                     self.assertEqual((made['brk'], made['max_break_cur']), (factory, factory))
                     self.assertEqual(gold_trade.sale_quality(made, items.params_of(output)), 1)
-                    self.advance_day()
+                    self.advance_day(recapture=True)
 
     def test_real_shop_buy_craft_and_paid_base_resale_never_make_profit(self):
         clan = self.clan
@@ -840,7 +870,7 @@ class Laborant(unittest.TestCase):
                         self.assertGreater(quote['price'], input_floor)
                     else:
                         self.assertLessEqual(quote['price'], input_floor)
-                    self.advance_day()
+                    self.advance_day(recapture=True)
                     # Keep a paid lease in each independent scenario; the
                     # weekly-expiry policy itself is covered by clan suites.
                     self.store.db.execute("UPDATE clan_holdings SET slot=?,paid_until=? WHERE site=?",

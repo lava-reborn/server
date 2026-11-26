@@ -357,8 +357,10 @@ class StatPipeline(unittest.IsolatedAsyncioTestCase):
         manager.add(3470)
         row = self.s.inv.create(7100)
         params = items.params_of(row['type_id'])
-        expected_hp = min(ch.hp_max, 1 + int(params['min_h_rest'] * 1.03))
-        expected_sp = min(ch.sp_max, 1 + int(params['min_st_rest'] * 1.03))
+        multiplier = self.s.combat.healing_multiplier(ch)
+        self.assertAlmostEqual(multiplier, 1 + .04 * max(0, ch.attr(progression.INTELLECT) - 5))
+        expected_hp = min(ch.hp_max, 1 + int(params['min_h_rest'] * multiplier))
+        expected_sp = min(ch.sp_max, 1 + int(params['min_st_rest'] * multiplier))
         with patch.object(combat.RNG, 'uniform', side_effect=lambda lo, hi: lo):
             self.s.combat.heal_now(row['uniq'], self.s.combat)
         self.assertEqual((ch.hp, ch.sp), (expected_hp, expected_sp))
@@ -374,11 +376,12 @@ class StatPipeline(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(ch.sp_max - sp, 3 * 4 + 4 * 20)
         self.assertEqual(self.s.combat.armor() - armour, (3 * 3 + 5) / 4)
         self.assertEqual(self.s.inv.carry_limit() - weight, 4000)
-        self.assertAlmostEqual(self.s.combat.healing_multiplier(ch), (1 + .04 * max(0, start[4] - 5)) * 1.03)
+        self.assertAlmostEqual(self.s.combat.healing_multiplier(ch), 1 + .04 * max(0, start[4] + 6 - 5))
         weapon = combat.Weapon(1, 100, 200, 2, 5, 10, 1, .1, 0, None, None, sdmin=50, sdmax=100)
         prepared = self.s.combat.prepare_weapon(weapon, {}, None)
-        self.assertEqual((prepared.dmin, prepared.dmax), (103, 206))
-        self.assertEqual((prepared.sdmin, prepared.sdmax), (52, 103))
+        power = 1 + battle_balance.DAMAGE_PER_INTELLECT * max(0, start[4] + 6 - 5)
+        self.assertEqual((prepared.dmin, prepared.dmax), (round(100 * power), round(200 * power)))
+        self.assertEqual((prepared.sdmin, prepared.sdmax), (round(50 * power), round(100 * power)))
         self.verify_wire()
 
     async def test_all_catalogue_ammunition_modifiers_reach_prepared_weapon(self):

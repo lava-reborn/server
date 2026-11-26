@@ -35,7 +35,7 @@ class ClientSuiteSelection(unittest.TestCase):
                             'A skipped workflow leaves required PR checks pending')
 
     def test_warehouse_capture_contracts_are_included_in_the_full_release_suites(self):
-        required = {'server/test_warehouse_capture_rules.py', 'server/test_holdings.py',
+        required = {'server/test_warehouse_daily_reset.py', 'server/test_warehouse_capture_rules.py', 'server/test_holdings.py',
                     'server/test_clan_bases.py', 'server/test_clan_base_access.py',
                     'server/test_release_integrity.py', 'server/test_boss_hotfix.py',
                     'server/test_capture_review_fixes.py', 'server/test_base_capture_feedback.py'}
@@ -44,6 +44,7 @@ class ClientSuiteSelection(unittest.TestCase):
 
     def test_progression_weapon_and_buff_bank_regressions_are_included_in_ci(self):
         required = {'server/test_action_recovery.py', 'server/test_action_sync.py',
+                    'server/test_room_delivery.py', 'server/test_training_bot.py',
                     'server/test_mob_penetration.py', 'server/test_combat_xp_ramp.py',
                     'server/test_weekend_experience.py', 'server/test_hand_valentines.py',
                     'server/test_hand_gift_storage.py', 'server/test_mail_gold_loot.py', 'server/test_auction.py',
@@ -52,7 +53,8 @@ class ClientSuiteSelection(unittest.TestCase):
                     'server/test_mob_weapon_visuals.py', 'server/test_mob_loadouts.py',
                     'server/test_eden_review.py', 'server/test_eden_harvest.py',
                     'server/test_ground.py', 'server/test_war_state.py', 'server/test_loot.py',
-                    'server/test_items.py', 'server/test_camp_box_loot.py',
+                    'server/test_items.py', 'server/test_laborant.py', 'server/test_ks12_balance.py',
+                    'server/test_camp_box_loot.py',
                     'server/test_eden_native_weapons.py',
                     'server/test_buff_purchases.py', 'server/test_archived_buffs.py',
                     'server/test_buff_progression.py',
@@ -78,6 +80,24 @@ class ClientSuiteSelection(unittest.TestCase):
         self.assertFalse(required - selected)
 
 
+    def test_global_combat_entry_and_unchanged_arrival_paths_are_included_in_ci(self):
+        required = {'server/test_global_entry.py', 'server/test_global_entry_session.py',
+                    'server/test_travel.py', 'server/test_walk_in.py',
+                    'server/test_connection_entry.py', 'server/test_pvp.py',
+                    'server/test_intercept.py', 'server/test_intercept_prepare.py',
+                    'server/test_eden_reentry.py'}
+        selected = {Path(path).relative_to(ROOT).as_posix() for path in suite.suites()}
+        self.assertFalse(required - selected, 'Map entry and interception regressions must reach CI')
+
+    def test_prison_rewards_and_redemption_regressions_are_included_in_ci(self):
+        required = {'data/test_orig_misc.py', 'data/test_orig_misc_release.py',
+                    'server/test_prison_farm_economy.py',
+                    'server/test_halfa_events.py',
+                    'server/test_dongola_quests.py',
+                    'server/test_abuhamed_quests.py'}
+        selected = {Path(path).relative_to(ROOT).as_posix() for path in suite.suites()}
+        self.assertFalse(required - selected, 'Prison reward regressions must reach CI')
+
     def test_buff_bank_transactions_are_also_scheduled_on_postgres(self):
         postgres = (ROOT / 'deploy/ci/pg_suites.sh').read_text(encoding='utf-8')
         groups = {name for group in re.findall(r'(?ms)^SUITES\+?=\((.*?)\)', postgres)
@@ -86,6 +106,7 @@ class ClientSuiteSelection(unittest.TestCase):
         self.assertIn('effect_clock_storage', groups)
         self.assertIn('eden_ticket_storage', groups)
         self.assertIn('hand_gift_storage', groups)
+        self.assertIn('warehouse_daily_reset', groups)
         self.assertIn('storage_pg', groups)
 
     def setUp(self):

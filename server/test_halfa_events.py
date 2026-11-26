@@ -293,14 +293,14 @@ try:
     medic = [(Q[t].kind, Q[t].objs[0][:2], Q[t].rew_afro, Q[t].rew_obj, Q[t].num_rew_obj,
               Q[t].per_day, Q[t].repeatable, Q[t].service)
              for t in (TEN, TWENTY_FIVE, FIFTY, SEVENTY_FIVE, HUNDRED)]
-    check("the medics: 10 for 500 afro, 25 for 1250, 50 for 5000, 75 for two talons, 100 for"
-          " 15 000; all but the ten once a day; all a day's tasks",
+    check("the medics: proportional rounded afro rewards and one talon for 75 armbands;"
+          " all but the ten once a day; all a day's tasks",
           medic,
-          [(quests.BRING_L_OBJ, (BAND, 10), 500, [], [], 0, 1, False),
-           (quests.BRING_L_OBJ, (BAND, 25), 1250, [], [], 1, 1, False),
-           (quests.BRING_L_OBJ, (BAND, 50), 5000, [], [], 1, 1, False),
-           (quests.BRING_L_OBJ, (BAND, 75), 0, [TALON], [2], 1, 1, False),
-           (quests.BRING_L_OBJ, (BAND, 100), 15000, [], [], 1, 1, False)])
+          [(quests.BRING_L_OBJ, (BAND, 10), 23500, [], [], 0, 1, False),
+           (quests.BRING_L_OBJ, (BAND, 25), 58500, [], [], 1, 1, False),
+           (quests.BRING_L_OBJ, (BAND, 50), 116500, [], [], 1, 1, False),
+           (quests.BRING_L_OBJ, (BAND, 75), 0, [TALON], [1], 1, 1, False),
+           (quests.BRING_L_OBJ, (BAND, 100), 233500, [], [], 1, 1, False)])
     talon = Q[TALON_Q]
     check("Самуэль: a talon for 500 rounds of one of the prison stores' twelve calibres,"
           " a service", (talon.objs[0][:2], talon.rew_obj, set(talon.num_rew_obj), talon.service,
@@ -313,15 +313,15 @@ try:
                   q.per_day) for t, q in quests.QUESTS.items() if TALON in q.rew_obj}
     per_talon = {500 * items.params_of(t)["g_cost"] // items.params_of(t)["sell_num"]
                  for t in talon.rew_obj}
-    check("the talons come from Томпсон's 75 alone, two once a day: 37.5 armbands a talon, the"
-          " original's rate (62292), and no row of the whole table pays one faster",
-          payers, {SEVENTY_FIVE: (2, [75], 1)})
+    check("the talon comes from Томпсон's 75 alone, one once a day across all prisons"
+          "; no other row pays a talon",
+          payers, {SEVENTY_FIVE: (1, [75], 1)})
     # Nominal purchase value differs from the 70% NPC resale payout.
     # test_prison_farm_economy checks actual redemption and sale transactions.
-    check("  ..a talon is 500 rounds, 5 G at the stalls' gold price: 10 G of rounds a day at"
-          " most, nominally 500 000 afro before the NPC resale share",
-          (per_talon, 2 * max(per_talon) * progression.GOLD_TO_AFRO_RATE // 100),
-          ({500}, 500_000))
+    check("  ..a talon is 500 rounds, 5 G at the stalls' gold price: 5 G of rounds a day at"
+          " most, nominally 250 000 afro before the NPC resale share",
+          (per_talon, max(per_talon) * progression.GOLD_TO_AFRO_RATE // 100),
+          ({500}, 250_000))
     paid = sorted({t for q in Q.values() for t in q.rew_obj + [o for o, _n in q.rew_also]})
     check("nothing any of them pays is premium (the owner's (P) out of the game)",
           [t for t in paid + [BAND] if items.premium(t)], [])
@@ -1005,8 +1005,8 @@ try:
           (acks(got), complete_of(got)), ([0], [1]))
     afro0 = srv.purse()[0]
     got = hand_in(c, medics[877], q_id_of(got))
-    check("  ..handed in: ten armbands out, 500 afro in",
-          (acks(got), srv.purse()[0] - afro0, srv.owned().get(BAND)), ([0], 500, 5))
+    check("  ..handed in: ten armbands out, 23,500 afro in",
+          (acks(got), srv.purse()[0] - afro0, srv.owned().get(BAND)), ([0], 23500, 5))
     got = take(c, centre[TOMAS], EXIT, TOMAS)
     c.send("q_co;obj_idx=0;mob=%d;q_id=%d;" % (centre[TOMAS], q_id_of(got)))
     got = c.until(lambda f: f[0] == "lcall", 3)

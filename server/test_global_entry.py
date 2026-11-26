@@ -2,6 +2,7 @@
 from collections import deque
 import math
 from pathlib import Path
+from types import SimpleNamespace as NS
 import unittest
 from unittest.mock import patch
 
@@ -222,6 +223,71 @@ class GlobalEntryTests(unittest.TestCase):
                     with patch.object(E, '_geometry', side_effect=AssertionError('Invalid coordinates must stop first')):
                         with self.assertRaises(E.NoSafeEntry):
                             E.choose(Scene(), *point)
+
+    def assert_exit_neighbour(self, loc, start, occupied=frozenset()):
+        self.assert_escape(loc, start, occupied)
+        neighbours = set(progression.hex_neighbours(start, loc.width, loc.height))
+        available = {c for c, side in travel.exit_sides(loc).items()
+                     if side in travel.SIDES and c not in occupied
+                     and c not in loc.obstacles}
+        self.assertTrue(neighbours & available, 'Combat entry must be one step from a free exit')
+
+    def test_combat_entries_exclude_declared_centres_and_keep_map_orientation(self):
+        for war in (0, 1):
+            loc = Scene([cell(10, 10)], war=war, war_entries=[cell(10, 10)])
+            self.assertEqual(E.choose(loc, 6000.5, 1900.5), cell(10, 10))
+            for fx, fy, expected in ((.05, .5, cell(1, 10)),
+                                     (.95, .5, cell(19, 10)),
+                                     (.5, .05, cell(10, 1)),
+                                     (.5, .95, cell(10, 19))):
+                with self.subTest(war=war, point=(fx, fy)):
+                    chosen = E.choose(loc, 6000 + fx, 1900 + fy, near_exits=True)
+                    self.assertEqual(chosen, expected)
+                    self.assert_exit_neighbour(loc, chosen)
+
+    def test_combat_entry_rechecks_both_landing_and_its_exit(self):
+        loc = Scene([cell(10, 10)], exits={cell(20, 10): travel.E, cell(10, 0): travel.N})
+        first = E.choose(loc, 6000.95, 1900.5, near_exits=True)
+        for occupied in ({first}, {cell(20, 10)}, {first, cell(20, 10)}):
+            with self.subTest(occupied=occupied):
+                chosen = E.choose(loc, 6000.95, 1900.5, occupied, near_exits=True)
+                self.assertNotEqual(chosen, first)
+                self.assert_exit_neighbour(loc, chosen, occupied)
+                if cell(20, 10) in occupied:
+                    self.assertIn(cell(10, 0),
+                                  progression.hex_neighbours(chosen, loc.width, loc.height))
+
+    def test_blocked_combat_edges_never_fall_back_to_an_empty_centre(self):
+        loc = Scene([cell(10, 10)])
+        occupied = {entry for entry, _exit in E._geometry(loc).approaches}
+        self.assertEqual(E.choose(loc, 6000.5, 1900.5, occupied), cell(10, 10))
+        with self.assertRaises(E.NoSafeEntry):
+            E.choose(loc, 6000.5, 1900.5, occupied, near_exits=True)
+
+    def test_cached_combat_approaches_honor_new_occupants_without_pathfinding(self):
+        loc = Scene([cell(10, 10)])
+        first = E.choose(loc, 6000.95, 1900.5, near_exits=True)
+        geometry = E._geometry(loc)
+        with patch.object(E, '_reachable', side_effect=AssertionError('Combat entries use direct exits')):
+            chosen = E.choose(loc, 6000.95, 1900.5, {first}, near_exits=True)
+        self.assertNotEqual(chosen, first)
+        self.assertIs(E._geometry(loc), geometry)
+        self.assert_exit_neighbour(loc, chosen, {first})
+
+    def test_harvest_objects_do_not_count_but_dead_combat_spawns_still_do(self):
+        room = NS(combat=None)
+        self.assertFalse(E.has_combat_mobs(room))
+        room.combat = NS(mobs={1: NS(stats=NS(role='object'), alive=True)})
+        self.assertFalse(E.has_combat_mobs(room))
+        for role in ('mob', 'animal', 'turret', 'boss'):
+            room.combat.mobs[2] = NS(stats=NS(role=role), alive=False)
+            self.assertTrue(E.has_combat_mobs(room), role)
+
+    def test_real_abri_fields_combat_arrival_is_by_an_exit_instead_of_the_central_spawn(self):
+        loc = self.real_location(261)
+        occupied = {c for c, _kind in loc.spawns}
+        chosen = E.choose(loc, 6000.5, 1900.5, occupied, near_exits=True)
+        self.assert_exit_neighbour(loc, chosen, occupied)
 
     def test_static_geometry_is_cached_without_repeating_pathfinding_for_empty_occupancy(self):
         loc = Scene([cell(10, 10)])

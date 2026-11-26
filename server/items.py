@@ -1399,6 +1399,9 @@ def static_info(type_id):
             if effect is not None:
                 info[1].update(bonus_act_time=effect['duration'],
                                effects=[effects.FIRST + type_id], effects_prob=[100])
+                for field, amount in zip(("str_bonus", "dex_bonus", "sta_bonus", "per_bonus", "int_bonus"),
+                                         effect['bonuses']['attribs']):
+                    info[1][field] = amount
                 # Ordinary A stimulants use the agreed strict character-level
                 # ladder; G stimulants are unrestricted. Neither asks for PvP
                 # reputation or independent shooting/melee levels.

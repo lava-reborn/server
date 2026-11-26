@@ -62,6 +62,22 @@ class BuffProgression(unittest.TestCase):
             self.assertEqual(inventory.buy_price(params, items.HEAL, 1, True), price)
             self.assertEqual(inventory.buy_price(params, items.HEAL, 1, True, .9), math.ceil(price * .9))
 
+    def test_attribute_stimulants_restore_archived_one_three_five_without_zero_description_rows(self):
+        import names
+        fields = ('str_bonus','dex_bonus','sta_bonus','per_bonus','int_bonus')
+        for first, attribute in ((3468,4), (3471,1), (3474,0)):
+            for offset, amount in enumerate((1,3,5)):
+                type_id = first + offset
+                expected = [0] * 5
+                expected[attribute] = amount
+                self.assertEqual(effects.definition(type_id)['bonuses']['attribs'], expected)
+                params = items.params_of(type_id)
+                self.assertEqual([params[k] for k in fields], expected)
+                desc = names.ALL[items.DESC_ID_OFFSET + type_id]
+                self.assertIn('+' + str(amount), desc)
+                self.assertNotIn(' 0', desc)
+                self.assertNotIn('Плюсы', desc)
+
     def test_all_original_health_and_stamina_doses_retain_their_exact_bonuses(self):
         families = (
             (4917, 'max_health', 'hp', (35, 50, 75, 75, 100, 100, 125, 125, 150, 150,

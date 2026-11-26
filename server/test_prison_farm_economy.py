@@ -48,19 +48,62 @@ class PrisonFarmEconomy(unittest.TestCase):
         self.s.cmd_q_co(dict(mob=1, q_id=qid, obj_idx=reward))
         self.assertEqual(self.acks(), [0])
 
-    def test_seventy_five_bands_pay_two_talons_once_per_day_across_towns(self):
+    def test_seventy_five_bands_pay_one_talon_once_per_day_across_towns(self):
         self.inv.give_pieces(2476, 150)
+        before = self.store.money(self.cid)
         qid = self.take(167, 879)
         self.finish(qid)
         bag = self.inv.bag_pieces()
         self.assertEqual(bag.get(2476), 75)
-        self.assertEqual(bag.get(3570), 2)
-        self.place(622, 879)
+        self.assertEqual(bag.get(3570), 1)
+        self.assertEqual(self.store.money(self.cid), before)
         self.frames.clear()
-        self.s.cmd_q_st(dict(mob=1, q_idx=quests.given_by(879).index(167)))
+        self.s.cmd_q_co(dict(mob=1, q_id=qid, obj_idx=0))
         self.assertNotIn(0, self.acks())
-        self.assertEqual(self.inv.bag_pieces().get(3570), 2)
+        self.assertEqual(self.inv.bag_pieces().get(3570), 1)
+        for loc in (622, 651):
+            self.place(loc, 879)
+            self.frames.clear()
+            self.s.cmd_q_st(dict(mob=1, q_idx=quests.given_by(879).index(167)))
+            self.assertNotIn(0, self.acks())
+            self.assertEqual(self.inv.bag_pieces().get(3570), 1)
         self.assertEqual(self.s.daily_available(), server.DAILY_MAX - 1)
+
+    def test_cash_rewards_use_one_talon_resale_and_pay_once(self):
+        for kind, npc, bands, amount in ((164, 877, 10, 23500),
+                                         (165, 877, 25, 58500),
+                                         (166, 878, 50, 116500),
+                                         (168, 879, 100, 233500)):
+            with self.subTest(quest=kind):
+                self.place(646, npc)
+                self.inv.give_pieces(2476, bands + 1)
+                held = self.inv.bag_pieces()[2476]
+                before = self.store.money(self.cid)
+                qid = self.take(kind, npc)
+                self.finish(qid)
+                after = (before[0] + amount, before[1])
+                self.assertEqual(self.store.money(self.cid), after)
+                self.assertEqual(self.inv.bag_pieces()[2476], held - bands)
+                self.assertEqual(amount % 500, 0)
+                self.assertLessEqual(abs(amount - 175000 * bands / 75), 250)
+                self.frames.clear()
+                self.s.cmd_q_co(dict(mob=1, q_id=qid, obj_idx=0))
+                self.assertNotIn(0, self.acks())
+                self.assertEqual(self.store.money(self.cid), after)
+                self.assertEqual(self.inv.bag_pieces()[2476], held - bands)
+                if kind != 164:
+                    for loc in (622, 651):
+                        self.place(loc, npc)
+                        self.frames.clear()
+                        self.s.cmd_q_st(dict(mob=1, q_idx=quests.given_by(npc).index(kind)))
+                        self.assertNotIn(0, self.acks())
+                        self.assertEqual(self.store.money(self.cid), after)
+
+    def test_reward_descriptions_survive_original_text_overlay(self):
+        self.assertIn('1 талон', quests.get(167).texts[1])
+        self.assertNotIn('2 талона', quests.get(167).texts[1])
+        self.assertIn('233 500 афро', quests.get(168).texts[1])
+        self.assertNotIn('15000', quests.get(168).texts[1])
 
     def test_every_talon_reward_is_five_hundred_rounds_and_sells_once(self):
         q = quests.get(169)

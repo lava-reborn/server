@@ -7,6 +7,7 @@ from unittest.mock import Mock, patch
 import combat
 import location_entry
 import movement
+import mobs
 import quests
 import progression
 import rooms
@@ -74,7 +75,8 @@ class GlobalEntrySessionTests(unittest.IsolatedAsyncioTestCase):
     def expected(self, x, y):
         room = self.room()
         return location_entry.choose(room.loc, x, y,
-            occupied=movement.get(room).occupied(exclude=self.s))
+            occupied=movement.get(room).occupied(exclude=self.s),
+            near_exits=location_entry.has_combat_mobs(room))
 
     async def test_real_global_toggle_uses_fraction_and_publishes_same_safe_cell(self):
         positions = set()
@@ -271,6 +273,40 @@ class GlobalEntrySessionTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.s.pos, expected)
         self.assertEqual(self.acks(), [0])
 
+    async def test_combat_map_arrival_uses_exit_neighbour_and_rechecks_a_moving_mob(self):
+        room = self.room()
+        centre = location_entry.choose(room.loc, 5879.5, 2012.5)
+        eid = self.manager.ids.npc()
+        mob = mobs.Mob(eid, 191, centre)
+        room.npcs[eid] = rooms.NPC(centre, 191, world.MOB)
+        room.combat.mobs[eid] = mob
+        self.s.handle('chWorld', {})
+        first = self.s.pos
+        self.assertNotEqual(first, centre)
+        self.assertTrue(set(progression.hex_neighbours(first, room.loc.width, room.loc.height))
+                        & set(travel.exit_sides(room.loc)))
+        # The NPC reaches the chosen landing while artwork is still loading.
+        mob.cell = first
+        room.npcs[eid] = room.npcs[eid]._replace(cell=first)
+        self.s.handle('lenter', {'accept': 1})
+        self.assertFalse(self.s.closed)
+        self.assertNotIn(self.s.pos, (centre, mob.cell))
+        free_exits = set(travel.exit_sides(room.loc)) - movement.get(room).occupied(exclude=self.s)
+        self.assertTrue(set(progression.hex_neighbours(self.s.pos, room.loc.width, room.loc.height))
+                        & free_exits)
+        frame = next(p for cmd, p in self.s.writer.frames if cmd == 'lenter')
+        self.assertEqual(frame['pos'], self.s.pos)
+
+    async def test_peaceful_map_arrival_keeps_the_declared_central_entry(self):
+        room = self.room()
+        self.assertFalse(location_entry.has_combat_mobs(room))
+        chosen = self.expected(5879.5, 2012.5)
+        self.assertIn(chosen, room.loc.entries)
+        self.s.handle('chWorld', {})
+        self.s.handle('lenter', {'accept': 1})
+        self.assertFalse(self.s.closed)
+        self.assertEqual(self.s.pos, chosen)
+
     async def test_all_safe_entries_taken_refuses_before_success_and_stays_on_map(self):
         room = self.room()
         before = (self.s.loc, self.s.pos, self.s.gx, self.s.gy)
@@ -352,7 +388,8 @@ class GlobalEntrySessionTests(unittest.IsolatedAsyncioTestCase):
         room = self.manager.get(eden.CENTER)
         combat.room_combat(room, self.store).keep_hours()
         expected = location_entry.choose(room.loc, *point,
-            occupied=movement.get(room).occupied(exclude=self.s))
+            occupied=movement.get(room).occupied(exclude=self.s),
+            near_exits=location_entry.has_combat_mobs(room))
         self.s.handle('lenter', {'accept': 1})
         self.assertFalse(self.s.closed)
         self.assertEqual(self.s.pos, expected)

@@ -17,8 +17,8 @@ class HandGiftStorage(unittest.TestCase):
         self.store = accounts.Store(':memory:')
         self.addCleanup(self.store.close)
         # PostgreSQL keeps this suite's database between test methods.
-        self.store.db.execute('DELETE FROM migrations WHERE name=?',
-                              (inventory.HAND_VALENTINE_SNAPSHOTS_FIX,))
+        self.store.db.execute('DELETE FROM migrations WHERE name IN (?,?)',
+                              (inventory.HAND_VALENTINE_SNAPSHOTS_FIX, inventory.HAND_VALENTINES_FIX))
         self.store.db.commit()
         aid, _ = self.store.register('gift-' + uuid.uuid4().hex[:12], 'test-only')
         self.cid, _ = self.store.create_character(aid, 'Gift' + uuid.uuid4().hex[:8], 0, '1')
@@ -40,8 +40,8 @@ class HandGiftStorage(unittest.TestCase):
             buyout=200, fee=0, hours=24, created_at=int(now), ends_at=now + 86400))
 
     def migrate(self):
-        return accounts.run_once(self.store.db, inventory.HAND_VALENTINE_SNAPSHOTS_FIX,
-                                 inventory.repair_hand_valentine_snapshots)
+        return accounts.run_once(self.store.db, inventory.HAND_VALENTINES_FIX,
+                                 inventory.repair_legacy_hand_valentines)
 
     def test_all_gifts_mixed_parcels_and_auction_rows_keep_every_nonclass_field(self):
         snapshots = [self.snapshot(t) for t in items.HAND_VALENTINES]
@@ -65,13 +65,35 @@ class HandGiftStorage(unittest.TestCase):
         self.assertFalse(self.migrate())
         self.assertEqual(self.store.mail_letter(parcel['id']), after_parcel)
         self.assertEqual(self.store.auction_lot(lot['id']), after_lot)
-        # Re-running the repair itself is harmless too.
+        # Re-running the complete repair itself is harmless too.
         with self.store.db:
-            inventory.repair_hand_valentine_snapshots(self.store.db)
+            inventory.repair_legacy_hand_valentines(self.store.db)
         self.assertEqual(self.store.mail_letter(parcel['id']), after_parcel)
         self.assertEqual(self.store.auction_lot(lot['id']), after_lot)
 
+    def test_offline_owners_old_items_migrate_even_when_v1_marker_exists(self):
+        slots = (inventory.BELT, inventory.BAG, inventory.BANK, inventory.SECONDARY)
+        rows = [self.store.create_item(self.cid, type_id, items.WEAR,
+                    slot=slot, count=1, brk=123, max_break_cur=30000)
+                for type_id, slot in zip(items.HAND_VALENTINES, slots)]
+        # Unrelated belts share graphics with gifts; never convert them.
+        belt = self.store.create_item(self.cid, 3722, items.WEAR, slot=inventory.BELT)
+        before_money = self.store.money(self.cid)
+        self.assertTrue(accounts.run_once(self.store.db, inventory.HAND_VALENTINE_SNAPSHOTS_FIX,
+                                          lambda _db: None))
+        self.assertTrue(self.migrate())
+        for row in rows:
+            expected = dict(row, root=items.COLD_ARM,
+                            slot=inventory.BAG if row['slot'] == inventory.BELT else row['slot'])
+            self.assertEqual(self.store.item(row['uniq']), expected)
+        self.assertEqual(self.store.item(belt['uniq']), belt)
+        self.assertEqual(self.store.money(self.cid), before_money)
+        after = [self.store.item(row['uniq']) for row in rows]
+        self.assertFalse(self.migrate())
+        self.assertEqual([self.store.item(row['uniq']) for row in rows], after)
+
     def test_failure_after_parcel_write_rolls_back_the_lot_and_migration_marker(self):
+        legacy = self.store.create_item(self.cid, 1071, items.WEAR, slot=inventory.BELT)
         parcel = self.store.mail_send(self.cid, self.cid, mail.LETTER, 'old', 'old',
                                       0, 0, json.dumps([self.snapshot()]))
         lot = self.lot()
@@ -85,9 +107,12 @@ class HandGiftStorage(unittest.TestCase):
                 self.migrate()
         self.assertEqual(self.store.mail_letter(parcel['id']), parcel)
         self.assertEqual(self.store.auction_lot(lot['id']), lot)
-        self.assertFalse(accounts.ran(self.store.db, inventory.HAND_VALENTINE_SNAPSHOTS_FIX))
+        self.assertEqual(self.store.item(legacy['uniq']), legacy)
+        self.assertFalse(accounts.ran(self.store.db, inventory.HAND_VALENTINES_FIX))
         self.assertTrue(self.migrate())
         self.assertEqual(self.store.auction_lot(lot['id'])['root'], items.COLD_ARM)
+        self.assertEqual(self.store.item(legacy['uniq'])['root'], items.COLD_ARM)
+        self.assertEqual(self.store.item(legacy['uniq'])['slot'], inventory.BAG)
 
 
 if __name__ == '__main__':

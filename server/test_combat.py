@@ -249,7 +249,7 @@ def _pull_in_loop(type_id, mode, ammo, drop=0):
     fighter.rc = rc
     fighter.fire_now(7, None, 0, combat.Weapon(
         num_shots=shots, dmin=1, dmax=1, opt_lo=0, opt_hi=0, max_range=1, piercing=1,
-        cone=0, crit=0, skill=progression.SHOOTING, spec=None), 0, rounds)
+        cone=0, crit=0, skill=progression.SHOOTING, spec=None), 0, rounds, mode=mode)
     return shots, flew[0], mag.row["ammo_count"], 500 - mag.row["brk"]
 
 
@@ -420,7 +420,7 @@ async def _aimed_weapon(type_id, mode=0):
                            inv=SimpleNamespace(find=lambda obj: row))
     fighter = _PullFighter(sess)
     fighter.rc = rc
-    fighter.fire_now = lambda uniq, target, cell, gun, cost, rounds: shot.set_result(gun)
+    fighter.fire_now = lambda uniq, target, cell, gun, cost, rounds, palm_cycle, mode: shot.set_result(gun)
     # Aiming duration is covered by the live suite; here only its payload matters.
     with patch.object(combat.pace, "paced", return_value=0):
         fighter.use_fire(dict(obj="7", target="0%08x" % (_row + 4)))
@@ -1298,9 +1298,11 @@ try:
     check("one pair around the bullet's fate",
           (burst[0], burst[1] in ("faHit", "faMiss", "faWall"), burst[2]), ("faShot", True, "faShot"))
     check("the pair is the player's, open then closed",
-          [{k: v for k, v in p.items() if k != "recovery_ms"} for n, p in got if n == "faShot"], [{"id": 0, "status": 1}, {"id": 0, "status": 0}])
-    check("the committed shot carries a positive release duration",
-          next(p["recovery_ms"] for n, p in got if n == "faShot" and p["status"] == 0) > 0, True)
+          [{k: v for k, v in p.items() if k not in ("recovery_ms", "animation_frames")} for n, p in got if n == "faShot"], [{"id": 0, "status": 1}, {"id": 0, "status": 0}])
+    check("the human pistol shot respects the 150 ms recovery floor",
+          next(p["recovery_ms"] for n, p in got if n == "faShot" and p["status"] == 0), 150)
+    check("the final shot carries a positive native frame budget",
+          next(p["animation_frames"] for n, p in got if n == "faShot" and p["status"] == 0) > 0, True)
     hit = named(got, "faHit")
     tail = names_[first + 3:]
     if hit:

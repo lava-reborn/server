@@ -7,6 +7,15 @@ from testkit import run_cases
 
 
 class RoomDelivery(unittest.TestCase):
+    def test_viewer_id_never_rewrites_a_matching_animation_duration_or_frame_count(self):
+        for value in (21, 113, 175, 225):
+            viewer = NS(pid=value)
+            command, params = rooms.viewer_frame('faShot', dict(
+                id=value, status=0, recovery_ms=value, animation_frames=value))(viewer)
+            self.assertEqual(command, 'faShot')
+            self.assertEqual(params, dict(id=0, status=0,
+                                         recovery_ms=value, animation_frames=value))
+
     def test_programming_errors_are_not_disguised_as_a_disconnected_player(self):
         closed = []
         def invalid(*_args,**_kwargs):

@@ -109,8 +109,8 @@ class ArchivedBuffs(unittest.IsolatedAsyncioTestCase):
 
     def test_catalogue_preserves_archived_prices_doses_and_explicit_effects(self):
         for tid, cost, gold, duration, strength, od in (
-                (3474, 500, 0, 3600, 1, 0), (3475, 2500, 0, 3600, 2, 0),
-                (3476, 0, 50, 3600, 3, 0), (3897, 0, 10, 7200, 0, 20)):
+                (3474, 500, 0, 3600, 1, 0), (3475, 2500, 0, 3600, 3, 0),
+                (3476, 0, 50, 3600, 5, 0), (3897, 0, 10, 7200, 0, 20)):
             with self.subTest(item=tid):
                 si = items.params_of(tid)
                 self.assertEqual((si['cost'], si['g_cost'], si['weight'], si['use_count']),
@@ -165,7 +165,7 @@ class ArchivedBuffs(unittest.IsolatedAsyncioTestCase):
                     self.assertIsNone(self.store.item(row['uniq']))
                     self.assertEqual(len(manager.active), 1)
                     if type_id == 3476:
-                        self.assertEqual(self.s.char.attr(p.STRENGTH), before_strength + 3)
+                        self.assertEqual(self.s.char.attr(p.STRENGTH), before_strength + 5)
                     elif type_id == 4932:
                         self.assertEqual(self.s.char.hp_max, before_hp + 225)
                     else:
@@ -212,8 +212,8 @@ class ArchivedBuffs(unittest.IsolatedAsyncioTestCase):
         row = self.s.inv.create(3476)
         effects.activate(f, row['uniq'], f, 0)
         self.assertIsNone(self.store.item(row['uniq']))
-        self.assertEqual(self.s.char.attr(p.STRENGTH), base + 3)
-        self.assertEqual((self.s.char.hp_max, self.s.char.max_weight()), (limits[0] + 12, limits[1] + 6000))
+        self.assertEqual(self.s.char.attr(p.STRENGTH), base + 5)
+        self.assertEqual((self.s.char.hp_max, self.s.char.max_weight()), (limits[0] + 20, limits[1] + 10000))
         self.assertEqual(self.s.char.attrib, before[0])
         self.assertEqual((self.s.char.hp, self.s.char.sp), before[1:])
         deadline = manager.active['Репарин'].deadline
@@ -227,7 +227,7 @@ class ArchivedBuffs(unittest.IsolatedAsyncioTestCase):
         resumed_at = deadline + 86400
         with patch.object(manager, 'clock', return_value=resumed_at):
             manager.load()
-        self.assertEqual(self.s.char.attr(p.STRENGTH), base + 3)
+        self.assertEqual(self.s.char.attr(p.STRENGTH), base + 5)
         deadline = manager.active['Репарин'].deadline
         self.assertAlmostEqual(deadline - resumed_at, remaining)
         with patch.object(manager, 'clock', return_value=deadline + 1):

@@ -1859,3 +1859,52 @@ max(now,старое окончание)+days*86400. Другой транспо
 аренда на сутки разрешена. Клиент ограничивает выбор, сервер проверяет
 независимо; оплата и запись транспорта атомарны. Новый запрос аренды — новая
 оплата/продление; обычный клиент блокирует двойную отправку до cmdAck.
+
+
+Firearm animation cadence: the server keeps the selected `fire_times` aiming
+period and then reserves 25% of the native `fire` animation for the committed
+shot or whole volley, rounded up to milliseconds, with a minimum of 150 ms.
+The reference excludes `fire_in` and `fire_out`, counts every shot of a burst,
+and counts shotgun
+pellets as one firing cycle. The ordinary human model (0) is the timing
+reference, so costumes cannot change cadence; presentation still uses the
+actual model and its full frame count. This pause is not added between individual bullets. Damage, accuracy, rounds and AP costs
+are unchanged. The first `faShot(status=1)` carries `recovery_ms` so input is
+blocked before the native acknowledgement latch is released. The final
+`faShot(status=0)` repeats `recovery_ms` and supplies `animation_frames`, the
+number of fire/fire_out frames for that model and volley (one firing cycle for
+a shotgun). These numeric fields must never be rewritten as viewer IDs.
+The client plays the native frame callbacks on a wall-clock schedule within
+that budget and queues one subsequent action; it does not restart the current
+volley. Rendering delays can postpone presentation but cannot bypass server
+recovery. Blades restore the old native `fire`-only recovery: lowering
+may overlap the next preparation, but the committed swing cannot be replayed
+or bypass its server deadline. The client distinguishes melee FireEvents
+from firearm shots; firearm lowering still waits for completion. Bare fists
+and NPC attack schedules retain their existing timings.
+
+
+The startup migration `hand-valentines-all-storage-2026-11-26` converts all four
+25 G hand gifts in saved item rows, including offline owners and bank storage.
+Only an old clothing slot moves to the backpack; serial, owner, quantity,
+durability and other locations remain intact. Mail snapshots and auction class
+metadata are repaired in the same transaction. The new marker runs even when
+the earlier parcel-only migration has already completed; login normalization
+remains as a fallback. Applying the fix to an existing server requires an
+updated server installation and restart; players then reconnect for new OIDs.
+
+
+### Суточное владение складами (2026-11-26)
+
+Все семь захватываемых складов сбрасывают владельца ежедневно в 20:00 МСК.
+Окна выдачи слитков сохраняются: 19:00–20:00, в центре Абу-Хамеда — 19:00–19:15.
+Захват после сброса доступен и прежнему клану: добивающий и ещё один живой
+соклановец нужного уровня должны нанести урон хозяину. Повторное убийство
+своего хозяина в том же суточном цикле не продлевает владение.
+
+Сброс затрагивает только владение и журналирует `expire`; он не очищает
+`clan_holding_claims` или `boss_kills`. Права казны, сутки членства и общая
+награда склада за день сохраняются. Проверка срока владения выполняется
+также под блокировкой при выдаче слитков. Удаление использует `since <`
+границы цикла, поэтому не удаляет уже новый захват. Простой и перезапуск
+не продлевают срок. Недельная аренда клановых баз не затрагивается.

@@ -7,8 +7,8 @@ and a real database:
 
   * the capture: the finishing clan qualifies with two living members at the
     site's level who hurt the boss; other clans' damage cannot win; one member alone, one below the level,
-    one dead, one gone from the room take nothing; the holder's own kill is
-    a defence; harm banked over a heal, or past the boss's health and
+    one dead, one gone from the room take nothing; the old holder can
+    capture again after the daily reset; harm banked over a heal, or past the boss's health and
     stamina, counts for nothing; a reconnect, onto the body left standing or
     as a new session once it is put away, keeps a member's harm, and a
     member who leaves his clan after the kill still counts for it; a new
@@ -407,7 +407,7 @@ async def main():
           ("capture", wolves, None, amir.char_id, bosses.slot_of(BOSS, NOW[0])))
     held = STORE.holding("wh_sever")
     check("  ..the holding: the clan, its name, since now, the window",
-          (held["clan_id"], held["name"], abs(held["since"] - time.time()) < 60,
+          (held["clan_id"], held["name"], abs(held["since"] - NOW[0]) < 1,
            held["slot"]), (wolves, "Волки", True, bosses.slot_of(BOSS, NOW[0])))
     check("  ..and the log line: who takes it, the harm, who is credited",
           LINES.take(), ["..    warehouse wh_sever (111): clan %d «Волки» takes it, 400 harm,"
@@ -421,12 +421,12 @@ async def main():
                   for p in named(fr, "userInfo_Trader") if p["id"] == flag}),
           [(wolves, 0)])
     since = held["since"]
-    check("the holder kills its own boss: a defence, its since unchanged",
-          (await fight([(alice, 300), (amir, 300)], alice), STORE.holding("wh_sever")["since"]),
-          (("defend", wolves), since))
+    check("the old holder can capture again after tomorrow's daily reset",
+          (await fight([(alice, 300), (amir, 300)], alice), STORE.holding("wh_sever")["since"] > since),
+          (("capture", wolves), True))
     check("  ..its row: the Волки before and after, the killer credited",
           [(r["how"], r["clan_id"], r["prev"], r["by_char"]) for r in log_rows(1)],
-          [("defend", wolves, wolves, alice.char_id)])
+          [("capture", wolves, None, alice.char_id)])
 
     # --- the finishing clan, never the damage leaders --------------------------------------
     order("hold", clan=jackals, site="wh_sever")
@@ -434,10 +434,10 @@ async def main():
           await fight([(alice, 100), (amir, 100), (andy, 100),
                        (bob, 150), (bill, 150), (ben, 150)], alice), ("capture", wolves))
     check("  ..the row credits the finisher and previous owner",
-          (log_rows(1)[0]["prev"], log_rows(1)[0]["by_char"]), (jackals, alice.char_id))
+          (log_rows(1)[0]["prev"], log_rows(1)[0]["by_char"]), (None, alice.char_id))
     check("a clanless last hit has no fallback winner even when both clans qualify",
           await fight([(alice, 150), (amir, 150), (andy, 150),
-                       (bob, 150), (bill, 150), (ben, 150)], carl), ("none", wolves))
+                       (bob, 150), (bill, 150), (ben, 150)], carl), ("none", None))
     check("equal damage: the finishing Шакалы capture the warehouse",
           await fight([(alice, 150), (amir, 150), (andy, 150),
                        (bob, 150), (bill, 150), (ben, 150)], bill), ("capture", jackals))
@@ -448,7 +448,7 @@ async def main():
     andy.combat.dead = True
     check("a dead assistant cannot qualify the finishing clan; no fallback to the other clan",
           await fight([(alice, 100), (andy, 100),
-                       (bob, 160), (bill, 130), (ben, 100)], alice), ("none", jackals))
+                       (bob, 160), (bill, 130), (ben, 100)], alice), ("none", None))
     andy.combat.dead = False
     pool = boss.hp_max + boss.sp_max
     order("hold", clan=wolves, site="wh_sever")
@@ -705,6 +705,9 @@ async def main():
           (server.Session.day_start(at(2, 59, day=41)), server.Session.day_start(at(3, day=41)),
            datetime.fromtimestamp(at(3, day=41), timezone.utc).hour),
           (at(3, day=40), at(3, day=41), 0))
+
+    # The 20:00 reset above left it neutral; an admin assigns this new cycle.
+    order("hold", clan=wolves, site="wh_sever")
 
     # --- the admin's orders -------------------------------------------------------------------
     for s in [alice2] + everybody[1:]:

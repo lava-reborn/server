@@ -397,6 +397,25 @@ def new_fields(type_id, count=1):
 # and lots included, as accounts.relink_heals does its types.
 OFFLINE_GIFTS_FIX = "admin-offline-gifts-2026-09-29"
 HAND_VALENTINE_SNAPSHOTS_FIX = "hand-valentine-snapshots-2026-11-26"
+HAND_VALENTINES_FIX = "hand-valentines-all-storage-2026-11-26"
+
+
+def repair_legacy_hand_valentines(db):
+    """Upgrade every saved gift before accepting clients, including offline owners.
+
+    The v2 marker is independent of the earlier parcel-only migration. All
+    item classes, former clothing slots, snapshots and the marker commit
+    together through accounts.run_once. Preserve identities and bank storage.
+    """
+    types = tuple(sorted(items.HAND_VALENTINES))
+    slots = tuple(sorted(WEAR_SLOTS))
+    type_marks = ','.join('?' for _ in types)
+    slot_marks = ','.join('?' for _ in slots)
+    db.execute('UPDATE items SET root=?,slot=CASE WHEN slot IN (' + slot_marks + ')'
+               ' THEN ? ELSE slot END WHERE type_id IN (' + type_marks + ')'
+               ' AND (root<>? OR slot IN (' + slot_marks + '))',
+               (items.COLD_ARM, *slots, BAG, *types, items.COLD_ARM, *slots))
+    repair_hand_valentine_snapshots(db)
 
 
 def repair_hand_valentine_snapshots(db):

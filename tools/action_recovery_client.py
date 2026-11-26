@@ -11,6 +11,7 @@ def __bfClearInput():
     _global.__bfOwnerFigure = None
     _global.__bfMoveIntent = None
     _global.__bfObservedFigure = None
+    _global.__bfShotTiming = None
 
 def __bfWaiting():
     now = getTimer()
@@ -19,6 +20,11 @@ def __bfWaiting():
     if figure and (figure.behavior == "fire" or figure.behavior == "fire_out") and figure.onEnterFrame and figure.animationEnabled != False and figure.isActive != False and figure.is_default != True:
         if figure.__bfBursts and len(figure.__bfBursts) > 0 and figure.__bfBursts[0].got > 0:
             bundle = figure.__bfBursts[0]
+            if bundle.melee and figure.behavior == "fire_out":
+                # A blade's lowering is cosmetic, as before serialization.
+                # Its committed swing must still meet the server deadline.
+                _global.__bfObservedFigure = None
+                return serverWaiting
             observed = _global.__bfObservedFigure
             if not observed or observed.figure != figure or observed.bundle != bundle or observed.frame != figure.currentFrameNumber or observed.got != bundle.got or now < observed.at:
                 observed = {"figure":figure, "bundle":bundle, "frame":figure.currentFrameNumber, "got":bundle.got, "at":now}
@@ -110,7 +116,30 @@ def __bfRetryMove(obj):
 
 def __bfLocationShot(obj):
     _global.__bfRecovery(obj)
+    # Location dispatches the visual event synchronously on the final pair.
+    # Preserve metadata that its native FireEvent does not copy.
+    _global.__bfShotTiming = obj.param
     this.__bfLocationShotOrig(obj)
+    _global.__bfShotTiming = None
+
+def __bfPlayAnimation():
+    clock = this.__bfPlayback
+    if not clock or (this.behavior != "fire" and this.behavior != "fire_out"):
+        this.__bfPlayAnimationOrig()
+        return
+    elapsed = Math.max(0, getTimer() - clock.start)
+    due = Math.min(clock.frames, Math.floor(elapsed * clock.frames / clock.duration))
+    if elapsed >= clock.duration:
+        # Model overrides may contain a different frame count. Finish their
+        # actual callbacks at the deadline instead of freezing at our estimate.
+        due = Math.max(due, clock.painted + 64)
+    steps = 0
+    # Catch up after slow rendering without skipping finalFrame callbacks,
+    # bullet reports or lowering the gun. Bound the work of a single frame.
+    while clock.painted < due and steps < 64 and this.__bfPlayback == clock and (this.behavior == "fire" or this.behavior == "fire_out"):
+        clock.painted = clock.painted + 1
+        steps = steps + 1
+        this.__bfPlayAnimationOrig()
 
 def __bfNextSequence():
     this.__bfNextSequenceOrig()
@@ -256,6 +285,7 @@ def __bfRequest{i}({args}):
         (('core','location','Location'),'breakMv','__bfRetryMoveOrig','__bfRetryMove'),
         (('gpui','LocationInterface'),'startExitTimer','__bfExitTimerOrig','__bfExitTimer'),
         (('core','location','LocWalker'),'breakMove','__bfStopMoveOrig','__bfBreakMove'),
+        (('core','location','Char'),'playAnimation','__bfPlayAnimationOrig','__bfPlayAnimation'),
         (('core','location','Char'),'nextSequence','__bfNextSequenceOrig','__bfNextSequence'),
         (('core','location','DisplayLocScene'),'hitTarget','__bfHitTargetOrig','__bfHitTarget'),
         (('core','location','DisplayLocScene'),'finishMove','__bfFinishMoveOrig','__bfFinishMove'),

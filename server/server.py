@@ -1560,7 +1560,8 @@ class Session:
                 # and its escape route against actors that arrived meanwhile.
                 try:
                     self.pos = location_entry.choose(self.loc, *pending[3:],
-                        occupied=movement.get(destination).occupied(exclude=self))
+                        occupied=movement.get(destination).occupied(exclude=self),
+                        near_exits=location_entry.has_combat_mobs(destination))
                 except location_entry.NoSafeEntry:
                     # lcall has already replaced the client's old location.
                     # Refuse lenter, then let handle() close without saving
@@ -1805,8 +1806,9 @@ class Session:
     def enter_cell(self, *, acknowledge=False, oriented=True):
         """Walk into whatever occupies the cell under the player.
 
-        The fractional map position selects an escapable local entry. Keep
-        the player on the map if all such entries are occupied; never fall
+        Combat locations use free inward neighbours of actual exits; peaceful
+        rooms keep their declared entries. Keep the player on the map if all
+        such entries are occupied; never fall
         back to a wall or an enclosed yard. Interceptions use their own pair
         of positions and deliberately retain the ordinary entry policy.
         """
@@ -1822,7 +1824,8 @@ class Session:
             combat.room_combat(room, STORE).keep_hours()
             try:
                 pos = location_entry.choose(loc, x, y,
-                    occupied=movement.get(room).occupied(exclude=self))
+                    occupied=movement.get(room).occupied(exclude=self),
+                    near_exits=location_entry.has_combat_mobs(room))
             except location_entry.NoSafeEntry:
                 if acknowledge:
                     self.send('cmdAck', res=RES_NO_WAY)
@@ -4324,7 +4327,8 @@ class Session:
                 self.answer(why)
                 return
             if not STORE.holding_gold_claim(gold_site.key, self.day_start(), self.char_id,
-                                            holdings.table().tenure):
+                                            holdings.table().tenure,
+                                            owner_since=holdings.warehouse_reset_at):
                 self.send("cmdAck", res=RES_NOT_AVAILABLE)
                 self.answer("Награда недоступна: проверьте владение складом, права и срок членства в клане.")
                 return
@@ -5254,6 +5258,7 @@ async def main():
     # box not in its room, its box's row missing or out of its window
     # (holdings.check).
     holdings.check()
+    holdings.reset_warehouses(STORE)
     names.document()
     # Bags left lying when the last process ended go back where they lay,
     # for the rest of their time; what ran out meanwhile, or has no place
@@ -5270,12 +5275,12 @@ async def main():
                          inventory.fill_offline_gifts):
         log.info("filled the admin panel's offline gifts (%s)",
                  inventory.OFFLINE_GIFTS_FIX)
-    # Old parcels and auction lots are snapshots, outside a login inventory.
-    # Repair both their IDs and the lot's class before accepting any clients.
-    if accounts.run_once(STORE.db, inventory.HAND_VALENTINE_SNAPSHOTS_FIX,
-                         inventory.repair_hand_valentine_snapshots):
-        log.info("repaired old valentine parcels and lots (%s)",
-                 inventory.HAND_VALENTINE_SNAPSHOTS_FIX)
+    # Upgrade existing gifts for offline owners as well as parcels/lots.
+    # The new marker also runs when the earlier parcel-only fix already ran.
+    if accounts.run_once(STORE.db, inventory.HAND_VALENTINES_FIX,
+                         inventory.repair_legacy_hand_valentines):
+        log.info("repaired old valentines in all storage (%s)",
+                 inventory.HAND_VALENTINES_FIX)
     # From the first socket on, the error log takes no more than twenty
     # records of one kind a minute: anybody can send unknown commands by
     # the thousand. Everything above went in whole (errlog.serving).
@@ -5596,8 +5601,13 @@ async def drain_admin_actions():
     second thing to authenticate, and it keeps working when the panel is
     restarted under the game or the other way round.
     """
+    warehouse_cycle = None
     while True:
         try:
+            cycle = holdings.warehouse_reset_at()
+            if cycle != warehouse_cycle:
+                holdings.reset_warehouses(STORE, ROOMS)
+                warehouse_cycle = cycle
             publish_online()
             for row in STORE.admin_pending():
                 try:
