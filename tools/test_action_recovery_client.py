@@ -35,6 +35,7 @@ class ActionRecoveryClient(unittest.TestCase):
                       __bfScene=scene)
         self.call('__bfAim',scene,dict(aim=0,num_shots=1,seq=1))
         self.call('__bfFire',scene,dict(gunnerID=0,access=True,shot=True,seq=1))
+        self.assertFalse(figure['__bfBursts'][0]['melee'])
         self.call('__bfRecovery',None,dict(param=dict(id=0,recovery_ms=120)))
         return scene,figure
 
@@ -87,7 +88,7 @@ class ActionRecoveryClient(unittest.TestCase):
         scene,figure=self.stalled_shot()
         self.call('__bfRequest4',dict(__bfRequestHealOrig=lambda med:self.executed.append('heal')),'med')
         self.now=900
-        self.call('__bfFire',scene,dict(gunnerID=0,access=True,seq=2))
+        self.call('__bfFire',scene,dict(gunnerID=0,access=True,shot=True,seq=2))
         self.call('__bfDrainInput',None)
         self.now=1100
         self.call('__bfDrainInput',None)
@@ -121,7 +122,7 @@ class ActionRecoveryClient(unittest.TestCase):
         self.now=1000
         self.call('__bfVisualFlush',None,scene,figure,False)
         self.call('__bfAim',scene,dict(aim=0,num_shots=1,seq=2))
-        self.call('__bfFire',scene,dict(gunnerID=0,access=True,seq=2))
+        self.call('__bfFire',scene,dict(gunnerID=0,access=True,shot=True,seq=2))
         self.call('__bfDrainInput',None)
         self.now=1100
         self.call('__bfDrainInput',None)
@@ -210,7 +211,7 @@ class ActionRecoveryClient(unittest.TestCase):
         figure.update(id=0,behavior='fire',animationEnabled=True,isActive=True,
                       onEnterFrame=True,__bfScene=scene)
         self.call('__bfAim',scene,dict(aim=0,num_shots=1,seq=1))
-        self.call('__bfFire',scene,dict(gunnerID=0,access=True,seq=1))
+        self.call('__bfFire',scene,dict(gunnerID=0,access=True,shot=True,seq=1))
         self.call('__bfRecovery',None,dict(param=dict(id=0,recovery_ms=120)))
         owner=dict(__bfRequestHealOrig=lambda c:self.executed.append(c))
         self.call('__bfRequest4',owner,'first')
@@ -529,7 +530,7 @@ class ActionRecoveryClient(unittest.TestCase):
         figure['__bfNextSequenceOrig']=lambda:figure.update(onEnterFrame=None,behavior='stand')
         for i in (1,2):
             self.call('__bfAim',scene,dict(aim=0,num_shots=1,seq=i))
-            self.call('__bfFire',scene,dict(gunnerID=0,access=True,seq=i))
+            self.call('__bfFire',scene,dict(gunnerID=0,access=True,shot=True,seq=i))
         figure['burstArr'].shift()
         figure['next']='stand'
         self.call('__bfVisualFinal',scene,dict(target=figure,data='fire_out'))
@@ -543,7 +544,7 @@ class ActionRecoveryClient(unittest.TestCase):
         scene,figure=self.fx.scene()
         figure.update(animationEnabled=False,isActive=True)
         self.call('__bfAim',scene,dict(aim=0,num_shots=1,seq=1))
-        self.call('__bfFire',scene,dict(gunnerID=0,access=True,seq=1))
+        self.call('__bfFire',scene,dict(gunnerID=0,access=True,shot=True,seq=1))
         self.assertEqual(self.fx.applied,[1])
         self.assertFalse(figure.get('__bfBursts'))
         self.assertFalse(self.call('__bfWaiting',None))

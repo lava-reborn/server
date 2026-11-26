@@ -93,6 +93,36 @@ class ReleaseTexts(unittest.TestCase):
             rows += json.loads(path.read_text(encoding="utf-8"))["quests"]
         self.assertEqual(builder.build_quests(texts, rows)[0], self.originals)
 
+    def test_prison_reward_starts_preserve_original_archive(self):
+        for quest_type, old, new in (
+                (167, '<b>2 талона</b>', '<b>1 талон</b>'),
+                (168, 'полагается 15000<Br>', 'полагается 233 500 афро.<Br>')):
+            with self.subTest(quest=quest_type):
+                record = self.build(quest_type)
+                self.assertEqual(record, self.originals[str(quest_type)])
+                self.assertEqual(self.rows[quest_type]['start'], record['start'].replace(old, new))
+
+    def test_prison_reward_starts_reject_unreviewed_rewards_and_other_changes(self):
+        for quest_type, changes in (
+                (167, (('<b>1 талон</b>', '<b>2 талона</b>'),
+                       ('75 повязок', '50 повязок'), ('30 минут', '10 минут'))),
+                (168, (('233 500 афро.', '15000'),
+                       ('233 500', '300 000'), ('100 повязок', '75 повязок'),
+                       ('30 минут', '10 минут')))):
+            for old, new in changes:
+                with self.subTest(quest=quest_type, change=new):
+                    row = copy.deepcopy(self.rows[quest_type])
+                    self.assertIn(old, row['start'])
+                    row['start'] = row['start'].replace(old, new)
+                    with self.assertRaises(SystemExit):
+                        self.build(quest_type, row)
+            for key in ('name', 'start'):
+                with self.subTest(quest=quest_type, field=key):
+                    row = copy.deepcopy(self.rows[quest_type])
+                    row[key] += ' Несогласованная новая награда.'
+                    with self.assertRaises(SystemExit):
+                        self.build(quest_type, row)
+
     def test_provision_does_not_allow_renaming_the_quest(self):
         row = copy.deepcopy(self.rows[148])
         row["name"] = "Другая награда"

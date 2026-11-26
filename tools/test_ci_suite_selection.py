@@ -90,7 +90,8 @@ class ClientSuiteSelection(unittest.TestCase):
         self.assertFalse(required - selected, 'Map entry and interception regressions must reach CI')
 
     def test_prison_rewards_and_redemption_regressions_are_included_in_ci(self):
-        required = {'server/test_prison_farm_economy.py',
+        required = {'data/test_orig_misc.py', 'data/test_orig_misc_release.py',
+                    'server/test_prison_farm_economy.py',
                     'server/test_halfa_events.py',
                     'server/test_dongola_quests.py',
                     'server/test_abuhamed_quests.py'}

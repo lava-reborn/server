@@ -521,7 +521,7 @@ class CombatClient(unittest.TestCase):
             self.assertEqual(seen, [(0,500),(0,500),(50,500),(100,500),(100,500),(0,500)])
 
     def scene(self):
-        figure = dict(burstArr=Arr(), addEventListener=lambda *a: None,
+        figure = dict(_x=100, _y=200, burstArr=Arr(), addEventListener=lambda *a: None,
                       removeEventListener=lambda *a: None)
         scene = dict(getWalker=lambda eid: figure,
                      __bfAimOrig=lambda e: self.calls.append(('aim',e['seq'])),

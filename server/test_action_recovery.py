@@ -185,13 +185,19 @@ class ActionRecovery(unittest.IsolatedAsyncioTestCase):
                         for _ in range(5):
                             self.a.combat.use_fire(dict(request, target='00000018e'))
                             self.assertIs(self.a.combat.aim, timer)
+                        # Use the accepted wire snapshot, not schedule_action's
+                        # private callback wrapper layout.
+                        aim = next(packet for name, packet in reversed(self.a.writer.frames)
+                                   if name == 'faAim')
+                        accepted_shots = shots if params['weapon_type'] == items.SHOTGUN else min(shots, rounds)
+                        self.assertEqual(aim['num_shots'], accepted_shots)
                         callback, args, deadline = timer._callback, timer._args, timer.when()
                         timer.cancel()
                     with self.case.at(deadline):
                         callback(*args)
                         before = dict(self.case.store.item(gun['uniq']))
                         previous_end = self.a.combat.recovery_until
-                        cycles = 1 if params['weapon_type'] == items.SHOTGUN else args[3].num_shots
+                        cycles = 1 if params['weapon_type'] == items.SHOTGUN else aim['num_shots']
                         self.assertAlmostEqual(previous_end - deadline, max(.150, cycles * .030))
                         self.a.combat.use_fire(request)
                         callback(*args)
