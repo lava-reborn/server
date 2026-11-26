@@ -1863,25 +1863,35 @@ max(now,старое окончание)+days*86400. Другой транспо
 
 Firearm animation cadence: the server keeps the selected `fire_times` aiming
 period and then reserves 25% of the native `fire` animation for the committed
-shot or whole volley, rounded up to milliseconds, with a minimum of 150 ms.
+shot or whole volley, rounded up to milliseconds, with a minimum of 250 ms.
 The reference excludes `fire_in` and `fire_out`, counts every shot of a burst,
 and counts shotgun
 pellets as one firing cycle. The ordinary human model (0) is the timing
-reference, so costumes cannot change cadence; presentation still uses the
-actual model and its full frame count. This pause is not added between individual bullets. Damage, accuracy, rounds and AP costs
+reference, so costumes cannot change cadence; presentation uses the
+actual model at its unchanged native frame rate. This pause is not added
+between individual bullets. Damage, accuracy, rounds and AP costs
 are unchanged. The first `faShot(status=1)` carries `recovery_ms` so input is
 blocked before the native acknowledgement latch is released. The final
-`faShot(status=0)` repeats `recovery_ms` and supplies `animation_frames`, the
-number of fire/fire_out frames for that model and volley (one firing cycle for
-a shotgun). These numeric fields must never be rewritten as viewer IDs.
-The client plays the native frame callbacks on a wall-clock schedule within
-that budget and queues one subsequent action; it does not restart the current
-volley. Rendering delays can postpone presentation but cannot bypass server
-recovery. Blades restore the old native `fire`-only recovery: lowering
-may overlap the next preparation, but the committed swing cannot be replayed
-or bypass its server deadline. The client distinguishes melee FireEvents
-from firearm shots; firearm lowering still waits for completion. Bare fists
-and NPC attack schedules retain their existing timings.
+`faShot(status=0)` repeats `recovery_ms`. The duration must never be rewritten
+as a viewer ID. Native `Char.playAnimation` is unchanged: no wall-clock
+fast-forward, repeated frame callbacks or per-packet frame budget is installed.
+A repeated firearm request waits for authoritative recovery, retaining the
+native acknowledgement latch during aim. Cosmetic playback does not prolong
+that wait. A newer accepted `faAim` queues its native visual behind the
+current one; the current animation finishes naturally when the figure stands still.
+Only the active and latest pending animation are retained, preventing a long
+visual backlog. Coalesced pending visuals keep every confirmed report without
+playing their projectiles simultaneously. A refused firearm request leaves
+the previous visual intact. Movement may interrupt cosmetic
+firing; an early refused move is retried once at the authoritative deadline.
+Confirmed damage, costs and reports are preserved. Unplayed old projectiles
+are not replayed as a simultaneous volley. Other queued actions retain their
+visual-completion/watchdog rules. The 250 ms minimum belongs to the entire
+attack, not to every bullet inside a volley.
+Blades restore the old native `fire`-only recovery: lowering may overlap the
+next preparation, but the committed swing cannot be replayed or bypass its
+server deadline. The client distinguishes melee FireEvents from firearm shots.
+Bare fists and NPC attack schedules retain their existing timings.
 
 
 The startup migration `hand-valentines-all-storage-2026-11-26` converts all four

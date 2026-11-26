@@ -341,9 +341,6 @@ def __bfFaceAim(figure, aim):
 def __bfVisualStart(scene, figure, bundle):
     bundle.active = True
     figure.__fireCount = 0
-    figure.__bfPlayback = None
-    if bundle.timing:
-        figure.__bfPlayback = {"start":getTimer(), "duration":bundle.timing.duration, "frames":bundle.timing.frames, "painted":0}
     _global.__bfFaceAim(figure, bundle.aim)
     scene.__bfAimOrig(bundle.aim)
     i = 0
@@ -398,7 +395,6 @@ def __bfVisualFlush(scene, figure, draw):
     figure.burstArr = []
     figure.__bfIncoming = None
     figure.__bfAdvanceReady = False
-    figure.__bfPlayback = None
     figure.removeEventListener("finalFrame", scene, scene.shotgunFireAck)
     figure.removeEventListener("finalFrame", scene, scene.busrtFireAck)
     i = 0
@@ -448,7 +444,6 @@ def __bfVisualFinal(obj):
     if len(bullets) > 0:
         this.showFireAckReport()
     figure.__bfBursts.shift()
-    figure.__bfPlayback = None
     if len(figure.__bfBursts) > 0:
         figure.__bfAdvanceReady = True
     else:
@@ -474,8 +469,18 @@ def __bfAim(obj):
         figure.__bfBursts = []
     if len(figure.__bfBursts) > 0 and figure.__bfBursts[0].got == 0:
         figure.__bfBursts.shift()
-    if len(figure.__bfBursts) >= 8:
-        _global.__bfVisualFlush(this, figure, False)
+    # Keep the active native animation and only the latest pending one.
+    # Confirmed reports survive coalescing; cosmetic shots are not replayed
+    # all at once and cannot build a long tail after firing has stopped.
+    while len(figure.__bfBursts) > 1:
+        previous = figure.__bfBursts.pop()
+        i = 0
+        while i < len(previous.events):
+            event = previous.events[i]
+            if event.access:
+                this.addFireAckReport(event)
+            i = i + 1
+        this.showFireAckReport()
     bundle = {"aim":obj, "expected":Math.max(1, obj.num_shots), "got":0, "events":[], "active":False, "shown":False, "sound":_global.__bfAimSound(this, obj.aim)}
     figure.__bfIncoming = bundle
     figure.__bfBursts.push(bundle)
@@ -508,11 +513,6 @@ def __bfFire(event):
     bundle = figure.__bfIncoming
     bundle.melee = not event.shot
     event.__bfBundle = bundle
-    timing = _global.__bfShotTiming
-    if timing and timing.animation_frames > 0 and timing.recovery_ms > 0:
-        bundle.timing = {"duration":timing.recovery_ms, "frames":timing.animation_frames}
-        if bundle.active:
-            figure.__bfPlayback = {"start":getTimer(), "duration":timing.recovery_ms, "frames":timing.animation_frames, "painted":0}
     bundle.got = bundle.got + 1
     if bundle.active:
         this.__bfFireOrig(event)

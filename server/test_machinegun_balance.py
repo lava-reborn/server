@@ -68,9 +68,9 @@ class MachinegunBalance(unittest.TestCase):
     def test_reviewed_dps_ladder_uses_native_animation_recovery_and_reload(self):
         # A quarter of native firing frames, selected mode and amortized reload.
         # Each mode uses its optimal band; fixed distances are checked below.
-        for variants, targets in (((24989, 25006, 25022), (241.7, 256.2, 320.7)),
+        for variants, targets in (((24989, 25006, 25022), (241.7, 241.8, 320.7)),
                                   ((24990, 25007, 7051, 25023, 7052),
-                                   (288.6, 307.3, 312.6, 387.2, 409.5))):
+                                   (288.6, 290.1, 312.6, 387.2, 409.5))):
             scores = [self.scores(type_id)[0] for type_id in variants]
             self.assertEqual(scores, sorted(scores))
             for type_id, score, target in zip(variants, scores, targets):

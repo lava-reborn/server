@@ -1298,11 +1298,11 @@ try:
     check("one pair around the bullet's fate",
           (burst[0], burst[1] in ("faHit", "faMiss", "faWall"), burst[2]), ("faShot", True, "faShot"))
     check("the pair is the player's, open then closed",
-          [{k: v for k, v in p.items() if k not in ("recovery_ms", "animation_frames")} for n, p in got if n == "faShot"], [{"id": 0, "status": 1}, {"id": 0, "status": 0}])
-    check("the human pistol shot respects the 150 ms recovery floor",
-          next(p["recovery_ms"] for n, p in got if n == "faShot" and p["status"] == 0), 150)
-    check("the final shot carries a positive native frame budget",
-          next(p["animation_frames"] for n, p in got if n == "faShot" and p["status"] == 0) > 0, True)
+          [{k: v for k, v in p.items() if k != "recovery_ms"} for n, p in got if n == "faShot"], [{"id": 0, "status": 1}, {"id": 0, "status": 0}])
+    check("the human pistol shot respects the 250 ms recovery floor",
+          next(p["recovery_ms"] for n, p in got if n == "faShot" and p["status"] == 0), 250)
+    check("native playback receives no fast-forward frame budget",
+          any("animation_frames" in p for n, p in got if n == "faShot"), False)
     hit = named(got, "faHit")
     tail = names_[first + 3:]
     if hit:

@@ -1967,9 +1967,8 @@ class Fighter:
         params = items.params_of(row['type_id'])
         recovery_ms = Fighter.commit_animation(self, params, weapon.num_shots,
                                                aimed_for=aimed_for, mode=mode)
-        _, animation_frames = action_animation.frame_counts(self.sess, params, weapon.num_shots)
         h, s, hits, killed = rc.burst(self, target, hexcell, weapon, live, others,
-                                     recovery_ms=recovery_ms, animation_frames=animation_frames)
+                                     recovery_ms=recovery_ms)
         if row is not None:
             # WEAR_PER_ROUND of durability per round that left the barrel. The
             # starter pistol holds 120 points, a median firearm 1000 -- and
@@ -3395,7 +3394,7 @@ class RoomCombat:
             out.setdefault(f.cell, f)
         return out
 
-    def burst(self, shooter, target, hexcell, weapon, live, others=None, *, recovery_ms=0, animation_frames=0):
+    def burst(self, shooter, target, hexcell, weapon, live, others=None, *, recovery_ms=0):
         """num_shots pairs of faShot around what each bullet did, then usrUp
         of everyone hit. live is how many chambers held a round; the rest
         click (a miss). Returns (hp damage, sp damage, hits, killed) of the
@@ -3458,8 +3457,6 @@ class RoomCombat:
             fields = dict(id=shooter.eid, status=0)
             if recovery_ms and pair_index == len(pairs) - 1:
                 fields['recovery_ms'] = recovery_ms
-                if animation_frames:
-                    fields['animation_frames'] = animation_frames
             self.room.broadcast(("faShot", fields))
         # The pairs are out. What follows is the server's own account, and
         # its caller settles the shot by it: pays the rounds and the action
