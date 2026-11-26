@@ -35,7 +35,7 @@ class ClientSuiteSelection(unittest.TestCase):
                             'A skipped workflow leaves required PR checks pending')
 
     def test_warehouse_capture_contracts_are_included_in_the_full_release_suites(self):
-        required = {'server/test_warehouse_capture_rules.py', 'server/test_holdings.py',
+        required = {'server/test_warehouse_daily_reset.py', 'server/test_warehouse_capture_rules.py', 'server/test_holdings.py',
                     'server/test_clan_bases.py', 'server/test_clan_base_access.py',
                     'server/test_release_integrity.py', 'server/test_boss_hotfix.py',
                     'server/test_capture_review_fixes.py', 'server/test_base_capture_feedback.py'}
@@ -87,6 +87,7 @@ class ClientSuiteSelection(unittest.TestCase):
         self.assertIn('effect_clock_storage', groups)
         self.assertIn('eden_ticket_storage', groups)
         self.assertIn('hand_gift_storage', groups)
+        self.assertIn('warehouse_daily_reset', groups)
         self.assertIn('storage_pg', groups)
 
     def setUp(self):

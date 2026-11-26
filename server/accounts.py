@@ -2518,7 +2518,7 @@ class Store:
         return self.db.execute("SELECT site FROM clan_holding_claims WHERE site = ? AND day = ?",
                                (str(site), int(day))).fetchone() is not None
 
-    def holding_gold_claim(self, site, day, char_id, tenure, when=None):
+    def holding_gold_claim(self, site, day, char_id, tenure, when=None, *, owner_since=None):
         """Reserve a warehouse's gold in the caller's item/quest transaction.
 
         The primary key belongs to the warehouse/day, never an account or
@@ -2539,9 +2539,12 @@ class Store:
                                    (clan_id,)).fetchone()
             if clan is None:
                 return False
-            held = self.db.execute("SELECT clan_id FROM clan_holdings WHERE site = ?" + lock,
+            held = self.db.execute("SELECT clan_id, since FROM clan_holdings WHERE site = ?" + lock,
                                    (str(site),)).fetchone()
-            if held is None or int(held["clan_id"]) != clan_id:
+            # Evaluate the live boundary after any wait for the ownership lock.
+            cutoff = owner_since() if callable(owner_since) else owner_since
+            if (held is None or int(held["clan_id"]) != clan_id
+                    or cutoff is not None and float(held["since"]) < cutoff):
                 return False
             hit = self.db.execute(
                 "INSERT INTO clan_holding_claims (site, day, clan_id, char_id, at)"
@@ -2552,7 +2555,8 @@ class Store:
                  CLAN_HEAD | 0x400, when - float(tenure))).rowcount
             return hit == 1
 
-    def holding_clear(self, site, how, clan_id=None, when=None, before_slot=None):
+    def holding_clear(self, site, how, clan_id=None, when=None, before_slot=None,
+                      before_since=None):
         """Nobody holds the site from now -- only if clan_id holds it, when
         given, so a stale or repeated order clears nothing -- in one
         transaction with its row in the log. Returns the clan that held it,
@@ -2564,6 +2568,10 @@ class Store:
             # A weekly reset must not erase a concurrent new capture.
             cond += " AND (slot IS NULL OR slot < ?)"
             args += (float(before_slot),)
+        if before_since is not None:
+            # A daily warehouse reset must preserve a new-cycle capture.
+            cond += " AND since < ?"
+            args += (float(before_since),)
         with self.db:
             rows = self.db.execute("DELETE FROM clan_holdings WHERE site = ?" + cond
                                    + " RETURNING clan_id", args).fetchall()

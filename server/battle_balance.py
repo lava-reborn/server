@@ -78,16 +78,8 @@ def intellect(character):
 
 
 def attribute_multiplier(character, per_point):
-    """Trained/equipped INT is full strength; consumables add at most 3%."""
-    power = 1 + per_point * intellect(character)
-    active = getattr(character, 'effects', None)
-    if active:
-        permanent = max(0, character.attr(progression.INTELLECT)
-                        - active['attribs'][progression.INTELLECT] - INTELLECT_BASE)
-        temporary = max(0, min(3, active['attribs'][progression.INTELLECT]))
-        extra = .04 * temporary / (1 + temporary)
-        power = min(power, (1 + per_point * permanent) * (1 + extra))
-    return power
+    """Every applied INT point uses the ordinary damage/healing formula."""
+    return 1 + per_point * intellect(character)
 
 
 def healing_multiplier(character):

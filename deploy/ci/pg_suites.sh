@@ -52,7 +52,7 @@ SUITES+=(stopwarn)
 # Native base rent, warehouse ingots and laboratory CAS/rollback transactions.
 # This suite deliberately honours LAVA_DB_URL; SQLite-only unit/race suites
 # remain in the ordinary shards.
-SUITES+=(holdings)
+SUITES+=(holdings warehouse_daily_reset)
 # Buff purchase/delivery rollback and bank-only stacks use the production dialect too.
 SUITES+=(bank_stacks)
 # Online-only buff time uses the same migration and checkpoint SQL in production.

@@ -1901,14 +1901,13 @@ class Fighter:
         # the first faShot (WeaponPan.aim); the burst waits the same.
         args = (row["uniq"], target, hexcell, weapon, cost, rounds)
         palm_cycle = eden_harvest.attack_cycle(rc, target)
-        if palm_cycle is not None:
-            args += (palm_cycle,)
+        args += (palm_cycle, mode)
         self.aim_started_at = now()
         Fighter.schedule_action(self, revision, "aim",
             pace.paced(si.get("fire_times", [700])[mode] / 1000.0),
             self.fire_now, *args)
 
-    def fire_now(self, uniq, target, hexcell, weapon, cost, rounds=None, palm_cycle=None):
+    def fire_now(self, uniq, target, hexcell, weapon, cost, rounds=None, palm_cycle=None, mode=0):
         """The burst, after the aim. num_shots pairs go out come what may:
         the client has already counted them from faAim. rounds is what the
         pull takes from the magazine (one for a shotgun's charge of shot,
@@ -1967,7 +1966,7 @@ class Fighter:
         others = []
         params = items.params_of(row['type_id'])
         recovery_ms = Fighter.commit_animation(self, params, weapon.num_shots,
-                                               aimed_for=aimed_for, mode=row['cur_mode'])
+                                               aimed_for=aimed_for, mode=mode)
         _, animation_frames = action_animation.frame_counts(self.sess, params, weapon.num_shots)
         h, s, hits, killed = rc.burst(self, target, hexcell, weapon, live, others,
                                      recovery_ms=recovery_ms, animation_frames=animation_frames)
@@ -4129,6 +4128,7 @@ class RoomCombat:
         «Хозяин склада» comes once a day, the rest at the bosses' hours.
         """
         holdings.reset_base(self)
+        holdings.reset_warehouse(self)
         events.keep(self)
         if not self.bosses:
             return

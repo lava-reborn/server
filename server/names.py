@@ -216,6 +216,15 @@ for _type_id, (_attribute, _amount) in items.HAND_VALENTINES.items():
         "Послание от любящего человека.<br>Режущее оружие. Не надевается на пояс.<br>Держите валентинку в любой руке: "
         f"она даёт +{_amount} к {_title}, пока находится в руке.")
 
+# Stat stimulants name only what they actually add, without five zero rows.
+import effects
+for _type in range(3468, 3477):
+    _bonuses = effects.definition(_type)['bonuses']['attribs']
+    if any(_bonuses):
+        _parts = [f"+{_value} к {_title}" for _value, _title in zip(
+            _bonuses, ("силе", "ловкости", "телосложению", "восприятию", "интеллекту")) if _value]
+        ALL[items.DESC_ID_OFFSET + _type] = "Временно даёт " + ", ".join(_parts) + "."
+
 # Both scanner grades share the same loot policy; duration stays in the effect.
 for _type in (3789, 3826):
     ALL[items.DESC_ID_OFFSET + _type] = (

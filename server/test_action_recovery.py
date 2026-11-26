@@ -261,6 +261,25 @@ class ActionRecovery(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(packets[-1]['animation_frames'],
                              action_animation.frame_counts(self.a, items.params_of(25566), 1)[1])
 
+    async def test_mode_change_during_aim_only_changes_the_next_shot(self):
+        params = items.params_of(25566)
+        self.case.store.update_item(self.gun['uniq'], cur_mode=2)
+        timer, callback, args, when = self.start_shot()
+        self.assertAlmostEqual(when - 100, params['fire_times'][2] / 1000)
+        self.case.store.update_item(self.gun['uniq'], cur_mode=0)
+        self.assertFalse(timer.cancelled())
+        timer.cancel()
+        with self.case.at(when):
+            callback(*args)
+        expected = math.ceil(params['fire_times'][2] * .35)
+        self.assertAlmostEqual(self.a.combat.recovery_until, when + expected / 1000)
+        packets = [p for n,p in self.a.writer.frames if n == 'faShot' and p.get('recovery_ms')]
+        self.assertEqual([p['recovery_ms'] for p in packets], [expected, expected])
+        with self.case.at(self.a.combat.recovery_until):
+            self.a.combat.use_fire(dict(obj=inventory.oid_of(self.gun), target='00000018f'))
+            self.assertAlmostEqual(self.a.combat.aim.when() - self.a.combat.recovery_until,
+                                   params['fire_times'][0] / 1000)
+
     async def test_healing_and_reload_remain_cancellable_before_timer(self):
         for kind in ('heal','reload'):
             with self.subTest(kind=kind):

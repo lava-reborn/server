@@ -63,11 +63,14 @@ keeps hours of his own (bosses.WAREHOUSE_HOURS, the owner's «на склада�
 20:00 to 21:00 Moscow time, as the box's hour ends -- so a site changes
 hands once a day at most.
 
-How long. DESIGNED, the owner's of 2026-10-09: the clan holds the site until
-another clan takes it. A disband drops its holdings in the same transaction
-(accounts.clan_drop), and the admin may set or clear one (clan_admin.py
-hold, release). No decay, no rent; a kill that qualifies nobody changes
-nothing.
+How long. Every warehouse becomes neutral daily at 20:00 Moscow, after
+all box reward windows and before the master's new daily window. The old
+clan can capture it again under the same two-contributor rule. Re-killing
+its own master within one cycle remains a defence, without extending the
+cycle or resetting rewards. Expiry is reconciled on startup and by a global
+timer even for empty rooms; live reads and the locked gold claim reject an
+expired owner immediately. An old corpse cannot capture in a newer cycle.
+A disband also releases ownership; admins can assign or clear a site.
 
 What the holders get, in the site's room only:
 
@@ -116,6 +119,7 @@ PATH = os.path.join(HERE, "data", "holdings.json")
 
 # What a row of clan_holding_log says happened (accounts.SCHEMA).
 HOW = ("capture", "defend", "none", "admin", "disband", "rent", "expire")
+WAREHOUSE_RESET_HOUR = 20
 BASE_SQUAD = 3
 BASE_RESET_LEAD = 5 * 60
 BASE_SOLDIER_RESPAWN = 5 * 60
@@ -285,6 +289,52 @@ def reset_base(rc):
     if held is not None and (held['slot'] is None or float(held['slot']) < slot):
         if rc.store.holding_clear(s.key, 'expire', when=now, before_slot=slot) is not None:
             refresh(rc.room, s)
+
+
+def warehouse_reset_at(now=None):
+    """The latest daily 20:00 boundary on the boss/reward schedule's clock."""
+    now = bosses.clock() if now is None else now
+    local = datetime.fromtimestamp(now, bosses.ZONE)
+    boundary = local.replace(hour=WAREHOUSE_RESET_HOUR, minute=0, second=0, microsecond=0)
+    if local < boundary:
+        boundary -= timedelta(days=1)
+    return boundary.timestamp()
+
+
+def reset_warehouses(store, rooms=None, now=None):
+    """Expire all seven sites, including empty rooms and days spent offline.
+
+    Conditional deletes cannot erase a concurrent new capture. Reward claims
+    and boss-death checkpoints belong to their own schedules and stay intact.
+    """
+    now = bosses.clock() if now is None else now
+    boundary = warehouse_reset_at(now)
+    expired = []
+    with storage.atomic(store.db):
+        for s in sites().values():
+            if s.kind == "warehouse" and store.holding_clear(
+                    s.key, "expire", when=now, before_since=boundary) is not None:
+                expired.append(s)
+    if rooms is not None:
+        for s in expired:
+            room = rooms.rooms.get(s.loc)
+            if room is not None:
+                refresh(room, s)
+    return tuple(s.key for s in expired)
+
+
+def reset_warehouse(rc):
+    """Reconcile on entry/tick before the boss and the box are shown."""
+    s = site_at(rc.room.loc.id)
+    if s is None or s.kind != "warehouse":
+        return
+    now = bosses.clock()
+    boundary = warehouse_reset_at(now)
+    if getattr(rc, "warehouse_cycle", None) == boundary:
+        return
+    if rc.store.holding_clear(s.key, "expire", when=now, before_since=boundary) is not None:
+        refresh(rc.room, s)
+    rc.warehouse_cycle = boundary
 
 
 def gold_site(quest_type):
@@ -554,10 +604,17 @@ def describe():
 
 
 # --- who holds what ----------------------------------------------------------------------
-def holder(store, s):
-    """The site's holding -- site, clan_id, name, since, by_char, slot
-    (Store.holding) -- or None: nobody holds it."""
-    return store.holding(s.key)
+def holder(store, s, now=None):
+    """Live ownership, even before the next timer or after an offline day.
+
+    This read has no commits: quest callers may already be in a transaction.
+    Daily expiry is also checked under the gold claim's database lock.
+    """
+    held = store.holding(s.key)
+    if (held is not None and s.kind == "warehouse"
+            and float(held["since"]) < warehouse_reset_at(now)):
+        return None
+    return held
 
 
 def member_of(store, held, char_id):
@@ -658,6 +715,8 @@ def snapshot(rc, mob, killer):
         return None
     now = bosses.clock()
     if s.kind == "base" and (mob.slot is None or battle_slot(s, now) != mob.slot):
+        return None
+    if s.kind == "warehouse" and mob.slot is not None and mob.slot < warehouse_reset_at(now):
         return None
     here, local_owners = {}, {}
     for sess in list(rc.room.players):
@@ -808,15 +867,22 @@ def settle(rc, mob):
             refresh(rc.room, s)
             return "capture"
         return status
-    mob.capture = None
-    held = holder(store, s)
+    now = bosses.clock()
+    boundary = warehouse_reset_at(now)
+    if snap["at"] < boundary or snap["slot"] is not None and snap["slot"] < boundary:
+        # A delayed corpse from yesterday cannot reassign today's warehouse.
+        mob.capture = None
+        return "none"
+    store.holding_clear(s.key, "expire", when=now, before_since=boundary)
+    held = holder(store, s, now)
     prev = int(held["clan_id"]) if held else None
     won = winner(snap, table().squad, s.min_level)
     if won is not None and won[0] != prev:
         clan, name, harm, credited = won
         before, status = store.holding_set(s.key, clan, "capture", by_char=credited,
-                                           slot=snap["slot"])
+                                           slot=snap["slot"], when=snap["at"])
         if status == "ok":
+            mob.capture = None
             log.info("  ..    %s: clan %d «%s» takes it%s, %d harm, credited char %s,"
                      " window %s", _where(s), clan, name,
                      " from %s" % _whose(held) if held else "", harm, credited,
@@ -833,11 +899,13 @@ def settle(rc, mob):
         won = None if status == "gone" else won
     if won is not None:
         clan, name, harm, credited = won
-        store.holding_logged(s.key, "defend", clan, by_char=credited, slot=snap["slot"])
+        store.holding_logged(s.key, "defend", clan, by_char=credited, slot=snap["slot"], when=snap["at"])
+        mob.capture = None
         log.info("  ..    %s: clan %d «%s» keeps it, %d harm, credited char %s, window %s",
                  _where(s), clan, name, harm, credited, _window(snap["slot"]))
         return "defend"
-    store.holding_logged(s.key, "none", prev, slot=snap["slot"])
+    store.holding_logged(s.key, "none", prev, slot=snap["slot"], when=snap["at"])
+    mob.capture = None
     log.info("  ..    %s: its boss killed, and the finishing clan lacked %d living members of level %d"
              " who hurt it in the room; it stays %s's, window %s", _where(s), table().squad,
              s.min_level, _whose(held), _window(snap["slot"]))
@@ -912,7 +980,9 @@ def order_hold(store, sessions, s, clan_id):
     (the holding before, "ok" | "same" | "gone"); "same" writes nothing --
     no new since, no row in the log -- so an order run twice is one."""
     before = holder(store, s)
-    _prev, status = store.holding_set(s.key, clan_id, "admin")
+    if s.kind == "warehouse":
+        store.holding_clear(s.key, "expire", when=bosses.clock(), before_since=warehouse_reset_at())
+    _prev, status = store.holding_set(s.key, clan_id, "admin", when=bosses.clock())
     if status == "ok":
         log.info("  ..    %s: clan %d holds it by the admin's order (it was %s's)",
                  _where(s), int(clan_id), _whose(before))

@@ -4324,7 +4324,8 @@ class Session:
                 self.answer(why)
                 return
             if not STORE.holding_gold_claim(gold_site.key, self.day_start(), self.char_id,
-                                            holdings.table().tenure):
+                                            holdings.table().tenure,
+                                            owner_since=holdings.warehouse_reset_at):
                 self.send("cmdAck", res=RES_NOT_AVAILABLE)
                 self.answer("Награда недоступна: проверьте владение складом, права и срок членства в клане.")
                 return
@@ -5254,6 +5255,7 @@ async def main():
     # box not in its room, its box's row missing or out of its window
     # (holdings.check).
     holdings.check()
+    holdings.reset_warehouses(STORE)
     names.document()
     # Bags left lying when the last process ended go back where they lay,
     # for the rest of their time; what ran out meanwhile, or has no place
@@ -5596,8 +5598,13 @@ async def drain_admin_actions():
     second thing to authenticate, and it keeps working when the panel is
     restarted under the game or the other way round.
     """
+    warehouse_cycle = None
     while True:
         try:
+            cycle = holdings.warehouse_reset_at()
+            if cycle != warehouse_cycle:
+                holdings.reset_warehouses(STORE, ROOMS)
+                warehouse_cycle = cycle
             publish_online()
             for row in STORE.admin_pending():
                 try:

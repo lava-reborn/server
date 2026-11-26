@@ -249,7 +249,7 @@ def _pull_in_loop(type_id, mode, ammo, drop=0):
     fighter.rc = rc
     fighter.fire_now(7, None, 0, combat.Weapon(
         num_shots=shots, dmin=1, dmax=1, opt_lo=0, opt_hi=0, max_range=1, piercing=1,
-        cone=0, crit=0, skill=progression.SHOOTING, spec=None), 0, rounds)
+        cone=0, crit=0, skill=progression.SHOOTING, spec=None), 0, rounds, mode=mode)
     return shots, flew[0], mag.row["ammo_count"], 500 - mag.row["brk"]
 
 
@@ -420,7 +420,7 @@ async def _aimed_weapon(type_id, mode=0):
                            inv=SimpleNamespace(find=lambda obj: row))
     fighter = _PullFighter(sess)
     fighter.rc = rc
-    fighter.fire_now = lambda uniq, target, cell, gun, cost, rounds: shot.set_result(gun)
+    fighter.fire_now = lambda uniq, target, cell, gun, cost, rounds, palm_cycle, mode: shot.set_result(gun)
     # Aiming duration is covered by the live suite; here only its payload matters.
     with patch.object(combat.pace, "paced", return_value=0):
         fighter.use_fire(dict(obj="7", target="0%08x" % (_row + 4)))

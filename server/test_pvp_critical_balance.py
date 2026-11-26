@@ -177,28 +177,19 @@ class PvPCriticalBalance(unittest.TestCase):
                                                                combat.melee_crit_evade(victim)))
             self.assertEqual(balance.melee_critical(a, b, raw), max(0, min(100, raw)))
 
-    def test_temporary_intellect_keeps_a_positive_but_bounded_damage_and_healing_bonus(self):
-        ch = character()
+    def test_temporary_intellect_uses_every_point_for_damage_and_healing(self):
         for rate in (balance.DAMAGE_PER_INTELLECT, balance.HEAL_PER_INTELLECT):
-            base = balance.attribute_multiplier(ch, rate)
+            ch = character()
             ch.effects = effects.zero()
-            ch.effects['attribs'][p.INTELLECT] = 3
-            boosted = balance.attribute_multiplier(ch, rate)
-            self.assertGreater(boosted, base)
-            self.assertLessEqual(boosted, base * 1.03)
-            del ch.effects
-            ch.attrib[p.INTELLECT] += 3
-            self.assertGreater(balance.attribute_multiplier(ch, rate), boosted)
-            ch.attrib[p.INTELLECT] -= 3
-
-    def test_intellect_stimulant_grades_remain_distinct_after_limiting(self):
-        ch = character()
-        ch.effects = effects.zero()
-        for rate in (balance.DAMAGE_PER_INTELLECT, balance.HEAL_PER_INTELLECT):
             values = []
-            for extra in (1, 2, 3):
+            for extra in (1, 3, 5):
                 ch.effects['attribs'][p.INTELLECT] = extra
-                values.append(balance.attribute_multiplier(ch, rate))
+                boosted = balance.attribute_multiplier(ch, rate)
+                self.assertAlmostEqual(boosted, 1 + rate * (ch.attr(p.INTELLECT) - balance.INTELLECT_BASE))
+                values.append(boosted)
+                trained = character()
+                trained.attrib[p.INTELLECT] += extra
+                self.assertEqual(balance.attribute_multiplier(trained, rate), boosted)
             self.assertLess(values[0], values[1])
             self.assertLess(values[1], values[2])
 
