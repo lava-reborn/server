@@ -356,20 +356,23 @@ def critical(shooter, target, chance, optimal=True, *, ordinary=False):
 
 
 def pvp_critical_chance(cp, ce, temporary_cp=0, temporary_ce=0, optimal=True):
-    """Permanent investment follows the difference; temporary ratings taper.
+    """Permanent ratings keep full weight; temporary ratings taper separately.
 
-    The soft limit keeps every A/G grade distinct, unlike clipping all
-    stronger pills to the same cap. No inventory reads or SQL in this helper.
+    Offence approaches 90% smoothly. Total defence can remove at most half
+    that chance, including temporary anti-crit. No hard rating cutoff makes
+    additional legal equipment/attribute investment disappear at high ratings.
     """
-    cp, ce = max(0, cp), max(0, ce)
-    x = (cp - ce - 4.82) / 8
-    base = min(90, 3 + 8 * (max(x, 0) + math.log1p(math.exp(-abs(x)))))
-
-    def boost(temporary):
+    def rating(permanent, temporary, limit):
         extra = max(0, temporary)
-        return 1 + .1 * extra / (10 + extra)
+        return max(0, permanent) + limit * extra / (10 + extra)
 
-    chance = max(3, min(90, base * boost(temporary_cp) / boost(temporary_ce)))
+    # Anti-crit has a gentler derivative because its total reduction is capped.
+    # Give its consumable ladder a separate budget so Omega remains useful.
+    attack = rating(cp, temporary_cp, 10)
+    defence = rating(ce, temporary_ce, 30)
+    unopposed = 3 + 87 * -math.expm1(-attack / 87)
+    retained = .5 + .5 / (1 + defence / 40)
+    chance = max(3, min(90, unopposed * retained))
     return chance if optimal else chance / 2
 
 

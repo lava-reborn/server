@@ -33,26 +33,46 @@ class PvPCriticalBalance(unittest.TestCase):
                     self.assertLessEqual(chance, 90)
                     self.assertEqual(balance.pvp_critical_chance(cp, ce, attack, defence, False), chance / 2)
 
-    def test_ninety_percent_limit_is_applied_after_enemy_anticrit_and_temporary_bonuses(self):
-        self.assertEqual(balance.pvp_critical_chance(300, 0, 30), 90)
-        self.assertEqual(balance.pvp_critical_chance(300, 0, 30, optimal=False), 45)
-        self.assertEqual(balance.pvp_critical_chance(300, 1000), 3)
-        self.assertLess(balance.pvp_critical_chance(300, 1000, 30), 4)
-        unbuffed = balance.pvp_critical_chance(100, 40)
-        defended = balance.pvp_critical_chance(100, 80)
-        self.assertGreater(unbuffed, 50)
-        self.assertLess(unbuffed, 90)
-        self.assertLess(defended, unbuffed)
-        self.assertGreater(balance.pvp_critical_chance(100, 80, 30), defended)
-        self.assertLess(balance.pvp_critical_chance(100, 80, 0, 30), defended)
-        self.assertAlmostEqual(balance.pvp_critical_chance(100, 80, 30, 30), defended)
+    def test_anticrit_never_removes_more_than_half_including_every_temporary_bonus(self):
+        for cp in (0, 5, 20, 60, 100, 300, 10000):
+            for temporary_cp in (0, 4, 30, 10000):
+                unopposed = balance.pvp_critical_chance(cp, 0, temporary_cp)
+                for ce in (0, 5, 40, 100, 1000, 10000):
+                    for temporary_ce in (0, 4, 30, 10000):
+                        for optimal in (True, False):
+                            defended = balance.pvp_critical_chance(cp, ce, temporary_cp,
+                                                                   temporary_ce, optimal)
+                            reference = unopposed if optimal else unopposed / 2
+                            self.assertGreaterEqual(defended, reference / 2)
+                            self.assertLessEqual(defended, reference)
+        self.assertEqual(balance.pvp_critical_chance(10000, 0), 90)
+        self.assertEqual(balance.pvp_critical_chance(10000, 0, optimal=False), 45)
+
+    def test_extra_permanent_ratings_and_ordinary_pills_still_help_high_rating_builds(self):
+        for cp, ce in ((10, 10), (40, 40), (100, 100), (300, 300), (1000, 1000)):
+            chance = balance.pvp_critical_chance(cp, ce)
+            self.assertGreater(balance.pvp_critical_chance(cp + 1, ce), chance)
+            self.assertLess(balance.pvp_critical_chance(cp, ce + 1), chance)
+            self.assertGreater(balance.pvp_critical_chance(cp, ce, 4), chance)
+            self.assertLess(balance.pvp_critical_chance(cp, ce, 0, 4), chance)
+
+    def test_top_alpha_and_omega_each_have_a_measurable_effect_on_high_level_ratings(self):
+        chance = balance.pvp_critical_chance(100, 80)
+        alpha = balance.pvp_critical_chance(100, 80, 30)
+        omega = balance.pvp_critical_chance(100, 80, 0, 30)
+        self.assertGreater(alpha - chance, 1)
+        self.assertGreater(chance - omega, 1)
+        self.assertGreater(balance.pvp_critical_chance(100, 80, 4), chance)
+        self.assertLess(balance.pvp_critical_chance(100, 80, 0, 4), chance)
+        self.assertLess(alpha, balance.pvp_critical_chance(110, 80))
+        self.assertGreater(omega, balance.pvp_critical_chance(100, 110))
 
     def test_permanent_growth_has_full_weight_and_temporary_power_tapers(self):
         base = balance.pvp_critical_chance(100, 80)
         trained = balance.pvp_critical_chance(110, 80)
         pill = balance.pvp_critical_chance(100, 80, 30)
         strongest = balance.pvp_critical_chance(100, 80, 100000)
-        self.assertGreater(trained - base, 7)
+        self.assertGreater(trained, base)
         self.assertGreater(pill, base)
         self.assertLess(pill - base, trained - base)
         self.assertLess(strongest, trained)
