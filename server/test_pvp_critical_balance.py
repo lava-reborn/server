@@ -146,6 +146,26 @@ class PvPCriticalBalance(unittest.TestCase):
             legacy = balance.ranged_critical(shooter, target, weapon, True)
             self.assertEqual(legacy, max(0, min(100, cp - target.crit_evade_ranged())))
 
+    def test_analytic_ranged_probability_is_exactly_the_live_roll_probability(self):
+        ch, victim = character(), character()
+        victim.effects = effects.zero()
+        victim.effects['ce'] = 30
+        victim.set_gear(sets.zero())
+        shooter = NS(is_player=True, character=lambda: ch)
+        target = NS(is_player=True, character=lambda: victim,
+                    crit_evade_ranged=lambda: p.crit_chance(victim, items.MACHINEGUN)[1])
+        raw = combat.Weapon(1, 10, 20, 1, 10, 20, 1, 1,
+                            p.crit_chance(ch, items.MACHINEGUN)[0], p.SHOOTING, 6)
+        weapon = balance.weapon(raw, ch, dict(type_id=25026, cur_mode=0), {})
+        for ordinary, optimal in ((True, True), (True, False), (False, True)):
+            chance = balance.ranged_critical_chance(shooter, target, weapon, optimal, ordinary=ordinary)
+            with patch.object(combat, 'roll', return_value=True) as roll:
+                self.assertTrue(balance.ranged_critical(shooter, target, weapon, optimal, ordinary=ordinary))
+                roll.assert_called_once_with(chance)
+        with patch.object(combat, 'roll') as roll:
+            self.assertFalse(balance.ranged_critical(shooter, target, weapon, False))
+            roll.assert_not_called()  # preserve the private range's RNG sequence
+
     def test_native_melee_uses_the_same_curve_without_changing_private_rules(self):
         ch, victim = character(), character()
         a = NS(is_player=True, character=lambda: ch)

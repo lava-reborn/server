@@ -65,6 +65,7 @@ class EdenToolMetadataTests(unittest.TestCase):
     def test_all_three_tickets_weigh_one_gram_on_wire_and_in_real_stacks(self):
         for type_id in (eden.GREEN_TICKET, eden.GOOD_TICKET, eden.BAD_TICKET):
             self.assertEqual(items.static_info(type_id)[1]['weight'], 1)
+            self.assertEqual(items.static_info(type_id)[1]['max_count'], items.EDEN_TICKET_STACK)
             fields = inventory.new_fields(type_id, 7)
             root = fields.pop('root')
             row = self.store.create_item(self.cid, type_id, root, **fields)

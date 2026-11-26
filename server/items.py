@@ -68,6 +68,8 @@ LINK_CONFIDENCE = 0.5
 # Item.as:39-45. The root type decides which ss_si_* frame describes the item.
 FIRE_ARM, WEAR, HEAL, AMMO, TRASH, COLD_ARM, TROPHY = range(7)
 POISON_SYRINGE = 3552
+EDEN_TICKETS = frozenset((4231, 4232, 4233))
+EDEN_TICKET_STACK = 2_147_483_647  # INTEGER bound shared by SQLite and PostgreSQL.
 HAND_VALENTINES = {1069: (progression.STRENGTH, 3), 1070: (progression.AGILITY, 3),
                    1071: (progression.PERCEPTION, 3), 1072: (progression.INTELLECT, 4)}
 
@@ -1442,6 +1444,8 @@ def static_info(type_id):
             info[1].update(max_break_abs=20, desc=DESC_ID_OFFSET + type_id)
     if info and info[1].get('max_count') == 50:
         info[1]['max_count'] = 100
+    if info and type_id in EDEN_TICKETS:
+        info[1]['max_count'] = EDEN_TICKET_STACK
     if info and root_of(type_id) == HEAL:
         name = catalogue()[type_id][1]
         single = (name.startswith(('Med_Battle_', 'Med_Pacific_'))

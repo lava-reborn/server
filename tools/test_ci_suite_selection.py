@@ -52,7 +52,8 @@ class ClientSuiteSelection(unittest.TestCase):
                     'server/test_items.py', 'server/test_camp_box_loot.py',
                     'server/test_eden_native_weapons.py',
                     'server/test_buff_purchases.py', 'server/test_archived_buffs.py',
-                    'server/test_base_trade.py', 'server/test_shop_prices.py',
+                    'server/test_base_trade.py', 'server/test_eden_ticket_storage.py',
+                    'server/test_eden_quests.py', 'server/test_shop_prices.py',
                     'server/test_bank_stacks.py', 'server/test_online_effects.py',
                     'server/test_effect_clock_storage.py', 'server/test_pvp_critical_balance.py',
                     'server/test_machinegun_burst_survival.py', 'server/test_machinegun_balance.py',
@@ -61,7 +62,8 @@ class ClientSuiteSelection(unittest.TestCase):
                     'tools/test_action_recovery_client.py', 'tools/test_bank_client.py',
                     'tools/test_stat_breakdown_client.py', 'tools/test_combat_client.py',
                     'tools/test_right_click_client.py', 'tools/test_chat_bubbles_client.py',
-                    'tools/test_flash_context_menu.py',
+                    'tools/test_flash_context_menu.py', 'tools/test_gold_commerce_client.py',
+                    'server/test_eden_tool_metadata.py', 'tools/test_eden_quest_client.py',
                     'server/test_combat_damage_xp.py', 'server/test_weapon_upgrade_integrity.py',
                     'server/test_quest_state.py', 'server/test_residence.py',
                     'server/test_release_quest_content.py', 'server/test_academy_suspension.py',
@@ -78,6 +80,7 @@ class ClientSuiteSelection(unittest.TestCase):
                   for name in group.split()}
         self.assertIn('bank_stacks', groups)
         self.assertIn('effect_clock_storage', groups)
+        self.assertIn('eden_ticket_storage', groups)
         self.assertIn('storage_pg', groups)
 
     def setUp(self):

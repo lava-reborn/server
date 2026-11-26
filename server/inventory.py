@@ -1177,7 +1177,10 @@ class Inventory:
         makes the client build the thing and fire the addItem its quest
         window lists under «Вы получили» (QuestInspector.getRewardItem), and
         a stack that only grew would fire none. Then its dynamic info, as a
-        purchase sends it. Returns the rows."""
+        purchase sends it. Plantation coupons alone merge and send a heap
+        count update instead. Returns the rows."""
+        if type_id in items.EDEN_TICKETS:
+            return self._give_eden_tickets(type_id, n)
         si = items.params_of(type_id) or {}
         per = max(1, si.get("max_count", 1)) \
             if items.heapable(type_id) else 1
@@ -1190,6 +1193,37 @@ class Inventory:
             out.append(row)
             left -= count
         return out
+
+    def _give_eden_tickets(self, type_id, n):
+        """Merge only plantation coupons; other quest rewards keep native delivery."""
+        changes, left = [], int(n)
+        if left <= 0:
+            return []
+        with storage.atomic(self.store.db):
+            if not self.store.lock_quest_character(self.char_id):
+                raise ValueError('Ticket owner disappeared')
+            for row in self.rows():
+                if (row['type_id'] != type_id or row['root'] != items.TRASH
+                        or row['slot'] != BAG or row['uniq'] in self.locked
+                        or any(row[field] for field in bank_storage.STATE)):
+                    continue
+                count = min(left, items.EDEN_TICKET_STACK - row['count'])
+                if count <= 0:
+                    continue
+                self.store.update_item(row['uniq'], count=row['count'] + count)
+                changes.append((self.store.item(row['uniq']), False))
+                left -= count
+                if not left:
+                    break
+            while left:
+                row = self.create(type_id, min(left, items.EDEN_TICKET_STACK))
+                changes.append((row, True))
+                left -= row['count']
+        for row, created in changes:
+            if created:
+                self.push_status(row, 1)
+            self.push_di(row)
+        return [row for row, _created in changes]
 
     @staticmethod
     def pieces_weight(type_id, n):
@@ -1346,6 +1380,46 @@ class Inventory:
         if not worn:
             return None
         return self.wear(RNG.choice(worn), points)
+
+    def normalize_eden_tickets(self):
+        """Compact legacy coupons before sending inventory IDs on login."""
+        def candidates():
+            return [row for row in self.rows() if row['type_id'] in items.EDEN_TICKETS
+                    and row['root'] == items.TRASH and row['slot'] == BAG
+                    and row['uniq'] not in self.locked]
+        rows = candidates()
+        if len(rows) <= len({bank_storage.key(row) for row in rows}):
+            return []
+        changed, removed = [], []
+        with storage.atomic(self.store.db):
+            if not self.store.lock_quest_character(self.char_id):
+                raise ValueError('Ticket owner disappeared')
+            groups = {}
+            for row in candidates():
+                groups.setdefault(bank_storage.key(row), []).append(row)
+            for group in groups.values():
+                if len(group) < 2:
+                    continue
+                total = sum(row['count'] for row in group)
+                for row in group:
+                    count = min(total, items.EDEN_TICKET_STACK)
+                    if not count:
+                        removed.append(row['uniq'])
+                    elif count != row['count']:
+                        self.store.update_item(row['uniq'], count=count)
+                    else:
+                        total -= count
+                        continue
+                    changed.append(row['uniq'])
+                    total -= count
+            # Keep a large legacy inventory to a few indexed DELETE batches,
+            # rather than one database round trip for every old coupon.
+            for start in range(0, len(removed), 200):
+                batch = removed[start:start + 200]
+                marks = ','.join('?' for _ in batch)
+                self.store.db.execute('DELETE FROM items WHERE char_id=? AND uniq IN (' + marks + ')',
+                                      (self.char_id, *batch))
+        return changed
 
     def normalize_hand_valentines(self):
         """Repair legacy gift classes before any OIDs are sent on login.
@@ -2612,7 +2686,8 @@ class Inventory:
                 or trade.trader_type in mortimer.NPC_TYPES):
             return None
         row = self.find(p.get("obj"))
-        if row is None or row["slot"] != BAG or row["root"] == items.TROPHY:
+        if (row is None or row["slot"] != BAG or row["root"] == items.TROPHY
+                or row['type_id'] in mortimer.VALUABLES):
             return None
         si = items.params_of(row["type_id"]) or {}
         rates = self.current_trade_rates()
@@ -2620,11 +2695,7 @@ class Inventory:
             return None
         share = (gold_trade.BASE_SALE_SHARE if rates['smod'] == float(gold_trade.BASE_SALE_SHARE)
                  else gold_trade.NPC_SALE_SHARE)
-        paying_gold = (row['type_id'] in mortimer.VALUABLES and row['root'] == items.TRASH
-                       and trade.trader_type in gold_trade.BASE_GOLD_BUYERS
-                       and share == gold_trade.BASE_SALE_SHARE)
-        unit = (gold_trade.base_loot_gold(row['type_id']) if paying_gold else
-                gold_trade.sale_unit(row["type_id"], si, share))
+        unit = gold_trade.sale_unit(row["type_id"], si, share)
         if not unit:
             return None
         try:
@@ -2637,10 +2708,7 @@ class Inventory:
         if quality <= 0:
             return None
         price = max(1, int(math.floor(unit * n * quality)))
-        terms = dict(row=row, n=n, price=price)
-        if paying_gold:
-            terms['gold'] = True
-        return terms
+        return dict(row=row, n=n, price=price)
 
     def quote_gold_sale(self, p):
         """One short-lived quote per stall; this stage never changes the DB."""

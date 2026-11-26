@@ -57,6 +57,8 @@ SUITES+=(holdings)
 SUITES+=(bank_stacks)
 # Online-only buff time uses the same migration and checkpoint SQL in production.
 SUITES+=(effect_clock_storage)
+# Plantation coupon migration and reward delivery use the production dialect too.
+SUITES+=(eden_ticket_storage)
 mkdir -p "$OUT"
 : > "$OUT/results"
 rm -f "$OUT/results.rerun"

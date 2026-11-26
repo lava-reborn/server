@@ -232,7 +232,12 @@ class Effects:
             self.timer = None
         clock = self.clock()
         if self.persistent and self.active and self._paused_at is None:
-            self.session.combat.store.checkpoint_effects([self.char_id], clock)
+            try:
+                self.session.combat.store.checkpoint_effects([self.char_id], clock)
+            except Exception:
+                # The online heartbeat retries this checkpoint every second.
+                # Persistence must not prevent expiry or the next effect timer.
+                log.exception('Saving online effects failed for character %s', self.char_id)
         self.active = {key: active for key, active in self.active.items() if active.deadline > clock}
         total = zero()
         next_event = None
@@ -251,7 +256,15 @@ class Effects:
         self.bonus = total
         # Quest transactions copy character state; never attach the live session/timer.
         setattr(character, self.attribute, self.bonus if self.persistent else self)
-        self.session.inv.refresh_gear(push=False)
+        if self.persistent:
+            # Gear already contains the previous flat effect bonuses. Replace
+            # only that contribution; expiry must not depend on inventory SQL.
+            before = previous if previous is not None else zero()
+            for field, key in (('hp', 'hp'), ('st', 'sp'), ('od', 'od'), ('cp', 'cp'), ('ce', 'ce')):
+                name = 'bonus_' + field
+                setattr(character, name, getattr(character, name) + total[key] - before[key])
+        else:
+            self.session.inv.refresh_gear(push=False)
         if character.hp is not None:
             character.hp = min(character.hp, character.hp_max)
         if character.sp is not None:
@@ -262,6 +275,8 @@ class Effects:
             # Keep the native room's equipment ceiling, adjusting only this effect.
             fighter.amax_sent += total['od'] - previous_od
         fighter.ap = min(fighter.ap, character.ap_ceiling, fighter.ap_max)
+        if next_event is not None and self._paused_at is None:
+            self.timer = asyncio.get_running_loop().call_later(max(0.01, next_event - clock), self.refresh)
         if notify:
             self.session.push_stats()
             self.session.push_vitals()
@@ -270,8 +285,6 @@ class Effects:
             else:
                 fighter.c_ap()
             self.send_list()
-        if next_event is not None and self._paused_at is None:
-            self.timer = asyncio.get_running_loop().call_later(max(0.01, next_event - clock), self.refresh)
 
     def send_list(self):
         self.session.send('e_list', mobi_id=0, effects=[FIRST + active.source for active in self.active.values()])

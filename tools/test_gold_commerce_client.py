@@ -218,33 +218,27 @@ class GoldCommerceClient(unittest.TestCase):
                                                        a_base_sale_unit=85, g_base_sale_unit=0)])
         self.assertEqual((item['a_sale_unit'], item['a_base_sale_unit']), (70, 85))
 
-    def test_base_gold_valuable_card_exchange_and_sale_use_gold_quote(self):
+    def test_valuables_are_rejected_outside_mortimer_even_with_stale_base_flags(self):
         self.pan['trader'] = dict(smod=0.85, base_gold_buyer=True)
-        item = self.item(g_sale_unit=0, base_loot_gold=5, size=3)
+        item = self.item(g_sale_unit=0, base_loot_gold=5, mortimer_only=1, size=3)
         item['rootID'] = 4
-        values, frames = [], []
-        card = dict(showItemSellMod=True, showHeapCount=True, attachIconEnabled=True,
-                    __gcShowCostOrig=lambda *a: None,
-                    price_mc=dict(gotoAndStop=frames.append, fontContainer=dict(showValue=values.append)))
+        ui = dict(__gcCheckSellOrig=lambda item: 'native')
+        self.assertEqual(self.methods['checkSellItem'].invoke(ui, [item]),
+                         'Ценности принимает только Мортимер')
+        self.assertNotIn('__gcBaseLoot', self.env['_global'])
+        card = dict(showItemSellMod=True, price_mc=dict(_visible=True),
+                    __gcShowCostOrig=lambda *args: None)
         self.methods['showCost'].invoke(card, [item, 'left'])
-        self.assertEqual((values, frames, card['costType']), ([0.15], [2], 'Золото'))
-        exchange = {}
-        ui = dict(__gcExchangeOrig=lambda *a: exchange)
-        self.methods['createExchangePan'].invoke(ui, [item, '', 0, False, True])
-        self.assertEqual((exchange['cost_num'], exchange['cost_mod'], exchange['showCostInGold']), (5, 1, True))
-        trade = self.trade()
-        self.methods['sell'].invoke(trade, [item, 3])
-        self.assertEqual(self.sent[0]['sale_stage'], '@quote@')
-        self.assertEqual(self.sent[0]['param'], 3)
-        self.pan['trader']['base_gold_buyer'] = False
-        self.assertFalse(self.env['_global']['__gcBaseLoot'].invoke(None, [item]))
+        self.assertFalse(card['price_mc']['_visible'])
+        self.env['_global']['__moActive'] = lambda: True
+        self.assertEqual(self.methods['checkSellItem'].invoke(ui, [item]), 'native')
 
-    def test_trader_info_clears_gold_valuable_right_when_server_revokes_lease(self):
-        trader = dict(__esTraderInfoOrig=lambda obj: None)
-        self.methods['userInfo'].invoke(trader, [dict(param=dict(base_gold_buyer=1))])
-        self.assertTrue(trader['base_gold_buyer'])
-        self.methods['userInfo'].invoke(trader, [dict(param={})])
-        self.assertFalse(trader['base_gold_buyer'])
+    def test_item_initialization_preserves_the_authoritative_mortimer_only_flag(self):
+        item = dict(__gcInitializeOrig=lambda obj: None)
+        self.methods['initialize'].invoke(item, [dict(mortimer_only=1)])
+        self.assertEqual(item['mortimer_only'], 1)
+        self.methods['initialize'].invoke(item, [dict(mortimer_only=0)])
+        self.assertEqual(item['mortimer_only'], 0)
 
     def test_blueprint_without_durability_can_sell_and_tooltip_says_yes(self):
         for gold in (False,True):

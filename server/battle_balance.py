@@ -376,14 +376,21 @@ def pvp_critical_chance(cp, ce, temporary_cp=0, temporary_ce=0, optimal=True):
     return chance if optimal else chance / 2
 
 
-def ranged_critical(shooter, target, weapon, optimal, *, ordinary=False):
+def ranged_critical_chance(shooter, target, weapon, optimal, *, ordinary=False):
+    """Use the same probability for live shots and analytic balance reports."""
     evade = target.crit_evade_ranged()
     if ordinary and shooter.is_player and target.is_player and weapon.base_crit is not None:
-        import combat
         temporary_evade = progression.temporary_crit(target.character())[1]
-        return combat.roll(pvp_critical_chance(weapon.base_crit, evade - temporary_evade,
-                           weapon.crit - weapon.base_crit, temporary_evade, optimal))
-    return critical(shooter, target, weapon.crit - evade, optimal, ordinary=ordinary)
+        return pvp_critical_chance(weapon.base_crit, evade - temporary_evade,
+                                   weapon.crit - weapon.base_crit, temporary_evade, optimal)
+    return critical_chance(shooter, target, weapon.crit - evade, optimal, ordinary=ordinary)
+
+
+def ranged_critical(shooter, target, weapon, optimal, *, ordinary=False):
+    if shooter.is_player and not optimal and not ordinary:
+        return False
+    import combat
+    return combat.roll(ranged_critical_chance(shooter, target, weapon, optimal, ordinary=ordinary))
 
 
 def melee_critical(shooter, target, chance, *, ordinary=False):

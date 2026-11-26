@@ -126,6 +126,88 @@ class OnlineEffects(unittest.IsolatedAsyncioTestCase):
         manager.load()
         self.assertFalse(manager.active)
 
+    async def test_failed_checkpoint_does_not_preserve_expired_bonus_or_stop_other_timer(self):
+        manager = self.manager()
+        self.activate(3115)
+        self.activate(3473)
+        old_timer = manager.timer
+        self.now += 600
+        with patch.object(self.store, 'checkpoint_effects', side_effect=RuntimeError('SQL unavailable')), \
+                patch.object(self.store, 'items_of', side_effect=RuntimeError('SQL unavailable')) as rows:
+            manager.refresh()
+            rows.assert_not_called()
+        self.assertTrue(old_timer.cancelled())
+        self.assertIsNotNone(manager.timer)
+        self.assertFalse(manager.timer.cancelled())
+        self.assertEqual(set(manager.active), {'Дофрамин'})
+        self.assertEqual(manager.bonus['cp'], 0)
+        self.assertEqual(self.s.char.effects['cp'], 0)
+        self.assertEqual(self.s.char.bonus_cp, 0)
+        command, packet = decode(self.s.writer.frames[-1][:-1])
+        self.assertEqual(command, 'e_list')
+        self.assertEqual(packet['effects'], [effects.FIRST + 3473])
+        # The existing batched heartbeat retries storage, including deleting
+        # expired rows, without an extra per-effect polling timer.
+        with patch.object(server, 'SESSIONS', {self.s}):
+            server.publish_online()
+        rows = self.store.effects_for(self.s.char_id)
+        self.assertEqual([row['source'] for row in rows], [3473])
+        self.assertEqual(rows[0]['checkpoint_at'], self.now)
+        manager.close()
+        self.now += 86400
+        manager.load()
+        self.assertEqual(set(manager.active), {'Дофрамин'})
+        self.assertEqual(manager.active['Дофрамин'].deadline - self.now, 3000)
+
+    async def test_effect_delta_and_normal_gear_recount_do_not_double_or_erase_bonuses(self):
+        manager = self.manager()
+        baseline = self.s.char.bonus_cp
+        self.activate(3115)
+        bonus = effects.definition(3115)['bonuses']['cp']
+        for _ in range(3):
+            manager.refresh(notify=False)
+            self.assertEqual(self.s.char.bonus_cp, baseline + bonus)
+            self.s.inv.refresh_gear(push=False)
+            self.assertEqual(self.s.char.bonus_cp, baseline + bonus)
+        self.now += 600
+        manager.refresh(notify=False)
+        self.assertEqual(self.s.char.bonus_cp, baseline)
+        self.s.inv.refresh_gear(push=False)
+        self.assertEqual(self.s.char.bonus_cp, baseline)
+
+    async def test_notification_failure_does_not_stop_the_next_expiry_timer(self):
+        manager = self.manager()
+        self.activate(3115)
+        self.now += 1
+        old_timer = manager.timer
+        with patch.object(self.s, 'push_stats', side_effect=RuntimeError('notification failed')):
+            with self.assertRaises(RuntimeError):
+                manager.refresh()
+        self.assertTrue(old_timer.cancelled())
+        self.assertIsNotNone(manager.timer)
+        self.assertFalse(manager.timer.cancelled())
+        self.now += 599
+        manager.refresh(notify=False)
+        self.assertFalse(manager.active)
+        self.assertEqual(self.s.char.bonus_cp, 0)
+
+    async def test_periodic_pulses_and_final_expiry_continue_during_checkpoint_failure(self):
+        manager = self.manager()
+        active = self.activate(3914)
+        with patch.object(self.store, 'checkpoint_effects', side_effect=RuntimeError('SQL unavailable')):
+            self.now += 650
+            manager.refresh(notify=False)
+            self.assertEqual(manager.bonus['attribs'][:2], [1, 1])
+            self.assertIsNotNone(manager.timer)
+            self.now = active.deadline
+            manager.refresh(notify=False)
+            self.assertFalse(manager.active)
+            self.assertEqual(manager.bonus, effects.zero())
+            self.assertIsNone(manager.timer)
+        with patch.object(server, 'SESSIONS', {self.s}):
+            server.publish_online()
+        self.assertEqual(self.store.effects_for(self.s.char_id), [])
+
     async def test_heartbeat_only_updates_online_characters(self):
         manager = self.manager()
         self.activate(3115)

@@ -963,6 +963,7 @@ class Session:
         # slot_type fix) goes back to the bag before the gear is counted,
         # and so does anything above the character's level (the level rule).
         self.inv.normalize_hand_valentines()
+        self.inv.normalize_eden_tickets()
         self.inv.unfit_to_bag()
         # Eligibility uses the same effective skills as the character card.
         # Recount after removals until no dependent weapon remains equipped.
@@ -2935,7 +2936,6 @@ class Session:
                                      if t not in quests.CLAN_BASE_ENTRIES]
         holder = None
         if root == world.TRADER:
-            import gold_trade
             rates = inventory.trade_rates(STORE, self.room.loc.id, type_id, self.char_id)
             # type_list is the price list itself, in order: the client builds a
             # TradeItem per entry and later refers to a purchase by that index,
@@ -2952,8 +2952,6 @@ class Session:
             if holdings.base_for(self.room.loc.id) is not None:
                 params['can_repair'] = int(holdings.may_repair(
                     STORE, self.room.loc.id, type_id, self.char_id))
-            params['base_gold_buyer'] = int(type_id in gold_trade.BASE_GOLD_BUYERS
-                and rates['smod'] == float(gold_trade.BASE_SALE_SHARE))
             if not holdings.may_serve(STORE, self.room.loc.id, type_id, self.char_id):
                 params.update(can_trade=0, can_repair=0, type_list=[])
             if eden_shop.is_buyer(type_id):
