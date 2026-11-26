@@ -80,6 +80,15 @@ class ClientSuiteSelection(unittest.TestCase):
         self.assertFalse(required - selected)
 
 
+    def test_global_combat_entry_and_unchanged_arrival_paths_are_included_in_ci(self):
+        required = {'server/test_global_entry.py', 'server/test_global_entry_session.py',
+                    'server/test_travel.py', 'server/test_walk_in.py',
+                    'server/test_connection_entry.py', 'server/test_pvp.py',
+                    'server/test_intercept.py', 'server/test_intercept_prepare.py',
+                    'server/test_eden_reentry.py'}
+        selected = {Path(path).relative_to(ROOT).as_posix() for path in suite.suites()}
+        self.assertFalse(required - selected, 'Map entry and interception regressions must reach CI')
+
     def test_prison_rewards_and_redemption_regressions_are_included_in_ci(self):
         required = {'server/test_prison_farm_economy.py',
                     'server/test_halfa_events.py',

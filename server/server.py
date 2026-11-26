@@ -1560,7 +1560,8 @@ class Session:
                 # and its escape route against actors that arrived meanwhile.
                 try:
                     self.pos = location_entry.choose(self.loc, *pending[3:],
-                        occupied=movement.get(destination).occupied(exclude=self))
+                        occupied=movement.get(destination).occupied(exclude=self),
+                        near_exits=location_entry.has_combat_mobs(destination))
                 except location_entry.NoSafeEntry:
                     # lcall has already replaced the client's old location.
                     # Refuse lenter, then let handle() close without saving
@@ -1805,8 +1806,9 @@ class Session:
     def enter_cell(self, *, acknowledge=False, oriented=True):
         """Walk into whatever occupies the cell under the player.
 
-        The fractional map position selects an escapable local entry. Keep
-        the player on the map if all such entries are occupied; never fall
+        Combat locations use free inward neighbours of actual exits; peaceful
+        rooms keep their declared entries. Keep the player on the map if all
+        such entries are occupied; never fall
         back to a wall or an enclosed yard. Interceptions use their own pair
         of positions and deliberately retain the ordinary entry policy.
         """
@@ -1822,7 +1824,8 @@ class Session:
             combat.room_combat(room, STORE).keep_hours()
             try:
                 pos = location_entry.choose(loc, x, y,
-                    occupied=movement.get(room).occupied(exclude=self))
+                    occupied=movement.get(room).occupied(exclude=self),
+                    near_exits=location_entry.has_combat_mobs(room))
             except location_entry.NoSafeEntry:
                 if acknowledge:
                     self.send('cmdAck', res=RES_NO_WAY)

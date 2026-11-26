@@ -21,6 +21,7 @@ class _Geometry:
     candidates: frozenset
     exits: frozenset
     triggers: frozenset
+    approaches: tuple
 
 
 def _valid(loc, cell):
@@ -78,16 +79,21 @@ def _geometry(loc):
     # A file may omit its inzones along an edge. Only the immediate hex
     # inside a real outzone is an allowed substitute, never an arbitrary
     # walkable point in an enclosed yard or behind a building.
+    approaches = set()
     for cell, side in exits.items():
         depth = travel._edge_distance(loc, cell, side)
-        pool.update(neighbour for neighbour in progression.hex_neighbours(
-            cell, loc.width, loc.height)
-            if travel._edge_distance(loc, neighbour, side) > depth)
+        for neighbour in progression.hex_neighbours(cell, loc.width, loc.height):
+            if travel._edge_distance(loc, neighbour, side) <= depth:
+                continue
+            pool.add(neighbour)
+            if neighbour not in blocked and neighbour not in all_exits:
+                approaches.add((neighbour, cell))
     candidates = {cell for cell in pool if _valid(loc, cell)
                   and cell not in blocked and cell not in all_exits
                   and _allowed_side(loc, cell, available_sides, declared)}
     reachable = _reachable(loc, exits, blocked, candidates)
-    cached = _Geometry(frozenset(candidates & reachable), frozenset(exits), triggers)
+    cached = _Geometry(frozenset(candidates & reachable), frozenset(exits), triggers,
+                       tuple(sorted(approaches)))
     loc._global_entry_geometry = cached
     return cached
 
@@ -120,22 +126,37 @@ def map_position(loc, cell, gx, gy):
             round(math.floor(float(gy)) + min(.99, fy), 2))
 
 
-def choose(loc, gx, gy, occupied=frozenset()):
+def has_combat_mobs(room):
+    """Combat spawns select edge arrivals, even while dead or off schedule.
+
+    Traders and harvest objects do not make a peaceful room a combat area.
+    A respawn must not switch ordinary map arrivals back to its centre.
+    """
+    rc = getattr(room, 'combat', None)
+    return rc is not None and any(mob.stats.role in ('mob', 'animal', 'turret', 'boss')
+                                  for mob in rc.mobs.values())
+
+
+def choose(loc, gx, gy, occupied=frozenset(), *, near_exits=False):
     """Return a free entry near the fractional position inside this map cell.
 
-    Every candidate belongs to a component with a real exit and therefore
-    has at least one free neighbour. Live NPC/player occupancy may invalidate
-    both a candidate and its route; no unsafe cell-zero fallback is used.
+    Ordinary combat-map arrivals use an inward neighbour of a real exit;
+    both cells must remain free. Other arrivals retain declared entries with
+    an escape route. Neither policy falls back to an unsafe central cell.
     """
     fx, fy = _fraction(gx), _fraction(gy)
     geometry = _geometry(loc)
     occupied = frozenset(cell for cell in occupied if _valid(loc, cell))
-    candidates = geometry.candidates - occupied
-    if occupied and candidates:
-        reachable = _reachable(loc, geometry.exits,
-                               set(loc.obstacles) | geometry.triggers | occupied,
-                               candidates)
-        candidates &= reachable
+    if near_exits:
+        candidates = {cell for cell, exit_cell in geometry.approaches
+                      if cell not in occupied and exit_cell not in occupied}
+    else:
+        candidates = geometry.candidates - occupied
+        if occupied and candidates:
+            reachable = _reachable(loc, geometry.exits,
+                                   set(loc.obstacles) | geometry.triggers | occupied,
+                                   candidates)
+            candidates &= reachable
     if not candidates:
         raise NoSafeEntry('No free entry has a path to an exit')
     width, height = max(1, loc.width - 1), max(1, loc.height - 1)
