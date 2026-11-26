@@ -44,6 +44,7 @@ class ClientSuiteSelection(unittest.TestCase):
 
     def test_progression_weapon_and_buff_bank_regressions_are_included_in_ci(self):
         required = {'server/test_action_recovery.py', 'server/test_action_sync.py',
+                    'server/test_room_delivery.py', 'server/test_training_bot.py',
                     'server/test_mob_penetration.py', 'server/test_combat_xp_ramp.py',
                     'server/test_weekend_experience.py', 'server/test_hand_valentines.py',
                     'server/test_hand_gift_storage.py', 'server/test_mail_gold_loot.py', 'server/test_auction.py',

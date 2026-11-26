@@ -47,6 +47,14 @@ class TrainingBot(unittest.IsolatedAsyncioTestCase):
         self.assertIsNone(bot.modes(ground, gun, 100))
         self.unchanged()
 
+    async def test_mode_scoring_uses_each_candidates_own_animation_budget(self):
+        ground, _enemy, gun = self.fighter()
+        with patch.object(combat.action_animation, 'duration_ms',
+                          wraps=combat.action_animation.duration_ms) as duration:
+            self.assertIsNotNone(bot.modes(ground, gun, 2))
+        self.assertEqual({call.kwargs['mode'] for call in duration.call_args_list}, {0, 1, 2})
+        self.unchanged()
+
     async def test_no_path_search_or_action_while_already_walking(self):
         ground, enemy, _gun = self.fighter()
         marker = object()

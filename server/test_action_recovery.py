@@ -1,6 +1,7 @@
 """Cancellation before completion; committed attack recovery after completion."""
 from types import SimpleNamespace as NS
 import unittest
+import math
 from unittest.mock import patch
 
 import action_animation
@@ -189,6 +190,8 @@ class ActionRecovery(unittest.IsolatedAsyncioTestCase):
                         callback(*args)
                         before = dict(self.case.store.item(gun['uniq']))
                         previous_end = self.a.combat.recovery_until
+                        self.assertAlmostEqual(previous_end - deadline,
+                                               math.ceil(params['fire_times'][mode] / 4) / 1000)
                         self.a.combat.use_fire(request)
                         callback(*args)
                         self.assertIsNone(self.a.combat.aim)
@@ -245,14 +248,18 @@ class ActionRecovery(unittest.IsolatedAsyncioTestCase):
         impacts = [p for n, p in self.a.writer.frames if n == 'caHit' and p['id'] == 0]
         self.assertEqual(len(impacts), 2)
 
-    async def test_recovery_is_piggybacked_on_final_shot_only_for_both_viewers(self):
+    async def test_recovery_guards_first_packet_and_final_packet_carries_playback_budget(self):
         self.complete_shot()
         for seat in (self.a,self.b):
             packets=[p for n,p in seat.writer.frames if n=='faShot']
             marked=[p for p in packets if p.get('recovery_ms')]
-            self.assertEqual(len(marked),1)
-            self.assertEqual(marked[0]['status'],0)
-            self.assertEqual(marked[0]['id'],0 if seat is self.a else self.a.pid)
+            self.assertEqual(marked, [packets[0], packets[-1]])
+            self.assertEqual([p['status'] for p in marked], [1, 0])
+            self.assertEqual(marked[0]['recovery_ms'], marked[1]['recovery_ms'])
+            self.assertEqual([p['id'] for p in marked], [0 if seat is self.a else self.a.pid] * 2)
+            self.assertNotIn('animation_frames', packets[0])
+            self.assertEqual(packets[-1]['animation_frames'],
+                             action_animation.frame_counts(self.a, items.params_of(25566), 1)[1])
 
     async def test_healing_and_reload_remain_cancellable_before_timer(self):
         for kind in ('heal','reload'):
@@ -289,6 +296,28 @@ class ActionRecovery(unittest.IsolatedAsyncioTestCase):
             self.a.combat.recovery_until=200
             self.a.combat.die(self.b.combat)
             self.assertEqual(self.a.combat.recovery_until,0)
+
+    async def test_firearm_cadence_follows_selected_aim_time_for_all_models_and_modes(self):
+        # Real pistol, shotgun, AR, rifle, MG and Bizon entries, not generic defaults.
+        for type_id in (25566, 25943, 25218, 25772, 24990, 26177):
+            params = items.params_of(type_id)
+            for mode, shots in enumerate(params['fire_mods']):
+                if not shots:
+                    continue
+                expected = math.ceil(params['fire_times'][mode] / 4)
+                for look in action_animation.sequences()['models']:
+                    seat = NS(inv=NS(look=look), active={'sex':0})
+                    # Empty chambers, burst length and delayed aim completion
+                    # cannot change the weapon's post-shot cadence.
+                    for count in (1, shots):
+                        for elapsed in (0, .01, 10):
+                            self.assertEqual(action_animation.duration_ms(seat, params, count,
+                                             mode=mode, aimed_for=elapsed), expected,
+                                             (type_id, mode, look, count, elapsed))
+        bizon = items.params_of(26177)
+        automatic = items.params_of(25218)
+        self.assertEqual(action_animation.duration_ms(self.a, bizon, 5, mode=1), 113)
+        self.assertEqual(action_animation.duration_ms(self.a, automatic, 3, mode=1), 175)
 
     async def test_model_recovery_counts_complete_sequences_without_repeated_io_or_sql(self):
         data=action_animation.sequences()

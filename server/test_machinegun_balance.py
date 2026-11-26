@@ -59,24 +59,24 @@ class MachinegunBalance(unittest.TestCase):
                 return total / ((weapon.dmax - low + 1) * (weapon.sdmax - slow + 1))
             damage = hit * ((1 - crit) * mean(False) + crit * mean(True)) * shots
             aim = si['fire_times'][mode] / 1000
-            seconds = aim + action_animation.duration_ms(self.seat, si, shots, aimed_for=aim) / 1000
+            seconds = aim + action_animation.duration_ms(self.seat, si, shots, aimed_for=aim, mode=mode) / 1000
             reload = si['reload_time'] / 1000 * shots / si['clip_size']
             scores.append((damage / (seconds + reload),
                            damage / max(seconds + reload, si['fire_costs'][mode] / (p.AP_REGEN / .6))))
         return tuple(max(score[index] for score in scores) for index in (0, 1))
 
     def test_reviewed_dps_ladder_uses_the_current_pkm17_anchor(self):
-        # Same complete attack/reload cycle as the agreed reference. Each
-        # mode uses its own optimal band; distance identities are checked below.
-        for variants, targets in (((24989, 25006, 25022), (150.7, 154.2, 183.5)),
+        # Current 25%-of-aim animation, selected mode and amortized reload.
+        # Each mode uses its optimal band; fixed distances are checked below.
+        for variants, targets in (((24989, 25006, 25022), (237.6, 251.9, 325.3)),
                                   ((24990, 25007, 7051, 25023, 7052),
-                                   (180, 185, 189, 221.6, 234.4))):
+                                   (283.7, 302.2, 306.9, 392.8, 415.4))):
             scores = [self.scores(type_id)[0] for type_id in variants]
             self.assertEqual(scores, sorted(scores))
             for type_id, score, target in zip(variants, scores, targets):
                 with self.subTest(type_id=type_id):
                     self.assertAlmostEqual(score, target, delta=.5)
-        self.assertAlmostEqual(self.scores(7052, distance=7)[0], 234.4, delta=.5)
+        self.assertAlmostEqual(self.scores(7052, distance=7)[0], 415.4, delta=.5)
 
     def test_bizon_comparison_preserves_distance_roles_instead_of_forcing_a_class_winner(self):
         for bizon, rpd, aug in ((25540, 24989, 25006), (26177, 24990, 25007)):
@@ -86,13 +86,13 @@ class MachinegunBalance(unittest.TestCase):
                 self.assertGreater(self.scores(aug, distance=18)[0], self.scores(rpd, distance=18)[0])
                 self.assertEqual(self.scores(bizon, distance=18)[0], 0)
 
-    def test_pkm16_keeps_the_matching_gold_reference_by_five_percent(self):
-        # The agreed reference uses the best mode in its optimal band,
-        # including a new aim, the complete animation and amortized reload.
+    def test_pkm16_advantage_remains_moderate_with_weapon_paced_animation(self):
+        # Native damage/accuracy are unchanged. Proportional animation changes
+        # the best mode; compare the complete new cycle including reload.
         for pkm, reference in ((7051, 24990),):
             with self.subTest(pkm=pkm):
                 ratio = self.scores(pkm)[0] / self.scores(reference)[0]
-                self.assertAlmostEqual(ratio, 1.05, delta=.002)
+                self.assertAlmostEqual(ratio, 1.082, delta=.002)
 
     def test_afro_and_gold_m249_beat_matching_rpd_on_medium_and_long_ranges(self):
         # Use the same fixed distance for all modes, with real non-optimal
@@ -130,8 +130,8 @@ class MachinegunBalance(unittest.TestCase):
             self.assertAlmostEqual(self.scores(25026, 4)[0], empty)
         self.assertGreater(unopposed, defended)
         self.assertGreater(empty, unopposed)
-        self.assertAlmostEqual(self.scores(25026, 4, stamina=10000)[0], 221.2, delta=.2)
-        self.assertAlmostEqual(self.scores(7052, 4, stamina=10000)[0], 213.3, delta=.2)
+        self.assertAlmostEqual(self.scores(25026, 4, stamina=10000)[0], 392.1, delta=.2)
+        self.assertAlmostEqual(self.scores(7052, 4, stamina=10000)[0], 378.1, delta=.2)
 
     def test_accuracy_ceilings_cover_all_rpd_blueprints_without_changing_other_weapons(self):
         expected = {type_id for type_id, (_root, name) in items.catalogue().items()

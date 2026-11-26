@@ -357,6 +357,105 @@ class ActionRecoveryClient(unittest.TestCase):
         self.assertEqual(self.fx.reported, [1])
         self.assertIsNone(self.global_['__bfInputTimer'])
 
+    def test_first_shot_packet_arms_guard_before_native_ack_releases_repeat_attack(self):
+        activator = dict(coolDownBlock=False,
+                         __bfRequestFireOrig=lambda *args:self.executed.append('fire'))
+        connection = dict(__bfRecoveryNotifyOrig=lambda cmd:
+                          self.call('__bfRequest1', activator, 1, 42))
+        self.call('__bfRecoveryNotify', connection,
+                  dict(messID='faShot', params=dict(id=0, status=1, recovery_ms=113)))
+        self.assertFalse(self.executed)
+        self.assertEqual(len(self.timers), 1)
+        self.now = 213
+        self.call('__bfDrainInput', None)
+        self.call('__bfDrainInput', None)
+        self.assertEqual(self.executed, ['fire'])
+
+    def test_native_shot_event_transfers_timing_to_visual_then_clears_packet_context(self):
+        scene, figure = self.fx.scene()
+        self.call('__bfAim', scene, dict(aim=0, num_shots=1, seq=1))
+        location = dict(__bfLocationShotOrig=lambda event:
+                        self.call('__bfFire', scene, dict(gunnerID=0, access=True, seq=1)))
+        self.call('__bfLocationShot', location,
+                  dict(param=dict(id=0, status=0, recovery_ms=113, animation_frames=9)))
+        self.assertIsNone(self.global_['__bfShotTiming'])
+        self.assertEqual(figure['__bfPlayback'],
+                         dict(start=100, duration=113, frames=9, painted=0))
+        self.assertEqual(self.fx.reported, [1])
+
+    def test_retimed_burst_plays_every_native_frame_and_only_then_releases_one_input(self):
+        scene, figure = self.fx.scene()
+        figure.update(id=0, behavior='fire', animationEnabled=True, isActive=True,
+                      onEnterFrame=True, currentFrameNumber=0)
+        self.call('__bfAim', scene, dict(aim=0, num_shots=5, seq=1))
+        self.global_['__bfShotTiming'] = dict(recovery_ms=113, animation_frames=21)
+        for index in range(5):
+            self.call('__bfFire', scene, dict(gunnerID=0, access=True, seq=index))
+            self.global_['__bfShotTiming'] = None
+        # Native Char.playAnimation paints a frame, emits finalFrame and runs
+        # nextSequence. Exercise its firing/lowering callbacks, not a shortcut
+        # that just clears the waiting flag at a deadline.
+        rendered = []
+        def native_frame():
+            rendered.append(figure['behavior'])
+            if len(rendered) == 15:
+                figure['behavior'] = 'fire_out'
+            if len(rendered) == 21:
+                self.call('__bfVisualFinal', scene, dict(target=figure, data='fire_out'))
+                figure['__bfNextSequenceOrig'] = lambda:figure.update(behavior='stand')
+                self.call('__bfNextSequence', figure)
+        figure['__bfPlayAnimationOrig'] = native_frame
+        self.global_['__bfRecoveryUntil'] = 213
+        owner = dict(__bfRequestFireOrig=lambda *args:self.executed.append(args))
+        self.call('__bfRequest1', owner, 1, 41)
+        self.call('__bfRequest1', owner, 1, 42)
+        self.now = 212
+        self.call('__bfPlayAnimation', figure)
+        self.assertEqual(len(rendered), 20)
+        self.assertFalse(self.executed)
+        self.now = 220  # a slow render catches up without adding a native-length tail
+        self.call('__bfPlayAnimation', figure)
+        self.call('__bfDrainInput', None)
+        self.assertEqual(rendered, ['fire'] * 15 + ['fire_out'] * 6)
+        self.assertEqual(self.executed, [(1, 42)])
+        self.assertIsNone(figure['__bfPlayback'])
+        self.assertEqual(self.fx.reported, list(range(5)))
+
+    def test_playback_work_is_bounded_and_does_not_speed_up_movement_or_legacy_animations(self):
+        rendered = []
+        clock = dict(start=100, duration=100, frames=200, painted=0)
+        figure = dict(behavior='fire', __bfPlayback=clock,
+                      __bfPlayAnimationOrig=lambda:rendered.append('frame'))
+        self.now = 200
+        self.call('__bfPlayAnimation', figure)
+        self.assertEqual(len(rendered), 64)
+        self.call('__bfPlayAnimation', figure)
+        self.assertEqual(len(rendered), 128)
+        figure['behavior'] = 'run'
+        self.call('__bfPlayAnimation', figure)
+        self.assertEqual(len(rendered), 129)
+        self.assertEqual(clock['painted'], 128)
+        figure.update(behavior='fire', __bfPlayback=None)
+        self.call('__bfPlayAnimation', figure)
+        self.assertEqual(len(rendered), 130)
+
+    def test_model_frame_count_override_finishes_real_animation_at_deadline(self):
+        rendered = []
+        clock = dict(start=100, duration=113, frames=9, painted=0)
+        figure = dict(behavior='fire', __bfPlayback=clock)
+        def native_frame():
+            rendered.append('frame')
+            if len(rendered) == 12:
+                figure.update(behavior='stand', __bfPlayback=None)
+        figure['__bfPlayAnimationOrig'] = native_frame
+        self.now = 212
+        self.call('__bfPlayAnimation', figure)
+        self.assertEqual(len(rendered), 8)
+        self.now = 220
+        self.call('__bfPlayAnimation', figure)
+        self.assertEqual(len(rendered), 12)
+        self.assertEqual(figure['behavior'], 'stand')
+
     def test_enemy_recovery_does_not_block_own_commands(self):
         connection=dict(__bfRecoveryNotifyOrig=lambda cmd:None)
         self.call('__bfRecoveryNotify',connection,dict(messID='caHit',params=dict(id=123,recovery_ms=440)))

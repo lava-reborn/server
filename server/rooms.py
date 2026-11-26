@@ -73,12 +73,12 @@ NPC = namedtuple("NPC", "cell type_id root")
 def viewer_frame(cmd, params):
     """A frame function showing the viewer as id 0.
 
-    Any integer parameter equal to the viewer's own player id becomes 0, which
-    is how the client recognises itself (Gamer.as:31). Lists and strings are
-    left alone: nothing in them is ever the viewer's id.
+    Integer references matching the viewer become 0 (Gamer.as:31). Timing
+    metadata is a duration/frame count, even when it happens to match that id.
     """
     def fn(viewer):
         return cmd, {k: (0 if isinstance(v, int) and not isinstance(v, bool)
+                         and k not in ('recovery_ms', 'animation_frames')
                          and v == viewer.pid else v)
                      for k, v in params.items()}
     return fn

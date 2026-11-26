@@ -1859,3 +1859,17 @@ max(now,старое окончание)+days*86400. Другой транспо
 аренда на сутки разрешена. Клиент ограничивает выбор, сервер проверяет
 независимо; оплата и запись транспорта атомарны. Новый запрос аренды — новая
 оплата/продление; обычный клиент блокирует двойную отправку до cmdAck.
+
+
+Firearm animation cadence: the server keeps the selected `fire_times` aiming
+period and then reserves `ceil(fire_times[mode] / 4)` milliseconds for the
+committed volley and lowering the weapon. Damage, accuracy, rounds and AP costs
+are unchanged. The first `faShot(status=1)` carries `recovery_ms` so input is
+blocked before the native acknowledgement latch is released. The final
+`faShot(status=0)` repeats `recovery_ms` and supplies `animation_frames`, the
+number of fire/fire_out frames for that model and volley (one firing cycle for
+a shotgun). These numeric fields must never be rewritten as viewer IDs.
+The client plays the native frame callbacks on a wall-clock schedule within
+that budget and queues one subsequent action; it does not restart the current
+volley. Rendering delays can postpone presentation but cannot bypass server
+recovery. Melee and NPC animation timing retain their native sequences.

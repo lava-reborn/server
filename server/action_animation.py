@@ -1,4 +1,4 @@
-"""Committed attack animation, including the final lowering sequence."""
+"""Weapon-paced firearm presentation and native melee recovery."""
 from functools import lru_cache
 import json
 import math
@@ -11,12 +11,24 @@ def sequences():
     return json.loads((Path(__file__).resolve().parents[1] / 'data/action_animation.json').read_text(encoding='utf-8'))
 
 
-def duration_ms(session, params=None, shots=1, *, aimed_for=0):
-    """Wait through every shot and fire_out; do not recount an elapsed fire_in.
+FIREARM_ANIMATION_RATIO = 0.25
 
-    Raising a firearm starts at faAim, before its packets. Melee has no
-    faAim, so its whole attack sequence starts with caHit/caMiss.
+
+def duration_ms(session, params=None, shots=1, *, aimed_for=0, mode=0):
+    """Firearms add 25% of their selected native aiming time after the shot.
+
+    Burst length and character graphics must not flatten weapon cadence.
+    The client fits all fire/fire_out frames into this authoritative budget.
+    Bare animation descriptors and melee retain their native frame timing.
     """
+    params = params or {}
+    times = params.get('fire_times', ())
+    if params.get('weapon_type') is not None and 0 <= mode < len(times) and times[mode] > 0:
+        return max(1, math.ceil(times[mode] * FIREARM_ANIMATION_RATIO))
+    return native_duration_ms(session, params, shots, aimed_for=aimed_for)
+
+
+def frame_counts(session, params=None, shots=1):
     params = params or {}
     if params.get('weapon_type') is not None:
         kind = 'pistol' if params['weapon_type'] == items.PISTOL else 'rifle'
@@ -29,7 +41,12 @@ def duration_ms(session, params=None, shots=1, *, aimed_for=0):
     fallback = data['models']['0']
     model = data['models'].get(str(look), fallback)
     sequence = model.get(kind, fallback[kind])
-    raise_ms = max(0, sequence['fire_in'] * 1000 / data['frame_rate'] - max(0, aimed_for) * 1000)
-    frames = sequence['fire'] * cycles + sequence['fire_out']
+    return sequence['fire_in'], sequence['fire'] * cycles + sequence['fire_out']
+
+
+def native_duration_ms(session, params=None, shots=1, *, aimed_for=0):
+    raising, frames = frame_counts(session, params, shots)
+    rate = sequences()['frame_rate']
+    raise_ms = max(0, raising * 1000 / rate - max(0, aimed_for) * 1000)
     # Round once, upwards; a partial frame must not release an attack early.
-    return math.ceil(raise_ms + frames * 1000 / data['frame_rate'])
+    return math.ceil(raise_ms + frames * 1000 / rate)
