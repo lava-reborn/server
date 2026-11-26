@@ -94,6 +94,52 @@ class ReleasePouches(unittest.TestCase):
                 self.assertLessEqual(ch.spec[index][1], ch.spec[index][2])
                 self.assertEqual(ch.spec_level(index), 5 + declared[index])
 
+    def test_real_level_and_temporary_skill_action_points_remain_separate(self):
+        ch = p.Character()
+        ch.set_skill(p.SHOOTING, 16)
+        ch.set_skill(p.MELEE, 15)
+        initial_ap = ch.ap_max
+        ch.gain_xp(p.MELEE, p.skill_xp_max(15), skill_cap=p.COMBAT_SKILL_CAP, premium=False)
+        self.assertEqual((ch.skill[p.MELEE][0], ch.level, ch.ap_max), (16, 16, initial_ap))
+        ch.gain_xp(p.MELEE, p.skill_xp_max(16), skill_cap=p.COMBAT_SKILL_CAP, premium=False)
+        self.assertEqual((ch.skill[p.MELEE][0], ch.level, ch.ap_max), (17, 17, initial_ap + 5))
+        saved = ch.rows()
+        for tid in self.PRICES:
+            ch.set_gear(inventory.gear_bonus([self.row(tid)], ch))
+            self.assertGreater(ch.skill_level(p.MELEE), ch.level)
+            self.assertEqual(ch.rows(), saved)
+            self.assertEqual(ch.ap_max, initial_ap + 5)
+            expected_bonus = 20 if tid == 5615 else 15
+            self.assertEqual(ch.skill_ap_bonus, expected_bonus)
+            self.assertEqual(ch.ap_ceiling, ch.ap_max + expected_bonus + ch.bonus_od)
+            ch.set_gear(inventory.gear_bonus([], ch))
+            self.assertEqual(ch.rows(), saved)
+
+    def test_pouch_ap_bonus_falls_as_the_other_base_skill_catches_up(self):
+        ch = p.Character()
+        ch.set_skill(p.MELEE, 17)
+        for shooting, expected in ((17, 20), (18, 15), (19, 10), (20, 5)):
+            ch.set_skill(p.SHOOTING, shooting)
+            before = ch.rows()
+            ch.set_gear(inventory.gear_bonus([self.row(5615)], ch))
+            self.assertEqual(ch.skill_ap_bonus, expected)
+            self.assertEqual(ch.ap_max, 50 + 5 * shooting)
+            self.assertEqual(ch.ap_ceiling, ch.ap_max + expected)
+            self.assertEqual(ch.rows(), before)
+        ch.set_skill(p.MELEE, 16)
+        self.assertEqual(ch.skill_ap_bonus, 0)
+        self.assertEqual(ch.ap_ceiling, ch.ap_max)
+        ch.set_gear(sets.zero())
+        ch.set_skill(p.MELEE, 17)
+        ch.set_skill(p.SHOOTING, 17)
+        bonus = sets.zero()
+        bonus['skills'][p.MELEE], bonus['skills'][p.SHOOTING] = 4, 3
+        ch.set_gear(bonus)
+        self.assertEqual(ch.skill_ap_bonus, 20)  # Highest skill, never their sum.
+        bonus['skills'][p.MELEE], bonus['skills'][p.SHOOTING] = -2, -1
+        ch.set_gear(bonus)
+        self.assertEqual(ch.skill_ap_bonus, -5)
+
     def test_skill_bonus_helps_matching_weapon_requirements_and_wear_but_not_armour(self):
         for root, skill in ((items.COLD_ARM, p.MELEE), (items.FIRE_ARM, p.SHOOTING)):
             ch = p.Character()

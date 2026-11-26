@@ -17,22 +17,17 @@ import world
 
 
 class MobWeaponVisuals(unittest.TestCase):
-    def test_unsupported_armed_bodies_use_complete_existing_human_art(self):
-        resources = {'bich': (14, 14, 14), '120': (14, 14, 14),
-                     'band_leader': (1668, None, None), '82': (1668, None, None),
-                     'm7': (None, 131, 131)}
+    def test_native_bodies_are_kept_for_every_weapon_stance(self):
         for key, info in mobs.TYPES.items():
-            if info['role'] not in ('mob', 'boss') or info['resource'] not in resources:
+            if info['resource'] not in ('bich', '120', 'band_leader', '82', 'm7'):
                 continue
             type_id = int(key)
-            for index, (root, weapon_type) in enumerate(((items.COLD_ARM, None),
-                                                        (items.FIRE_ARM, items.PISTOL),
-                                                        (items.FIRE_ARM, items.ASSAULT))):
-                with self.subTest(type_id=type_id, root=root, weapon_type=weapon_type):
-                    with patch.object(items, 'root_of', return_value=root), \
-                            patch.object(items, 'params_of', return_value={'weapon_type': weapon_type}):
-                        expected = resources[info['resource']][index] or type_id
-                        self.assertEqual(mobs.visual_type(type_id, 1), expected)
+            for root in (items.COLD_ARM, items.FIRE_ARM, items.HEAL):
+                with self.subTest(type_id=type_id, root=root):
+                    with patch.object(items, 'root_of', return_value=root):
+                        needs_twin = (info['resource'] == 'm7' and root == items.FIRE_ARM
+                                      and info['role'] in ('mob', 'boss'))
+                        self.assertEqual(mobs.visual_type(type_id, 1), 131 if needs_twin else type_id)
 
     def test_actual_equipment_and_stats_are_unchanged(self):
         for type_id in (411, 670, 1429, 1708, 1718, 1772, 2176, 4828, 4829):
@@ -69,11 +64,13 @@ class MobWeaponVisuals(unittest.TestCase):
         combat.after_npc_info.assert_called_once_with(123)
         return sess.send.call_args.args[0], sess.send.call_args.kwargs
 
-    def test_wire_only_changes_visual_resource_not_identity_name_or_level(self):
-        command, fields = self.npc_info(411, mobs.stats(411).weapon_type_id)
-        self.assertEqual(command, 'userInfo')
-        self.assertEqual((fields['id'], fields['name'], fields['lvl'], fields['res']),
-                         (123, 411, 12, 14))
+    def test_wire_keeps_the_native_model_name_and_identity_of_restored_mobs(self):
+        for type_id in (71, 411, 670, 1772, 2392, 5388, 5509, 5574, 2172, 2176):
+            with self.subTest(type_id=type_id):
+                command, fields = self.npc_info(type_id, mobs.stats(type_id).weapon_type_id)
+                self.assertEqual(command, 'userInfo')
+                self.assertEqual((fields['id'], fields['name'], fields['lvl'], fields['res']),
+                                 (123, type_id, 12, type_id))
 
     def test_wire_keeps_local_base_guard_model_and_caption(self):
         guard = holdings.base_for(118)
@@ -91,7 +88,7 @@ class MobWeaponVisuals(unittest.TestCase):
         resources = Path(world.RES) / 'mobs'
         if not resources.is_dir():
             self.skipTest('Original client resources are not configured')
-        for type_id in (14, 131, 1668):
+        for type_id in (131,):
             resource = mobs.TYPES[str(type_id)]['resource']
             xml = ET.parse(resources / (resource + '.xml')).getroot()
             self.assertEqual(xml.get('composite'), 'true')
@@ -103,6 +100,47 @@ class MobWeaponVisuals(unittest.TestCase):
                     if animation:
                         with self.subTest(type_id=type_id, stance=stance, animation=animation):
                             self.assertTrue((resources / resource / (resource + '_' + animation + '.swf')).is_file())
+
+    def test_restored_bodies_use_their_own_existing_nonempty_animations(self):
+        resources = Path(world.RES) / 'mobs'
+        if not resources.is_dir():
+            self.skipTest('Original client resources are not configured')
+        overlays = Path(__file__).resolve().parents[1] / 'client/files/mobs'
+        for resource in ('bich', '120', 'band_leader', '82'):
+            source = overlays / (resource + '.xml')
+            if not source.is_file():
+                source = resources / (resource + '.xml')
+            xml = ET.parse(source).getroot()
+            self.assertEqual(xml.get('composite'), 'false')
+            for stance in ('fist', 'knife', 'pistol', 'rifle'):
+                for action in xml.find(stance).findall('action'):
+                    animation = action.get('action')
+                    if animation and (action.text or '').strip():
+                        with self.subTest(resource=resource, stance=stance, animation=animation):
+                            self.assertTrue((resources / resource / (resource + '_' + animation + '.swf')).is_file())
+
+    def test_band_leader_overlay_changes_only_the_missing_melee_strike(self):
+        original = Path(world.RES) / 'mobs/band_leader.xml'
+        if not original.is_file():
+            self.skipTest('Original client resources are not configured')
+        before = ET.parse(original).getroot()
+        after = ET.parse(Path(__file__).resolve().parents[1] / 'client/files/mobs/band_leader.xml').getroot()
+        for stance in ('fist', 'knife'):
+            for name, animation, frames in (
+                    ('fire_in', 'rifle_stand', '1'),
+                    ('fire', 'fist_fire', ','.join(map(str, range(1, 20)))),
+                    ('fire_out', 'rifle_stand', '1')):
+                old = before.find(stance + "/action[@id='" + name + "']")
+                new = after.find(stance + "/action[@id='" + name + "']")
+                self.assertEqual((new.get('action'), new.text), (animation, frames))
+                new.attrib.clear()
+                new.attrib.update(old.attrib)
+                new.text = old.text
+        for tree in (before, after):
+            for element in tree.iter():
+                element.text = element.text.strip() if element.text else None
+                element.tail = None
+        self.assertEqual(ET.tostring(after), ET.tostring(before))
 
     def test_guard_overlay_changes_only_missing_rifle_stand(self):
         root = Path(__file__).resolve().parents[1]

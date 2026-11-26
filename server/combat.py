@@ -296,8 +296,8 @@ def pull(si, mode, ammo):
 # hit_cap bounds the ordinary player's accuracy through that same scatter;
 # the range's original rules and NPC attacks retain the default of 1.
 Weapon = namedtuple("Weapon", "num_shots dmin dmax opt_lo opt_hi max_range "
-                              "piercing cone crit skill spec through at_players sdmin sdmax hit_cap hp_multiplier sp_multiplier",
-                    defaults=(False, True, 0, 0, 1.0, 1.0, 1.0))
+                              "piercing cone crit skill spec through at_players sdmin sdmax hit_cap hp_multiplier sp_multiplier base_crit",
+                    defaults=(False, True, 0, 0, 1.0, 1.0, 1.0, None))
 
 
 def prepare_ammunition(weapon, ammo):
@@ -351,6 +351,11 @@ def checked_weapon(original, prepared):
         value = getattr(prepared, field)
         if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value < 0:
             raise ValueError("Invalid prepared weapon field: " + field)
+    if prepared.base_crit is not None:
+        value = prepared.base_crit
+        if (isinstance(value, bool) or not isinstance(value, (int, float))
+                or not math.isfinite(value) or not 0 <= value <= prepared.crit):
+            raise ValueError("Invalid prepared weapon field: base_crit")
     if prepared is original:
         return original
     for field in ('num_shots', 'skill', 'spec', 'through', 'at_players'):
@@ -1035,10 +1040,7 @@ class Fighter:
         # take-all moves them into the bag on the client (ss_upd 3).
         self.ran_out = []
         self.regen_at = 0.0
-        # The amax the last lenter carried, or None before the first. The
-        # client's bar keeps that ceiling until the next lenter
-        # (APManager.setAP is called from Master.lenter and nowhere else),
-        # so the fight here keeps it too -- see ap_max.
+        # The AP maximum last sent by lenter or c_ap, None before first entry.
         self.amax_sent = None
 
     # --- plumbing ------------------------------------------------------------
@@ -1087,16 +1089,7 @@ class Fighter:
 
     @property
     def ap_max(self):
-        """The card's ОД and the bar's ceiling, gear included: what lenter
-        told the client (Character.ap_ceiling), not rp_info's bare ap_max.
-
-        The figure of the last lenter, not the live one. A set piece that
-        breaks or comes off in the middle of a location lowers ap_ceiling
-        at once, but the client's bar still fills to the old amax -- on its
-        own tick and on every edge of ws -- and a server that regenerated
-        and reset to the lower one would refuse, with res=11, the shots the
-        bar says are paid for. The new ceiling reaches both sides together,
-        with the next lenter."""
+        """AP ceiling last sent to the bar, including equipment and skill bonuses."""
         if self.amax_sent is not None:
             return self.amax_sent
         return self.character().ap_ceiling
@@ -1546,6 +1539,19 @@ class Fighter:
         if not self.in_combat():
             return False
         self.ack(RES_NO_LEAVE)
+        return True
+
+    def sync_ap_ceiling(self):
+        """Publish a changed AP maximum without refilling AP or restarting timers."""
+        if self.amax_sent is None or self.sess.room is None:
+            return False
+        ceiling = self.character().ap_ceiling
+        if ceiling == self.amax_sent:
+            return False
+        Fighter.settle_walk(self)
+        self.amax_sent = ceiling
+        self.ap = min(self.ap, ceiling)
+        self.c_ap(amax=True)
         return True
 
     def c_ap(self, *, amax=False):
@@ -2932,7 +2938,7 @@ class RoomCombat:
         return battle_balance.ranged_critical(shooter, target, weapon, optimal, ordinary=True)
 
     def melee_critical(self, attacker, target, chance):
-        return battle_balance.critical(attacker, target, chance, ordinary=True)
+        return battle_balance.melee_critical(attacker, target, chance, ordinary=True)
 
     def bullet_damage(self, shooter, target, weapon, damage, stamina_damage, critical, stamina_left):
         rifle = (weapon.spec == SPEC_OF_WEAPON[items.RIFLE] if shooter.is_player

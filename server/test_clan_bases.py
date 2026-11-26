@@ -1484,6 +1484,47 @@ class WarehouseGold(unittest.TestCase):
         self.assertEqual(s.inv.bag_pieces(), {7620: 11, 4796: 4})
         self.assertEqual(len(self.claims()), 7)
 
+    def test_abu_minimum_level_character_claims_seven_gold_once(self):
+        self.site = holdings.site('wh_ah_center')
+        self.store.holding_set(self.site.key, self.clan, 'admin')
+        self.s, self.frames = self.native(self.cid)
+        for skill in self.s.char.skill:
+            skill[0] = 17
+        self.s.char.recalc()
+        self.assertEqual(self.s.skill_level(), 17)
+        self.assertTrue(self.s.quest_available(quests.get(self.site.gold_quest)))
+        qid = self.ready()
+        self.claim(qid)
+        self.claim(qid)
+        officer, officer_frames = self.native(self.officer)
+        self.claim(self.ready(self.officer), officer)
+        self.assertEqual(officer.inv.bag_pieces(), {})
+        self.assertEqual([p['res'] for n, p in officer_frames if n == 'cmdAck'],
+                         [server.RES_NOT_AVAILABLE])
+        self.assertEqual(self.s.inv.bag_pieces(), {4796: 1, 7620: 2})
+        self.assertEqual(len(self.claims()), 1)
+        self.assertEqual(self.claims()[0]['char_id'], self.cid)
+        self.assertEqual(self.claims()[0]['site'], self.site.key)
+
+    def test_abu_gold_window_remains_1900_to_1915_and_requires_level_17(self):
+        self.site = holdings.site('wh_ah_center')
+        self.store.holding_set(self.site.key, self.clan, 'admin')
+        self.s, self.frames = self.native(self.cid)
+        q = quests.get(self.site.gold_quest)
+        start = datetime.fromtimestamp(self.clock, bosses.ZONE).replace(minute=0).timestamp()
+        for level, moment, available in (
+                (17, start - 1, False), (16, start, False),
+                (17, start, True), (17, start + 899, True),
+                (17, start + 900, False)):
+            with self.subTest(level=level, time=moment):
+                for skill in self.s.char.skill:
+                    skill[0] = level
+                self.s.char.recalc()
+                self.clock = moment
+                self.assertEqual(self.s.quest_available(q), available)
+        self.assertEqual(self.claims(), [])
+        self.assertEqual(self.s.inv.bag_pieces(), {})
+
     def test_native_claim_and_duplicate_instances_mint_only_three_one_gold_ingots(self):
         self.assertTrue(self.s.quest_available(quests.get(self.site.gold_quest)))
         qid = self.ready()

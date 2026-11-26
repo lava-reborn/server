@@ -1,5 +1,6 @@
 """Release boundaries: timed items, fractional XP, loot and purchase prices."""
 import copy
+import time
 from datetime import datetime
 from types import SimpleNamespace as NS
 import unittest
@@ -422,8 +423,12 @@ class TimedItems(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(copy.deepcopy(self.s.char).__dict__, self.s.char.__dict__)
         deadline = manager.active['experience_down'].deadline
         manager.close()
-        manager.load()
-        self.assertEqual(manager.active['experience_down'].deadline, deadline)
+        remaining = deadline - manager.clock()
+        resumed_at = time.time()
+        with patch.object(manager, 'clock', return_value=resumed_at):
+            manager.load()
+        deadline = manager.active['experience_down'].deadline
+        self.assertAlmostEqual(deadline - resumed_at, remaining, delta=1e-6)
         with patch.object(manager, 'clock', return_value=deadline + 1):
             manager.refresh()
             self.assertEqual(effects.multiplier(self.s, 'mob_exp'), 1)
@@ -647,7 +652,7 @@ class TimedItems(unittest.IsolatedAsyncioTestCase):
         manager.add(3561)
         manager.active['stale_duplicate'] = manager.active['experience_up']
         self.assertEqual(effects.multiplier(self.s, 'mob_exp'), 1.7)
-        self.assertEqual(effects.multiplier(self.s, 'mob_exp', bonus=.3), 2)
+        self.assertAlmostEqual(effects.multiplier(self.s, 'mob_exp', bonus=.3), 2.0)
         manager.active.pop('stale_duplicate')
         manager.add(3206)
         self.assertAlmostEqual(effects.multiplier(self.s, 'mob_exp'), .34)
@@ -682,8 +687,12 @@ class TimedItems(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(self.store.effects_for(self.s.char_id)), 1)
         deadline += 600
         manager.close()
-        manager.load()
-        self.assertEqual(manager.active['experience_up'].deadline, deadline)
+        remaining = deadline - manager.clock()
+        resumed_at = time.time()
+        with patch.object(manager, 'clock', return_value=resumed_at):
+            manager.load()
+        deadline = manager.active['experience_up'].deadline
+        self.assertAlmostEqual(deadline - resumed_at, remaining, delta=1e-6)
         self.assertEqual(effects.multiplier(self.s, 'mob_exp'), 1.7)
         with patch.object(manager, 'clock', return_value=deadline + 1):
             manager.refresh()
@@ -806,7 +815,10 @@ class ReleaseCatalogue(unittest.TestCase):
             rows = [dict(type_id=outfit['members'][name], root=items.WEAR, slot=slot, brk=1)
                     for name, slot in zip(sets.SLOTS, inventory.SET_SLOTS)] if outfit else []
             character = progression.Character()
-            character.skill[progression.MELEE][0] = level
+            # ordinary_mob_ap uses a shooting-trained reference loadout.
+            # Melee-only training now adds different skill-derived AP for
+            # some belts, and is not the same reference character.
+            character.skill[progression.SHOOTING][0] = level
             character.set_gear(inventory.gear_bonus(rows))
             with self.subTest(level=level):
                 self.assertEqual(battle_balance.ordinary_mob_ap(level), character.ap_ceiling)
@@ -820,7 +832,7 @@ class ReleaseCatalogue(unittest.TestCase):
     def test_full_base_experience_starts_at_plus_two_with_approved_curve(self):
         for level in range(1, 17):
             base = progression.COMBAT_XP_BASE[level]
-            for gap, ratio in ((1, .85), (2, 1), (3, 1.1), (4, 1.2), (5, 1.2)):
+            for gap, ratio in ((1, 980/1100), (2, 1), (3, 1.1), (4, 1.2), (5, 1.2)):
                 with self.subTest(level=level, gap=gap):
                     self.assertAlmostEqual(progression.combat_mob_xp(level + gap, level), base * ratio)
                     self.assertAlmostEqual(progression.combat_mob_xp(level + gap, level, .25), base * ratio / 4)
@@ -1328,7 +1340,9 @@ class ReleaseCatalogue(unittest.TestCase):
     def test_only_documented_ordinary_utility_items(self):
         self.assertEqual(effects.definition(3789)['duration'], 1800)
         self.assertEqual(effects.definition(3826)['duration'], 7200)
-        self.assertEqual(items.params_of(3826)['g_cost'], 100)
+        self.assertEqual(items.params_of(3789)['g_cost'], 50)
+        self.assertEqual(items.params_of(3826)['g_cost'], 150)
+        self.assertEqual(items.params_of(3826)['cost'], 0)
         for t in (3093, 3823, 31594, 26275, 26607, 6490):
             self.assertIsNone(effects.definition(t))
 
@@ -1351,6 +1365,17 @@ class ReleaseCatalogue(unittest.TestCase):
         self.assertFalse(boosters.intersection(private_effects.definitions()))
         from training import catalog as private_catalog
         self.assertFalse(boosters.intersection(private_catalog.item_catalogue()))
+
+    def test_intux_iv_description_and_effect_agree_on_seventy_percent(self):
+        import names
+        self.assertEqual(items.wiki()[3561]['exp_mobs_pct'], 70)
+        self.assertEqual(items.wiki()[3561]['exp_players_pct'], 70)
+        params = items.params_of(3561)
+        description = names.ALL[params['desc']]
+        self.assertIn('70%', description)
+        self.assertNotIn('90%', description)
+        self.assertEqual(effects.definition(3561)['modifiers'],
+                         dict(mob_exp=1.7, pl_exp=1.7, mob_drop=1))
 
     def test_level_factor_changes_probability_not_quantity_or_guaranteed_drop(self):
         rows = [(333, .1, True), (334, 1, False)]

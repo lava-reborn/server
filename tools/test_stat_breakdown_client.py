@@ -130,6 +130,33 @@ class StatBreakdown(unittest.TestCase):
         self.call('PersAttributes', 'rp_info', attrs, {})
         self.assertEqual(notices, [('skill',17), ('spec',4)])
 
+    def test_pouch_action_points_show_separate_bonus_as_other_skill_catches_up(self):
+        ch = p.Character()
+        row = dict(type_id=5615, root=items.WEAR, slot=inventory.BELT, brk=1000)
+        for shooting, melee, bonus in ((17,17,20), (18,17,15), (19,17,10), (20,17,5), (20,16,0)):
+            ch.set_skill(p.MELEE, melee)
+            ch.set_skill(p.SHOOTING, shooting)
+            ch.set_gear(inventory.gear_bonus([row], ch))
+            ch.bonus_od += 7  # Another piece's explicit AP bonus counts once.
+            self.frame(ch)
+            before = ch.rows()
+            field = {}
+            card = dict(od_value=dict(value=field),
+                        __sbODOrig=lambda: field.update(text=str(ch.ap_max + ch.bonus_od)))
+            for _ in range(3):
+                self.call('CharInterface', 'showOD', card)
+                self.assertEqual(field['text'], self.value(ch.ap_max, ch.ap_max + bonus + 7))
+                self.assertEqual(ch.rows(), before)
+        ch.set_gear(sets.zero())
+        ch.set_skill(p.MELEE, 17)
+        ch.set_skill(p.SHOOTING, 16)
+        ch.bonus_skills[p.MELEE] = -2
+        self.frame(ch)
+        field = {}
+        card = dict(od_value=dict(value=field), __sbODOrig=lambda: field.update(text=str(ch.ap_max)))
+        self.call('CharInterface', 'showOD', card)
+        self.assertEqual(field['text'], '135 (-5)')
+
     def test_derived_card_values_keep_native_totals_and_show_raw_basis(self):
         ch = p.Character()
         ch.set_skill(p.MELEE, 16)

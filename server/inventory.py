@@ -396,6 +396,48 @@ def new_fields(type_id, count=1):
 # database at the server's start (server.main, accounts.run_once), letters
 # and lots included, as accounts.relink_heals does its types.
 OFFLINE_GIFTS_FIX = "admin-offline-gifts-2026-09-29"
+HAND_VALENTINE_SNAPSHOTS_FIX = "hand-valentine-snapshots-2026-11-26"
+
+
+def repair_hand_valentine_snapshots(db):
+    """Repair old parcels/lots before any client receives their item IDs.
+
+    Called through accounts.run_once: snapshots, auction root and the
+    migration marker commit together. No owner, quantity or price changes.
+    """
+    for table, column in (("mail", "items_json"), ("auction_lots", "item_json")):
+        if table == "auction_lots":
+            types = tuple(sorted(items.HAND_VALENTINES))
+            marks = ','.join('?' for _ in types)
+            rows = db.execute('SELECT id,type_id,root,' + column + ' FROM auction_lots'
+                              ' WHERE type_id IN (' + marks + ')', types).fetchall()
+        else:
+            rows = db.execute("SELECT id,items_json FROM mail WHERE items_json <> '[]'").fetchall()
+        for row in rows:
+            try:
+                snapshots = json.loads(row[column] or "[]")
+            except (TypeError, ValueError):
+                continue
+            if table == 'auction_lots' and (not isinstance(snapshots, dict)
+                    or snapshots.get('type_id') != row['type_id']):
+                continue
+            records = [snapshots] if isinstance(snapshots, dict) else snapshots
+            if not isinstance(records, list):
+                continue
+            changed = False
+            for snapshot in records:
+                if (isinstance(snapshot, dict) and isinstance(snapshot.get('type_id'), int)
+                        and snapshot['type_id'] in items.HAND_VALENTINES
+                        and snapshot.get('root') != items.COLD_ARM):
+                    snapshot['root'] = items.COLD_ARM
+                    changed = True
+            if table == 'auction_lots':
+                if changed or row['root'] != items.COLD_ARM:
+                    db.execute('UPDATE auction_lots SET root=?,item_json=? WHERE id=?',
+                               (items.COLD_ARM, json.dumps(snapshots), row['id']))
+            elif changed:
+                db.execute('UPDATE mail SET items_json=? WHERE id=?',
+                           (json.dumps(snapshots), row['id']))
 
 
 def unfilled(row):
@@ -475,6 +517,8 @@ def fits(row, slot):
     """
     if slot == BAG:
         return True
+    if row['type_id'] in items.HAND_VALENTINES:
+        return slot in HAND_SLOTS and row['root'] == items.COLD_ARM
     root = row["root"]
     if slot in HAND_SLOTS:
         return root in items.HAND_ROOTS
@@ -1175,7 +1219,10 @@ class Inventory:
         makes the client build the thing and fire the addItem its quest
         window lists under «Вы получили» (QuestInspector.getRewardItem), and
         a stack that only grew would fire none. Then its dynamic info, as a
-        purchase sends it. Returns the rows."""
+        purchase sends it. Plantation coupons alone merge and send a heap
+        count update instead. Returns the rows."""
+        if type_id in items.EDEN_TICKETS:
+            return self._give_eden_tickets(type_id, n)
         si = items.params_of(type_id) or {}
         per = max(1, si.get("max_count", 1)) \
             if items.heapable(type_id) else 1
@@ -1188,6 +1235,37 @@ class Inventory:
             out.append(row)
             left -= count
         return out
+
+    def _give_eden_tickets(self, type_id, n):
+        """Merge only plantation coupons; other quest rewards keep native delivery."""
+        changes, left = [], int(n)
+        if left <= 0:
+            return []
+        with storage.atomic(self.store.db):
+            if not self.store.lock_quest_character(self.char_id):
+                raise ValueError('Ticket owner disappeared')
+            for row in self.rows():
+                if (row['type_id'] != type_id or row['root'] != items.TRASH
+                        or row['slot'] != BAG or row['uniq'] in self.locked
+                        or any(row[field] for field in bank_storage.STATE)):
+                    continue
+                count = min(left, items.EDEN_TICKET_STACK - row['count'])
+                if count <= 0:
+                    continue
+                self.store.update_item(row['uniq'], count=row['count'] + count)
+                changes.append((self.store.item(row['uniq']), False))
+                left -= count
+                if not left:
+                    break
+            while left:
+                row = self.create(type_id, min(left, items.EDEN_TICKET_STACK))
+                changes.append((row, True))
+                left -= row['count']
+        for row, created in changes:
+            if created:
+                self.push_status(row, 1)
+            self.push_di(row)
+        return [row for row, _created in changes]
 
     @staticmethod
     def pieces_weight(type_id, n):
@@ -1345,6 +1423,72 @@ class Inventory:
             return None
         return self.wear(RNG.choice(worn), points)
 
+    def normalize_eden_tickets(self):
+        """Compact legacy coupons before sending inventory IDs on login."""
+        def candidates():
+            return [row for row in self.rows() if row['type_id'] in items.EDEN_TICKETS
+                    and row['root'] == items.TRASH and row['slot'] == BAG
+                    and row['uniq'] not in self.locked]
+        rows = candidates()
+        if len(rows) <= len({bank_storage.key(row) for row in rows}):
+            return []
+        changed, removed = [], []
+        with storage.atomic(self.store.db):
+            if not self.store.lock_quest_character(self.char_id):
+                raise ValueError('Ticket owner disappeared')
+            groups = {}
+            for row in candidates():
+                groups.setdefault(bank_storage.key(row), []).append(row)
+            for group in groups.values():
+                if len(group) < 2:
+                    continue
+                total = sum(row['count'] for row in group)
+                for row in group:
+                    count = min(total, items.EDEN_TICKET_STACK)
+                    if not count:
+                        removed.append(row['uniq'])
+                    elif count != row['count']:
+                        self.store.update_item(row['uniq'], count=count)
+                    else:
+                        total -= count
+                        continue
+                    changed.append(row['uniq'])
+                    total -= count
+            # Keep a large legacy inventory to a few indexed DELETE batches,
+            # rather than one database round trip for every old coupon.
+            for start in range(0, len(removed), 200):
+                batch = removed[start:start + 200]
+                marks = ','.join('?' for _ in batch)
+                self.store.db.execute('DELETE FROM items WHERE char_id=? AND uniq IN (' + marks + ')',
+                                      (self.char_id, *batch))
+        return changed
+
+    def normalize_hand_valentines(self):
+        """Repair legacy gift classes before any OIDs are sent on login.
+
+        Preserve the serial, owner, count, durability and bank placement.
+        A gift previously worn as clothing returns to the backpack.
+        """
+        candidates = [r for r in self.rows()
+                      if r['type_id'] in items.HAND_VALENTINES
+                      and (r['root'] != items.COLD_ARM or r['slot'] in WEAR_SLOTS)]
+        if not candidates:
+            return []
+        changed = []
+        with storage.atomic(self.store.db):
+            if not self.store.lock_quest_character(self.char_id):
+                raise ValueError('Gift owner disappeared')
+            for candidate in candidates:
+                row = self.store.item(candidate['uniq'])
+                if not row or row['char_id'] != self.char_id or row['type_id'] not in items.HAND_VALENTINES:
+                    continue
+                slot = BAG if row['slot'] in WEAR_SLOTS else row['slot']
+                self.store.db.execute(
+                    'UPDATE items SET root=?,slot=? WHERE uniq=? AND char_id=?',
+                    (items.COLD_ARM, slot, row['uniq'], self.char_id))
+                changed.append(row['uniq'])
+        return changed
+
     def unfit_to_bag(self):
         """Take off whatever sits in a slot it does not fit, into the bag.
 
@@ -1417,11 +1561,9 @@ class Inventory:
         cutting it down here instead lost the difference for good to anyone
         who took a piece off and put it back on (a full 198 became 151/198).
 
-        Action points are held to the fight's ceiling, which is the last
-        lenter's (combat.Fighter.ap_max) and so does not move here: the
-        client's bar keeps that ceiling until the next location
-        (APManager.setAP is called nowhere else), and a change of gear
-        reaches the bar and the fight together, there.
+        A changed AP ceiling reaches the bar through c_ap;amax without
+        refilling the current pool or resetting its regeneration interval.
+        Loading with push=False leaves that update to lenter or the caller.
 
         The figure is counted here too (look_of), and a change of it goes
         to everybody else in the room (push_look); the wearer's own client
@@ -1434,6 +1576,8 @@ class Inventory:
         rows = self.rows()
         changed = ch.set_gear(gear_bonus(rows, ch), card_repeat(rows))
         fighter = self.sess.combat
+        if push and getattr(fighter, 'amax_sent', None) is not None:
+            fighter.sync_ap_ceiling()
         held = fighter.ap > fighter.ap_max
         if held:
             fighter.ap = fighter.ap_max
@@ -1758,9 +1902,12 @@ class Inventory:
             self.ack(RES_NOT_FOUND)
             return
         import eden
-        if eden.restricted_item(row["type_id"]):
-            # Work resources leave only through an authorised exchange or
-            # release cleanup, including legacy rows outside the plantation.
+        discard_banana = (row['type_id'] in eden.BANANAS and row['slot'] == BAG
+                          and eden.inside(getattr(self.sess, 'loc', None))
+                          and not getattr(self.sess, 'on_map', False))
+        if eden.restricted_item(row["type_id"]) and not discard_banana:
+            # Only unwanted bananas in the local backpack may be discarded.
+            # Tools, tickets and local property outside Eden stay protected.
             self.ack(RES_UNWORDED)
             self.sess.answer("Предметы плантации Эдем нельзя удалить. Они изымаются при освобождении.")
             return
@@ -2584,7 +2731,8 @@ class Inventory:
                 or trade.trader_type in mortimer.NPC_TYPES):
             return None
         row = self.find(p.get("obj"))
-        if row is None or row["slot"] != BAG or row["root"] == items.TROPHY:
+        if (row is None or row["slot"] != BAG or row["root"] == items.TROPHY
+                or row['type_id'] in mortimer.VALUABLES):
             return None
         si = items.params_of(row["type_id"]) or {}
         rates = self.current_trade_rates()
@@ -2592,11 +2740,7 @@ class Inventory:
             return None
         share = (gold_trade.BASE_SALE_SHARE if rates['smod'] == float(gold_trade.BASE_SALE_SHARE)
                  else gold_trade.NPC_SALE_SHARE)
-        paying_gold = (row['type_id'] in mortimer.VALUABLES and row['root'] == items.TRASH
-                       and trade.trader_type in gold_trade.BASE_GOLD_BUYERS
-                       and share == gold_trade.BASE_SALE_SHARE)
-        unit = (gold_trade.base_loot_gold(row['type_id']) if paying_gold else
-                gold_trade.sale_unit(row["type_id"], si, share))
+        unit = gold_trade.sale_unit(row["type_id"], si, share)
         if not unit:
             return None
         try:
@@ -2609,10 +2753,7 @@ class Inventory:
         if quality <= 0:
             return None
         price = max(1, int(math.floor(unit * n * quality)))
-        terms = dict(row=row, n=n, price=price)
-        if paying_gold:
-            terms['gold'] = True
-        return terms
+        return dict(row=row, n=n, price=price)
 
     def quote_gold_sale(self, p):
         """One short-lived quote per stall; this stage never changes the DB."""

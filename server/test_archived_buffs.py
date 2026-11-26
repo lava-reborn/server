@@ -44,6 +44,29 @@ class ArchivedBuffs(unittest.IsolatedAsyncioTestCase):
             manager.refresh()
         self.assertEqual(self.s.char.hp_max, baseline)
 
+    async def test_original_health_and_stamina_caps_replace_weaker_doses_and_expire_once(self):
+        manager = self.manager()
+        ch = self.s.char
+        base_hp, base_sp = ch.hp_max, ch.sp_max
+        manager.add(4917)
+        manager.add(4937)
+        self.assertEqual((ch.hp_max, ch.sp_max), (base_hp + 35, base_sp + 65))
+        manager.add(4936)
+        manager.add(4956)
+        self.assertEqual(set(manager.active), {'max_health', 'max_stamina'})
+        for _ in range(3):
+            self.s.inv.refresh_gear(push=False)
+            manager.refresh(notify=False)
+            self.assertEqual((ch.hp_max, ch.sp_max), (base_hp + 300, base_sp + 600))
+        ch.hp, ch.sp = ch.hp_max, ch.sp_max
+        deadline = max(row.deadline for row in manager.active.values())
+        with patch.object(manager, 'clock', return_value=deadline + 1):
+            manager.refresh()
+        self.assertFalse(manager.active)
+        self.assertEqual((ch.hp_max, ch.sp_max, ch.hp, ch.sp), (base_hp, base_sp, base_hp, base_sp))
+        self.s.inv.refresh_gear(push=False)
+        self.assertEqual((ch.hp_max, ch.sp_max), (base_hp, base_sp))
+
     async def test_alpha_changes_only_crit_and_omega_only_anticrit_in_real_fights(self):
         manager = self.manager()
         f = self.s.combat
@@ -51,11 +74,11 @@ class ArchivedBuffs(unittest.IsolatedAsyncioTestCase):
         self.s.char.skill[p.SHOOTING][0] = 20
         self.s.char.skill[p.MELEE][0] = 10
         baseline = p.crit_chance(self.s.char, items.PISTOL, card=False)
-        # A/G of every ordinary rank; values are the archived reagent bonuses.
-        for alpha, omega, cp, ce in ((4181, 3208, 5, 10), (3115, 3209, 10, 20),
-                                    (3116, 3210, 15, 20), (3117, 3211, 20, 30),
-                                    (3118, 3212, 25, 30), (3119, 3213, 30, 40),
-                                    (4182, 4184, 30, 40), (4183, 4185, 60, 75)):
+        # A/G of every ordinary rank; values are the approved release bonuses.
+        for alpha, omega, cp, ce in ((4181, 3208, 4, 4), (3115, 3209, 6, 6),
+                                    (3116, 3210, 8, 8), (3117, 3211, 12, 12),
+                                    (3118, 3212, 12, 12), (3119, 3213, 18, 18),
+                                    (4182, 4184, 20, 20), (4183, 4185, 30, 30)):
             with self.subTest(alpha=alpha, omega=omega):
                 for tid, expected in ((alpha, (cp, 0)), (omega, (0, ce))):
                     value = effects.definition(tid)
@@ -86,8 +109,8 @@ class ArchivedBuffs(unittest.IsolatedAsyncioTestCase):
 
     def test_catalogue_preserves_archived_prices_doses_and_explicit_effects(self):
         for tid, cost, gold, duration, strength, od in (
-                (3474, 500, 0, 3600, 1, 0), (3475, 2500, 0, 3600, 3, 0),
-                (3476, 0, 50, 3600, 5, 0), (3897, 0, 10, 7200, 0, 20)):
+                (3474, 500, 0, 3600, 1, 0), (3475, 2500, 0, 3600, 2, 0),
+                (3476, 0, 50, 3600, 3, 0), (3897, 0, 10, 7200, 0, 20)):
             with self.subTest(item=tid):
                 si = items.params_of(tid)
                 self.assertEqual((si['cost'], si['g_cost'], si['weight'], si['use_count']),
@@ -119,7 +142,7 @@ class ArchivedBuffs(unittest.IsolatedAsyncioTestCase):
         manager = self.manager()
         fighter = self.s.combat
         self.s.char.skill[p.SHOOTING][0] = 17
-        for type_id in (3476, 4932):
+        for type_id in (3476, 4932, 4956):
             for slot in (inventory.BAG, *inventory.HAND_SLOTS):
                 with self.subTest(type_id=type_id, slot=slot):
                     for active in tuple(manager.active.values()):
@@ -131,6 +154,7 @@ class ArchivedBuffs(unittest.IsolatedAsyncioTestCase):
                     self.assertEqual(self.store.item(row['uniq'])['slot'], slot)
                     self.s.writer.frames.clear()
                     before_hp = self.s.char.hp_max
+                    before_sp = self.s.char.sp_max
                     before_strength = self.s.char.attr(p.STRENGTH)
                     fighter.ap = fighter.ap_max
                     fighter.use_heal(dict(obj=inventory.oid_of(row)), inventory.USE_IDLE)
@@ -141,9 +165,11 @@ class ArchivedBuffs(unittest.IsolatedAsyncioTestCase):
                     self.assertIsNone(self.store.item(row['uniq']))
                     self.assertEqual(len(manager.active), 1)
                     if type_id == 3476:
-                        self.assertEqual(self.s.char.attr(p.STRENGTH), before_strength + 5)
-                    else:
+                        self.assertEqual(self.s.char.attr(p.STRENGTH), before_strength + 3)
+                    elif type_id == 4932:
                         self.assertEqual(self.s.char.hp_max, before_hp + 225)
+                    else:
+                        self.assertEqual(self.s.char.sp_max, before_sp + 600)
                     before = dict(manager.active)
                     before_ap = fighter.ap
                     fighter.heal_now(*callback_args)
@@ -186,8 +212,8 @@ class ArchivedBuffs(unittest.IsolatedAsyncioTestCase):
         row = self.s.inv.create(3476)
         effects.activate(f, row['uniq'], f, 0)
         self.assertIsNone(self.store.item(row['uniq']))
-        self.assertEqual(self.s.char.attr(p.STRENGTH), base + 5)
-        self.assertEqual((self.s.char.hp_max, self.s.char.max_weight()), (limits[0] + 20, limits[1] + 10000))
+        self.assertEqual(self.s.char.attr(p.STRENGTH), base + 3)
+        self.assertEqual((self.s.char.hp_max, self.s.char.max_weight()), (limits[0] + 12, limits[1] + 6000))
         self.assertEqual(self.s.char.attrib, before[0])
         self.assertEqual((self.s.char.hp, self.s.char.sp), before[1:])
         deadline = manager.active['Репарин'].deadline
@@ -197,9 +223,13 @@ class ArchivedBuffs(unittest.IsolatedAsyncioTestCase):
         effects.activate(f, weaker['uniq'], f, 0)
         self.assertIsNotNone(self.store.item(weaker['uniq']))
         manager.close()
-        manager.load()
-        self.assertEqual(self.s.char.attr(p.STRENGTH), base + 5)
-        self.assertEqual(manager.active['Репарин'].deadline, deadline)
+        remaining = deadline - manager.clock()
+        resumed_at = deadline + 86400
+        with patch.object(manager, 'clock', return_value=resumed_at):
+            manager.load()
+        self.assertEqual(self.s.char.attr(p.STRENGTH), base + 3)
+        deadline = manager.active['Репарин'].deadline
+        self.assertAlmostEqual(deadline - resumed_at, remaining)
         with patch.object(manager, 'clock', return_value=deadline + 1):
             manager.refresh()
         self.assertEqual(self.s.char.attr(p.STRENGTH), base)
@@ -240,18 +270,18 @@ class ArchivedBuffs(unittest.IsolatedAsyncioTestCase):
         self.assertEqual((f.ap_max, f.ap, self.s.char.ap_ceiling), (original_max, original_max, original_max))
         self.assertFalse(manager.active)
 
-    async def test_ap_effect_adjusts_only_own_bonus_and_keeps_frozen_gear_policy(self):
+    async def test_ap_effect_reconciles_stale_ceiling_without_refilling_spent_ap(self):
         manager = self.manager()
         f = self.s.combat
         base = self.s.char.ap_ceiling
         f.amax_sent = base + 12  # A previous room-entry ceiling retained after a gear change.
         f.ap = 19
         manager.add(3897)
-        self.assertEqual((f.ap_max, f.ap), (base + 32, 19))
+        self.assertEqual((f.ap_max, f.ap), (base + 20, 19))
         deadline = manager.active['action_points'].deadline
         with patch.object(manager, 'clock', return_value=deadline + 1):
             manager.refresh()
-        self.assertEqual((f.ap_max, f.ap), (base + 12, 19))
+        self.assertEqual((f.ap_max, f.ap), (base, 19))
 
     def assert_ceiling_before_private_state(self, maximum):
         packets = [decode(frame[:-1]) for frame in self.s.writer.frames]

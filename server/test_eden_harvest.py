@@ -192,6 +192,29 @@ class EdenHarvestTests(unittest.IsolatedAsyncioTestCase):
     def resource_count(self, sess=None):
         return sum(self.awarded(sess or self.s).values())
 
+    async def test_discarding_unwanted_bananas_frees_capacity_for_the_other_colour(self):
+        self.give(eden.BASKET, inventory.BELT)
+        self.s.inv.refresh_gear(push=False)
+        real_capacity = inventory.Inventory.carry_limit.__get__(self.s.inv)
+        with patch.object(self.s.inv, 'carry_limit', real_capacity):
+            unwanted = [self.give(eden.GREEN_BANANA) for _ in range(4)]
+            self.assertGreater(self.s.inv.total_weight() + 30000, self.s.inv.carry_limit())
+            # Generate the required colour through the real harvest command.
+            with patch.object(harvest.RNG, 'choice', return_value=eden.GOOD_BANANA):
+                for _ in range(3):
+                    self.click()
+                    self.finish()
+            self.f.open_loot(dict(target=self.palm.cell))
+            self.frames.clear()
+            self.f.ss_upd(dict(s_status=3))
+            self.assertEqual([p['res'] for c,p in self.frames if c == 'cmdAck'], [inventory.RES_OVERLOAD])
+            self.s.cmd_ss_use(dict(type=inventory.USE_DELETE, obj=inventory.oid_of(unwanted[0])))
+            self.assertIsNone(self.store.item(unwanted[0]['uniq']))
+            self.pickup()
+            self.assertEqual(self.s.inv.bag_pieces()[eden.GREEN_BANANA], 3)
+            self.assertEqual(self.s.inv.bag_pieces()[eden.GOOD_BANANA], 1)
+            self.assertEqual(self.resource_count(), 4)
+
     async def test_two_workers_combine_damage_without_duplicate_rewards(self):
         other = self.other_worker(2)
         self.click()
@@ -473,6 +496,31 @@ class EdenHarvestTests(unittest.IsolatedAsyncioTestCase):
                 self.finish()
             self.assertEqual(self.amounts(), {t: before[t] + int(t == expected)
                                               for t in harvest.REWARDS})
+
+    async def test_all_sorter_plots_keep_the_original_mixed_resource_distribution(self):
+        for loc_id, expected_sorter in ((1383, 1786), (1384, 1788), (1385, 1787)):
+            with self.subTest(loc=loc_id):
+                self.assertTrue(any(r['type'] == expected_sorter
+                                    for r in world.placements().get(loc_id, ())))
+                self.s.loc = world.location(loc_id)
+                self.s.room.loc = self.s.loc
+                before = self.amounts()
+                rng = random.Random(1)
+                with patch.object(harvest, 'RNG', rng), \
+                        patch.object(rng, 'random', return_value=.5), \
+                        patch.object(rng, 'randint', return_value=1700), \
+                        patch.object(rng, '_randbelow', side_effect=iter(range(8))):
+                    for _ in range(8):
+                        self.reset_cycle()
+                        for _hit in range(3):
+                            self.click()
+                            self.finish()
+                after = self.amounts()
+                delta = {t: after[t] - before[t] for t in harvest.REWARDS}
+                self.assertEqual(delta, {eden.GOOD_BANANA: 4, eden.GREEN_BANANA: 1,
+                                         eden.BAD_BANANA: 1, eden.PALM_LEAF: 2})
+                self.assertEqual(eden.TICKET_QUOTA,
+                                 {eden.GREEN_TICKET: 100, eden.GOOD_TICKET: 1000, eden.BAD_TICKET: 75})
 
     async def test_real_weighted_choice_delivers_four_ripe_two_leaves_and_other_bananas(self):
         # Exercise Random.choice itself and the real transaction/publication

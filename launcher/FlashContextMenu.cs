@@ -1,6 +1,6 @@
 // The AVM1 client cannot remove Flash's Settings/About context-menu items.
-// Filter right clicks only over the launched projector's client area. The
-// hook owns a message loop, does no I/O, and ends with that game process.
+// Route right clicks over the launched projector to the game player menu.
+// The hook owns a message loop, does no I/O, and ends with that game process.
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -12,6 +12,8 @@ sealed class FlashContextMenu
 {
     const int WH_MOUSE_LL = 14, WM_RBUTTONDOWN = 0x204, WM_RBUTTONUP = 0x205;
     const uint GA_ROOT = 2;
+    const int PlayerMenuKey = 135, WM_KEYDOWN = 0x100, WM_KEYUP = 0x101; // F24 bridge.
+    readonly ClickPair clicks = new ClickPair();
     readonly Process game;
     readonly uint gameId;
     readonly HookProc callback;
@@ -33,6 +35,8 @@ sealed class FlashContextMenu
     [DllImport("user32.dll")] static extern bool ScreenToClient(IntPtr window, ref POINT point);
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     static extern int GetClassName(IntPtr window, StringBuilder name, int size);
+    [DllImport("user32.dll")] static extern bool SetForegroundWindow(IntPtr window);
+    [DllImport("user32.dll")] static extern bool PostMessage(IntPtr window, int message, IntPtr key, IntPtr flags);
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
     static extern IntPtr GetModuleHandle(string name);
 
@@ -64,6 +68,23 @@ sealed class FlashContextMenu
     {
         return code >= 0 && RightButton(message) && process == game &&
                rootClass == "ShockwaveFlash" && insideClient;
+    }
+
+    // Pair only clicks whose press and release belong to the same game surface.
+    internal sealed class ClickPair
+    {
+        IntPtr pressed;
+        internal bool Accept(int message, IntPtr surface)
+        {
+            if (message == WM_RBUTTONDOWN)
+            {
+                pressed = surface;
+                return false;
+            }
+            bool open = message == WM_RBUTTONUP && surface != IntPtr.Zero && surface == pressed;
+            pressed = IntPtr.Zero;
+            return open;
+        }
     }
 
     bool Alive()
@@ -105,7 +126,7 @@ sealed class FlashContextMenu
         {
             // MSLLHOOKSTRUCT starts with POINT; no other mouse data is read.
             POINT point = (POINT)Marshal.PtrToStructure(data, typeof(POINT));
-            IntPtr hit = WindowFromPoint(point);
+            IntPtr hit = WindowFromPoint(point), surface = IntPtr.Zero;
             uint process;
             GetWindowThreadProcessId(hit, out process);
             if (process == gameId)
@@ -119,8 +140,21 @@ sealed class FlashContextMenu
                     bool inside = point.X >= rect.Left && point.X < rect.Right &&
                                   point.Y >= rect.Top && point.Y < rect.Bottom;
                     if (Suppress(code, message.ToInt32(), process, gameId, name.ToString(), inside))
-                        return new IntPtr(1);
+                        surface = hit;
                 }
+            }
+            bool open = clicks.Accept(message.ToInt32(), surface);
+            if (surface != IntPtr.Zero)
+            {
+                if (open)
+                {
+                    SetForegroundWindow(GetAncestor(surface, GA_ROOT));
+                    // Only this movie receives F24. No synthetic left click, attack,
+                    // movement, or global modifier-key state is generated.
+                    if (PostMessage(surface, WM_KEYDOWN, new IntPtr(PlayerMenuKey), new IntPtr(1)))
+                        PostMessage(surface, WM_KEYUP, new IntPtr(PlayerMenuKey), new IntPtr(unchecked((int)0xC0000001)));
+                }
+                return new IntPtr(1);
             }
         }
         return CallNextHookEx(IntPtr.Zero, code, message, data);

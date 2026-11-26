@@ -10,6 +10,7 @@ import eden
 import inventory
 import items
 import names
+import progression
 from testkit import run_cases
 
 
@@ -64,12 +65,29 @@ class EdenToolMetadataTests(unittest.TestCase):
     def test_all_three_tickets_weigh_one_gram_on_wire_and_in_real_stacks(self):
         for type_id in (eden.GREEN_TICKET, eden.GOOD_TICKET, eden.BAD_TICKET):
             self.assertEqual(items.static_info(type_id)[1]['weight'], 1)
+            self.assertEqual(items.static_info(type_id)[1]['max_count'], items.EDEN_TICKET_STACK)
             fields = inventory.new_fields(type_id, 7)
             root = fields.pop('root')
             row = self.store.create_item(self.cid, type_id, root, **fields)
             self.assertEqual(inventory.weight_of(row), 7)
         for type_id in (eden.EXIT_PASS, eden.PALM_LEAF):
             self.assertEqual(items.static_info(type_id)[1]['weight'], 1)
+
+    def test_basket_adds_fifty_strength_and_one_hundred_kilograms_only_on_the_belt(self):
+        ch = progression.Character.load(self.store, self.cid)
+        before = ch.max_weight()
+        fields = inventory.new_fields(eden.BASKET)
+        root = fields.pop('root')
+        basket = self.store.create_item(self.cid, eden.BASKET, root, **fields)
+        for slot, extra in ((inventory.BAG, 0), (inventory.BELT, 100000),
+                            (inventory.BANK, 0), (inventory.BELT, 100000)):
+            with self.subTest(slot=slot):
+                basket['slot'] = slot
+                ch.set_gear(inventory.gear_bonus([basket], ch))
+                self.assertEqual(ch.max_weight(), before + extra)
+                self.assertEqual(ch.attr(progression.STRENGTH), ch.attrib[progression.STRENGTH] + (50 if slot == inventory.BELT else 0))
+                self.assertEqual(ch.rp_info()['max_weight'], before + extra)
+        self.assertIn('+100 кг', names.ALL[items.DESC_ID_OFFSET + eden.BASKET])
 
     def test_basket_has_one_thousand_factory_and_new_instance_durability(self):
         self.assertEqual(items.static_info(eden.BASKET)[1]['max_break_abs'], 1000)

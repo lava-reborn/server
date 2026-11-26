@@ -342,7 +342,7 @@ check("rp_info: the base in a_attribs, with the gear in f_attribs",
       (p["a_attribs"], p["f_attribs"]), ([5] * 5, [6, 5, 6, 5, 5]))
 check("  ..the skill's too", (p["a_skills"][1], p["f_skills"][1]), (0, 2))
 check("  ..and ap_max bare: the card adds the gear's od itself", p["ap_max"], 50)
-check("the ceiling the bar and the fight use is the card's ОД", ch.ap_ceiling, 57)
+check("the ceiling adds skill AP and direct equipment AP once", ch.ap_ceiling, 67)
 cp, ce = progression.crit_chance(ch, progression.PISTOL)
 check("pistol crit: the card's formula and the gear's cp/ce on top",
       (cp, ce), ((5 * 8 + 5 * 4) / 4 + 2 / 4 - 1 + 3, (5 + 5) / 2 + 2 / 2 - 1 + 4))
@@ -397,6 +397,8 @@ check("counted at load, nothing sent", (stand.frames, stand.char.bonus_attribs),
 check("action points held to the new ceiling", stand.combat.ap, stand.char.ap_ceiling)
 # In a location, as lenter leaves it: the bar's ceiling sent, the pool full.
 amax = stand.combat.amax_sent = stand.combat.ap = stand.char.ap_ceiling
+stand.room = type('Room', (), {'players': {},
+    'broadcast': lambda self, frame: stand.frames.append(frame)})()
 hp_full = stand.char.hp = stand.char.hp_max
 sp_full = stand.char.sp = stand.char.sp_max
 inv.wear(worn["boots"], 1)
@@ -424,17 +426,18 @@ v = [p for n, p in stand.frames if n == "usrUp"]
 check("the boots mended: the health and stamina they took off come back, not a point lost",
       [(p["hcur"], p["hmax"], p["scur"], p["smax"]) for p in v],
       [(hp_full, hp_full, sp_full, sp_full)])
-# Two pieces short of the three that carry Налетчик's od: the card's ОД falls
-# at once, the bar's ceiling (and so the fight's) only at the next lenter.
+# Losing the three-piece AP bonus changes the card and bar together.
 for name in ("armor", "pants", "boots"):
     store.update_item(worn[name]["uniq"], brk=0)
 stand.frames = []
 inv.refresh_gear()
 check("three pieces broken: the set's od is gone from the card's ОД",
       stand.char.ap_ceiling, amax - sets.SETS[NAL8]["bonus"][3]["od"])
-check("  ..but the fight keeps the ceiling lenter sent, and the pool with it",
-      (stand.combat.ap_max, stand.combat.ap), (amax, amax))
-check("  ..so no c_ap goes out to cut the bar", [n for n, _p in stand.frames if n == "c_ap"], [])
+check("  ..the fight clamps to the same ceiling without changing locations",
+      (stand.combat.ap_max, stand.combat.ap), (stand.char.ap_ceiling,) * 2)
+check("  ..c_ap updates the bar with the paid balance and new maximum",
+      [p for n, p in stand.frames if n == "c_ap"],
+      [dict(ap=stand.char.ap_ceiling, amax=stand.char.ap_ceiling)])
 store.close()
 
 # --- over the socket ------------------------------------------------------------------

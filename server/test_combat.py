@@ -772,8 +772,8 @@ _grc.room = type("R", (), {})()
 _grc.room.players = {_blade.sess: None}
 _dog.alive, _dog.hp = False, 0
 _grc.settle_xp(_dog)
-check("a knife at Ближний бой 0: +1 pays 85% of 20, times the dog factor 0.7",
-      _shooter.skill[progression.MELEE][:2], [0, 11])
+check("a knife at Ближний бой 0: the approved +1 ratio times the dog factor 0.7",
+      _shooter.skill[progression.MELEE][:2], [0, 12])
 _grey_dog = mobs.Mob(2, 82, 10)
 _blade.award_xp(progression.SHOOTING, 2, _whole, _grey_dog)
 _grey_dog.alive, _grey_dog.hp = False, 0
@@ -791,8 +791,8 @@ _by_blows = _gunner.skill[progression.SHOOTING][1]
 _grc.room.players = {_gun.sess: None}
 _gdog.alive, _gdog.hp = False, 0
 _grc.settle_xp(_gdog)
-check("a gun's shots pay nothing until death, then the solo price: 11 plus carry, as for a knife",
-      (_by_blows, _gunner.skill[progression.SHOOTING][:2]), (0, [0, 11]))
+check("a gun's shots pay nothing until death, then the solo price: 12 plus carry, as for a knife",
+      (_by_blows, _gunner.skill[progression.SHOOTING][:2]), (0, [0, 12]))
 check("and the ledger is closed with the kill", _gdog.xp_ledger, {})
 # The one death payment produces one update. Holding a killing burst's stats
 # still postpones that update until the rest of the burst is complete.
@@ -807,9 +807,9 @@ _odog.alive, _odog.hp = False, 0
 _grc.settle_xp(_odog)
 check("  ..held through the kill: nothing yet", _onegun.sess.pushed, [])
 _onegun.release_stats()
-check("  ..released: one rp_info for the shooting skill, the whole 11 in it",
+check("  ..released: one rp_info for the shooting skill, the whole 12 in it",
       (_onegun.sess.pushed, _one.skill[progression.SHOOTING][:2]),
-      ([{"skills": {progression.SHOOTING}, "specs": set(), "attribs": set()}], [0, 11]))
+      ([{"skills": {progression.SHOOTING}, "specs": set(), "attribs": set()}], [0, 12]))
 check("  ..and a release with nothing held pushes nothing", (_onegun.release_stats(), _onegun.sess.pushed[1:]), (None, []))
 
 
@@ -1758,7 +1758,7 @@ try:
     rp = named(c.until(lambda f: f[0] == "rp_info"), "rp_info")[0]
     check("the equal-level dog pays its base reward with the current calendar bonus",
           (rp["a_skills"][0], rp["xp_skills"][0]),
-          (1, int(25 * .70 * .95 * .7 * progression.combat_calendar_multiplier())))
+          (1, int(25 * (890/1100) * .95 * .7 * progression.combat_calendar_multiplier())))
     check("to exactly one solo kill's price, without per-hit experience",
           [rp["a_skills"][0], rp["xp_skills"][0]], mirror.skill[progression.MELEE][:2])
     check("while Стрельба is where it was", (rp["a_skills"][1], rp["xp_skills"][1]), (6, 0))

@@ -367,12 +367,15 @@ class Character:
         return 50 + 5 * self.level
 
     @property
+    def skill_ap_bonus(self):
+        """Temporary AP from the highest effective skill, without raising level."""
+        effective = max(0, *(self.skill_level(i) for i in range(SKILLS)))
+        return 5 * (effective - self.level)
+
+    @property
     def ap_ceiling(self):
-        """The ОД the card shows: ap_max plus the bonus_od of everything
-        worn and held and the od of every set (showOD). The bar is filled
-        to this -- lenter;amax is its only source (APManager.setAP) -- and
-        the fight spends from it, so what the player reads is what he has."""
-        return self.ap_max + self.bonus_od
+        """AP pool and card total; temporary skill and direct bonuses count once."""
+        return self.ap_max + self.skill_ap_bonus + self.bonus_od
 
     def set_gear(self, b, repeat=(0, 0)):
         """Take on what the gear adds, in inventory.gear_bonus's shape, and
@@ -886,6 +889,22 @@ def crit_chance(ch, weapon_type, card=True):
     return cp + ch.bonus_cp, ce + ch.bonus_ce
 
 
+def temporary_crit(ch, weapon_type=None, *, melee=False):
+    """Only consumable ratings; gear and trained attributes keep full weight."""
+    active = getattr(ch, 'effects', None)
+    if not active:
+        return 0, 0
+    attributes = active['attribs']
+    cp = active['cp']
+    if melee:
+        cp += attributes[AGILITY]
+    elif weapon_type in _CRIT:
+        a, wa, b, wb, _spec = _CRIT[weapon_type]
+        cp += (attributes[a] * wa + attributes[b] * wb) / 4
+    ce = active['ce'] + (attributes[AGILITY] + attributes[PERCEPTION]) / 2
+    return cp, ce
+
+
 def level_gap(a, b):
     """PersAttributes.compareLevels: the difference clamped to +-4, which is
     both the frame over a mob's head and the wiki's experience multiplier
@@ -921,16 +940,20 @@ KILLS_START = 5
 KILLS_GROWTH = 1.5
 GAP_SHARE = {0: 0.5, -1: 0.25}
 GREY_GAP = 2
-COMBAT_GAP_REWARD = (.85, 1.0, 1.1, 1.2)
-COMBAT_LOW_GAP_REWARD = (.70, .50, .30, .15)
+COMBAT_GAP_REWARD = (980 / 1100, 1.0, 1.1, 1.2)
+COMBAT_LOW_GAP_REWARD = (890 / 1100, .70, .30, .15)
 # Full ordinary +2 kill, indexed by the base skill (never gear/effects).
-# Approved moderate curve, 2026-11-25. Preserve the calculated fractions:
+# Owner anchors, 2026-11-26: skill 15 pays 890/980/1100 for +0/+1/+2.
+# Base relief enters in thirds at 11/12/13; levels 0..10 keep their base.
+# Skill 16 pays 1589 for +2; capped skills keep that base for specialisations.
+# Preserve the calculated fractions:
 # rounding XP here changes the agreed number of kills near level boundaries.
 COMBAT_XP_BASE = (
-    20, 23.75, 30.0751, 38.2775, 50.1567, 66.1157, 86.8385,
-    115.2115, 153.11, 203.2552, 252.58061816, 313.87619442,
-    390.04681411, 484.70231227, 602.32854883, 748.5,
-    930.14394069, 930.14394069,
+    20, 23.75, 30.0751, 38.2775,
+    50.1567, 66.1157, 86.8385, 115.2115,
+    153.11, 203.2552, 252.58061816, 363.0088964189,
+    512.1589986209, 712.3213673975, 885.1855761029, 1100.0,
+    1589.0, 1589.0,
 )
 COMBAT_XP_ZONE = timezone(timedelta(hours=3), "MSK")
 
@@ -979,7 +1002,8 @@ def mob_xp(mob_level, player_level, share=1.0, xp_mult=1):
 def combat_mob_xp(mob_level, skill_level, share=1.0, xp_mult=1):
     """Approved PvE curve; +2 pays the full base, +4 caps the gap bonus.
 
-    Equal/-1/-2/-3 pay 70/50/30/15%; +1 pays 85%, +3/+4 110/120%.
+    Equal/+1 follow the 890/980-to-1100 anchors; -1/-2/-3 pay
+    70/30/15% of base, and +3/+4 retain 110/120%.
     Skill 17 trains only specialisations, using the level-16 base and a
     normal +4 ceiling even for bosses. Mining keeps the legacy mob_xp.
     """

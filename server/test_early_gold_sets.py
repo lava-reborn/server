@@ -71,7 +71,7 @@ class EarlyGoldSets(unittest.TestCase):
             strength, agility, constitution = bonus['attribs'][:3]
             self.assertEqual(ch.hp_max - before[0], bonus['hp'] + 4 * strength + 20 * constitution)
             self.assertEqual(ch.sp_max - before[1], bonus['st'] + 4 * agility + 20 * constitution)
-            self.assertEqual(ch.ap_ceiling - before[2], bonus['od'])
+            self.assertEqual(ch.ap_ceiling - before[2], bonus['od'] + 5 * max([0] + bonus['skills']))
             ch.set_gear(sets.zero())
             self.assertEqual((ch.hp_max, ch.sp_max, ch.ap_ceiling), before)
 

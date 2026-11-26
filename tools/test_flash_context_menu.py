@@ -45,6 +45,19 @@ class ContextMenuChecks
         }
         foreach (int message in new[] {0x200, 0x201, 0x202, 0x203, 0x207, 0x208, 0x20A, 0x20B})
             Check(!FlashContextMenu.Suppress(0, message, game, game, "ShockwaveFlash", true));
+        FlashContextMenu.ClickPair clicks = new FlashContextMenu.ClickPair();
+        IntPtr first = new IntPtr(1), second = new IntPtr(2);
+        Check(!clicks.Accept(0x205, first)); // Release without press.
+        Check(!clicks.Accept(0x204, first));
+        Check(clicks.Accept(0x205, first));
+        Check(!clicks.Accept(0x205, first)); // No duplicate opening.
+        Check(!clicks.Accept(0x204, first));
+        Check(!clicks.Accept(0x205, second)); // Another surface.
+        Check(!clicks.Accept(0x204, first));
+        Check(!clicks.Accept(0x205, IntPtr.Zero)); // Release outside game.
+        Check(!clicks.Accept(0x205, first));
+        Check(!clicks.Accept(0x204, IntPtr.Zero));
+        Check(!clicks.Accept(0x205, first)); // Press outside game.
         // A windowless child owns no pointer target: installing this hook
         // cannot suppress any input to the user's applications.
         ProcessStartInfo start = new ProcessStartInfo(Assembly.GetExecutingAssembly().Location, "child");

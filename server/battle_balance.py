@@ -77,8 +77,21 @@ def intellect(character):
     return max(0, character.attr(progression.INTELLECT) - INTELLECT_BASE)
 
 
+def attribute_multiplier(character, per_point):
+    """Trained/equipped INT is full strength; consumables add at most 3%."""
+    power = 1 + per_point * intellect(character)
+    active = getattr(character, 'effects', None)
+    if active:
+        permanent = max(0, character.attr(progression.INTELLECT)
+                        - active['attribs'][progression.INTELLECT] - INTELLECT_BASE)
+        temporary = max(0, min(3, active['attribs'][progression.INTELLECT]))
+        extra = .04 * temporary / (1 + temporary)
+        power = min(power, (1 + per_point * permanent) * (1 + extra))
+    return power
+
+
 def healing_multiplier(character):
-    return 1 + HEAL_PER_INTELLECT * intellect(character)
+    return attribute_multiplier(character, HEAL_PER_INTELLECT)
 
 
 def cooldown_seconds(character):
@@ -342,9 +355,53 @@ def critical(shooter, target, chance, optimal=True, *, ordinary=False):
     return combat.roll(critical_chance(shooter, target, chance, optimal, ordinary=ordinary))
 
 
+def pvp_critical_chance(cp, ce, temporary_cp=0, temporary_ce=0, optimal=True):
+    """Permanent ratings keep full weight; temporary ratings taper separately.
+
+    Offence approaches 90% smoothly. Total defence can remove at most half
+    that chance, including temporary anti-crit. No hard rating cutoff makes
+    additional legal equipment/attribute investment disappear at high ratings.
+    """
+    def rating(permanent, temporary, limit):
+        extra = max(0, temporary)
+        return max(0, permanent) + limit * extra / (10 + extra)
+
+    # Anti-crit has a gentler derivative because its total reduction is capped.
+    # Give its consumable ladder a separate budget so Omega remains useful.
+    attack = rating(cp, temporary_cp, 10)
+    defence = rating(ce, temporary_ce, 30)
+    unopposed = 3 + 87 * -math.expm1(-attack / 87)
+    retained = .5 + .5 / (1 + defence / 40)
+    chance = max(3, min(90, unopposed * retained))
+    return chance if optimal else chance / 2
+
+
+def ranged_critical_chance(shooter, target, weapon, optimal, *, ordinary=False):
+    """Use the same probability for live shots and analytic balance reports."""
+    evade = target.crit_evade_ranged()
+    if ordinary and shooter.is_player and target.is_player and weapon.base_crit is not None:
+        temporary_evade = progression.temporary_crit(target.character())[1]
+        return pvp_critical_chance(weapon.base_crit, evade - temporary_evade,
+                                   weapon.crit - weapon.base_crit, temporary_evade, optimal)
+    return critical_chance(shooter, target, weapon.crit - evade, optimal, ordinary=ordinary)
+
+
 def ranged_critical(shooter, target, weapon, optimal, *, ordinary=False):
-    return critical(shooter, target, weapon.crit - target.crit_evade_ranged(), optimal,
-                    ordinary=ordinary)
+    if shooter.is_player and not optimal and not ordinary:
+        return False
+    import combat
+    return combat.roll(ranged_critical_chance(shooter, target, weapon, optimal, ordinary=ordinary))
+
+
+def melee_critical(shooter, target, chance, *, ordinary=False):
+    if ordinary and shooter.is_player and target.is_player:
+        import combat
+        evade = combat.melee_crit_evade(target.character())
+        temporary_cp = progression.temporary_crit(shooter.character(), melee=True)[0]
+        temporary_ce = progression.temporary_crit(target.character(), melee=True)[1]
+        return combat.roll(pvp_critical_chance(chance + evade - temporary_cp,
+                           evade - temporary_ce, temporary_cp, temporary_ce))
+    return critical(shooter, target, chance, ordinary=ordinary)
 
 
 @lru_cache(maxsize=1)
@@ -378,11 +435,14 @@ def weapon(weapon, character, row, ammo):
     missing = max(0, inventory.item_level(row['type_id']) - character.level) if row else 0
     accuracy = 1 - ORDINARY_LEVEL_ACCURACY * min(inventory.GEAR_LEVEL_ALLOWANCE, missing)
     spread = 1
+    base_crit = None
     hit_cap = PLAYER_HIT_CAP
     if row:
         hit_cap = weapon_hit_caps().get(row['type_id'], hit_cap)
         params = items.params_of(row['type_id']) or {}
         kind = params.get('weapon_type')
+        if progression.crit_chance(character, kind) is not None:
+            base_crit = max(0, weapon.crit - progression.temporary_crit(character, kind)[0])
         spec_index = combat.SPEC_OF_WEAPON.get(kind)
         if spec_index is not None:
             skill = max(0, character.skill_level(progression.SHOOTING))
@@ -402,18 +462,18 @@ def weapon(weapon, character, row, ammo):
         # Item scatter, ammo, specialisation and the accuracy cap stay intact.
         if kind == items.RIFLE:
             spread *= RIFLE_SPREAD
-    power = 1 + DAMAGE_PER_INTELLECT * intellect(character)
+    power = attribute_multiplier(character, DAMAGE_PER_INTELLECT)
     damage, stamina, reach = (ammo.get(key, 1) for key in ('dam_mod', 'st_mod', 'range_mod'))
     return weapon._replace(dmin=max(1, round(weapon.dmin * power * damage)),
         dmax=max(1, round(weapon.dmax * power * damage)),
         sdmin=round(weapon.sdmin * power * stamina), sdmax=round(weapon.sdmax * power * stamina),
         max_range=math.floor(weapon.max_range * reach + 1e-9),
         cone=0 if ammo.get('acc_mod', 1) == 0 else weapon.cone * spread / accuracy,
-        hit_cap=hit_cap * accuracy)
+        hit_cap=hit_cap * accuracy, base_crit=base_crit)
 
 
 def melee(bounds, character, row):
-    power = 1 + DAMAGE_PER_INTELLECT * intellect(character)
+    power = attribute_multiplier(character, DAMAGE_PER_INTELLECT)
     return tuple(max(1, round(value * power)) for value in bounds)
 
 
@@ -723,6 +783,9 @@ def configure_mob(stats, *, health_scale=1, damage_scale=1, site=False):
     # Even creatures absent from the simulator retain the original pool floor.
     stats.hp_max = max(original_hp, round(stats.hp_max * health_scale / MOB_BALANCE_DIVISOR))
     stats.sp_max = max(original_sp, round(stats.sp_max * health_scale / MOB_BALANCE_DIVISOR))
+    # A calibrated profile must not turn a native melee fighter into a gunner.
+    if getattr(stats, 'melee_only', False):
+        stats.weapon_class, stats.ranged = 'knife', False
     equipped = equip_mob(stats, damage_scale, site=site)
     if not site:
         stats.ap_max = ordinary_mob_ap(stats.level)

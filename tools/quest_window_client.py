@@ -37,11 +37,12 @@ def __qwStatus(obj):
 
 def __qwEdenNPC(obj):
     # Native checkedQuests survives location changes and even relogin.
-    # After a release its status=0 can otherwise hide every subsequent
-    # quest except the first one of an Eden NPC. Revalidate only this
-    # NPC's Eden/lift offers; keep the read FIFO and pending actions intact.
+    # A new NPC ID refreshes only its first cached quest. Revalidate all
+    # offers for Eden/lifts and warehouse boxes: the latter put the retired
+    # personal reward before the timed clan-gold service. Keep the native
+    # read FIFO, pending actions and quest indices intact.
     res = obj.param.res
-    if res and ((res >= 1784 and res <= 1789) or res == 689):
+    if res and ((res >= 1784 and res <= 1789) or res == 689 or (res >= 6824 and res <= 6830)):
         inspector = lol.core.quests.QuestInspector.getInstance()
         i = 0
         while i < len(obj.param.give_quests):

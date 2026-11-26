@@ -60,6 +60,7 @@ CREATE TABLE IF NOT EXISTS char_effects (
     source INTEGER NOT NULL,
     started REAL NOT NULL,
     deadline REAL NOT NULL,
+    checkpoint_at REAL,
     PRIMARY KEY (char_id, family)
 );
 CREATE TABLE IF NOT EXISTS char_eden (
@@ -794,11 +795,16 @@ def migrate(db):
     for table, wanted in (("characters", CHARACTER_COLUMNS),
                           ("trophies", TROPHY_COLUMNS),
                           ("accounts", ACCOUNT_COLUMNS),
-                          ("clan_holdings", [("paid_until", "REAL NOT NULL DEFAULT 0")])):
+                          ("clan_holdings", [("paid_until", "REAL NOT NULL DEFAULT 0")]),
+                          ("char_effects", [("checkpoint_at", "REAL")])):
         have = db.columns(table)
         for col, decl in wanted:
             if col not in have:
                 db.add_column(table, col, decl)
+    # Freeze legacy buffs at upgrade time, even before their owner's first login.
+    # Repeated game/site migrations must not move an existing checkpoint.
+    db.execute('UPDATE char_effects SET checkpoint_at=? WHERE checkpoint_at IS NULL',
+               (time.time(),))
     orphans = db.execute(
         "SELECT id FROM characters WHERE id NOT IN"
         " (SELECT DISTINCT char_id FROM char_stats)").fetchall()
@@ -3643,8 +3649,25 @@ class Store:
 
     def effects_for(self, char_id):
         return [dict(row) for row in self.db.execute(
-            'SELECT source, started, deadline FROM char_effects WHERE char_id=?', (char_id,))]
+            'SELECT family, source, started, deadline, checkpoint_at FROM char_effects WHERE char_id=?',
+            (char_id,))]
 
-    def put_effect(self, char_id, family, source, started, deadline):
-        self.db.replace('char_effects', ('char_id', 'family', 'source', 'started', 'deadline'),
-                       [(char_id, family, source, started, deadline)], conflict=('char_id', 'family'))
+    def put_effect(self, char_id, family, source, started, deadline, *, checkpoint_at=None):
+        self.db.replace('char_effects', ('char_id', 'family', 'source', 'started', 'deadline', 'checkpoint_at'),
+                       [(char_id, family, source, started, deadline, checkpoint_at)],
+                       conflict=('char_id', 'family'))
+
+    def checkpoint_effects(self, char_ids, when=None):
+        """One heartbeat batch; an offline row keeps its last online instant."""
+        ids = sorted(set(int(cid) for cid in char_ids))
+        if not ids:
+            return
+        when = time.time() if when is None else when
+        with storage.atomic(self.db):
+            for offset in range(0, len(ids), 200):
+                batch = ids[offset:offset + 200]
+                where = 'char_id IN (' + ','.join('?' for _ in batch) + ')'
+                self.db.execute('DELETE FROM char_effects WHERE ' + where + ' AND deadline<=?',
+                                (*batch, when))
+                self.db.execute('UPDATE char_effects SET checkpoint_at=? WHERE ' + where,
+                                (when, *batch))

@@ -18,7 +18,6 @@ BLUEPRINT_SALE_MAX_LEVEL = 17
 BLUEPRINT_SALE_DISCOUNT = 3
 NPC_SALE_SHARE = Fraction(7, 10)
 BASE_SALE_SHARE = Fraction(17, 20)
-BASE_GOLD_BUYERS = frozenset((714, 5240))
 
 
 # Twice the agreed 175-kill afro income around the source camp. Legacy
@@ -93,18 +92,6 @@ def sale_quality(row, params):
     if row["root"] == items.HEAL and params.get("use_count"):
         return max(0.0, min(1.0, row["use_count"] / float(params["use_count"])))
     return 1.0
-
-
-def base_loot_gold(type_id):
-    """Only existing gold valuables: at least one cent over ordinary buyback."""
-    ordinary = mortimer.unit_gold(type_id)
-    if not ordinary:
-        return 0
-    params = items.params_of(type_id) or {}
-    nominal = (Fraction(str(params.get('cost', 0))) * progression.GOLD_OUNCE
-               * BASE_SALE_SHARE / progression.GOLD_TO_AFRO_RATE)
-    rounded = -(-nominal.numerator // nominal.denominator)
-    return max(ordinary + 1, rounded)
 
 
 def _sent_unit(value):
@@ -238,7 +225,7 @@ def client_fields(type_id):
     return dict(a_sale_unit=afro_sale_unit(type_id, params),
                 a_base_sale_unit=afro_sale_unit(type_id, params, BASE_SALE_SHARE),
                 g_base_sale_unit=sale_unit(type_id, params, BASE_SALE_SHARE),
-                base_loot_gold=base_loot_gold(type_id),
+                mortimer_only=int(type_id in mortimer.VALUABLES),
                 g_restore_base=restore_policy.base_price(type_id, params),
                 g_sale_unit=gold_sale, bp_sell=int(blueprint_sellable),
                 a_sale_cap=afro_sale_cap(type_id, params),

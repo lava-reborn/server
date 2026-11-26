@@ -970,7 +970,7 @@
    "auction": 0,
    "drop_on_death": 0,
    "weight": 250,
-   "desc_ru": "Корзина для бананов. Надевается на пояс и даёт +20 к силе. Нельзя выносить с плантации.",
+   "desc_ru": "Корзина для бананов. Надевается на пояс и даёт +50 к силе (+100 кг к грузоподъёмности). Нельзя выносить с плантации.",
    "_why": "RECOVERED wiki article and original object type, approved restoration 2026-11-16; locality enforced by schedule.keep_in.",
    "slot_type": 3,
    "armor_class": 0,
@@ -981,7 +981,7 @@
    ],
    "bonus_attribs_m": 1,
    "bonus_attribs": [
-    20
+    50
    ]
   },
   "60011": {

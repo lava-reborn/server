@@ -303,14 +303,15 @@ class CombatClient(unittest.TestCase):
                 self.call('__bfFlagContact', gamer, dict(id=73, targetCell='there'))
                 self.assertEqual(calls, ['native'])
 
-    def test_action_point_effect_changes_ceiling_without_refill_or_timer_reset(self):
+    def test_action_point_stat_changes_ceiling_without_refill_or_timer_reset(self):
         manager = dict(_maxAP=110, currentAP=23, dAP=4, dtAPInterval=91)
         calls = []
         def native(event):
             calls.append(event)
             manager['currentAP'] = max(0, min(event['param']['ap'], manager['_maxAP']))
         manager['__bfSyncAPOrig'] = native
-        for maximum, paid in ((150, 17), (150, 11), (110, 110)):
+        for maximum, paid in ((155, 23), (155, 23), (140, 140), (155, 140),
+                              (150, 17), (150, 11), (110, 110)):
             event = dict(param=dict(amax=maximum, ap=paid))
             self.call('__bfSyncAP', manager, event)
             self.assertEqual((manager['_maxAP'], manager['currentAP']), (maximum, paid))
@@ -318,7 +319,7 @@ class CombatClient(unittest.TestCase):
             self.assertIs(calls[-1], event)
         self.call('__bfSyncAP', manager, dict(param=dict(ap=6)))
         self.assertEqual((manager['_maxAP'], manager['currentAP']), (110, 6))
-        self.assertEqual(len(calls), 4)
+        self.assertEqual(len(calls), 8)
 
     def test_legacy_action_point_packet_preserves_native_ceiling(self):
         for supplied in (None, 0, -1, float('nan')):

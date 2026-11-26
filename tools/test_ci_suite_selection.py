@@ -46,17 +46,33 @@ class ClientSuiteSelection(unittest.TestCase):
         required = {'server/test_action_recovery.py', 'server/test_action_sync.py',
                     'server/test_mob_penetration.py', 'server/test_combat_xp_ramp.py',
                     'server/test_weekend_experience.py', 'server/test_hand_valentines.py',
-                    'server/test_combat_xp_cap.py', 'server/test_aggro_hold.py',
+                    'server/test_hand_gift_storage.py', 'server/test_mail_gold_loot.py', 'server/test_auction.py',
+                    'server/test_combat_xp_cap.py', 'server/test_release_pouches.py',
+                    'server/test_aggro_hold.py', 'server/test_gear.py',
+                    'server/test_mob_weapon_visuals.py', 'server/test_mob_loadouts.py',
+                    'server/test_eden_review.py', 'server/test_eden_harvest.py',
                     'server/test_ground.py', 'server/test_war_state.py', 'server/test_loot.py',
                     'server/test_items.py', 'server/test_camp_box_loot.py',
                     'server/test_eden_native_weapons.py',
                     'server/test_buff_purchases.py', 'server/test_archived_buffs.py',
-                    'server/test_bank_stacks.py',
+                    'server/test_buff_progression.py',
+                    'server/test_base_trade.py', 'server/test_eden_ticket_storage.py',
+                    'server/test_eden_quests.py', 'server/test_shop_prices.py',
+                    'server/test_bank_stacks.py', 'server/test_online_effects.py',
+                    'server/test_effect_clock_storage.py', 'server/test_pvp_critical_balance.py',
                     'server/test_machinegun_burst_survival.py', 'server/test_machinegun_balance.py',
                     'server/test_mob_loot_followup.py', 'server/test_release_combat.py',
                     'server/test_scanner_loot.py', 'server/test_stat_pipeline.py',
                     'tools/test_action_recovery_client.py', 'tools/test_bank_client.py',
-                    'tools/test_stat_breakdown_client.py',
+                    'tools/test_stat_breakdown_client.py', 'tools/test_combat_client.py',
+                    'tools/test_right_click_client.py', 'tools/test_chat_bubbles_client.py',
+                    'tools/test_flash_context_menu.py', 'tools/test_gold_commerce_client.py',
+                    'server/test_eden_tool_metadata.py', 'tools/test_eden_quest_client.py',
+                    'server/test_combat_damage_xp.py', 'server/test_weapon_upgrade_integrity.py',
+                    'server/test_quest_state.py', 'server/test_residence.py',
+                    'server/test_release_quest_content.py', 'server/test_academy_suspension.py',
+                    'server/test_eden_gift.py', 'server/test_point_blank.py',
+                    'server/test_valley_quests.py',
                     'tools/test_medicine_cooldown_client.py', 'tools/test_tester_launcher.py'}
         selected = {Path(path).relative_to(ROOT).as_posix() for path in suite.suites()}
         self.assertFalse(required - selected)
@@ -67,6 +83,10 @@ class ClientSuiteSelection(unittest.TestCase):
         groups = {name for group in re.findall(r'(?ms)^SUITES\+?=\((.*?)\)', postgres)
                   for name in group.split()}
         self.assertIn('bank_stacks', groups)
+        self.assertIn('effect_clock_storage', groups)
+        self.assertIn('eden_ticket_storage', groups)
+        self.assertIn('hand_gift_storage', groups)
+        self.assertIn('storage_pg', groups)
 
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory(prefix='lava_ci_selection_')

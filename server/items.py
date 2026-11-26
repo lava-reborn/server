@@ -68,6 +68,8 @@ LINK_CONFIDENCE = 0.5
 # Item.as:39-45. The root type decides which ss_si_* frame describes the item.
 FIRE_ARM, WEAR, HEAL, AMMO, TRASH, COLD_ARM, TROPHY = range(7)
 POISON_SYRINGE = 3552
+EDEN_TICKETS = frozenset((4231, 4232, 4233))
+EDEN_TICKET_STACK = 2_147_483_647  # INTEGER bound shared by SQLite and PostgreSQL.
 HAND_VALENTINES = {1069: (progression.STRENGTH, 3), 1070: (progression.AGILITY, 3),
                    1071: (progression.PERCEPTION, 3), 1072: (progression.INTELLECT, 4)}
 
@@ -287,6 +289,10 @@ def catalogue():
         txt = world._read(os.path.join(world.RES, "database", "objects.xml"))
         table = own_items.originals(own_items.table(txt))
         table.update(own_items.rows(table))
+        # The four 25 G gifts are knives even with an older client catalogue.
+        for type_id in HAND_VALENTINES:
+            if type_id in table:
+                table[type_id] = (COLD_ARM, table[type_id][1])
         _CATALOGUE = table
     return _CATALOGUE
 
@@ -988,6 +994,7 @@ ARTICLE_GOLD_PRICE = {2649: 200, 2650: 250,           # DnLoteryKey_g_9_10, _g_1
                       2651: 300,                      # DnLoteryKey_g_13_14
                       2654: 300, 2655: 350, 3575: 450,  # AhLoteryKey_g_15_16, _17_18, _19_19
                       1567: 25, 1639: 10,             # ah_ticket, ah_dongola_ticket_g
+                      3826: 150,                      # Owner: two-hour scanner, 1.50 G (2026-11-26).
                       # Plus is the stronger dose above MK IX. Scale its
                       # price by the bonus, rounded up to the next 0.05 G.
                       4935: 200, 4936: 220, 4956: 220,  # Salus MK IX/+, Anesthetic +
@@ -1018,13 +1025,21 @@ GOLD_AMMO_ROUND = 1
 
 @lru_cache(maxsize=None)
 def scanner_quantity_item(type_id):
-    """Ordinary afro-only loot; no equipment, quest goods or gold buyback."""
+    """Cheap afro trash and ammunition; valuables use probability instead."""
     import mortimer
-    if (root_of(type_id) in (FIRE_ARM, WEAR, COLD_ARM)
+    root, name = catalogue().get(type_id, (None, ''))
+    if (root not in (TRASH, AMMO) or name.startswith('ValuableLoot_LvL_')
             or type_id in mortimer.VALUABLES or type_id == mortimer.SAND):
         return False
     si = params_of(type_id) or {}
     return bool(si.get('cost') and not (si.get('g_cost') or si.get('quest')))
+
+
+def scanner_quantity_multiplier(type_id, scanner):
+    """A +200% scanner doubles trash and triples ammunition, once."""
+    if not scanner_quantity_item(type_id):
+        return 1
+    return scanner if root_of(type_id) == AMMO else 1 + (scanner - 1) / 2
 
 
 def gold_round(p):
@@ -1367,6 +1382,17 @@ def static_info(type_id):
         admin = ADMIN_OVERRIDES.get(type_id)
         if admin:
             info[1].update(admin)
+        if type_id in HAND_VALENTINES:
+            attribute, amount = HAND_VALENTINES[type_id]
+            info[1].update(cost=0, g_cost=2500, action_map=ACT_FIRE,
+                           desc=DESC_ID_OFFSET + type_id,
+                           h_damage_min=1, h_damage_max=1,
+                           st_damage_min=1, st_damage_max=1,
+                           max_range=1.7, strike_cost=1, strike_mod=1,
+                           strike_time=600, can_aimed=1, max_break_abs=30000,
+                           need_skills_m=1, need_skills=[0],
+                           bonus_attribs_m=1 << attribute, bonus_attribs=[amount])
+            info[1].pop('slot_type', None)
         if root_of(type_id) == HEAL:
             import effects
             effect = effects.definition(type_id)
@@ -1411,6 +1437,8 @@ def static_info(type_id):
             info[1].update(max_break_abs=20, desc=DESC_ID_OFFSET + type_id)
     if info and info[1].get('max_count') == 50:
         info[1]['max_count'] = 100
+    if info and type_id in EDEN_TICKETS:
+        info[1]['max_count'] = EDEN_TICKET_STACK
     if info and root_of(type_id) == HEAL:
         name = catalogue()[type_id][1]
         single = (name.startswith(('Med_Battle_', 'Med_Pacific_'))

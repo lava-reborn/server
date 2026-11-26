@@ -246,6 +246,9 @@ def find_path(loc, start, goal, blocked=(), limit=SEARCH_LIMIT, toward=None):
 
 # --- what a type is ------------------------------------------------------
 
+BUM_RESOURCES = frozenset(('bich', '120'))
+
+
 class MobStats:
     """One type's numbers, from mob_types.json through mob_curves.json."""
 
@@ -255,7 +258,9 @@ class MobStats:
         self.name = info.get("name", "")
         self.level = int(info.get("level", 1))
         self.role = info.get("role", "mob")
-        self.weapon_class = info.get("weapon_class", "fist")
+        is_bum = self.role == "mob" and info.get("resource") in BUM_RESOURCES
+        self.weapon_class = "knife" if is_bum else info.get("weapon_class", "fist")
+        self.melee_only = self.weapon_class in ('knife', 'fist')
         self.hex_ms = int(info.get("hex_ms", HEX_MS))
         row = LEVELS[str(max(0, min(MAX_LEVEL, self.level)))]
         role = ROLES.get(self.role, ROLES["mob"])
@@ -283,7 +288,8 @@ class MobStats:
         self.shots = max(1, int(weapon["shots"]))
         self.attack_ap = int(weapon["ap"])
         self.ranged = self.weapon_class in RANGED
-        self.weapon_type_id = info.get("weapon_type_id", WEAPON_ITEM.get(self.weapon_class))
+        self.weapon_type_id = (WEAPON_ITEM["knife"] if is_bum else
+                               info.get("weapon_type_id", WEAPON_ITEM.get(self.weapon_class)))
         self.loot_ammo_type = info.get("loot_ammo_type")
         self.loot_ammo_count = tuple(info.get("loot_ammo_count", (3, 10)))
         self.can_attack = (self.role != "object" and self.weapon_class != "none"
@@ -672,9 +678,9 @@ def roll_table(type_id, rng, multiplier=1, *, gold_multiplier=1, guarantee_ingot
         if chance >= SURE or (guarantee_ingots and t in items.GOLD_INGOTS):
             out.append((t, count_of(type_id, t)))
             continue
-        if t in items.GOLD_INGOTS:
-            factor = gold_multiplier
-        elif t in mortimer.VALUABLES or t == mortimer.SAND or items.scanner_quantity_item(t):
+        if t in items.GOLD_INGOTS or t in mortimer.VALUABLES or t == mortimer.SAND:
+            factor = gold_multiplier * scanner_multiplier
+        elif items.scanner_quantity_item(t):
             factor = multiplier / scanner_multiplier
         else:
             factor = multiplier
@@ -843,14 +849,14 @@ def loot_for(st, rng, wanted=(), *, loc_id=None, ambush_camp=None,
         return out
     import bosses                  # late: keep module initialization separate
     blueprint = bosses.blueprint_for(loc_id, st.type_id)
-    # Scanner raises the quantity of afro-only common loot, and the chance
-    # of equipment. Gold valuables, quests, objects, events and harvest stay separate.
+    # Trash quantity x2 and ammo x3; other ordinary loot and equipment
+    # gain probability only. Quests, objects, events and harvest stay separate.
     scanner = min(3, max(1, scanner_multiplier)) if st.role != 'object' else 1
     multiplier = min(camp_loot.MAX_MULTIPLIER, multiplier) if st.role != 'object' else 1
     ordinary = carried(st, rng, multiplier / scanner) + roll_table(st.type_id, rng, multiplier,
                          gold_multiplier=gold_multiplier, scanner_multiplier=scanner,
                          guarantee_ingots=st.role == 'boss')
-    ordinary = [(t, math.floor(n * scanner) if items.scanner_quantity_item(t) else n)
+    ordinary = [(t, math.floor(n * items.scanner_quantity_multiplier(t, scanner)))
                 for t, n in ordinary]
     if st.role == 'object':
         import camp_box_loot
@@ -889,29 +895,10 @@ def stats(type_id):
 
 
 def visual_type(type_id, weapon_type_id):
-    """Existing armed art for the few native bodies without that animation.
-
-    The identity, equipment and fighting stats stay those of the actual mob;
-    only userInfo.res uses the donor. Never substitute unarmed actors or
-    animals. The m7 donor is the same body with a complete animation folder.
-    """
+    """Keep native bodies; only the incomplete m7 armed rig needs its twin."""
     info = TYPES.get(str(type_id), {})
-    if info.get('role') not in ('mob', 'boss') or weapon_type_id is None:
-        return type_id
-    root = items.root_of(weapon_type_id)
-    if root == items.COLD_ARM:
-        stance = 'knife'
-    elif root == items.FIRE_ARM:
-        params = items.params_of(weapon_type_id) or {}
-        stance = 'pistol' if params.get('weapon_type') == items.PISTOL else 'rifle'
-    else:
-        return type_id
-    resource = info.get('resource')
-    if resource in ('bich', '120'):
-        return 14
-    if resource in ('band_leader', '82') and stance == 'knife':
-        return 1668
-    if resource == 'm7' and stance in ('pistol', 'rifle'):
+    if (info.get('role') in ('mob', 'boss') and info.get('resource') == 'm7'
+            and weapon_type_id is not None and items.root_of(weapon_type_id) == items.FIRE_ARM):
         return 131
     return type_id
 

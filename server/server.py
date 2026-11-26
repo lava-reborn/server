@@ -809,6 +809,9 @@ class Session:
             training_ground.suspend(self)
         if self.closed and (not force or self.linger is None):
             return
+        active = getattr(self, 'effects', None)
+        if active is not None:
+            active.pause()
         if not force and not self.closed and self.should_linger():
             self.closed = True
             self.linger = asyncio.get_running_loop().call_later(
@@ -959,6 +962,8 @@ class Session:
         # Anything worn in a slot it does not fit (a row from before the
         # slot_type fix) goes back to the bag before the gear is counted,
         # and so does anything above the character's level (the level rule).
+        self.inv.normalize_hand_valentines()
+        self.inv.normalize_eden_tickets()
         self.inv.unfit_to_bag()
         # Eligibility uses the same effective skills as the character card.
         # Recount after removals until no dependent weapon remains equipped.
@@ -1279,6 +1284,11 @@ class Session:
                              c["name"])
                     old.close()
                     if old.linger is not None:
+                        # Rebase persisted buffs before taking over the socket:
+                        # a failed SQL write must leave the old body recoverable.
+                        active = getattr(old, "effects", None)
+                        if active is not None:
+                            active.resume()
                         old.linger.cancel()
                         old.linger = None
                         old.writer, old.peer = self.writer, self.peer
@@ -1539,8 +1549,8 @@ class Session:
         # APManager.setAP takes both from here and nowhere else. The ceiling
         # is the card's ОД, gear included (Character.ap_ceiling), where
         # rp_info's ap_max goes without it for the card to add. The fight
-        # keeps this figure until the next lenter, as the bar does
-        # (combat.Fighter.ap_max); entered() below fills the pool to it.
+        # keeps the bar in sync through c_ap when equipment/skills change;
+        # entered() below fills the initial pool to it.
         if not self.resume_loading:
             destination = ROOMS.get(self.room_key())
             combat.room_combat(destination, STORE).keep_hours()
@@ -2830,6 +2840,8 @@ class Session:
         attribs=/skills=/specs=. The client asks for this frame once per
         session and never again, so every change is pushed from here."""
         self.send("rp_info", **self.character().rp_info(**groups))
+        if getattr(self.combat, 'amax_sent', None) is not None:
+            self.combat.sync_ap_ceiling()
         self.skill_recount()
 
     def send_other_player_info(self, pid):
@@ -2924,7 +2936,6 @@ class Session:
                                      if t not in quests.CLAN_BASE_ENTRIES]
         holder = None
         if root == world.TRADER:
-            import gold_trade
             rates = inventory.trade_rates(STORE, self.room.loc.id, type_id, self.char_id)
             # type_list is the price list itself, in order: the client builds a
             # TradeItem per entry and later refers to a purchase by that index,
@@ -2941,8 +2952,6 @@ class Session:
             if holdings.base_for(self.room.loc.id) is not None:
                 params['can_repair'] = int(holdings.may_repair(
                     STORE, self.room.loc.id, type_id, self.char_id))
-            params['base_gold_buyer'] = int(type_id in gold_trade.BASE_GOLD_BUYERS
-                and rates['smod'] == float(gold_trade.BASE_SALE_SHARE))
             if not holdings.may_serve(STORE, self.room.loc.id, type_id, self.char_id):
                 params.update(can_trade=0, can_repair=0, type_list=[])
             if eden_shop.is_buyer(type_id):
@@ -5261,6 +5270,12 @@ async def main():
                          inventory.fill_offline_gifts):
         log.info("filled the admin panel's offline gifts (%s)",
                  inventory.OFFLINE_GIFTS_FIX)
+    # Old parcels and auction lots are snapshots, outside a login inventory.
+    # Repair both their IDs and the lot's class before accepting any clients.
+    if accounts.run_once(STORE.db, inventory.HAND_VALENTINE_SNAPSHOTS_FIX,
+                         inventory.repair_hand_valentine_snapshots):
+        log.info("repaired old valentine parcels and lots (%s)",
+                 inventory.HAND_VALENTINE_SNAPSHOTS_FIX)
     # From the first socket on, the error log takes no more than twenty
     # records of one kind a minute: anybody can send unknown commands by
     # the thousand. Everything above went in whole (errlog.serving).
@@ -5568,6 +5583,8 @@ def publish_online():
             gx=int(sess.gx or 0), gy=int(sess.gy or 0),
             since=int(getattr(sess, "since", time.time()))))
     STORE.set_online(rows)
+    # Persist online time in one batch, not a write per buff or per hit.
+    STORE.checkpoint_effects([row["char_id"] for row in rows])
 
 
 async def drain_admin_actions():

@@ -1,4 +1,4 @@
-"""Replay the native cache bug and execute the emitted Eden-only refresh."""
+"""Replay native status caching for Eden, lifts and warehouse gold rewards."""
 import struct
 import sys
 from pathlib import Path
@@ -153,11 +153,54 @@ class EdenQuestClient(unittest.TestCase):
         self.assertEqual(self.reads, [18114, 18120, 18121, 18122])
 
     def test_ordinary_npcs_keep_the_original_cache_and_requests(self):
-        for npc_type in (883, 1783, 1790, 60020, None):
+        for npc_type in (883, 1783, 1790, 6823, 6831, 60020, None):
             target, frame = self.npc(npc_type)
             self.wrapper.invoke(target, [frame])
         self.assertEqual(self.reads, [])
-        self.assertEqual(len(self.original_calls), 5)
+        self.assertEqual(len(self.original_calls), 7)
+
+    def warehouse(self, npc_type, entity_id):
+        self.catalogue[npc_type] = (quests.given_by(npc_type), quests.taken_by(npc_type))
+        give, take = self.catalogue[npc_type]
+        self.inspector['checkedQuests'].update(dict.fromkeys(give + take, True))
+        return self.npc(npc_type, entity_id)
+
+    def test_native_cache_reproduces_hidden_warehouse_gold_after_box_refresh(self):
+        for npc_type in range(6824, 6831):
+            with self.subTest(npc=npc_type):
+                self.reads.clear()
+                target, frame = self.warehouse(npc_type, 800000 + npc_type)
+                target['__qwEdenNPCOrig'](frame)
+                # Native checkQStatus marks the new NPC checked after the
+                # retired personal quest, then skips its cached gold offer.
+                self.assertEqual(self.reads, [765 + npc_type - 6824])
+                self.assertNotIn(18220 + npc_type - 6824, self.reads)
+
+    def test_all_warehouse_boxes_revalidate_gold_after_window_capture_and_relog(self):
+        for npc_type in range(6824, 6831):
+            for entity_id in (800001, 800002, 800001):
+                with self.subTest(npc=npc_type, entity=entity_id):
+                    self.reads.clear()
+                    target, frame = self.warehouse(npc_type, entity_id)
+                    offered = list(frame['param']['give_quests'])
+                    self.wrapper.invoke(target, [frame])
+                    self.assertEqual(self.reads, [765 + npc_type - 6824,
+                                                 18220 + npc_type - 6824])
+                    self.assertEqual(list(frame['param']['give_quests']), offered)
+                    self.assertEqual(list(frame['param']['take_quests']), offered)
+
+    def test_warehouse_refresh_preserves_inflight_requests_and_other_npc_cache(self):
+        pending_head = self.pending[0]
+        checked_npcs = self.inspector['checkedNPC']
+        target, frame = self.warehouse(6830, 800030)
+        self.wrapper.invoke(target, [frame])
+        self.assertEqual(self.reads, [771, 18226])
+        self.assertIs(self.pending[0], pending_head)
+        self.assertEqual(self.inspector['callCount'], 1)
+        self.assertIs(self.inspector['currentQuests'], self.active)
+        self.assertIs(self.inspector['checkedNPC'], checked_npcs)
+        self.assertTrue(self.inspector['checkedQuests'][777])
+        self.assertEqual(self.inspector['closedQuest'], 18117)
 
     def test_bunker_lifts_revalidate_both_locations_without_reindexing_quests(self):
         self.catalogue[689] = (quests.given_by(689), quests.taken_by(689))

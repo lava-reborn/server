@@ -218,6 +218,30 @@ class EdenQuestTests(unittest.TestCase):
                           for _npc, _qtype, _banana, ticket in exchanges},
                          {eden.GREEN_TICKET: 1, eden.GOOD_TICKET: 1, eden.BAD_TICKET: 1})
 
+    def test_sorter_merges_coupons_and_quota_quest_consumes_each_heap_once(self):
+        self.finish_intro()
+        for npc, qtype, banana, ticket in ((1788, 18111, eden.GREEN_BANANA, eden.GREEN_TICKET),
+                                          (1787, 18112, eden.GOOD_BANANA, eden.GOOD_TICKET),
+                                          (1786, 18113, eden.BAD_BANANA, eden.BAD_TICKET)):
+            quota = eden.TICKET_QUOTA[ticket]
+            old = self.s.inv.give_pieces(ticket, quota - 1)[0]
+            self.give(banana)
+            self.assertEqual(self.take(qtype, npc), [0])
+            qid = self.taken_id(qtype)
+            self.assertEqual(self.hand_in(qid), [0])
+            self.assertEqual(self.store.item(old['uniq'])['count'], quota)
+            self.assertEqual(len([r for r in self.s.inv.rows() if r['type_id'] == ticket]), 1)
+            self.assertEqual(self.hand_in(qid), [server.RES_NO_SUCH])
+            self.s.inv.give_pieces(ticket, 3)
+        self.assertEqual(self.take(18114), [0])
+        qid = self.taken_id(18114)
+        self.assertEqual(self.hand_in(qid), [0])
+        self.assertEqual({ticket: self.s.inv.bag_pieces().get(ticket)
+                          for ticket in items.EDEN_TICKETS}, dict.fromkeys(items.EDEN_TICKETS, 3))
+        self.assertEqual(self.s.inv.bag_pieces().get(eden.EXIT_PASS), 1)
+        self.assertEqual(self.hand_in(qid), [server.RES_NO_SUCH])
+        self.assertEqual(self.s.inv.bag_pieces().get(eden.EXIT_PASS), 1)
+
     def test_all_six_wrong_sorter_hand_ins_preserve_bananas_tickets_and_active_quest(self):
         for qtype, npc_type, banana, ticket in (
                 (18111, 1788, eden.GREEN_BANANA, eden.GREEN_TICKET),

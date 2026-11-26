@@ -1,5 +1,6 @@
 """Paid clan-base prices: native frames and actual atomic buy/sell/repair."""
 import math
+import time
 import unittest
 from datetime import datetime
 from types import SimpleNamespace as NS
@@ -269,6 +270,22 @@ class BaseTrade(unittest.TestCase):
         self.assertEqual(inventory.purchase_pmod(26075, self.inv.trade.rates), inventory.PMOD)
         self.assertEqual(inventory.repair_rmod(self.site.loc, self.site.flag), inventory.RMOD)
 
+    def test_two_hour_scanner_costs_135_cents_per_piece_at_both_paid_bases(self):
+        for location in (609, 1443):
+            self.base_room(location)
+            self.open(1013)
+            for quantity in (1, 2):
+                with self.subTest(location=location, quantity=quantity):
+                    before = self.store.money(self.cid)
+                    serials = {row['uniq'] for row in self.inv.rows()}
+                    self.assertEqual(self.buy(3826, quantity), [inventory.RES_OK])
+                    self.assertEqual(self.store.money(self.cid),
+                                     (before[0], before[1] - 135 * quantity))
+                    bought = [row for row in self.inv.rows() if row['uniq'] not in serials]
+                    self.assertEqual(len(bought), quantity)
+                    self.assertTrue(all(row['type_id'] == 3826 and row['count'] == 1
+                                        for row in bought))
+
     def test_changed_membership_or_expired_rent_refuses_stale_window_without_payment(self):
         ammo = next(t for t in items.stock_for(714, 609) if items.root_of(t) == items.AMMO and items.params_of(t).get('g_cost'))
         before = self.store.money(self.cid)
@@ -513,7 +530,8 @@ class BaseTrade(unittest.TestCase):
                 self.assertTrue(expected <= set(stock), sorted(expected - set(stock)))
                 self.assertEqual(len(stock), len(set(stock)))
                 self.assertLess(len(stock), 256)
-                for tid, gold, cost in ((3789, True, 45), (4181, False, 2250),
+                for tid, gold, cost in ((3789, True, 45), (3826, True, 135),
+                                        (4181, False, 2250),
                                         (4917, False, 450), (4937, False, 450),
                                         (4919, True, 7), (4939, True, 7),
                                         (4936, True, 198), (4956, True, 198)):
@@ -596,87 +614,45 @@ class BaseTrade(unittest.TestCase):
                 self.assertLessEqual(after[0] + after[1] * rate, before[0] + before[1] * rate)
                 self.assertIsNone(self.store.item(row['uniq']))
 
-    def test_five_gold_valuables_pay_gold_once_and_keep_remaining_stack(self):
-        prices = {6950: 4, 6951: 5, 6952: 5, 6953: 5, 6959: 7}
-        self.assertEqual({t: gold_trade.base_loot_gold(t) for t in mortimer.VALUABLES}, prices)
-        self.assertTrue(next(p for cmd, p in self.frames if cmd == 'userInfo_Trader')['base_gold_buyer'])
-        for t, unit in prices.items():
-            row = self.give(t, 5)
-            before = self.store.money(self.cid)
-            p, q = self.quote(row, 2)
-            self.assertEqual((q['res'], q['price'], q['currency']), (0, unit * 2, 1))
-            self.assertNotIn('eden_sale', q)
-            self.s.char.gold = 999999999
-            self.assertEqual(self.confirmed(p, q), 0)
-            self.assertEqual(self.store.money(self.cid), (before[0], before[1] + unit * 2))
-            self.assertEqual(self.store.item(row['uniq'])['count'], 3)
-            self.assertEqual(self.confirmed(p, q), inventory.RES_REFUSED)
-            p, q = self.quote(self.store.item(row['uniq']), 3)
-            self.assertEqual(self.confirmed(p, q), 0)
-            self.assertEqual(self.store.money(self.cid), (before[0], before[1] + unit * 5))
-            self.assertIsNone(self.store.item(row['uniq']))
+    def test_gold_valuables_are_refused_by_every_trader_on_both_paid_bases(self):
+        for loc_id in (609, 1443):
+            self.base_room(loc_id)
+            for trader in self.site.traders:
+                self.open(trader)
+                info = next(p for cmd, p in self.frames if cmd == 'userInfo_Trader')
+                self.assertFalse(info.get('base_gold_buyer'))
+                for type_id in mortimer.VALUABLES:
+                    row = self.give(type_id, 5)
+                    before = self.store.money(self.cid), list(self.inv.rows())
+                    request, quote = self.quote(row, 2)
+                    self.assertEqual(quote['res'], inventory.RES_REFUSED)
+                    self.assertEqual(self.confirmed(request, quote), inventory.RES_REFUSED)
+                    self.assertEqual((self.store.money(self.cid), list(self.inv.rows())), before)
 
-    def test_gold_valuable_quote_loses_rights_when_membership_or_lease_changes(self):
-        row = self.give(6951, 5)
-        p, q = self.quote(row, 2)
-        self.store.db.execute('UPDATE clan_holdings SET paid_until=1500 WHERE site=?', (self.site.key,))
-        self.store.db.commit()
-        before = self.store.money(self.cid)
-        self.assertEqual(self.confirmed(p, q), inventory.RES_REFUSED)
-        self.assertEqual(self.store.money(self.cid), before)
-        self.assertEqual(self.store.item(row['uniq'])['count'], 5)
-        self.store.db.execute('UPDATE clan_holdings SET paid_until=? WHERE site=?',
-                              (1000 + 7 * 86400, self.site.key))
-        self.store.db.commit()
-        p, q = self.quote(row, 2)
-        self.store.db.execute('DELETE FROM clan_members WHERE char_id=?', (self.cid,))
-        self.store.db.commit()
-        self.assertEqual(self.confirmed(p, q), inventory.RES_REFUSED)
-        self.assertEqual(self.store.money(self.cid), before)
-        self.assertEqual(self.store.item(row['uniq'])['count'], 5)
-
-    def test_gold_valuable_quotes_refuse_wrong_trader_and_failed_payment_rolls_back(self):
+    def test_old_gold_quote_cannot_be_confirmed_after_exchange_is_removed(self):
         row = self.give(6950, 5)
-        self.open(1013)
-        _, q = self.quote(row, 2)
-        self.assertNotEqual(q['res'], 0)
-        self.open(714)
-        p, q = self.quote(row, 2)
-        before = self.store.money(self.cid)
-        with patch.object(self.store, 'set_money', side_effect=RuntimeError('injected')):
-            self.assertEqual(self.confirmed(p, q), inventory.RES_REFUSED)
-        self.assertEqual(self.store.money(self.cid), before)
-        self.assertEqual(self.store.item(row['uniq'])['count'], 5)
-        self.assertEqual(self.confirmed(p, q), inventory.RES_REFUSED)
-        p, q = self.quote(row, 2)
-        self.assertEqual(self.confirmed(p, q), 0)
-        self.assertEqual(self.store.money(self.cid)[1], before[1] + 8)
+        before = self.store.money(self.cid), list(self.inv.rows())
+        self.inv.trade.sale_quote = dict(token='old-quote', expires=time.monotonic() + 60,
+                                        row=row, n=2, price=8, gold=True)
+        request = dict(obj=inventory.oid_of(row), param=2)
+        for _ in range(2):
+            self.assertEqual(self.confirmed(request, dict(token='old-quote')), inventory.RES_REFUSED)
+            self.assertEqual((self.store.money(self.cid), list(self.inv.rows())), before)
 
-    def test_gold_loot_excludes_sand_ingots_and_quest_bags_and_has_no_retail_source(self):
-        from test_shop_prices import stock_types
-        self.assertFalse(mortimer.VALUABLES & stock_types())
-        for t in (2258, 7620, 4796, 4797, 1305, 1306):
-            self.assertEqual(gold_trade.base_loot_gold(t), 0)
-            row = self.give(t)
-            _, q = self.quote(row)
-            self.assertNotEqual(q.get('currency'), 1)
-
-    def test_dongola_gold_supplier_uses_its_actual_paid_base_and_same_gold_buyback(self):
-        self.store.holding_clear(self.site.key, 'admin')
-        site = holdings.site_at(1443)
-        self.store.holding_set(site.key, self.clan, 'admin', slot=1000, when=1000)
-        self.store.db.execute('UPDATE clan_holdings SET paid_until=? WHERE site=?',
-                              (1000 + 7 * 86400, site.key))
-        self.store.db.commit()
-        self.s.loc = NS(id=1443, width=20, height=20, spawns=[])
+    def test_valuables_remain_sellable_only_to_mortimer_at_original_price(self):
+        self.s.loc = NS(id=36, width=20, height=20, spawns=[])
         self.s.room.loc = self.s.loc
-        self.open(5240)
-        row = self.give(6950)
-        before = self.store.money(self.cid)
-        p, q = self.quote(row)
-        self.assertEqual((q['price'], q['currency']), (4, 1))
-        self.assertEqual(self.confirmed(p, q), 0)
-        self.assertEqual(self.store.money(self.cid), (before[0], before[1] + 4))
+        self.open(1188)
+        for type_id in mortimer.VALUABLES:
+            row = self.give(type_id, 5)
+            before = self.store.money(self.cid)
+            self.assertEqual(self.sell(row, 2), inventory.RES_OK)
+            self.assertEqual(self.store.money(self.cid),
+                             (before[0], before[1] + 2 * mortimer.unit_gold(type_id)))
+            self.assertEqual(self.store.item(row['uniq'])['count'], 3)
+            self.assertEqual(gold_trade.client_fields(type_id)['mortimer_only'], 1)
+        for type_id in (2258, 7620, 4796, 4797, 1305, 1306):
+            self.assertEqual(gold_trade.client_fields(type_id)['mortimer_only'], 0)
 
 
 if __name__ == '__main__':
