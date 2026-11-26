@@ -657,11 +657,18 @@ _LOOT_MANUAL = None
 _ORIG_DESCRIBED = None
 
 
+INTUX_IV_EXPERIENCE = 90
+
+
 def wiki():
     """type_id -> the wiki's ss_si_* fields for it (data/items_wiki.json)."""
     global _WIKI
     if _WIKI is None:
         _WIKI = {int(k): v for k, v in _load_wiki(WIKI_ITEMS_PATH, "items").items()}
+        # Release override; keep the archived article unchanged.
+        _WIKI[3561] = dict(_WIKI[3561], exp_mobs_pct=INTUX_IV_EXPERIENCE,
+                           exp_players_pct=INTUX_IV_EXPERIENCE,
+                           desc_ru=f"Увеличивает получаемое количество опыта на {INTUX_IV_EXPERIENCE}%.")
     return _WIKI
 
 

@@ -104,7 +104,18 @@ def __sbOD():
     this.__sbODOrig()
     attrs = lol.core.Master.getInstance().gamer.attributes
     field = this.od_value.value
-    _global.__sbField(field, _global.__sbValue(attrs.ap_max, Number(field.text)))
+    trained = 0
+    effective = 0
+    i = 0
+    while i < len(attrs.skillArray):
+        skill = attrs.skillArray[i]
+        if skill.value > trained:
+            trained = skill.value
+        if skill.level > effective:
+            effective = skill.level
+        i = i + 1
+    total = Number(field.text) + 5 * (effective - trained)
+    _global.__sbField(field, _global.__sbValue(attrs.ap_max, total))
 
 def __sbEvade():
     this.__sbEvadeOrig()

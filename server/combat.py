@@ -1040,10 +1040,7 @@ class Fighter:
         # take-all moves them into the bag on the client (ss_upd 3).
         self.ran_out = []
         self.regen_at = 0.0
-        # The amax the last lenter carried, or None before the first. The
-        # client's bar keeps that ceiling until the next lenter
-        # (APManager.setAP is called from Master.lenter and nowhere else),
-        # so the fight here keeps it too -- see ap_max.
+        # The AP maximum last sent by lenter or c_ap, None before first entry.
         self.amax_sent = None
 
     # --- plumbing ------------------------------------------------------------
@@ -1092,16 +1089,7 @@ class Fighter:
 
     @property
     def ap_max(self):
-        """The card's ОД and the bar's ceiling, gear included: what lenter
-        told the client (Character.ap_ceiling), not rp_info's bare ap_max.
-
-        The figure of the last lenter, not the live one. A set piece that
-        breaks or comes off in the middle of a location lowers ap_ceiling
-        at once, but the client's bar still fills to the old amax -- on its
-        own tick and on every edge of ws -- and a server that regenerated
-        and reset to the lower one would refuse, with res=11, the shots the
-        bar says are paid for. The new ceiling reaches both sides together,
-        with the next lenter."""
+        """AP ceiling last sent to the bar, including equipment and skill bonuses."""
         if self.amax_sent is not None:
             return self.amax_sent
         return self.character().ap_ceiling
@@ -1551,6 +1539,19 @@ class Fighter:
         if not self.in_combat():
             return False
         self.ack(RES_NO_LEAVE)
+        return True
+
+    def sync_ap_ceiling(self):
+        """Publish a changed AP maximum without refilling AP or restarting timers."""
+        if self.amax_sent is None or self.sess.room is None:
+            return False
+        ceiling = self.character().ap_ceiling
+        if ceiling == self.amax_sent:
+            return False
+        Fighter.settle_walk(self)
+        self.amax_sent = ceiling
+        self.ap = min(self.ap, ceiling)
+        self.c_ap(amax=True)
         return True
 
     def c_ap(self, *, amax=False):

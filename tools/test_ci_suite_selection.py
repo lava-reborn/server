@@ -47,7 +47,7 @@ class ClientSuiteSelection(unittest.TestCase):
                     'server/test_mob_penetration.py', 'server/test_combat_xp_ramp.py',
                     'server/test_weekend_experience.py', 'server/test_hand_valentines.py',
                     'server/test_combat_xp_cap.py', 'server/test_release_pouches.py',
-                    'server/test_aggro_hold.py',
+                    'server/test_aggro_hold.py', 'server/test_gear.py',
                     'server/test_ground.py', 'server/test_war_state.py', 'server/test_loot.py',
                     'server/test_items.py', 'server/test_camp_box_loot.py',
                     'server/test_eden_native_weapons.py',
@@ -59,7 +59,9 @@ class ClientSuiteSelection(unittest.TestCase):
                     'server/test_mob_loot_followup.py', 'server/test_release_combat.py',
                     'server/test_scanner_loot.py', 'server/test_stat_pipeline.py',
                     'tools/test_action_recovery_client.py', 'tools/test_bank_client.py',
-                    'tools/test_stat_breakdown_client.py',
+                    'tools/test_stat_breakdown_client.py', 'tools/test_combat_client.py',
+                    'tools/test_right_click_client.py', 'tools/test_flash_context_menu.py',
+                    'server/test_combat_damage_xp.py',
                     'tools/test_medicine_cooldown_client.py', 'tools/test_tester_launcher.py'}
         selected = {Path(path).relative_to(ROOT).as_posix() for path in suite.suites()}
         self.assertFalse(required - selected)

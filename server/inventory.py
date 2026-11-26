@@ -1417,11 +1417,9 @@ class Inventory:
         cutting it down here instead lost the difference for good to anyone
         who took a piece off and put it back on (a full 198 became 151/198).
 
-        Action points are held to the fight's ceiling, which is the last
-        lenter's (combat.Fighter.ap_max) and so does not move here: the
-        client's bar keeps that ceiling until the next location
-        (APManager.setAP is called nowhere else), and a change of gear
-        reaches the bar and the fight together, there.
+        A changed AP ceiling reaches the bar through c_ap;amax without
+        refilling the current pool or resetting its regeneration interval.
+        Loading with push=False leaves that update to lenter or the caller.
 
         The figure is counted here too (look_of), and a change of it goes
         to everybody else in the room (push_look); the wearer's own client
@@ -1434,6 +1432,8 @@ class Inventory:
         rows = self.rows()
         changed = ch.set_gear(gear_bonus(rows, ch), card_repeat(rows))
         fighter = self.sess.combat
+        if push and getattr(fighter, 'amax_sent', None) is not None:
+            fighter.sync_ap_ceiling()
         held = fighter.ap > fighter.ap_max
         if held:
             fighter.ap = fighter.ap_max

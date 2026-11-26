@@ -227,14 +227,14 @@ class CombatClient(unittest.TestCase):
         self.env['lol']['display'] = dict(DisplaySprite=dict(create=lambda *args:
             dict(display=lambda *args: icons.append(args))))
         scanner = self.effect(mob_drop=3, name='Сканер', res_icon=1)
-        xp = self.effect(mob_exp=1.7, player_exp=1.7, name='INTUX IV', res_icon=2)
+        xp = self.effect(mob_exp=1.9, player_exp=1.9, name='INTUX IV', res_icon=2)
         self.call('__bfEffectsInfo', panel, Arr([scanner, None, xp]), Arr([100, 0, 75]), True, True)
         self.assertEqual([t['effect_name']['htmlText'] for t in titles], ['Сканер', 'INTUX IV'])
         self.assertEqual([t['effect_prob']['htmlText'] for t in titles],
                          ['Вероятность срабатывания: 100', 'Вероятность срабатывания: 75'])
         self.assertEqual(rows, [('Время действия', '1800000'), ('Бонус\rк луту с мобов', '+200%'),
-                                ('Время действия', '1800000'), ('Бонус\rк опыту с мобов', '+70%'),
-                                ('Бонус\rк опыту с игроков', '+70%')])
+                                ('Время действия', '1800000'), ('Бонус\rк опыту с мобов', '+90%'),
+                                ('Бонус\rк опыту с игроков', '+90%')])
         self.assertEqual((panel['arrItem'], panel['arrLine']), (titles, lines))
         self.assertEqual(icons, [('0_effect_icon', 1), ('2_effect_icon', 2)])
         self.assertEqual(calls, ['unlisten', 'remove', 'style', 'align'])
@@ -303,14 +303,15 @@ class CombatClient(unittest.TestCase):
                 self.call('__bfFlagContact', gamer, dict(id=73, targetCell='there'))
                 self.assertEqual(calls, ['native'])
 
-    def test_action_point_effect_changes_ceiling_without_refill_or_timer_reset(self):
+    def test_action_point_stat_changes_ceiling_without_refill_or_timer_reset(self):
         manager = dict(_maxAP=110, currentAP=23, dAP=4, dtAPInterval=91)
         calls = []
         def native(event):
             calls.append(event)
             manager['currentAP'] = max(0, min(event['param']['ap'], manager['_maxAP']))
         manager['__bfSyncAPOrig'] = native
-        for maximum, paid in ((150, 17), (150, 11), (110, 110)):
+        for maximum, paid in ((155, 23), (155, 23), (140, 140), (155, 140),
+                              (150, 17), (150, 11), (110, 110)):
             event = dict(param=dict(amax=maximum, ap=paid))
             self.call('__bfSyncAP', manager, event)
             self.assertEqual((manager['_maxAP'], manager['currentAP']), (maximum, paid))
@@ -318,7 +319,7 @@ class CombatClient(unittest.TestCase):
             self.assertIs(calls[-1], event)
         self.call('__bfSyncAP', manager, dict(param=dict(ap=6)))
         self.assertEqual((manager['_maxAP'], manager['currentAP']), (110, 6))
-        self.assertEqual(len(calls), 4)
+        self.assertEqual(len(calls), 8)
 
     def test_legacy_action_point_packet_preserves_native_ceiling(self):
         for supplied in (None, 0, -1, float('nan')):

@@ -107,7 +107,7 @@ class CombatXpCap(unittest.TestCase):
 
     def test_intux_residence_percentages_add_before_experience_reduction(self):
         for type_id, multipliers in ((3112, (1.1, 1.25, 1.4)), (3113, (1.3, 1.45, 1.6)),
-                                     (3114, (1.5, 1.65, 1.8)), (3561, (1.7, 1.85, 2.0))):
+                                     (3114, (1.5, 1.65, 1.8)), (3561, (1.9, 2.05, 2.2))):
             for premium, multiplier in enumerate(multipliers):
                 for reduction, factor in ((None, 1), (3205, .5), (3206, .2), (3207, .01)):
                     for level in (12, p.COMBAT_SKILL_CAP):

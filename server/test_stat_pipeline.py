@@ -63,6 +63,51 @@ class StatPipeline(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.s.char.level, 2)
         self.assertEqual(self.store.item(weapon['uniq'])['slot'], inventory.PRIMARY)
 
+    async def test_pouch_ap_ceiling_updates_live_without_refilling_or_changing_progress(self):
+        ch, fighter = self.s.char, self.s.combat
+        ch.set_skill(progression.MELEE, 17)
+        ch.set_skill(progression.SHOOTING, 17)
+        fighter.amax_sent, fighter.ap = ch.ap_ceiling, 23
+        row = self.s.inv.create(5615, slot=inventory.BAG)
+        before = ch.rows()
+        for _ in range(3):
+            for slot, maximum in ((inventory.BELT, 155), (inventory.BAG, 135)):
+                self.store.update_item(row['uniq'], slot=slot)
+                self.s.writer.frames.clear()
+                self.s.inv.refresh_gear()
+                frames = [decode(frame[:-1]) for frame in self.s.writer.frames]
+                self.assertEqual([p for name, p in frames if name == 'c_ap'],
+                                 [dict(ap=23, amax=maximum)])
+                self.assertEqual((fighter.ap_max, fighter.ap), (maximum, 23))
+                self.assertEqual(ch.rows(), before)
+                self.s.writer.frames.clear()
+                self.s.inv.refresh_gear()
+                self.assertFalse(self.s.writer.frames)  # Recount is idempotent.
+        self.store.update_item(row['uniq'], slot=inventory.BELT)
+        self.s.inv.refresh_gear()
+        ch.set_skill(progression.SHOOTING, 18)
+        self.s.push_stats()
+        self.assertEqual((ch.skill_ap_bonus, fighter.ap_max, fighter.ap), (15, 155, 23))
+        fighter.ap = 153
+        self.store.update_item(row['uniq'], slot=inventory.BAG)
+        self.s.writer.frames.clear()
+        self.s.inv.refresh_gear()
+        frames = [decode(frame[:-1]) for frame in self.s.writer.frames]
+        self.assertIn(('c_ap', dict(ap=140, amax=140)), frames)
+        self.store.update_item(row['uniq'], slot=inventory.BELT)
+        self.s.inv.refresh_gear()
+        self.assertEqual((fighter.ap_max, fighter.ap), (155, 140))
+        fighter.ap = 30
+        fighter.walk_ap = ([0, 1, 2, 3], 0, 0)
+        self.s.room.ws = True
+        with patch.object(combat, 'now', return_value=1.5 * combat.mobs.HEX_MS / 1000):
+            self.store.update_item(row['uniq'], slot=inventory.BAG)
+            self.s.inv.refresh_gear()
+            self.assertEqual(fighter.ap, 29)
+            self.assertEqual(fighter.walk_ap[2], 1)
+            self.assertFalse(fighter.sync_ap_ceiling())
+            self.assertEqual(fighter.ap, 29)
+
     async def test_every_released_rifle_mode_aim_uses_small_uniform_followup_without_other_changes(self):
         import shop_bands
         guns = []
@@ -492,7 +537,8 @@ class StatPipeline(unittest.IsolatedAsyncioTestCase):
                                  + 20 * (ch.attrib[2] + expected['attribs'][2]) + expected['hp'])
                 self.assertEqual(ch.sp_max, 4 * (ch.attrib[1] + expected['attribs'][1])
                                  + 20 * (ch.attrib[2] + expected['attribs'][2]) + expected['st'])
-                self.assertEqual(ch.ap_ceiling, ch.ap_max + expected['od'])
+                highest = max(0, *(s[0] + b for s, b in zip(ch.skill, expected['skills'])))
+                self.assertEqual(ch.ap_ceiling, 50 + 5 * highest + expected['od'])
                 self.assertEqual((ch.bonus_cp, ch.bonus_ce), (expected['cp'], expected['ce']))
                 self.assertEqual(ch.rows(), base)
 

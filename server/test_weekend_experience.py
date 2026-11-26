@@ -32,7 +32,7 @@ class WeekendExperience(unittest.TestCase):
     def test_calendar_intux_and_residence_add_then_reductions_apply(self):
         for stamp, calendar in ((FRIDAY, 1), (SATURDAY, 1.5)):
             for residence in (0, .15, .30):
-                for source, boost in ((None, 1), (3112, 1.1), (3113, 1.3), (3114, 1.5), (3561, 1.7)):
+                for source, boost in ((None, 1), (3112, 1.1), (3113, 1.3), (3114, 1.5), (3561, 1.9)):
                     for reduction, factor in ((None, 1), (3205, .5), (3206, .2), (3207, .01)):
                         s = session(source, reduction)
                         got = effects.multiplier(s, 'mob_exp',
@@ -43,7 +43,7 @@ class WeekendExperience(unittest.TestCase):
                                                (boost + residence) * factor)
         s = session(3561)
         s.effects.active['duplicate'] = NS(source=3561, deadline=10)
-        self.assertEqual(effects.multiplier(s, 'mob_exp', bonus=.3 + .5), 2.5)
+        self.assertEqual(effects.multiplier(s, 'mob_exp', bonus=.3 + .5), 2.7)
 
     def test_calendar_applies_to_the_approved_base_without_extra_weekday_reduction(self):
         for level in range(18):
@@ -69,24 +69,30 @@ class WeekendExperience(unittest.TestCase):
                         with patch.object(p.time, 'time', return_value=stamp):
                             reward = f.xp_reward(p.SHOOTING, 1, target)
                         self.assertAlmostEqual(reward, p.combat_mob_xp(level + gap, level, xp_mult=role)
-                                               * (2.5 if stamp == SATURDAY else 2))
+                                               * (2.7 if stamp == SATURDAY else 2.2))
         f, ch, spec = fixture.fighter(15, 2)
         f.sess.effects = session(3561).effects
         with patch.object(p.time, 'time', return_value=SATURDAY):
-            self.assertAlmostEqual(f.xp_reward(p.SHOOTING, 1, fixture.mob(19)), 2245.5)
+            self.assertAlmostEqual(f.xp_reward(p.SHOOTING, 1, fixture.mob(19)), 3564)
 
     def test_approved_kill_counts_for_every_transition_and_requested_bonus_combination(self):
         expected = (
-            ((7, 6), (7, 6), (6, 5)), ((11, 9), (10, 9), (9, 8)),
-            ((17, 14), (15, 13), (14, 12)), ((26, 22), (23, 20), (21, 18)),
-            ((38, 33), (35, 30), (31, 27)), ((58, 50), (53, 45), (47, 40)),
-            ((88, 75), (80, 68), (71, 61)), ((132, 112), (120, 102), (107, 91)),
-            ((198, 168), (180, 153), (161, 137)), ((318, 271), (290, 246), (258, 220)),
-            ((512, 435), (466, 396), (415, 353)), ((824, 701), (749, 637), (668, 568)),
-            ((1326, 1127), (1206, 1025), (1075, 914)),
-            ((2134, 1814), (1940, 1649), (1730, 1471)),
-            ((3434, 2919), (3122, 2654), (2784, 2367)),
-            ((5527, 4698), (5024, 4271), (4481, 3809)),
+            ((7, 6), (6, 6), (5, 5)),
+            ((10, 9), (10, 9), (8, 7)),
+            ((16, 14), (15, 13), (12, 11)),
+            ((24, 22), (22, 20), (18, 16)),
+            ((37, 33), (33, 30), (27, 24)),
+            ((56, 50), (51, 45), (41, 36)),
+            ((84, 75), (76, 68), (61, 55)),
+            ((126, 112), (114, 102), (92, 82)),
+            ((189, 168), (172, 153), (138, 123)),
+            ((304, 271), (276, 246), (222, 198)),
+            ((423, 377), (384, 342), (309, 276)),
+            ((599, 534), (545, 485), (438, 391)),
+            ((861, 767), (783, 697), (630, 561)),
+            ((1386, 1234), (1260, 1122), (1014, 903)),
+            ((2230, 1986), (2027, 1806), (1632, 1454)),
+            ((3087, 2750), (2806, 2500), (2259, 2012)),
         )
         for level, row in enumerate(expected, 1):
             for (premium, source), counts in zip(((0, 3114), (1, 3114), (1, 3561)), row):
@@ -101,7 +107,7 @@ class WeekendExperience(unittest.TestCase):
         self.assertEqual(effects.multiplier(session(), 'mob_exp', bonus=.15 + .5), 1.65)
 
     def test_weekend_and_intux_have_explicit_additive_totals(self):
-        expected = {3114: (2, 2.15, 2.3), 3561: (2.2, 2.35, 2.5)}
+        expected = {3114: (2, 2.15, 2.3), 3561: (2.4, 2.55, 2.7)}
         for source, totals in expected.items():
             for premium, total in enumerate(totals):
                 f, _ch, _spec = CombatXpCap().fighter(15, premium)
@@ -115,7 +121,7 @@ class WeekendExperience(unittest.TestCase):
         for stamp, calendar in ((FRIDAY, 1), (SATURDAY, 1.5)):
             for level in (1, 4, 5, 10, 11, 15, 17):
                 for premium, residence in ((0, 0), (1, .15), (2, .30)):
-                    for source, boost in ((None, 1), (3112, 1.1), (3113, 1.3), (3114, 1.5), (3561, 1.7)):
+                    for source, boost in ((None, 1), (3112, 1.1), (3113, 1.3), (3114, 1.5), (3561, 1.9)):
                         f, ch, spec = fixture.fighter(level, premium)
                         f.sess.effects = session(source).effects
                         with patch.object(p.time, 'time', return_value=stamp):
@@ -138,7 +144,7 @@ class WeekendExperience(unittest.TestCase):
     def test_crossing_midnight_pays_damage_time_price_without_repricing_or_double_settlement(self):
         fixture = CombatXpCap()
         saturday = datetime(2026, 11, 28, tzinfo=p.COMBAT_XP_ZONE).timestamp()
-        for source, boost in ((None, 1), (3113, 1.3), (3561, 1.7)):
+        for source, boost in ((None, 1), (3113, 1.3), (3561, 1.9)):
             f, ch, spec = fixture.fighter(15, 2)
             f.sess.effects = session(source).effects
             target = fixture.mob(19)
@@ -158,7 +164,7 @@ class WeekendExperience(unittest.TestCase):
             for gap in range(-3, 5):
                 for role in (.7, 1, 3):
                     for residence in (0, .15, .30):
-                        for boost in (1, 1.1, 1.3, 1.5, 1.7):
+                        for boost in (1, 1.1, 1.3, 1.5, 1.9):
                             previous_reward, previous_kills = 0, 0
                             for level in range(max(1, 1 - gap), 17):
                                 reward = p.combat_mob_xp(level + gap, level, xp_mult=role) * (calendar + boost - 1 + residence)

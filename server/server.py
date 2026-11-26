@@ -1547,8 +1547,8 @@ class Session:
         # APManager.setAP takes both from here and nowhere else. The ceiling
         # is the card's ОД, gear included (Character.ap_ceiling), where
         # rp_info's ap_max goes without it for the card to add. The fight
-        # keeps this figure until the next lenter, as the bar does
-        # (combat.Fighter.ap_max); entered() below fills the pool to it.
+        # keeps the bar in sync through c_ap when equipment/skills change;
+        # entered() below fills the initial pool to it.
         if not self.resume_loading:
             destination = ROOMS.get(self.room_key())
             combat.room_combat(destination, STORE).keep_hours()
@@ -2838,6 +2838,8 @@ class Session:
         attribs=/skills=/specs=. The client asks for this frame once per
         session and never again, so every change is pushed from here."""
         self.send("rp_info", **self.character().rp_info(**groups))
+        if getattr(self.combat, 'amax_sent', None) is not None:
+            self.combat.sync_ap_ceiling()
         self.skill_recount()
 
     def send_other_player_info(self, pid):

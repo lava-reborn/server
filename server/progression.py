@@ -367,12 +367,15 @@ class Character:
         return 50 + 5 * self.level
 
     @property
+    def skill_ap_bonus(self):
+        """Temporary AP from the highest effective skill, without raising level."""
+        effective = max(0, *(self.skill_level(i) for i in range(SKILLS)))
+        return 5 * (effective - self.level)
+
+    @property
     def ap_ceiling(self):
-        """The ОД the card shows: ap_max plus the bonus_od of everything
-        worn and held and the od of every set (showOD). The bar is filled
-        to this -- lenter;amax is its only source (APManager.setAP) -- and
-        the fight spends from it, so what the player reads is what he has."""
-        return self.ap_max + self.bonus_od
+        """AP pool and card total; temporary skill and direct bonuses count once."""
+        return self.ap_max + self.skill_ap_bonus + self.bonus_od
 
     def set_gear(self, b, repeat=(0, 0)):
         """Take on what the gear adds, in inventory.gear_bonus's shape, and
