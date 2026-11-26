@@ -19121,6 +19121,7 @@
     }
   },
   "world_boss_damage_references": {
+    "1035": {"reference": 1027, "locations": [168], "ceiling": {"dmin": 10, "dmax": 35, "sdmin": 0, "sdmax": 0, "damage_per_ap": 0.6428571428571429, "stamina_per_ap": 0, "burst_damage": 35, "burst_stamina": 0, "damage_per_second": 19.5, "stamina_per_second": 0}},
     "269": {"reference": 265, "locations": [82], "ceiling": {"dmin": 4, "dmax": 18, "sdmin": 0, "sdmax": 0, "damage_per_ap": 0.9090909090909091, "stamina_per_ap": 0, "burst_damage": 18, "burst_stamina": 0, "damage_per_second": 14, "stamina_per_second": 0}},
     "270": {"reference": 258, "locations": [80], "ceiling": {"dmin": 2, "dmax": 8, "sdmin": 0, "sdmax": 0, "damage_per_ap": 0.38461538461538464, "stamina_per_ap": 0, "burst_damage": 8, "burst_stamina": 0, "damage_per_second": 7.142857142857143, "stamina_per_second": 0}},
     "283": {"reference": 336, "locations": [81], "ceiling": {"dmin": 6, "dmax": 23, "sdmin": 0, "sdmax": 0, "damage_per_ap": 1.0357142857142858, "stamina_per_ap": 0, "burst_damage": 23, "burst_stamina": 0, "damage_per_second": 24.166666666666668, "stamina_per_second": 0}},

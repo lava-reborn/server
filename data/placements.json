@@ -192,6 +192,14 @@
      37
     ],
     "why": "RECOVERED creature and place, DESIGNED cell. The Alliance's treasurer (na_Kaznachei, «[18] Казначей<Br>Северный Альянс», 8980), whom no file puts down: the outpost has eleven empty slots for its twelve ranks (data/camp_fill.json), so he stands by hand, as the other camps' treasurers stand by their fill. The owner's Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»): at the outpost (Bandit_Camp_10), by the campfire O_fireplace (25,36), on open ground clear of the slots. Level 18 by his row; a boss by role who stands all day (server/bosses.py ALL_DAY) and carries no ingot; no ambush or patrol takes him."
+   },
+   {
+    "type": 1035,
+    "cell": [
+     30,
+     40
+    ],
+    "why": "DESIGNED 2026-11-27: restore the client's na_captain_lvl18 as the Northern Alliance outpost subboss. One captain at 168; shared boss hours, four one-ounce ingots, ordinary officer artwork. Cell is clear of existing mobs, obstacles and exits."
    }
   ],
   "263": [

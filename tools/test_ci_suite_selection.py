@@ -34,6 +34,13 @@ class ClientSuiteSelection(unittest.TestCase):
         self.assertNotRegex(pr.group(1), r'(?m)^    paths(?:-ignore)?:',
                             'A skipped workflow leaves required PR checks pending')
 
+    def test_coasts_and_outpost_rewards_are_included_in_ci(self):
+        required = {'server/test_coastal_locations.py', 'server/test_outpost_captain.py',
+                    'server/test_boss_hotfix.py', 'server/test_abuhamed_ingots.py',
+                    'data/test_orig_npcs.py', 'data/test_settlements.py', 'data/test_world_data.py'}
+        selected = {Path(path).relative_to(ROOT).as_posix() for path in suite.suites()}
+        self.assertFalse(required - selected, 'Restored coasts and scheduled captain must reach CI')
+
     def test_warehouse_capture_contracts_are_included_in_the_full_release_suites(self):
         required = {'server/test_warehouse_daily_reset.py', 'server/test_warehouse_capture_rules.py', 'server/test_holdings.py',
                     'server/test_clan_bases.py', 'server/test_clan_base_access.py',

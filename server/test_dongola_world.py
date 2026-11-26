@@ -102,7 +102,7 @@ SEWERS = [607, 608, 1009]
 ZONE49 = [702, 703, 704, 705]
 DUNGEON = [597, 1007]
 PLACES = (TOWN + QUEST_PLACES + CAMP_PLACES + WORKS + PRISON + QUARRY + MINE_TOP + MINE + SEWERS
-          + ZONE49 + DUNGEON)
+          + ZONE49 + DUNGEON + [20, 23, 24])
 BOX = (5866, 5960, 1950, 2066)                 # x0, x1, y0, y1 round the town
 
 

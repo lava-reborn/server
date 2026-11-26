@@ -83,7 +83,63 @@
     1034,
     1036
    ],
-   "why": "Аванпост Северного Альянса (Bandit_Camp_10), «Для игроков 16-18 уровней» (tooltip 6210,1986): the Alliance's na_ of levels 16-18 round Генерал Шерхан (8620, the outpost's boss by its file); eleven slots for the twelve ranks, the «[18] Капитан» (1035) left out, a boss by his type. The treasurer na_Kaznachei (1024) and Гейнц Тейлор (1749) are put down by hand (data/placements.json)."
+   "why": "Аванпост Северного Альянса (Bandit_Camp_10), «Для игроков 16-18 уровней» (tooltip 6210,1986): the Alliance's na_ of levels 16-18 round Генерал Шерхан (8620, the outpost's boss by its file); eleven ordinary slots; the «[18] Капитан» (1035) is a scheduled subboss placed separately. The treasurer na_Kaznachei (1024) and Гейнц Тейлор (1749) are put down by hand (data/placements.json)."
+  },
+  "17": {
+   "band": [
+    4,
+    4
+   ],
+   "faction": null,
+   "fn": "3_LeftDounCorner_ARS",
+   "types": [
+    2418,
+    2418,
+    2418,
+    2418,
+    2418,
+    2418,
+    2418,
+    2418
+   ],
+   "why": "DESIGNED 2026-11-27: restore Вади-Хальфа coast with the original 3_LeftDounCorner_ARS geometry and its 8 empty nests; existing level-4 crocodile 2418, natural respawn. Regional placement is not a recovered server table."
+  },
+  "18": {
+   "band": [
+    4,
+    4
+   ],
+   "faction": null,
+   "fn": "16_UpSide_IVS",
+   "types": [
+    2418,
+    2418,
+    2418,
+    2418,
+    2418,
+    2418,
+    2418,
+    2418
+   ],
+   "why": "DESIGNED 2026-11-27: restore Вади-Хальфа coast with the original 16_UpSide_IVS geometry and its 8 empty nests; existing level-4 crocodile 2418, natural respawn. Regional placement is not a recovered server table."
+  },
+  "19": {
+   "band": [
+    4,
+    4
+   ],
+   "faction": null,
+   "fn": "13_RightSide_IVS",
+   "types": [
+    2418,
+    2418,
+    2418,
+    2418,
+    2418,
+    2418,
+    2418
+   ],
+   "why": "DESIGNED 2026-11-27: restore Вади-Хальфа coast with the original 13_RightSide_IVS geometry and its 7 empty nests; existing level-4 crocodile 2418, natural respawn. Regional placement is not a recovered server table."
   },
   "191": {
    "band": [
@@ -104,6 +160,101 @@
     5631
    ],
    "why": "«Хиппи в пустыне» (Q_Abri_Hippi, tooltip 5860,1838): the file has three hippies, «Дети цветов» (9048, 9050), and nine empty slots; the same three kinds three times more, at 9-11 (data/build_mob_types.py DESIGNED_LEVELS). They brew the ФРОК «Заполучить амазонку (Часть 3)» sends the player for («у них и раздобудь, заодно порядок наведи», texts.xml 46975)."
+  },
+  "20": {
+   "band": [
+    12,
+    12
+   ],
+   "faction": null,
+   "fn": "17_RightUpCorner_ARS",
+   "types": [
+    130,
+    130,
+    130,
+    130,
+    130,
+    130,
+    130,
+    130
+   ],
+   "why": "DESIGNED 2026-11-27: restore Донгола coast with the original 17_RightUpCorner_ARS geometry and its 8 empty nests; existing level-12 crocodile 130, natural respawn. Regional placement is not a recovered server table."
+  },
+  "21": {
+   "band": [
+    11,
+    11
+   ],
+   "faction": null,
+   "fn": "18_LeftUpCorner_ARS",
+   "types": [
+    2419,
+    2419,
+    2419,
+    2419,
+    2419,
+    2419,
+    2419,
+    2419
+   ],
+   "why": "DESIGNED 2026-11-27: restore Абри coast with the original 18_LeftUpCorner_ARS geometry and its 8 empty nests; existing level-11 crocodile 2419, natural respawn. Regional placement is not a recovered server table."
+  },
+  "22": {
+   "band": [
+    4,
+    4
+   ],
+   "faction": null,
+   "fn": "4_LeftSide_IVS",
+   "types": [
+    2418,
+    2418,
+    2418,
+    2418,
+    2418,
+    2418,
+    2418,
+    2418
+   ],
+   "why": "DESIGNED 2026-11-27: restore Вади-Хальфа coast with the original 4_LeftSide_IVS geometry and its 8 empty nests; existing level-4 crocodile 2418, natural respawn. Regional placement is not a recovered server table."
+  },
+  "23": {
+   "band": [
+    12,
+    12
+   ],
+   "faction": null,
+   "fn": "1_RightDownCorner_ARS",
+   "types": [
+    130,
+    130,
+    130,
+    130,
+    130,
+    130,
+    130,
+    130
+   ],
+   "why": "DESIGNED 2026-11-27: restore Донгола coast with the original 1_RightDownCorner_ARS geometry and its 8 empty nests; existing level-12 crocodile 130, natural respawn. Regional placement is not a recovered server table."
+  },
+  "24": {
+   "band": [
+    12,
+    12
+   ],
+   "faction": null,
+   "fn": "14_DownSide_IVS",
+   "types": [
+    130,
+    130,
+    130,
+    130,
+    130,
+    130,
+    130,
+    130
+   ],
+   "why": "DESIGNED 2026-11-27: restore Донгола coast with the original 14_DownSide_IVS geometry and its 8 empty nests; existing level-12 crocodile 130, natural respawn. Regional placement is not a recovered server table."
   },
   "261": {
    "band": [
@@ -207,6 +358,42 @@
    ],
    "why": "«Свалка Автомобилей» (Svalka_OldCars_01, 5863,1835): the dump's own creatures are lost with the server; rats, the dump's vermin (mRat_8, mRat_12, «[N] Крыса<Br>Дикое животное», 9498), at the town's band, nine of level 8 and four of 12 in the file's thirteen empty slots. The junk piles of the dump's searches stand by hand (data/placements.json)."
   },
+  "38": {
+   "band": [
+    20,
+    20
+   ],
+   "faction": null,
+   "fn": "15_HorisontalPass_MWS",
+   "types": [
+    2420,
+    2420,
+    2420,
+    2420,
+    2420,
+    2420,
+    2420
+   ],
+   "why": "DESIGNED 2026-11-27: restore Абу-Хамед coast with the original 15_HorisontalPass_MWS geometry and its 7 empty nests; existing level-20 crocodile 2420, natural respawn. Regional placement is not a recovered server table."
+  },
+  "39": {
+   "band": [
+    20,
+    20
+   ],
+   "faction": null,
+   "fn": "5_VerticalPass_MWS",
+   "types": [
+    2420,
+    2420,
+    2420,
+    2420,
+    2420,
+    2420,
+    2420
+   ],
+   "why": "DESIGNED 2026-11-27: restore Абу-Хамед coast with the original 5_VerticalPass_MWS geometry and its 7 empty nests; existing level-20 crocodile 2420, natural respawn. Regional placement is not a recovered server table."
+  },
   "46": {
    "band": [
     3,
@@ -218,6 +405,82 @@
     21
    ],
    "why": "«Перехват» (Q_IV_perehvat): a fourth m05_BanditShooter_lvl3 beside the three the file has, over the box m_WF_Q8_Box (50)."
+  },
+  "54": {
+   "band": [
+    20,
+    20
+   ],
+   "faction": null,
+   "fn": "19_UpPeninsula_ARS",
+   "types": [
+    2420,
+    2420,
+    2420,
+    2420,
+    2420,
+    2420,
+    2420,
+    2420
+   ],
+   "why": "DESIGNED 2026-11-27: restore Абу-Хамед coast with the original 19_UpPeninsula_ARS geometry and its 8 empty nests; existing level-20 crocodile 2420, natural respawn. Regional placement is not a recovered server table."
+  },
+  "55": {
+   "band": [
+    11,
+    11
+   ],
+   "faction": null,
+   "fn": "21_RightPeninsula_MWS",
+   "types": [
+    2419,
+    2419,
+    2419,
+    2419,
+    2419,
+    2419,
+    2419,
+    2419
+   ],
+   "why": "DESIGNED 2026-11-27: restore Абри coast with the original 21_RightPeninsula_MWS geometry and its 8 empty nests; existing level-11 crocodile 2419, natural respawn. Regional placement is not a recovered server table."
+  },
+  "56": {
+   "band": [
+    11,
+    11
+   ],
+   "faction": null,
+   "fn": "22_LeftPeninsula_MWS",
+   "types": [
+    2419,
+    2419,
+    2419,
+    2419,
+    2419,
+    2419,
+    2419,
+    2419
+   ],
+   "why": "DESIGNED 2026-11-27: restore Абри coast with the original 22_LeftPeninsula_MWS geometry and its 8 empty nests; existing level-11 crocodile 2419, natural respawn. Regional placement is not a recovered server table."
+  },
+  "57": {
+   "band": [
+    11,
+    11
+   ],
+   "faction": null,
+   "fn": "2_DownPeninsula_IVS",
+   "types": [
+    2419,
+    2419,
+    2419,
+    2419,
+    2419,
+    2419,
+    2419,
+    2419
+   ],
+   "why": "DESIGNED 2026-11-27: restore Абри coast with the original 2_DownPeninsula_IVS geometry and its 8 empty nests; existing level-11 crocodile 2419, natural respawn. Regional placement is not a recovered server table."
   },
   "64": {
    "band": [

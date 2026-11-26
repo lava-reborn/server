@@ -88,13 +88,13 @@ ADMIN_GUN, ROUNDS = 1534, 6092
 BOSSES = {
     # type: (the camp's sum, the place he stands in, the ingots of his bag)
     777: ("Пираты", 132, {I1: 4}), 778: ("Пираты", 133, {I1: 4}),
-    8620: ("Аванпост", 168, {I1: 4}),
+    8620: ("Аванпост", 168, {I1: 4}), 1035: ("Аванпост", 168, {I1: 4}),
     1037: ("База", 263, {I1: 4}), 1038: ("База", 274, {I1: 4}),
 }
 FACTION_OUNCES = {"Пираты": 4, "Аванпост": 4, "База": 4}
 TREASURERS = {764: 132, 1024: 168, 1736: 263}
 MARABU = 777
-WINDOW_OUNCES, ABUHAMED_OUNCES = 49, 20
+WINDOW_OUNCES, ABUHAMED_OUNCES = 53, 24
 DONGOLA = (374, 375, 407, 408)
 MT = world.mob_types()
 
@@ -112,7 +112,7 @@ def ounces(bag):
 
 
 # --- the bosses --------------------------------------------------------------------
-check("the five are bosses who keep the boss hours, by names the client has",
+check("the six are bosses who keep the boss hours, by names the client has",
       {t: (world.creature_role(t), bosses.keeps_hours(t), names.known(t)) for t in BOSSES},
       {t: ("boss", True, True) for t in BOSSES})
 standing = {}
@@ -209,10 +209,10 @@ check("  ..the two Шерханы each once, in their own camps: the outpost 168
       (sorted(places.get(8620, ())), sorted(places.get(1037, ()))), ([168], [263]))
 check("  ..twelve windows a day: %d ounces" % (12 * WINDOW_OUNCES),
       len(bosses.parse_hours(bosses.DEFAULT_HOURS)) * sum(window.values()), 12 * WINDOW_OUNCES)
-check("  ..in Абу-Хамед's window twenty ingots, which Мортимер's fee of 0.05 an ingot takes one ounce of",
+check("  ..in Абу-Хамед's window twenty-four ingots, with Mortimer taking 0.05 per ingot",
       (sum(n for t in BOSSES for n in BOSSES[t][2].values()),
        sum(n for t in BOSSES for n in BOSSES[t][2].values()) * (100 - quests.get(CASH[I1]).rew_gold)),
-      (20, 100))
+      (24, 120))
 
 
 # --- a hundred bags each, through RoomCombat and a real database -----------------------

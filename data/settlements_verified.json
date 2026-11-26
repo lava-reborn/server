@@ -173,7 +173,21 @@
   "5926,2068": 1442,
   "6032,1957": null,
   "6033,1957": null,
-  "5955,2032": null
+  "5955,2032": null,
+  "5961,1756": 17,
+  "5969,1746": 18,
+  "5967,1724": 19,
+  "5874,2005": 20,
+  "5875,1853": 21,
+  "5968,1747": 22,
+  "5875,2016": 23,
+  "5876,2016": 24,
+  "6169,1952": 38,
+  "6216,1922": 39,
+  "6166,1945": 54,
+  "5877,1856": 55,
+  "5875,1856": 56,
+  "5876,1876": 57
  },
  "why": {
   "6268,1818": "RECOVERED. The map's own tooltip on this cell is «Поля и Пастбища» (res/database/locations.xml), and 182 «Предгорья» (NoobZone_Cow, library Noob_Zone_Nord like the Нубийское поселение 181 on 6268,1819 below it) is the file with the cows: Корова 5195 three times and the grazing cows 115/116/120. Its one exit is south (outzones side 4 only), which from here is 181; and Зула's quest in 181 sends the player to the cows «в соседней локации, наверху» (texts.xml 59789). The placer had put 182 on 5833,1607 by its title, the tooltip «западные предгорья» of the north-west corner's second drawing of the valley.",
@@ -345,6 +359,20 @@
   "6083,1957": "DESIGNED 2026-11-22: Abu base exactly 50 cells east of the historical NeutralClan cell 6033,1957; original yard/bunker artwork.",
   "5926,2068": "DESIGNED 2026-11-22: Dongola base between the southern and eastern warehouses; 75.93 cells from station 49, 31% farther than the more distant warehouse. Passable terrain, reachable from the town; original NeutralClan yard/bunker artwork.",
   "6032,1957": "Retire both historical NeutralClan map cells.",
-  "5955,2032": "Delta Force is retired again; clan bases use the NeutralClan artwork at 5926,2068 and 6083,1957. The old block-post cell stays wasteland."
+  "5955,2032": "Delta Force is retired again; clan bases use the NeutralClan artwork at 5926,2068 and 6083,1957. The old block-post cell stays wasteland.",
+  "5961,1756": "DESIGNED 2026-11-27: Вади-Хальфа coast, original tile 17; dry reachable bank, native exits agree with land neighbours. The original global placement is unknown.",
+  "5969,1746": "DESIGNED 2026-11-27: Вади-Хальфа coast, original tile 18; dry reachable bank, native exits agree with land neighbours. The original global placement is unknown.",
+  "5967,1724": "DESIGNED 2026-11-27: Вади-Хальфа coast, original tile 19; dry reachable bank, native exits agree with land neighbours. The original global placement is unknown.",
+  "5874,2005": "DESIGNED 2026-11-27: Донгола coast, original tile 20; dry reachable bank, native exits agree with land neighbours. The original global placement is unknown.",
+  "5875,1853": "DESIGNED 2026-11-27: Абри coast, original tile 21; dry reachable bank, native exits agree with land neighbours. The original global placement is unknown.",
+  "5968,1747": "DESIGNED 2026-11-27: Вади-Хальфа coast, original tile 22; dry reachable bank, native exits agree with land neighbours. The original global placement is unknown.",
+  "5875,2016": "DESIGNED 2026-11-27: Донгола coast, original tile 23; dry reachable bank, native exits agree with land neighbours. The original global placement is unknown.",
+  "5876,2016": "DESIGNED 2026-11-27: Донгола coast, original tile 24; dry reachable bank, native exits agree with land neighbours. The original global placement is unknown.",
+  "6169,1952": "DESIGNED 2026-11-27: Абу-Хамед coast, original tile 38; dry reachable bank, native exits agree with land neighbours. The original global placement is unknown.",
+  "6216,1922": "DESIGNED 2026-11-27: Абу-Хамед coast, original tile 39; dry reachable bank, native exits agree with land neighbours. The original global placement is unknown.",
+  "6166,1945": "DESIGNED 2026-11-27: Абу-Хамед coast, original tile 54; dry reachable bank, native exits agree with land neighbours. The original global placement is unknown.",
+  "5877,1856": "DESIGNED 2026-11-27: Абри coast, original tile 55; dry reachable bank, native exits agree with land neighbours. The original global placement is unknown.",
+  "5875,1856": "DESIGNED 2026-11-27: Абри coast, original tile 56; dry reachable bank, native exits agree with land neighbours. The original global placement is unknown.",
+  "5876,1876": "DESIGNED 2026-11-27: Абри coast, original tile 57; dry reachable bank, native exits agree with land neighbours. The original global placement is unknown."
  }
 }

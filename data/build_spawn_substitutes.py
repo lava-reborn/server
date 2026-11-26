@@ -288,8 +288,8 @@ CAMP_FILL = {
           [1025, 1026, 1027, 1028, 1029, 1030, 1031, 1032, 1033, 1034, 1036],
           "Аванпост Северного Альянса (Bandit_Camp_10), «Для игроков 16-18 уровней» (tooltip "
           "6210,1986): the Alliance's na_ of levels 16-18 round Генерал Шерхан (8620, the outpost's "
-          "boss by its file); eleven slots for the twelve ranks, the «[18] Капитан» (1035) left out, "
-          "a boss by his type. The treasurer na_Kaznachei (1024) and Гейнц Тейлор (1749) are put down "
+          "boss by its file); eleven ordinary slots; the «[18] Капитан» (1035) is a scheduled "
+          "subboss placed separately. The treasurer na_Kaznachei (1024) and Гейнц Тейлор (1749) are put down "
           "by hand (data/placements.json)."),
     263: ("na", (19, 20),
           [1728, 1729, 1730, 1731, 1732, 1733, 1734, 1735, 2315, 1736],
@@ -304,6 +304,11 @@ CAMP_FILL = {
           "levels 19-20 round their chief, the ranks of 8999-9002 the base leaves out (2316-2319) and "
           "its snipers, the «Прототип» and a ranger."),
 }
+
+
+# Coastal populations share the same ordinary spawn mechanism.
+from build_coastal_locations import fill_rows as coastal_fill_rows
+CAMP_FILL.update(coastal_fill_rows())
 
 
 def camp_fill(mt, types):

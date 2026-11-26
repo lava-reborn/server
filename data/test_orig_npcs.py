@@ -78,7 +78,8 @@ MIN_MOB_KIND = 308
 # traders, the shell line of the works, the Alliance's defector, its ranks
 # and a teacher of the Academy, Вюрт's box, the doctor's junior helper and
 # Кодого -- and "suggest" fell from 601 to 569.
-MIN_SUGGEST = 569
+# Two coast-crocodile suggestions are now explicitly named; one had no suggestion.
+MIN_SUGGEST = 567
 
 
 def canonical(doc):

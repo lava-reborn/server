@@ -86,7 +86,7 @@ WALL = {(6182, 1976): 126, (6183, 1977): 131}
 STATION, STATION_CELL = 126, (6182, 1976)
 PORT = 446
 DIAMOND = 5545
-BOSSES = (777, 778, 8620, 1037, 1038)
+BOSSES = (777, 778, 8620, 1035, 1037, 1038)
 TREASURERS = (764, 1024, 1736)
 NAMED = {1750: 132, 1749: 168, 1751: 263, 2170: 263, 1752: 156}
 INSTANCE_BOSSES = (1702, 1708, 1709, 1710, 1711, 1718, 1720)
@@ -106,7 +106,7 @@ MINE = [615, 1014, 1216, 1254, 1273]
 ACADEMY = [1295]
 INSTANCES = [690, 691, 692, 693, 694]
 PLACES = (TOWN + QUEST_PLACES + CAMP_PLACES + WORKS + PRISON + QUARRY + MINE_TOP + MINE + ACADEMY
-          + INSTANCES)
+          + INSTANCES + [38, 39, 54])
 BOX = (6076, 6300, 1840, 2030)                 # x0, x1, y0, y1 round the town
 
 
@@ -184,7 +184,7 @@ try:
           {132: ["pt"], 133: ["pt"], 168: ["na"], 263: ["na"], 274: ["na"]})
     in_files = {lid: {t for _c, t in world.location(lid).spawns if t} for lid in CAMP_PLACES}
     check("  ..and every rank of each faction stands in one of its places: the pirates' twelve, the"
-          " outpost's eleven without the captain 1035 (a boss of the file's kind, no slot left for him),"
+          " outpost's eleven ordinary ranks (captain 1035 is placed separately as a timed boss),"
           " the base's thirteen",
           (sorted((set(fill[132]) | set(fill[133]) | in_files[133]) - {778}),
            sorted(set(fill[168])), sorted(set(fill[263]) | set(fill[274]))),
@@ -201,7 +201,7 @@ try:
     check("the Альянс's outpost 168: Генерал Шерхан, eleven of the fill, Гейнц Тейлор and the treasurer"
           " by hand, two boxes",
           stood(r168),
-          collections.Counter({1032: 4, 1033: 3, 1036: 3, 1027: 1, 2171: 2, 8620: 1, 1749: 1, 1024: 1}))
+          collections.Counter({1032: 4, 1033: 3, 1036: 3, 1027: 1, 2171: 2, 8620: 1, 1749: 1, 1024: 1, 1035: 1}))
     check("the Альянс's base 263: Генерал Шерхан, ten of the fill with the bookkeeper, Рудольф Треурнихт"
           " and Джеймс Бейкер, three boxes",
           stood(r263),
@@ -227,7 +227,7 @@ try:
     check("the named men stand by their camps by hand (data/placements.json), Кленз in the Dark Mine's"
           " entrance by its file",
           (placed, stood(room(156))[1752]),
-          ({132: [1750], 168: [1024, 1749], 263: [1751, 2170]}, 1))
+          ({132: [1750], 168: [1024, 1035, 1749], 263: [1751, 2170]}, 1))
     check("  ..and none of them, no treasurer and no box is in any ambush's band",
           sorted({t for b, _r in encounters.bands() for t in b.types}
                  & (set(NAMED) | {1760, 2168} | set(TREASURERS) | {2169, 2171})), [])

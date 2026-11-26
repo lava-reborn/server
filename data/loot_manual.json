@@ -804,6 +804,16 @@
     "independent": true,
     "_source": "Owner 2026-10-25: Abu-Hamed Somali miners; independent of quests and the ordinary two-drop cap."
    }
+  ],
+  "1035": [
+   {
+    "type": 7620,
+    "_name": "1 унция золота",
+    "tier": "Ценный",
+    "chance": 1.0,
+    "count": 4,
+    "_source": "DESIGNED, owner 2026-11-27: scheduled Captain of the Northern Alliance at outpost 168 drops 4 G. Existing boss-hour and fixed-quantity rules apply."
+   }
   ]
  },
  "items": {

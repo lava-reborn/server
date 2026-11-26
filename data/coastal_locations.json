@@ -1,0 +1,133 @@
+{
+ "_": "Original coastal geometry and crocodile types are recovered from the client. Global cells and regional populations are DESIGNED: the original server table is missing. Cardinal exits follow reachable dry neighbours of the current map; existing settlements, patrols and closed areas are preserved.",
+ "cities": {
+  "Вади-Хальфа": {
+   "origin": [
+    5965,
+    1728
+   ],
+   "mob": 2418
+  },
+  "Абри": {
+   "origin": [
+    5860,
+    1835
+   ],
+   "mob": 2419
+  },
+  "Донгола": {
+   "origin": [
+    5877,
+    2010
+   ],
+   "mob": 130
+  },
+  "Абу-Хамед": {
+   "origin": [
+    6182,
+    1976
+   ],
+   "mob": 2420
+  }
+ },
+ "locations": {
+  "17": {
+   "city": "Вади-Хальфа",
+   "cell": [
+    5961,
+    1756
+   ]
+  },
+  "18": {
+   "city": "Вади-Хальфа",
+   "cell": [
+    5969,
+    1746
+   ]
+  },
+  "19": {
+   "city": "Вади-Хальфа",
+   "cell": [
+    5967,
+    1724
+   ]
+  },
+  "20": {
+   "city": "Донгола",
+   "cell": [
+    5874,
+    2005
+   ]
+  },
+  "21": {
+   "city": "Абри",
+   "cell": [
+    5875,
+    1853
+   ]
+  },
+  "22": {
+   "city": "Вади-Хальфа",
+   "cell": [
+    5968,
+    1747
+   ]
+  },
+  "23": {
+   "city": "Донгола",
+   "cell": [
+    5875,
+    2016
+   ]
+  },
+  "24": {
+   "city": "Донгола",
+   "cell": [
+    5876,
+    2016
+   ]
+  },
+  "38": {
+   "city": "Абу-Хамед",
+   "cell": [
+    6169,
+    1952
+   ]
+  },
+  "39": {
+   "city": "Абу-Хамед",
+   "cell": [
+    6216,
+    1922
+   ]
+  },
+  "54": {
+   "city": "Абу-Хамед",
+   "cell": [
+    6166,
+    1945
+   ]
+  },
+  "55": {
+   "city": "Абри",
+   "cell": [
+    5877,
+    1856
+   ]
+  },
+  "56": {
+   "city": "Абри",
+   "cell": [
+    5875,
+    1856
+   ]
+  },
+  "57": {
+   "city": "Абри",
+   "cell": [
+    5876,
+    1876
+   ]
+  }
+ }
+}
