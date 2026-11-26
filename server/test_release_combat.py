@@ -815,7 +815,10 @@ class ReleaseCatalogue(unittest.TestCase):
             rows = [dict(type_id=outfit['members'][name], root=items.WEAR, slot=slot, brk=1)
                     for name, slot in zip(sets.SLOTS, inventory.SET_SLOTS)] if outfit else []
             character = progression.Character()
-            character.skill[progression.MELEE][0] = level
+            # ordinary_mob_ap uses a shooting-trained reference loadout.
+            # Melee-only training now adds different skill-derived AP for
+            # some belts, and is not the same reference character.
+            character.skill[progression.SHOOTING][0] = level
             character.set_gear(inventory.gear_bonus(rows))
             with self.subTest(level=level):
                 self.assertEqual(battle_balance.ordinary_mob_ap(level), character.ap_ceiling)

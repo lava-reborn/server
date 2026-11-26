@@ -1626,4 +1626,42 @@ ok(up.character(keeper)["loc"] == 467 and accounts.ran(up.db, accounts.ABUHAMED_
    "второе открытие ничего не повторяет")
 up.close()
 
+
+# Hand gifts keep identity across the legacy class repair on PostgreSQL too.
+from types import SimpleNamespace
+from unittest.mock import patch
+import inventory
+import items
+store = fresh_store()
+aid, _ = store.register('hand-gift-pg', 'test-password')
+cid, _ = store.create_character(aid, 'HandGiftPG', 0, 1)
+inv = inventory.Inventory(SimpleNamespace(char_id=cid), store)
+legacy = []
+for type_id, slot in ((1069, inventory.BELT), (1070, inventory.BANK)):
+    legacy.append(store.create_item(cid, type_id, items.WEAR,
+                                    slot=slot, count=1, brk=123, max_break_cur=30000))
+expected = [dict(r, root=items.COLD_ARM,
+                 slot=inventory.BAG if r['slot'] == inventory.BELT else r['slot'])
+            for r in legacy]
+ok(inv.normalize_hand_valentines() == [r['uniq'] for r in legacy], 'legacy hand gifts repaired')
+ok(store.items_of(cid) == expected, 'gift serials, durability and bank placement preserved')
+ok(inv.normalize_hand_valentines() == [], 'gift repair is idempotent')
+for r in legacy:
+    store.db.execute('UPDATE items SET root=?,slot=? WHERE uniq=?', (r['root'], r['slot'], r['uniq']))
+store.db.commit()
+execute = store.db.execute
+def fail_gift_update(sql, args=()):
+    if sql.startswith('UPDATE items SET root=') and args[2] == legacy[1]['uniq']:
+        raise RuntimeError('interrupted gift repair')
+    return execute(sql, args)
+try:
+    with patch.object(store.db, 'execute', side_effect=fail_gift_update):
+        inv.normalize_hand_valentines()
+except RuntimeError as exc:
+    ok(str(exc) == 'interrupted gift repair', 'interrupted repair raises its original error')
+else:
+    raise AssertionError('gift repair unexpectedly completed')
+ok(store.items_of(cid) == legacy, 'failed gift repair rolls back all gift rows')
+store.close()
+
 print("storage(pg): %d проверок, все зелёные" % checks)

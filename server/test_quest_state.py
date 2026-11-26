@@ -31,6 +31,8 @@ def session(store, level=10, char_id=1):
         skill[0] = level
     for spec in s.char.spec:
         spec[0] = 2
+    # Quest-only sessions have not entered combat and have published no AP limit.
+    s.combat = NS(amax_sent=None)
     s.inv = inventory.Inventory(s, store)
     s.send = lambda *a, **kw: None
     return s

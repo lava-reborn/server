@@ -475,6 +475,8 @@ def fits(row, slot):
     """
     if slot == BAG:
         return True
+    if row['type_id'] in items.HAND_VALENTINES:
+        return slot in HAND_SLOTS and row['root'] == items.COLD_ARM
     root = row["root"]
     if slot in HAND_SLOTS:
         return root in items.HAND_ROOTS
@@ -1344,6 +1346,32 @@ class Inventory:
         if not worn:
             return None
         return self.wear(RNG.choice(worn), points)
+
+    def normalize_hand_valentines(self):
+        """Repair legacy gift classes before any OIDs are sent on login.
+
+        Preserve the serial, owner, count, durability and bank placement.
+        A gift previously worn as clothing returns to the backpack.
+        """
+        candidates = [r for r in self.rows()
+                      if r['type_id'] in items.HAND_VALENTINES
+                      and (r['root'] != items.COLD_ARM or r['slot'] in WEAR_SLOTS)]
+        if not candidates:
+            return []
+        changed = []
+        with storage.atomic(self.store.db):
+            if not self.store.lock_quest_character(self.char_id):
+                raise ValueError('Gift owner disappeared')
+            for candidate in candidates:
+                row = self.store.item(candidate['uniq'])
+                if not row or row['char_id'] != self.char_id or row['type_id'] not in items.HAND_VALENTINES:
+                    continue
+                slot = BAG if row['slot'] in WEAR_SLOTS else row['slot']
+                self.store.db.execute(
+                    'UPDATE items SET root=?,slot=? WHERE uniq=? AND char_id=?',
+                    (items.COLD_ARM, slot, row['uniq'], self.char_id))
+                changed.append(row['uniq'])
+        return changed
 
     def unfit_to_bag(self):
         """Take off whatever sits in a slot it does not fit, into the bag.

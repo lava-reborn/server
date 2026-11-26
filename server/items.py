@@ -287,6 +287,10 @@ def catalogue():
         txt = world._read(os.path.join(world.RES, "database", "objects.xml"))
         table = own_items.originals(own_items.table(txt))
         table.update(own_items.rows(table))
+        # The four 25 G gifts are knives even with an older client catalogue.
+        for type_id in HAND_VALENTINES:
+            if type_id in table:
+                table[type_id] = (COLD_ARM, table[type_id][1])
         _CATALOGUE = table
     return _CATALOGUE
 
@@ -1383,6 +1387,17 @@ def static_info(type_id):
         admin = ADMIN_OVERRIDES.get(type_id)
         if admin:
             info[1].update(admin)
+        if type_id in HAND_VALENTINES:
+            attribute, amount = HAND_VALENTINES[type_id]
+            info[1].update(cost=0, g_cost=2500, action_map=ACT_FIRE,
+                           desc=DESC_ID_OFFSET + type_id,
+                           h_damage_min=1, h_damage_max=1,
+                           st_damage_min=1, st_damage_max=1,
+                           max_range=1.7, strike_cost=1, strike_mod=1,
+                           strike_time=600, can_aimed=1, max_break_abs=30000,
+                           need_skills_m=1, need_skills=[0],
+                           bonus_attribs_m=1 << attribute, bonus_attribs=[amount])
+            info[1].pop('slot_type', None)
         if root_of(type_id) == HEAL:
             import effects
             effect = effects.definition(type_id)

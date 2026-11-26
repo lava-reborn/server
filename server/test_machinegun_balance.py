@@ -68,13 +68,13 @@ class MachinegunBalance(unittest.TestCase):
         # mode uses its own optimal band; distance identities are checked below.
         for variants, targets in (((24989, 25006, 25022), (150.7, 154.2, 183.5)),
                                   ((24990, 25007, 7051, 25023, 7052),
-                                   (180, 185, 189, 221.6, 232.7))):
+                                   (180, 185, 189, 221.6, 234.4))):
             scores = [self.scores(type_id)[0] for type_id in variants]
             self.assertEqual(scores, sorted(scores))
             for type_id, score, target in zip(variants, scores, targets):
                 with self.subTest(type_id=type_id):
                     self.assertAlmostEqual(score, target, delta=.5)
-        self.assertAlmostEqual(self.scores(7052, distance=7)[0], 232.7, delta=.5)
+        self.assertAlmostEqual(self.scores(7052, distance=7)[0], 234.4, delta=.5)
 
     def test_bizon_comparison_preserves_distance_roles_instead_of_forcing_a_class_winner(self):
         for bizon, rpd, aug in ((25540, 24989, 25006), (26177, 24990, 25007)):
@@ -84,10 +84,10 @@ class MachinegunBalance(unittest.TestCase):
                 self.assertGreater(self.scores(aug, distance=18)[0], self.scores(rpd, distance=18)[0])
                 self.assertEqual(self.scores(bizon, distance=18)[0], 0)
 
-    def test_pkm_tiers_follow_the_matching_gold_reference_by_five_percent(self):
+    def test_pkm16_keeps_the_matching_gold_reference_by_five_percent(self):
         # The agreed reference uses the best mode in its optimal band,
         # including a new aim, the complete animation and amortized reload.
-        for pkm, reference in ((7051, 24990), (7052, 25023)):
+        for pkm, reference in ((7051, 24990),):
             with self.subTest(pkm=pkm):
                 ratio = self.scores(pkm)[0] / self.scores(reference)[0]
                 self.assertAlmostEqual(ratio, 1.05, delta=.002)
@@ -109,12 +109,13 @@ class MachinegunBalance(unittest.TestCase):
                 with self.subTest(m249=m249, rpd=rpd, distance=distance):
                     self.assertGreater(self.scores(m249, distance)[0], self.scores(rpd, distance)[0])
 
-    def test_gold_m249_damage_blueprint_exceeds_pkm17_by_five_percent(self):
+    def test_gold_m249_damage_blueprint_exceeds_pkm17_by_at_most_five_percent(self):
         # Keep both the agreed optimal-band reference and actual close fights.
-        for distance in (None, 1, 2, 3, 4, 7):
+        for distance in (None, *range(1, 34)):
             with self.subTest(distance=distance):
                 ratio = self.scores(25026, distance)[0] / self.scores(7052, distance)[0]
-                self.assertAlmostEqual(ratio, 1.05, delta=.001)
+                self.assertGreater(ratio, 1)
+                self.assertLessEqual(ratio, 1.05)
         self.assertGreater(self.scores(25026, 4)[0], self.scores(40088, 4)[0])
 
     def test_accuracy_ceilings_cover_all_rpd_blueprints_without_changing_other_weapons(self):
@@ -122,10 +123,10 @@ class MachinegunBalance(unittest.TestCase):
                     if name.startswith('machine_gun_1_lvl_16')
                     and '_mob' not in name and not items.premium(type_id)}
         caps = balance.weapon_hit_caps()
-        self.assertEqual(set(caps), expected | {7052})
+        self.assertEqual(set(caps), expected)
         for type_id in expected:
             self.assertEqual(caps[type_id], .83)
-        for type_id, cap in ((24990, .83), (7052, .905), (25026, .95), (26177, .95)):
+        for type_id, cap in ((24990, .83), (7052, .95), (25026, .95), (26177, .95)):
             with self.subTest(type_id=type_id):
                 self.assertEqual(self.weapon(type_id, 2, {}).hit_cap, cap)
         # An older weapon still receives the existing over-level penalty.
@@ -178,9 +179,9 @@ class MachinegunBalance(unittest.TestCase):
                     count += 1
         self.assertGreaterEqual(count, 100)
 
-    def test_pkm_all_five_tiers_keep_the_pre_release_damage_bounds(self):
+    def test_only_pkm17_receives_the_reviewed_small_damage_reduction(self):
         fixtures = {7051: ([24, 24, 18], [72, 60, 90]),
-                    7052: ([29, 32, 37], [81, 84, 103]),
+                    7052: ([28, 31, 36], [78, 81, 99]),
                     7082: ([36, 30, 30], [132, 126, 138]),
                     7053: ([46, 42, 54], [118, 114, 102]),
                     7054: ([78, 66, 60], [138, 114, 108])}
@@ -189,6 +190,34 @@ class MachinegunBalance(unittest.TestCase):
                 si = items.params_of(type_id)
                 self.assertEqual(si['h_damage_min'], minimum)
                 self.assertEqual(si['h_damage_max'], maximum)
+
+    def test_pkm17_damage_is_lower_in_every_mode_with_no_large_nominal_gap(self):
+        fn = items.params_of(25026)
+        pkm = items.params_of(7052)
+        for field in ('h_damage_min', 'h_damage_max'):
+            for higher, lower in zip(fn[field], pkm[field]):
+                self.assertGreater(higher, lower)
+                self.assertLessEqual(higher / lower, 1.05)
+        # Cone size is proportional to maximum range. Equal close-range
+        # accuracy avoids multiplying a damage reduction by another hit penalty.
+        for mode in range(3):
+            fn_weapon = self.weapon(25026, mode, {})
+            pkm_weapon = self.weapon(7052, mode, {})
+            self.assertAlmostEqual(fn_weapon.cone, pkm_weapon.cone, delta=.00001)
+            self.assertEqual(fn_weapon.hit_cap, pkm_weapon.hit_cap)
+        self.assertEqual(pkm['max_range'], [33, 25, 22])
+        self.assertEqual(pkm['end_opt_range'], [24, 19, 15])
+        self.assertEqual(pkm['fire_mods'], fn['fire_mods'])
+        self.assertEqual(pkm['fire_times'], fn['fire_times'])
+        self.assertEqual(pkm['fire_costs'], fn['fire_costs'])
+
+    def test_pkm17_private_range_keeps_its_frozen_damage(self):
+        from training.balance import before_release
+        ordinary = items.params_of(7052)
+        private = before_release(7052, dict(ordinary))
+        self.assertEqual(private['h_damage_min'], [29, 32, 37])
+        self.assertEqual(private['h_damage_max'], [81, 84, 103])
+        self.assertEqual(ordinary['h_damage_min'], [28, 31, 36])
 
     def test_gold_ammo_changes_final_damage_without_changing_bounds_or_crit(self):
         for type_id in (25566, 25943, 25201, 25803, 24990, 26177):

@@ -184,6 +184,9 @@ def gun(sess, type_id, mode, ammo):
     row = store.create_item(sess.char_id, type_id, root, **fields)
     store.update_item(row["uniq"], cur_mode=mode, ammo_count=ammo,
                       ammo_type=si["comp_array"][0])
+    # Direct fixture writes bypass the normal equipment/level command hooks.
+    # Publish their current ceiling before shoot() fills AP for this case.
+    sess.inv.refresh_gear()
     return store.item(row["uniq"])
 
 

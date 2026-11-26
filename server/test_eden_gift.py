@@ -34,7 +34,7 @@ class EdenGiftTests(unittest.TestCase):
         self.assertEqual((basket.need_all, basket.need_any), ([], []))
         self.assertEqual((basket.cost_afro, basket.cost_gold), (0, 0))
         self.assertEqual(items.params_of(eden.BASKET)['bonus_attribs_m'], 1)
-        self.assertEqual(items.params_of(eden.BASKET)['bonus_attribs'], [20])
+        self.assertEqual(items.params_of(eden.BASKET)['bonus_attribs'], [50])
         self.assertIn(GIFT, eden.QUESTS)
 
     def buy(self):
@@ -178,8 +178,8 @@ class EdenGiftTests(unittest.TestCase):
                                 **{'from': inventory.BAG, 'to': inventory.BELT}))
         self.assertEqual(self.fixture.acknowledgements(), [0])
         self.s.inv.refresh_gear()
-        self.assertEqual(self.s.character().attr(progression.STRENGTH), strength + 20)
-        self.assertEqual(self.s.inv.carry_limit(), capacity + 40000)
+        self.assertEqual(self.s.character().attr(progression.STRENGTH), strength + 50)
+        self.assertEqual(self.s.inv.carry_limit(), capacity + 100000)
 
     def test_failure_partway_through_ticket_stacks_rolls_back_then_pays_once(self):
         self.fixture.fund(afro=15000)

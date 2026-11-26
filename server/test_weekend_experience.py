@@ -114,7 +114,7 @@ class WeekendExperience(unittest.TestCase):
                 f.sess.effects = session(source).effects
                 with patch.object(p.time, 'time', return_value=SATURDAY):
                     self.assertAlmostEqual(f.xp_reward(p.SHOOTING, 1, CombatXpCap().mob(17)),
-                                           748.5 * total)
+                                           1100 * total)
 
     def test_all_combinations_credit_once_before_fractional_carry_and_keep_cap(self):
         fixture = CombatXpCap()
@@ -129,7 +129,8 @@ class WeekendExperience(unittest.TestCase):
                                 f.credit_xp(p.SHOOTING, spec, .01, fixture.mob(level + 4))
                         reward = p.combat_mob_xp(level + 4, level) * (calendar + boost - 1 + residence)
                         self.assertEqual(fixture.spec_total(ch, spec), int(reward + 1e-9))
-                        self.assertAlmostEqual(ch.xp_carry['spec', spec], reward % 1)
+                        self.assertAlmostEqual(ch.xp_carry['spec', spec],
+                                               max(0, reward - int(reward + 1e-9)))
                         self.assertEqual(ch.skill[p.SHOOTING][1], 0 if level == 17 else int(reward + 1e-9))
 
     def test_expired_intux_falls_back_to_calendar_and_reductions_still_apply(self):

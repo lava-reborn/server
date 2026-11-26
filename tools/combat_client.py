@@ -604,5 +604,7 @@ def patches(Asm, undef, *, training=False):
     ranges = range_patches(Asm, undef)
     from right_click_client import patches as right_click_patches
     right_click = right_click_patches(Asm, undef)
+    from chat_bubbles_client import patches as bubble_patches
+    bubbles = bubble_patches(Asm, undef)
     return dict(globals=functions + recovery['globals'] + medicine['globals'] + respawn['globals'] + ranges['globals'],
-                wraps=tuple(wraps) + recovery['wraps'] + medicine['wraps'] + respawn['wraps'] + ranges['wraps'] + right_click['wraps'])
+                wraps=tuple(wraps) + recovery['wraps'] + medicine['wraps'] + respawn['wraps'] + ranges['wraps'] + right_click['wraps'] + bubbles['wraps'])

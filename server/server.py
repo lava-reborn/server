@@ -962,6 +962,7 @@ class Session:
         # Anything worn in a slot it does not fit (a row from before the
         # slot_type fix) goes back to the bag before the gear is counted,
         # and so does anything above the character's level (the level rule).
+        self.inv.normalize_hand_valentines()
         self.inv.unfit_to_bag()
         # Eligibility uses the same effective skills as the character card.
         # Recount after removals until no dependent weapon remains equipped.

@@ -215,7 +215,7 @@ for _type, (_root, _internal_name) in items.catalogue().items():
 for _type_id, (_attribute, _amount) in items.HAND_VALENTINES.items():
     _title = ("силе", "ловкости", "телосложению", "восприятию", "интеллекту")[_attribute]
     ALL[items.DESC_ID_OFFSET + _type_id] = (
-        "Послание от любящего человека.<br>Держите валентинку в любой руке: "
+        "Послание от любящего человека.<br>Режущее оружие. Не надевается на пояс.<br>Держите валентинку в любой руке: "
         f"она даёт +{_amount} к {_title}, пока находится в руке.")
 
 # Both scanner grades share the same loot policy; duration stays in the effect.

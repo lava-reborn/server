@@ -399,9 +399,8 @@ def skill_seen(c, skill):
 
 
 def no_level(seq):
-    """A frame order with a level-up's usrUp left out: whether Стрельба
-    crosses a level at a hand-in depends on what the rats paid for it."""
-    return [n for n in seq if n != "usrUp"]
+    """Omit optional level-up vitals/AP: rat XP may cross a skill level."""
+    return [n for n in seq if n not in ("usrUp", "c_ap")]
 
 
 def done(cid):
@@ -554,7 +553,7 @@ try:
     got = hand_in(c, here, WISDOM, q)
     check("«Немного мудрости»: the awl, the experience -- Медицина's first level, so the"
           " bars follow", (upto_ack(got), acks(got), owned(CID).get(AWL)),
-          (["ss_obj_status", "ss_di_coldarm", "rp_info", "usrUp", "cmdAck"], [0], 1))
+          (["ss_obj_status", "ss_di_coldarm", "rp_info", "c_ap", "usrUp", "cmdAck"], [0], 1))
     check("  ..a hundred and ten to Медицина, its first level",
           experience(CID, MEDICINE), 110)
     check("«Стреляем» offered now", status(c, SHOOT), 1)

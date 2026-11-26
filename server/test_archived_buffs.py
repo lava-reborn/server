@@ -244,18 +244,18 @@ class ArchivedBuffs(unittest.IsolatedAsyncioTestCase):
         self.assertEqual((f.ap_max, f.ap, self.s.char.ap_ceiling), (original_max, original_max, original_max))
         self.assertFalse(manager.active)
 
-    async def test_ap_effect_adjusts_only_own_bonus_and_keeps_frozen_gear_policy(self):
+    async def test_ap_effect_reconciles_stale_ceiling_without_refilling_spent_ap(self):
         manager = self.manager()
         f = self.s.combat
         base = self.s.char.ap_ceiling
         f.amax_sent = base + 12  # A previous room-entry ceiling retained after a gear change.
         f.ap = 19
         manager.add(3897)
-        self.assertEqual((f.ap_max, f.ap), (base + 32, 19))
+        self.assertEqual((f.ap_max, f.ap), (base + 20, 19))
         deadline = manager.active['action_points'].deadline
         with patch.object(manager, 'clock', return_value=deadline + 1):
             manager.refresh()
-        self.assertEqual((f.ap_max, f.ap), (base + 12, 19))
+        self.assertEqual((f.ap_max, f.ap), (base, 19))
 
     def assert_ceiling_before_private_state(self, maximum):
         packets = [decode(frame[:-1]) for frame in self.s.writer.frames]
