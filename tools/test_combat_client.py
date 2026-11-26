@@ -564,12 +564,12 @@ class CombatClient(unittest.TestCase):
                     self.assertEqual(self.sent, [])
                     self.assertFalse(self.env['_global'].get('__bfInputTimer'))
 
-    def test_queued_volley_does_not_turn_the_current_shot_early(self):
+    def test_queued_melee_does_not_turn_the_current_swing_early(self):
         scene, figure, logical = self.facing_scene(17)
         self.call('__bfAim', scene, dict(aim=17, ang=2, num_shots=1, seq=1))
-        self.call('__bfFire', scene, dict(gunnerID=17, access=True, seq=1))
+        self.call('__bfFire', scene, dict(gunnerID=17, access=True, shot=False, seq=1))
         self.call('__bfAim', scene, dict(aim=17, ang=6, num_shots=1, seq=2))
-        self.call('__bfFire', scene, dict(gunnerID=17, access=True, seq=2))
+        self.call('__bfFire', scene, dict(gunnerID=17, access=True, shot=False, seq=2))
         self.assertEqual((figure['__direction'], logical['direction']), (2, 2))
         self.assertEqual(self.calls, [('cancel-rotate', 4), ('aim', 1, 2)])
         figure['burstArr'].shift()
@@ -579,6 +579,45 @@ class CombatClient(unittest.TestCase):
         self.assertEqual(self.calls[-3:], ['native-transition', ('cancel-rotate', 2), ('aim', 2, 6)])
         self.assertEqual((figure['__direction'], logical['direction']), (6, 6))
         self.assertEqual([event['seq'] for event in figure['burstArr']], [2])
+
+    def test_accepted_firearm_aim_waits_for_native_visual_for_owner_and_observer(self):
+        for actor in (0, 17):
+            with self.subTest(actor=actor):
+                self.calls.clear()
+                self.reported.clear()
+                scene, figure, logical = self.facing_scene(actor)
+                self.call('__bfAim', scene, dict(aim=actor, ang=2, num_shots=1, seq=1))
+                self.call('__bfFire', scene, dict(gunnerID=actor, access=True, shot=True, seq=1))
+                figure['behavior'] = 'fire'
+                self.call('__bfAim', scene, dict(aim=actor, ang=6, num_shots=1, seq=2))
+                self.assertEqual((figure['__direction'], logical['direction']), (2, 2))
+                self.assertEqual(figure['behavior'], 'fire')
+                self.assertEqual(len(figure['__bfBursts']), 2)
+                figure['burstArr'].shift()
+                self.call('__bfVisualFinal', scene, dict(target=figure, data='fire_out'))
+                figure['__bfNextSequenceOrig'] = lambda:self.calls.append('native-transition')
+                self.call('__bfNextSequence', figure)
+                self.assertEqual((figure['__direction'], logical['direction']), (6, 6))
+                self.assertEqual(figure['behavior'], 'fire_in')
+                self.assertEqual(self.calls[-3:], ['native-transition', ('cancel-rotate', 2), ('aim', 2, 6)])
+                self.assertEqual(self.reported, [1])
+                self.assertEqual(figure['__bfBursts'][0]['aim']['seq'], 2)
+                self.assertNotIn('__bfPlayback', figure)
+
+    def test_visual_queue_keeps_active_and_latest_pending_volley_and_every_report_once(self):
+        scene, figure = self.scene()
+        for seq in range(30):
+            self.call('__bfAim', scene, dict(aim=1, num_shots=1, seq=seq))
+            self.call('__bfFire', scene, dict(gunnerID=1, access=True, shot=True, seq=seq))
+            self.assertLessEqual(len(figure['__bfBursts']), 2)
+        self.assertEqual(self.calls, [('aim', 0)])
+        self.assertEqual([b['aim']['seq'] for b in figure['__bfBursts']], [0, 29])
+        self.assertEqual(self.reported, list(range(29)))
+        self.call('__bfVisualFlush', None, scene, figure, False)
+        self.call('__bfVisualFlush', None, scene, figure, False)
+        self.assertEqual(self.reported, list(range(30)))
+        self.assertEqual(self.applied, [])
+        self.assertEqual(figure['__bfBursts'], [])
 
     def test_inactive_or_unanimated_figure_updates_facing_without_a_visual_queue(self):
         for changed in (dict(animationEnabled=False), dict(isActive=False)):
@@ -717,12 +756,12 @@ class CombatClient(unittest.TestCase):
         self.call('__bfVisualFlush', None, scene, figure, False)
         self.assertEqual((self.reported, self.applied), ([], []))
 
-    def test_repeat_aim_preserves_confirmed_previous_bullets(self):
+    def test_repeat_melee_aim_preserves_confirmed_previous_events(self):
         scene, figure = self.scene()
         self.call('__bfAim',scene,dict(aim=1,num_shots=1,seq=1))
-        self.call('__bfFire',scene,dict(gunnerID=1,access=True,seq=1))
+        self.call('__bfFire',scene,dict(gunnerID=1,access=True,shot=False,seq=1))
         self.call('__bfAim',scene,dict(aim=1,num_shots=1,seq=2))
-        self.call('__bfFire',scene,dict(gunnerID=1,access=True,seq=2))
+        self.call('__bfFire',scene,dict(gunnerID=1,access=True,shot=False,seq=2))
         self.assertEqual(self.calls,[('aim',1)])
         self.assertEqual([e['seq'] for e in figure['burstArr']],[1])
         # Native final-frame handler consumes the confirmed first burst.
@@ -742,7 +781,7 @@ class CombatClient(unittest.TestCase):
         scene,figure=self.scene()
         self.call('__bfAim',scene,dict(aim=1,num_shots=2,seq=1))
         for seq in (1,2):
-            self.call('__bfFire',scene,dict(gunnerID=1,access=True,seq=seq))
+            self.call('__bfFire',scene,dict(gunnerID=1,access=True,shot=False,seq=seq))
         self.call('__bfVisualFinal',scene,dict(target=figure,data='fire_out'))
         self.assertEqual(self.applied,[])
         self.assertEqual(self.reported,[1,2])
@@ -758,7 +797,7 @@ class CombatClient(unittest.TestCase):
         scene, figure = self.scene()
         for i in (1,2,3):
             self.call('__bfAim',scene,dict(aim=1,num_shots=1,seq=i))
-            self.call('__bfFire',scene,dict(gunnerID=1,access=True,seq=i))
+            self.call('__bfFire',scene,dict(gunnerID=1,access=True,shot=False,seq=i))
         self.call('__bfDead',scene,dict(dead=1))
         self.assertEqual(self.applied,[])
         self.assertEqual(self.reported,[1,2,3])
@@ -771,8 +810,8 @@ class CombatClient(unittest.TestCase):
         scene, figure = self.scene()
         for i in range(30):
             self.call('__bfAim',scene,dict(aim=1,num_shots=1,seq=i))
-            self.call('__bfFire',scene,dict(gunnerID=1,access=True,seq=i))
-            self.assertLessEqual(len(figure['__bfBursts']),8)
+            self.call('__bfFire',scene,dict(gunnerID=1,access=True,shot=False,seq=i))
+            self.assertLessEqual(len(figure['__bfBursts']),2)
         self.call('__bfDead',scene,dict(dead=1))
         self.assertEqual(self.applied,[])
         self.assertEqual(self.reported,list(range(30)))

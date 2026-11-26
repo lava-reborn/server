@@ -11,10 +11,10 @@ class RoomDelivery(unittest.TestCase):
         for value in (21, 113, 175, 225):
             viewer = NS(pid=value)
             command, params = rooms.viewer_frame('faShot', dict(
-                id=value, status=0, recovery_ms=value, animation_frames=value))(viewer)
+                id=value, status=0, recovery_ms=value))(viewer)
             self.assertEqual(command, 'faShot')
             self.assertEqual(params, dict(id=0, status=0,
-                                         recovery_ms=value, animation_frames=value))
+                                         recovery_ms=value))
 
     def test_programming_errors_are_not_disguised_as_a_disconnected_player(self):
         closed = []

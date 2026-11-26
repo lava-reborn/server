@@ -12,16 +12,17 @@ def sequences():
 
 
 FIREARM_ANIMATION_RATIO = 0.25
-FIREARM_MIN_RECOVERY_MS = 150
+FIREARM_MIN_RECOVERY_MS = 250
 
 
 def duration_ms(session, params=None, shots=1, *, aimed_for=0, mode=0):
-    """Firearms reserve 25% of native firing time, with a 150 ms floor.
+    """Firearms reserve 25% of native firing time, with a 250 ms floor.
 
     Aim and lowering are not part of that reference. The ordinary model
     prevents costume-dependent cadence; shotgun pellets share one firing
     cycle. Blades keep their old swing-only recovery; bare fists
-    retain the complete native sequence. Client presentation fits the budget.
+    retain the complete native sequence. Client playback stays native and a
+    newer accepted firearm aim may queue behind its remaining cosmetic frames.
     """
     params = params or {}
     if params:

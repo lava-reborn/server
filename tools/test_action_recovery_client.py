@@ -259,6 +259,23 @@ class ActionRecoveryClient(unittest.TestCase):
         self.assertLess(self.executed.index('consume-old-callback'),
                         len(self.executed)-1)
 
+    def test_refused_early_move_retries_at_server_deadline_without_waiting_for_native_fire(self):
+        _scene, figure = self.stalled_shot()
+        owner = self.location
+        owner['__bfRequestMoveOrig'] = lambda cell, splice:self.executed.append(('move', cell))
+        owner['__bfRetryMoveOrig'] = lambda event:None
+        self.call('__bfRequest0', owner, 20, None)
+        self.call('__bfRetryMove', owner, dict(param=dict(id=0, recovery_ms=250)))
+        self.now = 349
+        self.call('__bfDrainInput', None)
+        self.assertEqual(self.executed.count(('move', 20)), 1)
+        self.now = 350
+        self.call('__bfDrainInput', None)
+        self.call('__bfDrainInput', None)
+        self.assertEqual(self.executed.count(('move', 20)), 2)
+        self.assertEqual(figure['__bfBursts'], [])
+        self.assertEqual(self.fx.reported, [1])
+
     def test_shot_boundary_retry_does_not_restore_a_move_replaced_by_heal(self):
         owner=self.location
         owner['__bfRequestMoveOrig']=lambda cell,splice:self.executed.append('move')
@@ -302,7 +319,7 @@ class ActionRecoveryClient(unittest.TestCase):
         self.assertEqual(self.executed[-1],(11,50,True))
         self.assertFalse(self.timers)
 
-    def test_auto_fire_waits_for_the_complete_previous_sequence(self):
+    def test_auto_fire_waits_for_the_authoritative_recovery_deadline(self):
         activator=dict(__bfRequestFireOrig=lambda a,b:self.executed.append('fire'))
         connection=dict(__bfRecoveryNotifyOrig=lambda cmd:self.call('__bfRequest1',activator,1,42))
         self.call('__bfRecoveryNotify',connection,dict(messID='faShot',params=dict(id=0,status=0,recovery_ms=440)))
@@ -340,21 +357,32 @@ class ActionRecoveryClient(unittest.TestCase):
                         self.call('__bfDrainInput', None)
                     self.assertEqual(self.executed, [(1, 42)])
 
-    def test_space_spam_waits_through_fire_out_and_sends_one_new_aim(self):
+    def test_repeat_fire_waits_for_recovery_then_queues_native_visual_without_restarting_it(self):
         scene, figure = self.stalled_shot()
+        old = figure['__bfBursts'][0]
         owner = dict(__bfRequestFireOrig=lambda *args: self.executed.append(args))
         for target in range(100):
             self.call('__bfRequest1', owner, 1, target)
         self.assertEqual(len(self.timers), 1)
-        self.assertEqual(figure['__bfBursts'][0]['got'], 1)
-        self.now = 250
-        figure['behavior'] = 'fire_out'
+        self.now = 219
         self.call('__bfDrainInput', None)
         self.assertFalse(self.executed)
-        figure['__bfNextSequenceOrig'] = lambda: figure.update(behavior='stand')
-        self.call('__bfNextSequence', figure)
+        self.now = 220
+        self.call('__bfDrainInput', None)
         self.call('__bfDrainInput', None)
         self.assertEqual(self.executed, [(1, 99)])
+        self.assertIs(figure['__bfBursts'][0], old)
+        scene['__bfAimOrig'] = lambda event: figure.update(behavior='fire_in')
+        self.call('__bfAim', scene, dict(aim=0, num_shots=1, seq=2))
+        self.assertIs(figure['__bfBursts'][0], old)
+        self.assertEqual(figure['behavior'], 'fire')
+        self.assertEqual(len(figure['__bfBursts']), 2)
+        figure['burstArr'].shift()
+        self.call('__bfVisualFinal', scene, dict(target=figure, data='fire_out'))
+        figure['__bfNextSequenceOrig'] = lambda:figure.update(behavior='stand')
+        self.call('__bfNextSequence', figure)
+        self.assertEqual(figure['behavior'], 'fire_in')
+        self.assertEqual(figure['__bfBursts'][0]['aim']['seq'], 2)
         self.assertEqual(self.fx.reported, [1])
         self.assertIsNone(self.global_['__bfInputTimer'])
 
@@ -392,102 +420,52 @@ class ActionRecoveryClient(unittest.TestCase):
         connection = dict(__bfRecoveryNotifyOrig=lambda cmd:
                           self.call('__bfRequest1', activator, 1, 42))
         self.call('__bfRecoveryNotify', connection,
-                  dict(messID='faShot', params=dict(id=0, status=1, recovery_ms=150)))
+                  dict(messID='faShot', params=dict(id=0, status=1, recovery_ms=250)))
         self.assertFalse(self.executed)
         self.assertEqual(len(self.timers), 1)
-        self.now = 249
+        self.now = 349
         self.call('__bfDrainInput', None)
         self.assertFalse(self.executed)
-        self.now = 250
+        self.now = 350
         self.call('__bfDrainInput', None)
         self.call('__bfDrainInput', None)
         self.assertEqual(self.executed, ['fire'])
 
-    def test_native_shot_event_transfers_timing_to_visual_then_clears_packet_context(self):
+    def test_native_animation_method_has_no_accelerated_playback_wrapper(self):
+        from action_recovery_client import patches
+        spec = patches(fixture.w.Asm, fixture.w.UNDEF)
+        self.assertNotIn('__bfPlayAnimation', self.fx.functions)
+        self.assertFalse(any(path == ('core', 'location', 'Char') and method == 'playAnimation'
+                             for path, method, *_ in spec['wraps']))
+
+    def test_old_frame_metadata_is_ignored_while_native_shot_and_recovery_are_preserved(self):
         scene, figure = self.fx.scene()
         self.call('__bfAim', scene, dict(aim=0, num_shots=1, seq=1))
-        location = dict(__bfLocationShotOrig=lambda event:
-                        self.call('__bfFire', scene, dict(gunnerID=0, access=True, shot=True, seq=1)))
-        self.call('__bfLocationShot', location,
-                  dict(param=dict(id=0, status=0, recovery_ms=150, animation_frames=9)))
-        self.assertIsNone(self.global_['__bfShotTiming'])
-        self.assertEqual(figure['__bfPlayback'],
-                         dict(start=100, duration=150, frames=9, painted=0))
+        received = []
+        def native_shot(event):
+            received.append(event)
+            self.call('__bfFire', scene, dict(gunnerID=0, access=True, shot=True, seq=1))
+        location = dict(__bfLocationShotOrig=native_shot)
+        event = dict(param=dict(id=0, status=0, recovery_ms=150, animation_frames=9))
+        self.call('__bfLocationShot', location, event)
+        self.assertEqual(received, [event])
+        self.assertEqual(self.global_['__bfRecoveryUntil'], 250)
+        self.assertNotIn('__bfPlayback', figure)
+        self.assertNotIn('__bfShotTiming', self.global_)
         self.assertEqual(self.fx.reported, [1])
 
-    def test_retimed_burst_plays_every_native_frame_and_only_then_releases_one_input(self):
-        scene, figure = self.fx.scene()
-        figure.update(id=0, behavior='fire', animationEnabled=True, isActive=True,
-                      onEnterFrame=True, currentFrameNumber=0)
-        self.call('__bfAim', scene, dict(aim=0, num_shots=5, seq=1))
-        for index in range(5):
-            if index == 4:
-                self.global_['__bfShotTiming'] = dict(recovery_ms=150, animation_frames=21)
-            self.call('__bfFire', scene, dict(gunnerID=0, access=True, shot=True, seq=index))
-            self.global_['__bfShotTiming'] = None
-        # Native Char.playAnimation paints a frame, emits finalFrame and runs
-        # nextSequence. Exercise its firing/lowering callbacks, not a shortcut
-        # that just clears the waiting flag at a deadline.
-        rendered = []
-        def native_frame():
-            rendered.append(figure['behavior'])
-            if len(rendered) == 15:
-                figure['behavior'] = 'fire_out'
-            if len(rendered) == 21:
-                self.call('__bfVisualFinal', scene, dict(target=figure, data='fire_out'))
-                figure['__bfNextSequenceOrig'] = lambda:figure.update(behavior='stand')
-                self.call('__bfNextSequence', figure)
-        figure['__bfPlayAnimationOrig'] = native_frame
-        self.global_['__bfRecoveryUntil'] = 250
-        owner = dict(__bfRequestFireOrig=lambda *args:self.executed.append(args))
-        self.call('__bfRequest1', owner, 1, 41)
+    def test_refused_repeat_fire_does_not_discard_the_previous_native_visual(self):
+        _scene, figure = self.stalled_shot()
+        previous = figure['__bfBursts'][0]
+        self.now = 220
+        owner = dict(__bfRequestFireOrig=lambda *args:self.executed.append('refused'))
         self.call('__bfRequest1', owner, 1, 42)
-        self.now = 249
-        self.call('__bfPlayAnimation', figure)
-        self.assertEqual(len(rendered), 20)
-        self.assertFalse(self.executed)
-        self.now = 252  # a slow render catches up without adding a native-length tail
-        self.call('__bfPlayAnimation', figure)
-        self.call('__bfDrainInput', None)
-        self.assertEqual(rendered, ['fire'] * 15 + ['fire_out'] * 6)
-        self.assertEqual(self.executed, [(1, 42)])
-        self.assertIsNone(figure['__bfPlayback'])
-        self.assertEqual(self.fx.reported, list(range(5)))
-
-    def test_playback_work_is_bounded_and_does_not_speed_up_movement_or_legacy_animations(self):
-        rendered = []
-        clock = dict(start=100, duration=100, frames=200, painted=0)
-        figure = dict(behavior='fire', __bfPlayback=clock,
-                      __bfPlayAnimationOrig=lambda:rendered.append('frame'))
-        self.now = 200
-        self.call('__bfPlayAnimation', figure)
-        self.assertEqual(len(rendered), 64)
-        self.call('__bfPlayAnimation', figure)
-        self.assertEqual(len(rendered), 128)
-        figure['behavior'] = 'run'
-        self.call('__bfPlayAnimation', figure)
-        self.assertEqual(len(rendered), 129)
-        self.assertEqual(clock['painted'], 128)
-        figure.update(behavior='fire', __bfPlayback=None)
-        self.call('__bfPlayAnimation', figure)
-        self.assertEqual(len(rendered), 130)
-
-    def test_model_frame_count_override_finishes_real_animation_at_deadline(self):
-        rendered = []
-        clock = dict(start=100, duration=150, frames=9, painted=0)
-        figure = dict(behavior='fire', __bfPlayback=clock)
-        def native_frame():
-            rendered.append('frame')
-            if len(rendered) == 12:
-                figure.update(behavior='stand', __bfPlayback=None)
-        figure['__bfPlayAnimationOrig'] = native_frame
-        self.now = 249
-        self.call('__bfPlayAnimation', figure)
-        self.assertEqual(len(rendered), 8)
-        self.now = 252
-        self.call('__bfPlayAnimation', figure)
-        self.assertEqual(len(rendered), 12)
-        self.assertEqual(figure['behavior'], 'stand')
+        self.assertEqual(self.executed, ['refused'])
+        self.assertIs(figure['__bfBursts'][0], previous)
+        self.assertEqual(figure['behavior'], 'fire')
+        self.assertEqual([event['seq'] for event in figure['burstArr']], [1])
+        self.assertEqual(self.fx.reported, [1])
+        self.assertFalse(self.timers)
 
     def test_enemy_recovery_does_not_block_own_commands(self):
         connection=dict(__bfRecoveryNotifyOrig=lambda cmd:None)
@@ -549,15 +527,17 @@ class ActionRecoveryClient(unittest.TestCase):
         self.assertFalse(figure.get('__bfBursts'))
         self.assertFalse(self.call('__bfWaiting',None))
 
-    def test_firing_and_lowering_hold_the_next_attack_but_stand_and_disabled_rendering_do_not(self):
+    def test_native_visual_still_guards_other_actions_but_not_a_ready_firearm_request(self):
         _,figure=self.fx.scene()
         figure.update(animationEnabled=True,isActive=True,onEnterFrame=True,
-                      behavior='fire',__bfBursts=Arr([dict(got=1)]))
+                      behavior='fire',__bfBursts=Arr([dict(got=1, melee=False)]))
         self.global_['__bfOwnerFigure']=figure
         self.global_['__bfRecoveryUntil']=100
         self.assertTrue(self.call('__bfWaiting',None))
+        self.assertFalse(self.call('__bfWaiting', None, True))
         figure['behavior'] = 'fire_out'
         self.assertTrue(self.call('__bfWaiting', None))
+        self.assertFalse(self.call('__bfWaiting', None, True))
         for behavior in ('stand','run'):
             figure['behavior']=behavior
             self.assertFalse(self.call('__bfWaiting',None))

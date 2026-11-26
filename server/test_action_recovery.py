@@ -198,7 +198,7 @@ class ActionRecovery(unittest.IsolatedAsyncioTestCase):
                         before = dict(self.case.store.item(gun['uniq']))
                         previous_end = self.a.combat.recovery_until
                         cycles = 1 if params['weapon_type'] == items.SHOTGUN else aim['num_shots']
-                        self.assertAlmostEqual(previous_end - deadline, max(.150, cycles * .030))
+                        self.assertAlmostEqual(previous_end - deadline, max(.250, cycles * .030))
                         self.a.combat.use_fire(request)
                         callback(*args)
                         self.assertIsNone(self.a.combat.aim)
@@ -260,18 +260,16 @@ class ActionRecovery(unittest.IsolatedAsyncioTestCase):
         impacts = [p for n, p in self.a.writer.frames if n == 'caHit' and p['id'] == 0]
         self.assertEqual(len(impacts), 2)
 
-    async def test_recovery_guards_first_packet_and_final_packet_carries_playback_budget(self):
+    async def test_recovery_guards_first_and_final_packet_without_retiming_metadata(self):
         self.complete_shot()
         for seat in (self.a,self.b):
             packets=[p for n,p in seat.writer.frames if n=='faShot']
             marked=[p for p in packets if p.get('recovery_ms')]
             self.assertEqual(marked, [packets[0], packets[-1]])
             self.assertEqual([p['status'] for p in marked], [1, 0])
-            self.assertEqual([p['recovery_ms'] for p in marked], [150, 150])
+            self.assertEqual([p['recovery_ms'] for p in marked], [250, 250])
             self.assertEqual([p['id'] for p in marked], [0 if seat is self.a else self.a.pid] * 2)
-            self.assertNotIn('animation_frames', packets[0])
-            self.assertEqual(packets[-1]['animation_frames'],
-                             action_animation.frame_counts(self.a, items.params_of(25566), 1)[1])
+            self.assertTrue(all('animation_frames' not in packet for packet in packets))
 
     async def test_mode_change_during_aim_only_changes_the_next_shot(self):
         params = items.params_of(25566)
@@ -283,7 +281,7 @@ class ActionRecovery(unittest.IsolatedAsyncioTestCase):
         timer.cancel()
         with self.case.at(when):
             callback(*args)
-        expected = 150
+        expected = 250
         self.assertAlmostEqual(self.a.combat.recovery_until, when + expected / 1000)
         packets = [p for n,p in self.a.writer.frames if n == 'faShot' and p.get('recovery_ms')]
         self.assertEqual([p['recovery_ms'] for p in packets], [expected, expected])
@@ -344,18 +342,18 @@ class ActionRecovery(unittest.IsolatedAsyncioTestCase):
                     sequence = data['models']['0'][kind]
                     for count in (1, shots):
                         cycles = 1 if params['weapon_type'] == items.SHOTGUN else count
-                        expected = max(150, math.ceil(sequence['fire'] * cycles * 1000 / data['frame_rate'] * .25))
+                        expected = max(250, math.ceil(sequence['fire'] * cycles * 1000 / data['frame_rate'] * .25))
                         for elapsed in (0, .01, 10):
                             self.assertEqual(action_animation.duration_ms(seat, params, count,
                                              mode=mode, aimed_for=elapsed), expected,
                                              (type_id, mode, look, count, elapsed))
-        self.assertEqual(action_animation.duration_ms(self.a, items.params_of(26177), 5, mode=1), 150)
-        self.assertEqual(action_animation.duration_ms(self.a, items.params_of(25218), 3, mode=1), 150)
+        self.assertEqual(action_animation.duration_ms(self.a, items.params_of(26177), 5, mode=1), 250)
+        self.assertEqual(action_animation.duration_ms(self.a, items.params_of(25218), 3, mode=1), 250)
 
     async def test_every_catalogue_firearm_uses_native_shot_duration_in_each_enabled_mode(self):
         classes = set()
         # The ordinary human model has three fire frames at 25 fps: a quarter
-        # is 30 ms per round before the 150 ms floor. Aim/lowering are separate.
+        # is 30 ms per round before the 250 ms floor. Aim/lowering are separate.
         for type_id, (root, _name) in items.catalogue().items():
             if root != items.FIRE_ARM:
                 continue
@@ -365,12 +363,12 @@ class ActionRecovery(unittest.IsolatedAsyncioTestCase):
                 if shots:
                     cycles = 1 if params['weapon_type'] == items.SHOTGUN else shots
                     self.assertEqual(action_animation.duration_ms(
-                        self.a, params, shots, mode=mode), max(150, 30 * cycles), (type_id, mode))
+                        self.a, params, shots, mode=mode), max(250, 30 * cycles), (type_id, mode))
         self.assertTrue(set(range(6)) <= classes)
         for kind in range(6):
             cycles = 1 if kind == items.SHOTGUN else 12
             self.assertEqual(action_animation.duration_ms(
-                self.a, {'weapon_type':kind}, 12), max(150, 30 * cycles))
+                self.a, {'weapon_type':kind}, 12), max(250, 30 * cycles))
 
     async def test_blades_keep_the_legacy_swing_without_raising_or_lowering(self):
         data = action_animation.sequences()

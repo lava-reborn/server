@@ -74,11 +74,11 @@ def viewer_frame(cmd, params):
     """A frame function showing the viewer as id 0.
 
     Integer references matching the viewer become 0 (Gamer.as:31). Timing
-    metadata is a duration/frame count, even when it happens to match that id.
+    metadata is a duration, even when it happens to match that id.
     """
     def fn(viewer):
         return cmd, {k: (0 if isinstance(v, int) and not isinstance(v, bool)
-                         and k not in ('recovery_ms', 'animation_frames')
+                         and k != 'recovery_ms'
                          and v == viewer.pid else v)
                      for k, v in params.items()}
     return fn
