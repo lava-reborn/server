@@ -275,9 +275,11 @@ class ActionRecovery(unittest.IsolatedAsyncioTestCase):
         self.assertAlmostEqual(self.a.combat.recovery_until, when + expected / 1000)
         packets = [p for n,p in self.a.writer.frames if n == 'faShot' and p.get('recovery_ms')]
         self.assertEqual([p['recovery_ms'] for p in packets], [expected, expected])
-        with self.case.at(self.a.combat.recovery_until):
+        ends = self.a.combat.recovery_until
+        with self.case.at(ends):
             self.a.combat.use_fire(dict(obj=inventory.oid_of(self.gun), target='00000018f'))
-            self.assertAlmostEqual(self.a.combat.aim.when() - self.a.combat.recovery_until,
+            self.assertIsNotNone(self.a.combat.aim)
+            self.assertAlmostEqual(self.a.combat.aim.when() - ends,
                                    params['fire_times'][0] / 1000)
 
     async def test_healing_and_reload_remain_cancellable_before_timer(self):

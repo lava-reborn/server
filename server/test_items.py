@@ -512,6 +512,10 @@ def expected_item_description(t, original):
         amount = 4 if t == 1072 else 3
         original = ('Послание от любящего человека.<br>Режущее оружие. Не надевается на пояс.<br>Держите валентинку в любой руке: '
                     f'она даёт +{amount} к {hand_gifts[t]}, пока находится в руке.')
+    for first, attribute in ((3468, 'интеллекту'), (3471, 'ловкости'), (3474, 'силе')):
+        if first <= t < first + 3:
+            amount = (1, 3, 5)[t - first]
+            original = f'Временно даёт +{amount} к {attribute}.'
     if t in (3789, 3826):
         original = ('Удваивает количество выпавшего мусора и утраивает количество патронов с мобов. '
                     'Для остального обычного лута, ценностей, оружия, частей сетов и подсумков '
@@ -539,7 +543,7 @@ def expected_item_description(t, original):
     return original + ("<br>" if original else "") + level_note if level_note else original
 
 
-check("each description keeps its source bonus text and exact applicability suffix",
+check("each description keeps its source or approved override and exact applicability suffix",
       {t: (names.text(items.DESC_ID_OFFSET + t), expected_item_description(t, _od.get(t, d)))
        for t, d in wd.items() if names.text(items.DESC_ID_OFFSET + t) != expected_item_description(t, _od.get(t, d))}, {})
 check("line breaks become <br>, markup goes",

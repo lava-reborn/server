@@ -154,8 +154,11 @@ class Ks12AttackCosts(unittest.IsolatedAsyncioTestCase):
                     f.aim._callback(*f.aim._args)
                     resolved = [args for name, args in events if name == 'resolved_fire']
                     self.assertEqual(len(resolved), 1)
-                    self.assertEqual(resolved[0][-2], cost)
-                    self.assertEqual(resolved[0][-1], 1)
+                    _uniq, _target, _cell, _weapon, paid, rounds, palm_cycle, mode = resolved[0]
+                    self.assertEqual(paid, cost)
+                    self.assertEqual(rounds, 1)
+                    self.assertIsNone(palm_cycle)
+                    self.assertEqual(mode, 2)
                 finally:
                     combat.Fighter.cancel_timers(f)
 
