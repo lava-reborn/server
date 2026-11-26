@@ -30,16 +30,16 @@ class ArchivedBuffs(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(manager.static(effects.FIRST + 4932))
         card = next(data for cmd, data in (decode(frame[:-1]) for frame in self.s.writer.frames)
                     if cmd == 'e_si')
-        self.assertEqual((card['max_hp'], card['work_time']), (225, 4800 * 1000))
+        self.assertEqual((card['max_hp'], card['work_time']), (19, 4800 * 1000))
         row = self.s.inv.create(4932)
         effects.activate(fighter, row['uniq'], fighter, 0)
         self.assertIsNone(self.store.item(row['uniq']))
-        self.assertEqual(self.s.char.hp_max, baseline + 225)
+        self.assertEqual(self.s.char.hp_max, baseline + 19)
         active = next(iter(manager.active.values()))
         self.assertEqual(active.deadline - active.started, 4800)
         manager.close()
         manager.load()
-        self.assertEqual(self.s.char.hp_max, baseline + 225)
+        self.assertEqual(self.s.char.hp_max, baseline + 19)
         with patch.object(manager, 'clock', return_value=active.deadline + 1):
             manager.refresh()
         self.assertEqual(self.s.char.hp_max, baseline)
@@ -51,11 +51,11 @@ class ArchivedBuffs(unittest.IsolatedAsyncioTestCase):
         self.s.char.skill[p.SHOOTING][0] = 20
         self.s.char.skill[p.MELEE][0] = 10
         baseline = p.crit_chance(self.s.char, items.PISTOL, card=False)
-        # A/G of every ordinary rank; values are the archived reagent bonuses.
-        for alpha, omega, cp, ce in ((4181, 3208, 5, 10), (3115, 3209, 10, 20),
-                                    (3116, 3210, 15, 20), (3117, 3211, 20, 30),
-                                    (3118, 3212, 25, 30), (3119, 3213, 30, 40),
-                                    (4182, 4184, 30, 40), (4183, 4185, 60, 75)):
+        # A/G of every ordinary rank; values are the approved release bonuses.
+        for alpha, omega, cp, ce in ((4181, 3208, 4, 4), (3115, 3209, 6, 6),
+                                    (3116, 3210, 8, 8), (3117, 3211, 12, 12),
+                                    (3118, 3212, 12, 12), (3119, 3213, 18, 18),
+                                    (4182, 4184, 20, 20), (4183, 4185, 30, 30)):
             with self.subTest(alpha=alpha, omega=omega):
                 for tid, expected in ((alpha, (cp, 0)), (omega, (0, ce))):
                     value = effects.definition(tid)
@@ -86,8 +86,8 @@ class ArchivedBuffs(unittest.IsolatedAsyncioTestCase):
 
     def test_catalogue_preserves_archived_prices_doses_and_explicit_effects(self):
         for tid, cost, gold, duration, strength, od in (
-                (3474, 500, 0, 3600, 1, 0), (3475, 2500, 0, 3600, 3, 0),
-                (3476, 0, 50, 3600, 5, 0), (3897, 0, 10, 7200, 0, 20)):
+                (3474, 500, 0, 3600, 1, 0), (3475, 2500, 0, 3600, 2, 0),
+                (3476, 0, 50, 3600, 3, 0), (3897, 0, 10, 7200, 0, 20)):
             with self.subTest(item=tid):
                 si = items.params_of(tid)
                 self.assertEqual((si['cost'], si['g_cost'], si['weight'], si['use_count']),
@@ -141,9 +141,9 @@ class ArchivedBuffs(unittest.IsolatedAsyncioTestCase):
                     self.assertIsNone(self.store.item(row['uniq']))
                     self.assertEqual(len(manager.active), 1)
                     if type_id == 3476:
-                        self.assertEqual(self.s.char.attr(p.STRENGTH), before_strength + 5)
+                        self.assertEqual(self.s.char.attr(p.STRENGTH), before_strength + 3)
                     else:
-                        self.assertEqual(self.s.char.hp_max, before_hp + 225)
+                        self.assertEqual(self.s.char.hp_max, before_hp + 19)
                     before = dict(manager.active)
                     before_ap = fighter.ap
                     fighter.heal_now(*callback_args)
@@ -186,8 +186,8 @@ class ArchivedBuffs(unittest.IsolatedAsyncioTestCase):
         row = self.s.inv.create(3476)
         effects.activate(f, row['uniq'], f, 0)
         self.assertIsNone(self.store.item(row['uniq']))
-        self.assertEqual(self.s.char.attr(p.STRENGTH), base + 5)
-        self.assertEqual((self.s.char.hp_max, self.s.char.max_weight()), (limits[0] + 20, limits[1] + 10000))
+        self.assertEqual(self.s.char.attr(p.STRENGTH), base + 3)
+        self.assertEqual((self.s.char.hp_max, self.s.char.max_weight()), (limits[0] + 12, limits[1] + 6000))
         self.assertEqual(self.s.char.attrib, before[0])
         self.assertEqual((self.s.char.hp, self.s.char.sp), before[1:])
         deadline = manager.active['Репарин'].deadline
@@ -197,9 +197,13 @@ class ArchivedBuffs(unittest.IsolatedAsyncioTestCase):
         effects.activate(f, weaker['uniq'], f, 0)
         self.assertIsNotNone(self.store.item(weaker['uniq']))
         manager.close()
-        manager.load()
-        self.assertEqual(self.s.char.attr(p.STRENGTH), base + 5)
-        self.assertEqual(manager.active['Репарин'].deadline, deadline)
+        remaining = deadline - manager.clock()
+        resumed_at = deadline + 86400
+        with patch.object(manager, 'clock', return_value=resumed_at):
+            manager.load()
+        self.assertEqual(self.s.char.attr(p.STRENGTH), base + 3)
+        deadline = manager.active['Репарин'].deadline
+        self.assertAlmostEqual(deadline - resumed_at, remaining)
         with patch.object(manager, 'clock', return_value=deadline + 1):
             manager.refresh()
         self.assertEqual(self.s.char.attr(p.STRENGTH), base)
@@ -360,7 +364,7 @@ class GofusStock(unittest.TestCase):
         frame = next(params for cmd, params in viewer.frames if cmd == 'userInfo_Trader')
         self.assertEqual((frame['can_trade'], frame['type_list']), (1, [4919, 4939]))
         self.assertTrue(frame['give_quests'])  # Original doctor's quests remain.
-        for tid, bonus in ((4919, ('hp', 75)), (4939, ('sp', 150))):
+        for tid, bonus in ((4919, ('hp', 6)), (4939, ('sp', 15))):
             params = items.params_of(tid)
             self.assertEqual((params['cost'], params['g_cost'], params['buff_level']), (0, 8, 0))
             definition = effects.definition(tid)

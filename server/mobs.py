@@ -672,9 +672,9 @@ def roll_table(type_id, rng, multiplier=1, *, gold_multiplier=1, guarantee_ingot
         if chance >= SURE or (guarantee_ingots and t in items.GOLD_INGOTS):
             out.append((t, count_of(type_id, t)))
             continue
-        if t in items.GOLD_INGOTS:
-            factor = gold_multiplier
-        elif t in mortimer.VALUABLES or t == mortimer.SAND or items.scanner_quantity_item(t):
+        if t in items.GOLD_INGOTS or t in mortimer.VALUABLES or t == mortimer.SAND:
+            factor = gold_multiplier * scanner_multiplier
+        elif items.scanner_quantity_item(t):
             factor = multiplier / scanner_multiplier
         else:
             factor = multiplier
@@ -843,14 +843,14 @@ def loot_for(st, rng, wanted=(), *, loc_id=None, ambush_camp=None,
         return out
     import bosses                  # late: keep module initialization separate
     blueprint = bosses.blueprint_for(loc_id, st.type_id)
-    # Scanner raises the quantity of afro-only common loot, and the chance
-    # of equipment. Gold valuables, quests, objects, events and harvest stay separate.
+    # Trash quantity x2 and ammo x3; other ordinary loot and equipment
+    # gain probability only. Quests, objects, events and harvest stay separate.
     scanner = min(3, max(1, scanner_multiplier)) if st.role != 'object' else 1
     multiplier = min(camp_loot.MAX_MULTIPLIER, multiplier) if st.role != 'object' else 1
     ordinary = carried(st, rng, multiplier / scanner) + roll_table(st.type_id, rng, multiplier,
                          gold_multiplier=gold_multiplier, scanner_multiplier=scanner,
                          guarantee_ingots=st.role == 'boss')
-    ordinary = [(t, math.floor(n * scanner) if items.scanner_quantity_item(t) else n)
+    ordinary = [(t, math.floor(n * items.scanner_quantity_multiplier(t, scanner)))
                 for t, n in ordinary]
     if st.role == 'object':
         import camp_box_loot

@@ -829,7 +829,7 @@ class ReleaseCatalogue(unittest.TestCase):
     def test_full_base_experience_starts_at_plus_two_with_approved_curve(self):
         for level in range(1, 17):
             base = progression.COMBAT_XP_BASE[level]
-            for gap, ratio in ((1, .85), (2, 1), (3, 1.1), (4, 1.2), (5, 1.2)):
+            for gap, ratio in ((1, 980/1100), (2, 1), (3, 1.1), (4, 1.2), (5, 1.2)):
                 with self.subTest(level=level, gap=gap):
                     self.assertAlmostEqual(progression.combat_mob_xp(level + gap, level), base * ratio)
                     self.assertAlmostEqual(progression.combat_mob_xp(level + gap, level, .25), base * ratio / 4)

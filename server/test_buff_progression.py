@@ -52,7 +52,7 @@ class BuffProgression(unittest.TestCase):
 
     def test_plus_prices_scale_from_mk_nine_without_changing_effects(self):
         for previous, plus, stat, price, bonus in (
-                (4935, 4936, 'hp', 220, 300), (4955, 4956, 'sp', 220, 600)):
+                (4935, 4936, 'hp', 220, 25), (4955, 4956, 'sp', 220, 60)):
             old, current = effects.definition(previous), effects.definition(plus)
             scaled = Fraction(items.params_of(previous)['g_cost'] * bonus, old['bonuses'][stat])
             self.assertEqual(math.ceil(scaled / 5) * 5, price)
@@ -66,8 +66,8 @@ class BuffProgression(unittest.TestCase):
         for tier in range(1, 10):
             afro = effects.definition(4916 + tier * 2)
             gold = effects.definition(4917 + tier * 2)
-            self.assertEqual(afro['bonuses']['hp'], 25 * (tier + 1))
-            self.assertEqual(gold['bonuses']['hp'], 25 * (tier + 2))
+            self.assertEqual(afro['bonuses']['hp'], round(25 * (tier + 1) / 12))
+            self.assertEqual(gold['bonuses']['hp'], round(25 * (tier + 2) / 12))
             self.assertEqual((afro['duration'], gold['duration']), (600 * tier, 600 * (tier + 1)))
         self.assertEqual(items.params_of(4934)['cost'], 84000)
         self.assertEqual(items.params_of(4935)['g_cost'], 200)

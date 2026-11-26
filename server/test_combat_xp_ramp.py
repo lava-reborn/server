@@ -16,17 +16,14 @@ class CombatXpRamp(unittest.TestCase):
         for skill in range(17):
             base = p.COMBAT_XP_BASE[skill]
             values = [p.combat_mob_xp(skill + gap, skill) for gap in range(5)]
-            self.assertAlmostEqual(values[0], base * .70)
-            for gap, factor in enumerate((.85, 1, 1.1, 1.2), 1):
+            self.assertAlmostEqual(values[0], base * (890/1100))
+            for gap, factor in enumerate((980/1100, 1, 1.1, 1.2), 1):
                 self.assertAlmostEqual(values[gap], base * factor)
                 self.assertGreater(values[gap], values[gap - 1])
             self.assertAlmostEqual(p.combat_mob_xp(skill + 50, skill), base * 1.2)
 
     def test_full_rewards_match_approved_moderate_curve_at_every_base_skill_level(self):
-        expected = (20, 23.75, 30.0751, 38.2775, 50.1567, 66.1157, 86.8385,
-                    115.2115, 153.11, 203.2552, 252.58061816, 313.87619442,
-                    390.04681411, 484.70231227, 602.32854883, 748.5,
-                    930.14394069, 930.14394069)
+        expected = (20, 23.75, 30.0751, 38.2775, 50.1567, 66.1157, 86.8385, 115.2115, 153.11, 203.2552, 252.58061816, 363.0088964189, 512.1589986209, 712.3213673975, 885.1855761029, 1100.0, 1366.945003018, 1366.945003018)
         for skill, reward in enumerate(expected):
             with self.subTest(skill=skill):
                 self.assertAlmostEqual(p.combat_mob_xp(skill + 2, skill), reward)
@@ -43,7 +40,7 @@ class CombatXpRamp(unittest.TestCase):
         for skill in range(17):
             for mob in range(skill + 1):
                 for mult in (.7, 1, 3):
-                    ratio = {0:.70, -1:.50, -2:.30, -3:.15}.get(mob - skill, 0)
+                    ratio = {0:890/1100, -1:.50, -2:.30, -3:.15}.get(mob - skill, 0)
                     expected = p.COMBAT_XP_BASE[skill] * ratio * mult
                     self.assertAlmostEqual(p.combat_mob_xp(mob, skill, xp_mult=mult), expected)
 

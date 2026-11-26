@@ -46,7 +46,7 @@ class Isolation(unittest.IsolatedAsyncioTestCase):
         args[4](*args[5:])
         current = g.store.item(row['uniq'])
         self.assertEqual(current['use_count'] if current else 0, uses - 1)
-        self.assertEqual(g.clone.character().bonus_cp, base + 10)
+        self.assertEqual(g.clone.character().bonus_cp, base + 6)
         self.assertEqual(len(manager.active), 1)
         active = next(iter(manager.active.values()))
         active.deadline = asyncio.get_running_loop().time() - 1

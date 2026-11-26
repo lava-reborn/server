@@ -273,8 +273,8 @@ class StatPipeline(unittest.IsolatedAsyncioTestCase):
                 [ch.attr(i) for i in range(progression.ATTRIBS)])
         for source in (4917, 4937, 3115, 3208, 3468, 3471):
             manager.add(source)
-        expected = (base[0] + 35, base[1] + 65 + 4,
-                    (base[2][0] + 10 + 2, base[2][1] + 10 + .5),
+        expected = (base[0] + 3, base[1] + 6 + 4,
+                    (base[2][0] + 6 + 2, base[2][1] + 4 + .5),
                     [base[3][0], base[3][1] + 1, base[3][2], base[3][3], base[3][4] + 1])
         for _ in range(10):
             self.s.inv.refresh_gear(push=False)
@@ -312,8 +312,8 @@ class StatPipeline(unittest.IsolatedAsyncioTestCase):
         manager.add(3470)
         row = self.s.inv.create(7100)
         params = items.params_of(row['type_id'])
-        expected_hp = min(ch.hp_max, 1 + int(params['min_h_rest'] * 1.2))
-        expected_sp = min(ch.sp_max, 1 + int(params['min_st_rest'] * 1.2))
+        expected_hp = min(ch.hp_max, 1 + int(params['min_h_rest'] * 1.03))
+        expected_sp = min(ch.sp_max, 1 + int(params['min_st_rest'] * 1.03))
         with patch.object(combat.RNG, 'uniform', side_effect=lambda lo, hi: lo):
             self.s.combat.heal_now(row['uniq'], self.s.combat)
         self.assertEqual((ch.hp, ch.sp), (expected_hp, expected_sp))
@@ -329,11 +329,11 @@ class StatPipeline(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(ch.sp_max - sp, 3 * 4 + 4 * 20)
         self.assertEqual(self.s.combat.armor() - armour, (3 * 3 + 5) / 4)
         self.assertEqual(self.s.inv.carry_limit() - weight, 4000)
-        self.assertAlmostEqual(self.s.combat.healing_multiplier(ch), 1 + .04 * max(0, start[4] + 6 - 5))
+        self.assertAlmostEqual(self.s.combat.healing_multiplier(ch), (1 + .04 * max(0, start[4] - 5)) * 1.03)
         weapon = combat.Weapon(1, 100, 200, 2, 5, 10, 1, .1, 0, None, None, sdmin=50, sdmax=100)
         prepared = self.s.combat.prepare_weapon(weapon, {}, None)
-        self.assertEqual((prepared.dmin, prepared.dmax), (118, 236))
-        self.assertEqual((prepared.sdmin, prepared.sdmax), (59, 118))
+        self.assertEqual((prepared.dmin, prepared.dmax), (103, 206))
+        self.assertEqual((prepared.sdmin, prepared.sdmax), (52, 103))
         self.verify_wire()
 
     async def test_all_catalogue_ammunition_modifiers_reach_prepared_weapon(self):
@@ -391,7 +391,7 @@ class StatPipeline(unittest.IsolatedAsyncioTestCase):
                 finally:
                     self.s.combat.cancel_timers()
 
-    async def test_real_fire_crit_subtracts_defenders_own_antikrit_once_for_every_class_and_ammo(self):
+    async def test_real_fire_crit_separates_permanent_and_temporary_ratings_for_every_class_and_ammo(self):
         from types import SimpleNamespace as NS
         guns = (25566, 25943, 25201, 25803, 24990, 26177)
         rc = combat.RoomCombat.__new__(combat.RoomCombat)
@@ -433,7 +433,8 @@ class StatPipeline(unittest.IsolatedAsyncioTestCase):
                             for optimal in (False, True):
                                 with patch.object(combat, 'roll', return_value=True) as roll:
                                     self.assertTrue(rc.ranged_critical(f, target, weapon, optimal))
-                                expected = max(0, min(100, weapon.crit - expected_anti))
+                                expected = battle_balance.pvp_critical_chance(weapon.base_crit,
+                                    expected_anti - 17, weapon.crit - weapon.base_crit, 17)
                                 roll.assert_called_once_with(expected if optimal else expected*.5)
                             hp, sp = rc.bullet_damage(f, target, weapon, weapon.dmax,
                                                      weapon.sdmax, True, 100)

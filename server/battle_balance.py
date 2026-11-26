@@ -77,8 +77,21 @@ def intellect(character):
     return max(0, character.attr(progression.INTELLECT) - INTELLECT_BASE)
 
 
+def attribute_multiplier(character, per_point):
+    """Trained/equipped INT is full strength; consumables add at most 3%."""
+    power = 1 + per_point * intellect(character)
+    active = getattr(character, 'effects', None)
+    if active:
+        permanent = max(0, character.attr(progression.INTELLECT)
+                        - active['attribs'][progression.INTELLECT] - INTELLECT_BASE)
+        temporary = max(0, min(3, active['attribs'][progression.INTELLECT]))
+        extra = .04 * temporary / (1 + temporary)
+        power = min(power, (1 + per_point * permanent) * (1 + extra))
+    return power
+
+
 def healing_multiplier(character):
-    return 1 + HEAL_PER_INTELLECT * intellect(character)
+    return attribute_multiplier(character, HEAL_PER_INTELLECT)
 
 
 def cooldown_seconds(character):
@@ -342,9 +355,43 @@ def critical(shooter, target, chance, optimal=True, *, ordinary=False):
     return combat.roll(critical_chance(shooter, target, chance, optimal, ordinary=ordinary))
 
 
+def pvp_critical_chance(cp, ce, temporary_cp=0, temporary_ce=0, optimal=True, *, ceiling=50):
+    """Permanent investment follows the difference; temporary ratings taper.
+
+    The soft limit keeps every A/G grade distinct, unlike clipping all
+    stronger pills to the same cap. No inventory reads or SQL in this helper.
+    """
+    cp, ce = max(0, cp), max(0, ce)
+    x = (cp - ce - 4.82) / 8
+    base = min(ceiling, 3 + 8 * (max(x, 0) + math.log1p(math.exp(-abs(x)))))
+
+    def boost(temporary):
+        extra = max(0, temporary)
+        return 1 + .1 * extra / (10 + extra)
+
+    chance = max(3, min(ceiling, base * boost(temporary_cp) / boost(temporary_ce)))
+    return chance if optimal else chance / 2
+
+
 def ranged_critical(shooter, target, weapon, optimal, *, ordinary=False):
-    return critical(shooter, target, weapon.crit - target.crit_evade_ranged(), optimal,
-                    ordinary=ordinary)
+    evade = target.crit_evade_ranged()
+    if ordinary and shooter.is_player and target.is_player and weapon.base_crit is not None:
+        import combat
+        temporary_evade = progression.temporary_crit(target.character())[1]
+        return combat.roll(pvp_critical_chance(weapon.base_crit, evade - temporary_evade,
+                           weapon.crit - weapon.base_crit, temporary_evade, optimal))
+    return critical(shooter, target, weapon.crit - evade, optimal, ordinary=ordinary)
+
+
+def melee_critical(shooter, target, chance, *, ordinary=False):
+    if ordinary and shooter.is_player and target.is_player:
+        import combat
+        evade = combat.melee_crit_evade(target.character())
+        temporary_cp = progression.temporary_crit(shooter.character(), melee=True)[0]
+        temporary_ce = progression.temporary_crit(target.character(), melee=True)[1]
+        return combat.roll(pvp_critical_chance(chance + evade - temporary_cp,
+                           evade - temporary_ce, temporary_cp, temporary_ce, ceiling=100))
+    return critical(shooter, target, chance, ordinary=ordinary)
 
 
 @lru_cache(maxsize=1)
@@ -378,11 +425,14 @@ def weapon(weapon, character, row, ammo):
     missing = max(0, inventory.item_level(row['type_id']) - character.level) if row else 0
     accuracy = 1 - ORDINARY_LEVEL_ACCURACY * min(inventory.GEAR_LEVEL_ALLOWANCE, missing)
     spread = 1
+    base_crit = None
     hit_cap = PLAYER_HIT_CAP
     if row:
         hit_cap = weapon_hit_caps().get(row['type_id'], hit_cap)
         params = items.params_of(row['type_id']) or {}
         kind = params.get('weapon_type')
+        if progression.crit_chance(character, kind) is not None:
+            base_crit = max(0, weapon.crit - progression.temporary_crit(character, kind)[0])
         spec_index = combat.SPEC_OF_WEAPON.get(kind)
         if spec_index is not None:
             skill = max(0, character.skill_level(progression.SHOOTING))
@@ -402,18 +452,18 @@ def weapon(weapon, character, row, ammo):
         # Item scatter, ammo, specialisation and the accuracy cap stay intact.
         if kind == items.RIFLE:
             spread *= RIFLE_SPREAD
-    power = 1 + DAMAGE_PER_INTELLECT * intellect(character)
+    power = attribute_multiplier(character, DAMAGE_PER_INTELLECT)
     damage, stamina, reach = (ammo.get(key, 1) for key in ('dam_mod', 'st_mod', 'range_mod'))
     return weapon._replace(dmin=max(1, round(weapon.dmin * power * damage)),
         dmax=max(1, round(weapon.dmax * power * damage)),
         sdmin=round(weapon.sdmin * power * stamina), sdmax=round(weapon.sdmax * power * stamina),
         max_range=math.floor(weapon.max_range * reach + 1e-9),
         cone=0 if ammo.get('acc_mod', 1) == 0 else weapon.cone * spread / accuracy,
-        hit_cap=hit_cap * accuracy)
+        hit_cap=hit_cap * accuracy, base_crit=base_crit)
 
 
 def melee(bounds, character, row):
-    power = 1 + DAMAGE_PER_INTELLECT * intellect(character)
+    power = attribute_multiplier(character, DAMAGE_PER_INTELLECT)
     return tuple(max(1, round(value * power)) for value in bounds)
 
 

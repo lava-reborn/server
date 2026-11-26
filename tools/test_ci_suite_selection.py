@@ -52,7 +52,7 @@ class ClientSuiteSelection(unittest.TestCase):
                     'server/test_eden_native_weapons.py',
                     'server/test_buff_purchases.py', 'server/test_archived_buffs.py',
                     'server/test_bank_stacks.py', 'server/test_online_effects.py',
-                    'server/test_effect_clock_storage.py',
+                    'server/test_effect_clock_storage.py', 'server/test_pvp_critical_balance.py',
                     'server/test_machinegun_burst_survival.py', 'server/test_machinegun_balance.py',
                     'server/test_mob_loot_followup.py', 'server/test_release_combat.py',
                     'server/test_scanner_loot.py', 'server/test_stat_pipeline.py',

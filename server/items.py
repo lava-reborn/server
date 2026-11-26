@@ -1018,13 +1018,21 @@ GOLD_AMMO_ROUND = 1
 
 @lru_cache(maxsize=None)
 def scanner_quantity_item(type_id):
-    """Ordinary afro-only loot; no equipment, quest goods or gold buyback."""
+    """Cheap afro trash and ammunition; valuables use probability instead."""
     import mortimer
-    if (root_of(type_id) in (FIRE_ARM, WEAR, COLD_ARM)
+    root, name = catalogue().get(type_id, (None, ''))
+    if (root not in (TRASH, AMMO) or name.startswith('ValuableLoot_LvL_')
             or type_id in mortimer.VALUABLES or type_id == mortimer.SAND):
         return False
     si = params_of(type_id) or {}
     return bool(si.get('cost') and not (si.get('g_cost') or si.get('quest')))
+
+
+def scanner_quantity_multiplier(type_id, scanner):
+    """A +200% scanner doubles trash and triples ammunition, once."""
+    if not scanner_quantity_item(type_id):
+        return 1
+    return scanner if root_of(type_id) == AMMO else 1 + (scanner - 1) / 2
 
 
 def gold_round(p):

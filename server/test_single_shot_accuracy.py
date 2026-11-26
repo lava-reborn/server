@@ -45,8 +45,9 @@ class SingleShotAccuracy(unittest.TestCase):
                         bonus *= .95
                     self.assertAlmostEqual(result.cone, original.cone * bonus)
                     self.assertEqual(result.hit_cap, .95)
+                    self.assertEqual(result.base_crit, original.crit)
                     for field in original._fields:
-                        if field not in ('cone', 'hit_cap'):
+                        if field not in ('cone', 'hit_cap', 'base_crit'):
                             self.assertEqual(getattr(result, field), getattr(original, field), field)
                     self.assertEqual(combat.checked_weapon(original, result), result)
 

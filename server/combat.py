@@ -296,8 +296,8 @@ def pull(si, mode, ammo):
 # hit_cap bounds the ordinary player's accuracy through that same scatter;
 # the range's original rules and NPC attacks retain the default of 1.
 Weapon = namedtuple("Weapon", "num_shots dmin dmax opt_lo opt_hi max_range "
-                              "piercing cone crit skill spec through at_players sdmin sdmax hit_cap hp_multiplier sp_multiplier",
-                    defaults=(False, True, 0, 0, 1.0, 1.0, 1.0))
+                              "piercing cone crit skill spec through at_players sdmin sdmax hit_cap hp_multiplier sp_multiplier base_crit",
+                    defaults=(False, True, 0, 0, 1.0, 1.0, 1.0, None))
 
 
 def prepare_ammunition(weapon, ammo):
@@ -351,6 +351,11 @@ def checked_weapon(original, prepared):
         value = getattr(prepared, field)
         if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value < 0:
             raise ValueError("Invalid prepared weapon field: " + field)
+    if prepared.base_crit is not None:
+        value = prepared.base_crit
+        if (isinstance(value, bool) or not isinstance(value, (int, float))
+                or not math.isfinite(value) or not 0 <= value <= prepared.crit):
+            raise ValueError("Invalid prepared weapon field: base_crit")
     if prepared is original:
         return original
     for field in ('num_shots', 'skill', 'spec', 'through', 'at_players'):
@@ -2932,7 +2937,7 @@ class RoomCombat:
         return battle_balance.ranged_critical(shooter, target, weapon, optimal, ordinary=True)
 
     def melee_critical(self, attacker, target, chance):
-        return battle_balance.critical(attacker, target, chance, ordinary=True)
+        return battle_balance.melee_critical(attacker, target, chance, ordinary=True)
 
     def bullet_damage(self, shooter, target, weapon, damage, stamina_damage, critical, stamina_left):
         rifle = (weapon.spec == SPEC_OF_WEAPON[items.RIFLE] if shooter.is_player
