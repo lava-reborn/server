@@ -1,7 +1,6 @@
 """Cancellation before completion; committed attack recovery after completion."""
 from types import SimpleNamespace as NS
 import unittest
-import math
 from unittest.mock import patch
 
 import action_animation
@@ -191,7 +190,7 @@ class ActionRecovery(unittest.IsolatedAsyncioTestCase):
                         before = dict(self.case.store.item(gun['uniq']))
                         previous_end = self.a.combat.recovery_until
                         self.assertAlmostEqual(previous_end - deadline,
-                                               math.ceil(params['fire_times'][mode] * .35) / 1000)
+                                               .350)
                         self.a.combat.use_fire(request)
                         callback(*args)
                         self.assertIsNone(self.a.combat.aim)
@@ -255,7 +254,7 @@ class ActionRecovery(unittest.IsolatedAsyncioTestCase):
             marked=[p for p in packets if p.get('recovery_ms')]
             self.assertEqual(marked, [packets[0], packets[-1]])
             self.assertEqual([p['status'] for p in marked], [1, 0])
-            self.assertEqual(marked[0]['recovery_ms'], marked[1]['recovery_ms'])
+            self.assertEqual([p['recovery_ms'] for p in marked], [350, 350])
             self.assertEqual([p['id'] for p in marked], [0 if seat is self.a else self.a.pid] * 2)
             self.assertNotIn('animation_frames', packets[0])
             self.assertEqual(packets[-1]['animation_frames'],
@@ -271,7 +270,7 @@ class ActionRecovery(unittest.IsolatedAsyncioTestCase):
         timer.cancel()
         with self.case.at(when):
             callback(*args)
-        expected = math.ceil(params['fire_times'][2] * .35)
+        expected = 350
         self.assertAlmostEqual(self.a.combat.recovery_until, when + expected / 1000)
         packets = [p for n,p in self.a.writer.frames if n == 'faShot' and p.get('recovery_ms')]
         self.assertEqual([p['recovery_ms'] for p in packets], [expected, expected])
@@ -318,14 +317,14 @@ class ActionRecovery(unittest.IsolatedAsyncioTestCase):
             self.a.combat.die(self.b.combat)
             self.assertEqual(self.a.combat.recovery_until,0)
 
-    async def test_firearm_cadence_follows_selected_aim_time_for_all_models_and_modes(self):
+    async def test_firearm_pause_is_fixed_for_all_models_and_modes(self):
         # Real pistol, shotgun, AR, rifle, MG and Bizon entries, not generic defaults.
         for type_id in (25566, 25943, 25218, 25772, 24990, 26177):
             params = items.params_of(type_id)
             for mode, shots in enumerate(params['fire_mods']):
                 if not shots:
                     continue
-                expected = math.ceil(params['fire_times'][mode] * .35)
+                expected = 350
                 for look in action_animation.sequences()['models']:
                     seat = NS(inv=NS(look=look), active={'sex':0})
                     # Empty chambers, burst length and delayed aim completion
@@ -337,8 +336,26 @@ class ActionRecovery(unittest.IsolatedAsyncioTestCase):
                                              (type_id, mode, look, count, elapsed))
         bizon = items.params_of(26177)
         automatic = items.params_of(25218)
-        self.assertEqual(action_animation.duration_ms(self.a, bizon, 5, mode=1), 158)
-        self.assertEqual(action_animation.duration_ms(self.a, automatic, 3, mode=1), 245)
+        self.assertEqual(action_animation.duration_ms(self.a, bizon, 5, mode=1), 350)
+        self.assertEqual(action_animation.duration_ms(self.a, automatic, 3, mode=1), 350)
+
+    async def test_every_catalogue_firearm_has_the_same_pause_in_each_enabled_mode(self):
+        classes = set()
+        for type_id, (root, _name) in items.catalogue().items():
+            if root != items.FIRE_ARM:
+                continue
+            params = items.params_of(type_id)
+            classes.add(params['weapon_type'])
+            for mode, shots in enumerate(params['fire_mods']):
+                if shots:
+                    self.assertEqual(action_animation.duration_ms(
+                        self.a, params, shots, mode=mode), 350, (type_id, mode))
+        self.assertTrue(set(range(6)) <= classes)
+        # The firearm category itself selects the fixed pause, even when only
+        # an animation descriptor is available. Native frame counts stay separate.
+        for kind in range(6):
+            self.assertEqual(action_animation.duration_ms(
+                self.a, {'weapon_type':kind}, 12), 350)
 
     async def test_model_recovery_counts_complete_sequences_without_repeated_io_or_sql(self):
         data=action_animation.sequences()
@@ -353,11 +370,11 @@ class ActionRecovery(unittest.IsolatedAsyncioTestCase):
                         cycles=count if kind in ('pistol','rifle') else 1
                         seq=model.get(kind,data['models']['0'][kind])
                         full=(seq['fire_in']+seq['fire']*cycles+seq['fire_out'])*1000/data['frame_rate']
-                        delay=action_animation.duration_ms(seat,params,count)
+                        delay=action_animation.native_duration_ms(seat,params,count)
                         self.assertGreaterEqual(delay,full-1e-9)
                         self.assertLess(delay,full+1)
-            one=action_animation.duration_ms(self.a,{'weapon_type':items.SHOTGUN},1)
-            self.assertEqual(action_animation.duration_ms(self.a,{'weapon_type':items.SHOTGUN},12),one)
+            one=action_animation.native_duration_ms(self.a,{'weapon_type':items.SHOTGUN},1)
+            self.assertEqual(action_animation.native_duration_ms(self.a,{'weapon_type':items.SHOTGUN},12),one)
             fallback=NS(inv=NS(look='unknown'),active={'sex':0})
             normal=NS(inv=NS(look=0),active={'sex':0})
             self.assertEqual(action_animation.duration_ms(fallback),action_animation.duration_ms(normal))

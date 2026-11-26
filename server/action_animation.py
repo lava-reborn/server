@@ -1,4 +1,4 @@
-"""Weapon-paced firearm presentation and native melee recovery."""
+"""Fixed firearm presentation and native melee recovery."""
 from functools import lru_cache
 import json
 import math
@@ -11,20 +11,19 @@ def sequences():
     return json.loads((Path(__file__).resolve().parents[1] / 'data/action_animation.json').read_text(encoding='utf-8'))
 
 
-FIREARM_ANIMATION_RATIO = 0.35
+FIREARM_RECOVERY_MS = 350
 
 
 def duration_ms(session, params=None, shots=1, *, aimed_for=0, mode=0):
-    """Firearms add 35% of their selected native aiming time after the shot.
+    """Every firearm reserves 350 ms after its committed shot or volley.
 
-    Burst length and character graphics must not flatten weapon cadence.
-    The client fits all fire/fire_out frames into this authoritative budget.
-    Bare animation descriptors and melee retain their native frame timing.
+    Selected aim times stay separate; mode, burst length and character
+    graphics cannot change this pause. The client fits fire/fire_out frames
+    into the budget. Melee retains its native frame timing.
     """
     params = params or {}
-    times = params.get('fire_times', ())
-    if params.get('weapon_type') is not None and 0 <= mode < len(times) and times[mode] > 0:
-        return max(1, math.ceil(times[mode] * FIREARM_ANIMATION_RATIO))
+    if params.get('weapon_type') is not None:
+        return FIREARM_RECOVERY_MS
     return native_duration_ms(session, params, shots, aimed_for=aimed_for)
 
 

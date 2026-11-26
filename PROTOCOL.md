@@ -1862,8 +1862,9 @@ max(now,старое окончание)+days*86400. Другой транспо
 
 
 Firearm animation cadence: the server keeps the selected `fire_times` aiming
-period and then reserves `ceil(fire_times[mode] * 0.35)` milliseconds for the
-committed volley and lowering the weapon. Damage, accuracy, rounds and AP costs
+period and then reserves a fixed `350` milliseconds for the committed shot or
+whole volley and lowering the weapon, for every firearm and mode. This pause
+is not added between individual bullets. Damage, accuracy, rounds and AP costs
 are unchanged. The first `faShot(status=1)` carries `recovery_ms` so input is
 blocked before the native acknowledgement latch is released. The final
 `faShot(status=0)` repeats `recovery_ms` and supplies `animation_frames`, the

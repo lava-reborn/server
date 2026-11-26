@@ -363,10 +363,13 @@ class ActionRecoveryClient(unittest.TestCase):
         connection = dict(__bfRecoveryNotifyOrig=lambda cmd:
                           self.call('__bfRequest1', activator, 1, 42))
         self.call('__bfRecoveryNotify', connection,
-                  dict(messID='faShot', params=dict(id=0, status=1, recovery_ms=158)))
+                  dict(messID='faShot', params=dict(id=0, status=1, recovery_ms=350)))
         self.assertFalse(self.executed)
         self.assertEqual(len(self.timers), 1)
-        self.now = 258
+        self.now = 449
+        self.call('__bfDrainInput', None)
+        self.assertFalse(self.executed)
+        self.now = 450
         self.call('__bfDrainInput', None)
         self.call('__bfDrainInput', None)
         self.assertEqual(self.executed, ['fire'])
@@ -377,10 +380,10 @@ class ActionRecoveryClient(unittest.TestCase):
         location = dict(__bfLocationShotOrig=lambda event:
                         self.call('__bfFire', scene, dict(gunnerID=0, access=True, seq=1)))
         self.call('__bfLocationShot', location,
-                  dict(param=dict(id=0, status=0, recovery_ms=158, animation_frames=9)))
+                  dict(param=dict(id=0, status=0, recovery_ms=350, animation_frames=9)))
         self.assertIsNone(self.global_['__bfShotTiming'])
         self.assertEqual(figure['__bfPlayback'],
-                         dict(start=100, duration=158, frames=9, painted=0))
+                         dict(start=100, duration=350, frames=9, painted=0))
         self.assertEqual(self.fx.reported, [1])
 
     def test_retimed_burst_plays_every_native_frame_and_only_then_releases_one_input(self):
@@ -388,8 +391,9 @@ class ActionRecoveryClient(unittest.TestCase):
         figure.update(id=0, behavior='fire', animationEnabled=True, isActive=True,
                       onEnterFrame=True, currentFrameNumber=0)
         self.call('__bfAim', scene, dict(aim=0, num_shots=5, seq=1))
-        self.global_['__bfShotTiming'] = dict(recovery_ms=158, animation_frames=21)
         for index in range(5):
+            if index == 4:
+                self.global_['__bfShotTiming'] = dict(recovery_ms=350, animation_frames=21)
             self.call('__bfFire', scene, dict(gunnerID=0, access=True, seq=index))
             self.global_['__bfShotTiming'] = None
         # Native Char.playAnimation paints a frame, emits finalFrame and runs
@@ -405,15 +409,15 @@ class ActionRecoveryClient(unittest.TestCase):
                 figure['__bfNextSequenceOrig'] = lambda:figure.update(behavior='stand')
                 self.call('__bfNextSequence', figure)
         figure['__bfPlayAnimationOrig'] = native_frame
-        self.global_['__bfRecoveryUntil'] = 258
+        self.global_['__bfRecoveryUntil'] = 450
         owner = dict(__bfRequestFireOrig=lambda *args:self.executed.append(args))
         self.call('__bfRequest1', owner, 1, 41)
         self.call('__bfRequest1', owner, 1, 42)
-        self.now = 257
+        self.now = 449
         self.call('__bfPlayAnimation', figure)
         self.assertEqual(len(rendered), 20)
         self.assertFalse(self.executed)
-        self.now = 260  # a slow render catches up without adding a native-length tail
+        self.now = 452  # a slow render catches up without adding a native-length tail
         self.call('__bfPlayAnimation', figure)
         self.call('__bfDrainInput', None)
         self.assertEqual(rendered, ['fire'] * 15 + ['fire_out'] * 6)
@@ -441,17 +445,17 @@ class ActionRecoveryClient(unittest.TestCase):
 
     def test_model_frame_count_override_finishes_real_animation_at_deadline(self):
         rendered = []
-        clock = dict(start=100, duration=158, frames=9, painted=0)
+        clock = dict(start=100, duration=350, frames=9, painted=0)
         figure = dict(behavior='fire', __bfPlayback=clock)
         def native_frame():
             rendered.append('frame')
             if len(rendered) == 12:
                 figure.update(behavior='stand', __bfPlayback=None)
         figure['__bfPlayAnimationOrig'] = native_frame
-        self.now = 257
+        self.now = 449
         self.call('__bfPlayAnimation', figure)
         self.assertEqual(len(rendered), 8)
-        self.now = 260
+        self.now = 452
         self.call('__bfPlayAnimation', figure)
         self.assertEqual(len(rendered), 12)
         self.assertEqual(figure['behavior'], 'stand')
