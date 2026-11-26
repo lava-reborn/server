@@ -66,17 +66,17 @@ class MachinegunBalance(unittest.TestCase):
         return tuple(max(score[index] for score in scores) for index in (0, 1))
 
     def test_reviewed_dps_ladder_uses_the_current_pkm17_anchor(self):
-        # Current 25%-of-aim animation, selected mode and amortized reload.
+        # Current 35%-of-aim animation, selected mode and amortized reload.
         # Each mode uses its optimal band; fixed distances are checked below.
-        for variants, targets in (((24989, 25006, 25022), (237.6, 251.9, 325.3)),
+        for variants, targets in (((24989, 25006, 25022), (222.5, 236.1, 303.4)),
                                   ((24990, 25007, 7051, 25023, 7052),
-                                   (283.7, 302.2, 306.9, 392.8, 415.4))):
+                                   (265.7, 283.3, 285.9, 366.3, 387.5))):
             scores = [self.scores(type_id)[0] for type_id in variants]
             self.assertEqual(scores, sorted(scores))
             for type_id, score, target in zip(variants, scores, targets):
                 with self.subTest(type_id=type_id):
                     self.assertAlmostEqual(score, target, delta=.5)
-        self.assertAlmostEqual(self.scores(7052, distance=7)[0], 415.4, delta=.5)
+        self.assertAlmostEqual(self.scores(7052, distance=7)[0], 387.5, delta=.5)
 
     def test_bizon_comparison_preserves_distance_roles_instead_of_forcing_a_class_winner(self):
         for bizon, rpd, aug in ((25540, 24989, 25006), (26177, 24990, 25007)):
@@ -92,7 +92,7 @@ class MachinegunBalance(unittest.TestCase):
         for pkm, reference in ((7051, 24990),):
             with self.subTest(pkm=pkm):
                 ratio = self.scores(pkm)[0] / self.scores(reference)[0]
-                self.assertAlmostEqual(ratio, 1.082, delta=.002)
+                self.assertAlmostEqual(ratio, 1.076, delta=.002)
 
     def test_afro_and_gold_m249_beat_matching_rpd_on_medium_and_long_ranges(self):
         # Use the same fixed distance for all modes, with real non-optimal
@@ -130,8 +130,8 @@ class MachinegunBalance(unittest.TestCase):
             self.assertAlmostEqual(self.scores(25026, 4)[0], empty)
         self.assertGreater(unopposed, defended)
         self.assertGreater(empty, unopposed)
-        self.assertAlmostEqual(self.scores(25026, 4, stamina=10000)[0], 392.1, delta=.2)
-        self.assertAlmostEqual(self.scores(7052, 4, stamina=10000)[0], 378.1, delta=.2)
+        self.assertAlmostEqual(self.scores(25026, 4, stamina=10000)[0], 365.7, delta=.2)
+        self.assertAlmostEqual(self.scores(7052, 4, stamina=10000)[0], 352.6, delta=.2)
 
     def test_accuracy_ceilings_cover_all_rpd_blueprints_without_changing_other_weapons(self):
         expected = {type_id for type_id, (_root, name) in items.catalogue().items()

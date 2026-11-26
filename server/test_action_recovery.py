@@ -191,7 +191,7 @@ class ActionRecovery(unittest.IsolatedAsyncioTestCase):
                         before = dict(self.case.store.item(gun['uniq']))
                         previous_end = self.a.combat.recovery_until
                         self.assertAlmostEqual(previous_end - deadline,
-                                               math.ceil(params['fire_times'][mode] / 4) / 1000)
+                                               math.ceil(params['fire_times'][mode] * .35) / 1000)
                         self.a.combat.use_fire(request)
                         callback(*args)
                         self.assertIsNone(self.a.combat.aim)
@@ -304,7 +304,7 @@ class ActionRecovery(unittest.IsolatedAsyncioTestCase):
             for mode, shots in enumerate(params['fire_mods']):
                 if not shots:
                     continue
-                expected = math.ceil(params['fire_times'][mode] / 4)
+                expected = math.ceil(params['fire_times'][mode] * .35)
                 for look in action_animation.sequences()['models']:
                     seat = NS(inv=NS(look=look), active={'sex':0})
                     # Empty chambers, burst length and delayed aim completion
@@ -316,8 +316,8 @@ class ActionRecovery(unittest.IsolatedAsyncioTestCase):
                                              (type_id, mode, look, count, elapsed))
         bizon = items.params_of(26177)
         automatic = items.params_of(25218)
-        self.assertEqual(action_animation.duration_ms(self.a, bizon, 5, mode=1), 113)
-        self.assertEqual(action_animation.duration_ms(self.a, automatic, 3, mode=1), 175)
+        self.assertEqual(action_animation.duration_ms(self.a, bizon, 5, mode=1), 158)
+        self.assertEqual(action_animation.duration_ms(self.a, automatic, 3, mode=1), 245)
 
     async def test_model_recovery_counts_complete_sequences_without_repeated_io_or_sql(self):
         data=action_animation.sequences()

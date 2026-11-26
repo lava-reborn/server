@@ -1862,7 +1862,7 @@ max(now,старое окончание)+days*86400. Другой транспо
 
 
 Firearm animation cadence: the server keeps the selected `fire_times` aiming
-period and then reserves `ceil(fire_times[mode] / 4)` milliseconds for the
+period and then reserves `ceil(fire_times[mode] * 0.35)` milliseconds for the
 committed volley and lowering the weapon. Damage, accuracy, rounds and AP costs
 are unchanged. The first `faShot(status=1)` carries `recovery_ms` so input is
 blocked before the native acknowledgement latch is released. The final
@@ -1873,3 +1873,13 @@ The client plays the native frame callbacks on a wall-clock schedule within
 that budget and queues one subsequent action; it does not restart the current
 volley. Rendering delays can postpone presentation but cannot bypass server
 recovery. Melee and NPC animation timing retain their native sequences.
+
+
+The startup migration `hand-valentines-all-storage-2026-11-26` converts all four
+25 G hand gifts in saved item rows, including offline owners and bank storage.
+Only an old clothing slot moves to the backpack; serial, owner, quantity,
+durability and other locations remain intact. Mail snapshots and auction class
+metadata are repaired in the same transaction. The new marker runs even when
+the earlier parcel-only migration has already completed; login normalization
+remains as a fallback. Applying the fix to an existing server requires an
+updated server installation and restart; players then reconnect for new OIDs.

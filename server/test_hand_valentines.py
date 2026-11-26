@@ -105,8 +105,8 @@ class HandValentines(unittest.IsolatedAsyncioTestCase):
                                       'old gift', 'old gift', 25 if kind == mail.TRADE else 0,
                                       0, json.dumps([snap]))
             parcels.append((letter, snap))
-        self.assertTrue(accounts.run_once(store.db, inventory.HAND_VALENTINE_SNAPSHOTS_FIX,
-                                          inventory.repair_hand_valentine_snapshots))
+        self.assertTrue(accounts.run_once(store.db, inventory.HAND_VALENTINES_FIX,
+                                          inventory.repair_legacy_hand_valentines))
         for letter, snap in parcels:
             with self.subTest(type_id=snap['type_id']):
                 frames = []
@@ -145,8 +145,8 @@ class HandValentines(unittest.IsolatedAsyncioTestCase):
             type_id=1070, root=items.WEAR, item_json=json.dumps(snap),
             seller=self.s.char_id, seller_name=self.s.nick, currency=auction.GOLD,
             start_bid=100, buyout=200, fee=0, hours=24, created_at=int(now), ends_at=now + 86400))
-        accounts.run_once(store.db, inventory.HAND_VALENTINE_SNAPSHOTS_FIX,
-                          inventory.repair_hand_valentine_snapshots)
+        accounts.run_once(store.db, inventory.HAND_VALENTINES_FIX,
+                          inventory.repair_legacy_hand_valentines)
         current = store.auction_lot(lot['id'])
         house = auction.Auction(self.s, store, self.s.mail.directory)
         frames = []

@@ -11,11 +11,11 @@ def sequences():
     return json.loads((Path(__file__).resolve().parents[1] / 'data/action_animation.json').read_text(encoding='utf-8'))
 
 
-FIREARM_ANIMATION_RATIO = 0.25
+FIREARM_ANIMATION_RATIO = 0.35
 
 
 def duration_ms(session, params=None, shots=1, *, aimed_for=0, mode=0):
-    """Firearms add 25% of their selected native aiming time after the shot.
+    """Firearms add 35% of their selected native aiming time after the shot.
 
     Burst length and character graphics must not flatten weapon cadence.
     The client fits all fire/fire_out frames into this authoritative budget.
