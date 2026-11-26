@@ -170,6 +170,36 @@ class CombatXpCap(unittest.TestCase):
         f.credit_xp(p.SHOOTING, spec, 1, self.mob(17))
         self.assertEqual(ch.skill[p.SHOOTING][1], int(p.combat_mob_xp(17, 16)))
 
+    def test_equipment_skill_and_spec_bonuses_do_not_change_settled_experience(self):
+        for skill in (p.MELEE, p.SHOOTING):
+            for level in (10, 16, 17):
+                for bonus in (-4, 1, 4, 10):
+                    with self.subTest(skill=skill, level=level, bonus=bonus):
+                        fighter, ch, spec = self.fighter(level, skill=skill)
+                        reference, expected, expected_spec = self.fighter(level, skill=skill)
+                        base_skill = ch.skill[skill][0]
+                        ch.bonus_skills[skill] = bonus
+                        ch.bonus_specs[spec] = 12
+                        self.assertEqual(ch.skill_level(skill), base_skill + bonus)
+                        self.assertEqual(ch.level, expected.level)
+                        self.assertEqual(ch.rows(), expected.rows())
+                        for _ in range(3):
+                            mob = self.mob(level + 2)
+                            # Equip/remove a skill bonus during the same kill.
+                            for active_bonus, harm in ((bonus, 25), (0, 25), (bonus, 50)):
+                                ch.bonus_skills[skill] = active_bonus
+                                fighter.award_xp(skill, spec, harm, mob)
+                            self.settle(mob, fighter)
+                            self.settle(mob, fighter)
+                            reference_mob = self.mob(level + 2)
+                            reference.award_xp(skill, expected_spec, 100, reference_mob)
+                            self.settle(reference_mob, reference)
+                            self.assertEqual(ch.rows(), expected.rows())
+                            self.assertEqual(ch.level, expected.level)
+                            self.assertEqual(ch.xp_carry.keys(), expected.xp_carry.keys())
+                            for key, value in expected.xp_carry.items():
+                                self.assertAlmostEqual(ch.xp_carry[key], value)
+
     def test_group_shares_and_fractional_carry_are_preserved(self):
         first, a, spec_a = self.fighter()
         second, b, spec_b = self.fighter()
