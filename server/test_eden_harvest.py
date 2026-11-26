@@ -192,6 +192,29 @@ class EdenHarvestTests(unittest.IsolatedAsyncioTestCase):
     def resource_count(self, sess=None):
         return sum(self.awarded(sess or self.s).values())
 
+    async def test_discarding_unwanted_bananas_frees_capacity_for_the_other_colour(self):
+        self.give(eden.BASKET, inventory.BELT)
+        self.s.inv.refresh_gear(push=False)
+        real_capacity = inventory.Inventory.carry_limit.__get__(self.s.inv)
+        with patch.object(self.s.inv, 'carry_limit', real_capacity):
+            unwanted = [self.give(eden.GREEN_BANANA) for _ in range(4)]
+            self.assertGreater(self.s.inv.total_weight() + 30000, self.s.inv.carry_limit())
+            # Generate the required colour through the real harvest command.
+            with patch.object(harvest.RNG, 'choice', return_value=eden.GOOD_BANANA):
+                for _ in range(3):
+                    self.click()
+                    self.finish()
+            self.f.open_loot(dict(target=self.palm.cell))
+            self.frames.clear()
+            self.f.ss_upd(dict(s_status=3))
+            self.assertEqual([p['res'] for c,p in self.frames if c == 'cmdAck'], [inventory.RES_OVERLOAD])
+            self.s.cmd_ss_use(dict(type=inventory.USE_DELETE, obj=inventory.oid_of(unwanted[0])))
+            self.assertIsNone(self.store.item(unwanted[0]['uniq']))
+            self.pickup()
+            self.assertEqual(self.s.inv.bag_pieces()[eden.GREEN_BANANA], 3)
+            self.assertEqual(self.s.inv.bag_pieces()[eden.GOOD_BANANA], 1)
+            self.assertEqual(self.resource_count(), 4)
+
     async def test_two_workers_combine_damage_without_duplicate_rewards(self):
         other = self.other_worker(2)
         self.click()

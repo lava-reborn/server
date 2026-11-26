@@ -783,6 +783,9 @@ def configure_mob(stats, *, health_scale=1, damage_scale=1, site=False):
     # Even creatures absent from the simulator retain the original pool floor.
     stats.hp_max = max(original_hp, round(stats.hp_max * health_scale / MOB_BALANCE_DIVISOR))
     stats.sp_max = max(original_sp, round(stats.sp_max * health_scale / MOB_BALANCE_DIVISOR))
+    # A calibrated profile must not turn a native melee fighter into a gunner.
+    if getattr(stats, 'melee_only', False):
+        stats.weapon_class, stats.ranged = 'knife', False
     equipped = equip_mob(stats, damage_scale, site=site)
     if not site:
         stats.ap_max = ordinary_mob_ap(stats.level)

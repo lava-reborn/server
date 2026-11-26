@@ -1902,9 +1902,12 @@ class Inventory:
             self.ack(RES_NOT_FOUND)
             return
         import eden
-        if eden.restricted_item(row["type_id"]):
-            # Work resources leave only through an authorised exchange or
-            # release cleanup, including legacy rows outside the plantation.
+        discard_banana = (row['type_id'] in eden.BANANAS and row['slot'] == BAG
+                          and eden.inside(getattr(self.sess, 'loc', None))
+                          and not getattr(self.sess, 'on_map', False))
+        if eden.restricted_item(row["type_id"]) and not discard_banana:
+            # Only unwanted bananas in the local backpack may be discarded.
+            # Tools, tickets and local property outside Eden stay protected.
             self.ack(RES_UNWORDED)
             self.sess.answer("Предметы плантации Эдем нельзя удалить. Они изымаются при освобождении.")
             return

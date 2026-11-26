@@ -49,6 +49,8 @@ class ClientSuiteSelection(unittest.TestCase):
                     'server/test_hand_gift_storage.py', 'server/test_mail_gold_loot.py', 'server/test_auction.py',
                     'server/test_combat_xp_cap.py', 'server/test_release_pouches.py',
                     'server/test_aggro_hold.py', 'server/test_gear.py',
+                    'server/test_mob_weapon_visuals.py', 'server/test_mob_loadouts.py',
+                    'server/test_eden_review.py', 'server/test_eden_harvest.py',
                     'server/test_ground.py', 'server/test_war_state.py', 'server/test_loot.py',
                     'server/test_items.py', 'server/test_camp_box_loot.py',
                     'server/test_eden_native_weapons.py',

@@ -246,6 +246,9 @@ def find_path(loc, start, goal, blocked=(), limit=SEARCH_LIMIT, toward=None):
 
 # --- what a type is ------------------------------------------------------
 
+BUM_RESOURCES = frozenset(('bich', '120'))
+
+
 class MobStats:
     """One type's numbers, from mob_types.json through mob_curves.json."""
 
@@ -255,7 +258,9 @@ class MobStats:
         self.name = info.get("name", "")
         self.level = int(info.get("level", 1))
         self.role = info.get("role", "mob")
-        self.weapon_class = info.get("weapon_class", "fist")
+        is_bum = self.role == "mob" and info.get("resource") in BUM_RESOURCES
+        self.weapon_class = "knife" if is_bum else info.get("weapon_class", "fist")
+        self.melee_only = self.weapon_class in ('knife', 'fist')
         self.hex_ms = int(info.get("hex_ms", HEX_MS))
         row = LEVELS[str(max(0, min(MAX_LEVEL, self.level)))]
         role = ROLES.get(self.role, ROLES["mob"])
@@ -283,7 +288,8 @@ class MobStats:
         self.shots = max(1, int(weapon["shots"]))
         self.attack_ap = int(weapon["ap"])
         self.ranged = self.weapon_class in RANGED
-        self.weapon_type_id = info.get("weapon_type_id", WEAPON_ITEM.get(self.weapon_class))
+        self.weapon_type_id = (WEAPON_ITEM["knife"] if is_bum else
+                               info.get("weapon_type_id", WEAPON_ITEM.get(self.weapon_class)))
         self.loot_ammo_type = info.get("loot_ammo_type")
         self.loot_ammo_count = tuple(info.get("loot_ammo_count", (3, 10)))
         self.can_attack = (self.role != "object" and self.weapon_class != "none"
@@ -889,29 +895,10 @@ def stats(type_id):
 
 
 def visual_type(type_id, weapon_type_id):
-    """Existing armed art for the few native bodies without that animation.
-
-    The identity, equipment and fighting stats stay those of the actual mob;
-    only userInfo.res uses the donor. Never substitute unarmed actors or
-    animals. The m7 donor is the same body with a complete animation folder.
-    """
+    """Keep native bodies; only the incomplete m7 armed rig needs its twin."""
     info = TYPES.get(str(type_id), {})
-    if info.get('role') not in ('mob', 'boss') or weapon_type_id is None:
-        return type_id
-    root = items.root_of(weapon_type_id)
-    if root == items.COLD_ARM:
-        stance = 'knife'
-    elif root == items.FIRE_ARM:
-        params = items.params_of(weapon_type_id) or {}
-        stance = 'pistol' if params.get('weapon_type') == items.PISTOL else 'rifle'
-    else:
-        return type_id
-    resource = info.get('resource')
-    if resource in ('bich', '120'):
-        return 14
-    if resource in ('band_leader', '82') and stance == 'knife':
-        return 1668
-    if resource == 'm7' and stance in ('pistol', 'rifle'):
+    if (info.get('role') in ('mob', 'boss') and info.get('resource') == 'm7'
+            and weapon_type_id is not None and items.root_of(weapon_type_id) == items.FIRE_ARM):
         return 131
     return type_id
 

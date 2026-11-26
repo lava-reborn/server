@@ -30,6 +30,27 @@ class FixedRandom:
 
 
 class MobLoadouts(unittest.TestCase):
+    def test_native_melee_fighters_and_tramps_never_receive_firearms(self):
+        for key, info in mobs.TYPES.items():
+            bum = info['role'] == 'mob' and info['resource'] in mobs.BUM_RESOURCES
+            native_melee = info['weapon_class'] in ('fist', 'knife')
+            if not (bum or native_melee) or info['role'] not in ('mob', 'boss', 'animal', 'turret'):
+                continue
+            with self.subTest(type_id=key):
+                st = mobs.stats(int(key))
+                if not st.can_attack:
+                    continue
+                self.assertFalse(st.ranged)
+                self.assertFalse(hasattr(st, 'balanced_modes'))
+                if st.weapon_type_id is not None:
+                    self.assertEqual(items.root_of(st.weapon_type_id), items.COLD_ARM)
+                    self.assertLessEqual(inventory.item_level(st.weapon_type_id), st.level)
+                if bum:
+                    self.assertEqual(st.weapon_class, 'knife')
+                    self.assertIsNotNone(st.weapon_oid(123))
+                    self.assertFalse(any(items.root_of(t) == items.AMMO
+                                         for t, _n in mobs.carried(st, FixedRandom())))
+
     def test_all_live_camp_attacks_retain_damage_through_the_native_player_resolver(self):
         from types import SimpleNamespace as NS
         from test_mob_penetration import afro_character

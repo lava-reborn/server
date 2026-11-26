@@ -189,7 +189,7 @@ class EdenReviewTests(unittest.TestCase):
                 self.assertFalse(barter.tradable(type_id))
                 self.assertFalse(mail.postable(type_id))
 
-    def test_delete_cannot_destroy_any_local_work_item(self):
+    def test_delete_protects_tools_tickets_and_nonlocal_or_equipped_bananas(self):
         sentence = self.s.eden_sentence
         self.s.answer = lambda text: self.frames.append(('answer', text))
         states = [(loc, None) for loc in sorted(eden.LOCATIONS)]
@@ -197,6 +197,8 @@ class EdenReviewTests(unittest.TestCase):
         for type_id in sorted(eden.LOCAL_ITEMS):
             row = self.give(type_id)
             for (loc_id, active_sentence), slot in product(states, (inventory.BAG, inventory.PRIMARY)):
+                if type_id in eden.BANANAS and loc_id in eden.LOCATIONS and slot == inventory.BAG:
+                    continue  # Local backpack bananas are deliberately disposable.
                 with self.subTest(type_id=type_id, loc=loc_id, sentenced=bool(active_sentence), slot=slot):
                     self.s.loc = NS(id=loc_id)
                     self.s.eden_sentence = active_sentence
@@ -215,6 +217,41 @@ class EdenReviewTests(unittest.TestCase):
                     self.assertEqual(len(self.frames), 2)
                     self.assertEqual(self.frames[1][0], 'answer')
                     self.assertIn('нельзя удалить', self.frames[1][1])
+
+    def test_discarding_each_banana_colour_deletes_once_without_changing_progress(self):
+        self.s.on_map = False
+        for type_id in eden.BANANAS:
+            row = self.give(type_id, 4)
+            before = self.store.money(self.cid), eden.assigned(self.store, self.cid), self.store.quests(self.cid)
+            self.frames.clear()
+            request = dict(type=inventory.USE_DELETE, obj=inventory.oid_of(row))
+            self.s.cmd_ss_use(request)
+            self.assertIsNone(self.store.item(row['uniq']))
+            self.assertEqual(self.frames[0], ('cmdAck', {'res': inventory.RES_OK}))
+            self.assertEqual([p['status'] for c,p in self.frames if c == 'ss_obj_status'], [0])
+            self.frames.clear()
+            self.s.cmd_ss_use(request)
+            self.assertEqual(self.frames, [('cmdAck', {'res': inventory.RES_NOT_FOUND})])
+            self.assertEqual((self.store.money(self.cid), eden.assigned(self.store, self.cid),
+                              self.store.quests(self.cid)), before)
+
+    def test_banana_discard_rejects_bank_locked_foreign_and_global_map_items(self):
+        row = self.give(eden.GREEN_BANANA)
+        request = dict(type=inventory.USE_DELETE, obj=inventory.oid_of(row))
+        for case in ('bank', 'locked', 'foreign', 'map'):
+            self.s.on_map = case == 'map'
+            self.store.update_item(row['uniq'], slot=inventory.BANK if case == 'bank' else inventory.BAG,
+                                   char_id=0 if case == 'foreign' else self.cid)
+            if case == 'locked':
+                self.inv.locked.add(row['uniq'])
+            saved = self.store.item(row['uniq'])
+            self.frames.clear()
+            self.s.cmd_ss_use(request)
+            self.assertNotEqual(self.frames[0][1]['res'], inventory.RES_OK)
+            self.assertEqual(self.store.item(row['uniq']), saved)
+            self.assertFalse(any(c == 'ss_obj_status' for c,_p in self.frames))
+            self.inv.locked.discard(row['uniq'])
+        self.s.on_map = False
 
     def test_ordinary_deletion_is_unchanged_inside_and_outside_eden(self):
         for loc_id, active_sentence in ((eden.CENTER, self.s.eden_sentence), (41, None)):
