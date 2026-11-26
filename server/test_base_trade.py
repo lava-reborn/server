@@ -269,6 +269,22 @@ class BaseTrade(unittest.TestCase):
         self.assertEqual(inventory.purchase_pmod(26075, self.inv.trade.rates), inventory.PMOD)
         self.assertEqual(inventory.repair_rmod(self.site.loc, self.site.flag), inventory.RMOD)
 
+    def test_two_hour_scanner_costs_135_cents_per_piece_at_both_paid_bases(self):
+        for location in (609, 1443):
+            self.base_room(location)
+            self.open(1013)
+            for quantity in (1, 2):
+                with self.subTest(location=location, quantity=quantity):
+                    before = self.store.money(self.cid)
+                    serials = {row['uniq'] for row in self.inv.rows()}
+                    self.assertEqual(self.buy(3826, quantity), [inventory.RES_OK])
+                    self.assertEqual(self.store.money(self.cid),
+                                     (before[0], before[1] - 135 * quantity))
+                    bought = [row for row in self.inv.rows() if row['uniq'] not in serials]
+                    self.assertEqual(len(bought), quantity)
+                    self.assertTrue(all(row['type_id'] == 3826 and row['count'] == 1
+                                        for row in bought))
+
     def test_changed_membership_or_expired_rent_refuses_stale_window_without_payment(self):
         ammo = next(t for t in items.stock_for(714, 609) if items.root_of(t) == items.AMMO and items.params_of(t).get('g_cost'))
         before = self.store.money(self.cid)
@@ -513,7 +529,8 @@ class BaseTrade(unittest.TestCase):
                 self.assertTrue(expected <= set(stock), sorted(expected - set(stock)))
                 self.assertEqual(len(stock), len(set(stock)))
                 self.assertLess(len(stock), 256)
-                for tid, gold, cost in ((3789, True, 45), (4181, False, 2250),
+                for tid, gold, cost in ((3789, True, 45), (3826, True, 135),
+                                        (4181, False, 2250),
                                         (4917, False, 450), (4937, False, 450),
                                         (4919, True, 7), (4939, True, 7),
                                         (4936, True, 198), (4956, True, 198)):

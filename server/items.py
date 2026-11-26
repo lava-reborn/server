@@ -988,6 +988,7 @@ ARTICLE_GOLD_PRICE = {2649: 200, 2650: 250,           # DnLoteryKey_g_9_10, _g_1
                       2651: 300,                      # DnLoteryKey_g_13_14
                       2654: 300, 2655: 350, 3575: 450,  # AhLoteryKey_g_15_16, _17_18, _19_19
                       1567: 25, 1639: 10,             # ah_ticket, ah_dongola_ticket_g
+                      3826: 150,                      # Owner: two-hour scanner, 1.50 G (2026-11-26).
                       # Plus is the stronger dose above MK IX. Scale its
                       # price by the bonus, rounded up to the next 0.05 G.
                       4935: 200, 4936: 220, 4956: 220,  # Salus MK IX/+, Anesthetic +

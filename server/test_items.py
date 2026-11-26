@@ -97,9 +97,9 @@ sample = sorted(set(rnd.sample(linked, 20)) | ((corrected | set(craft.DURABILITY
 # Always include both paired blueprint lines, not only whichever a random
 # sample happens to select. Their purchase prices have an explicit overlay.
 sample = sorted(set(sample) | {t for t in linked if cat[t][1].startswith('bpg_damage_25_')})
-# All four PMM variants have the reviewed ten-round magazine. Keep the
-# remainder of each article checked even when the random sample misses them.
-sample = sorted(set(sample) | {7055, 7056, 7057, 7058})
+# The PMM variants have ten-round magazines; the long scanner has a retail
+# override. Keep their other article fields checked even if the sample misses them.
+sample = sorted(set(sample) | {7055, 7056, 7057, 7058, 3826})
 for t in sample:
     rec = wiki[t]
     cmd, p = items.static_info(t)
@@ -116,6 +116,8 @@ for t in sample:
     # record that is another article's (items.OWN_ARTICLE_PRICE).
     if t in items.GOLD_PRICE_ONLY or t in items.OWN_ARTICLE_PRICE:
         ours = dict(ours, cost=p["cost"])
+    if t in items.ARTICLE_GOLD_PRICE:
+        ours = dict(ours, g_cost=items.ARTICLE_GOLD_PRICE[t])
     # So is a gold round's, a hundredth of an ounce a round whatever its
     # article says (items.GOLD_AMMO_ROUND; every one of them in test_repair).
     if root == items.AMMO and items.gold_round(p):
@@ -212,7 +214,8 @@ check("  ..explicit retail overrides: city goods and the stronger released buff 
                                   7041, 7042)]),
        {2649: (0, 200), 2650: (0, 250), 2651: (0, 300), 2654: (0, 300), 2655: (0, 350),
         3575: (0, 450), 1567: (0, 25), 1639: (0, 10), 6294: (0, 10), 6295: (0, 100),
-        6296: (0, 1000), 4935: (0, 200), 4936: (0, 220), 4956: (0, 220)}))
+        6296: (0, 1000), 4935: (0, 200), 4936: (0, 220), 4956: (0, 220),
+         3826: (0, 150)}))
 
 # --- every unlinked type keeps the designed frame ------------------------------
 # All of them, not a sample: twenty drawn by the clock failed now and then on

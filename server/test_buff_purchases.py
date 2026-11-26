@@ -50,6 +50,21 @@ class BuffPurchases(unittest.TestCase):
                     self.assertEqual(sum(cmd == 'ss_di_heal' for cmd, _ in self.frames), 2)
                     self.assertEqual(sum(cmd == 'money' for cmd, _ in self.frames), 1)
 
+    def test_two_hour_scanner_charges_exact_retail_and_base_prices_without_item_loss(self):
+        for modifier, unit_price in ((1, 150), (.9, 135)):
+            self.rates['pmod'] = modifier
+            for quantity in (1, 2):
+                with self.subTest(modifier=modifier, quantity=quantity):
+                    before = self.store.money(self.cid)
+                    serials = {row['uniq'] for row in self.inv.rows()}
+                    self.assertEqual(self.buy(3826, quantity), [inventory.RES_OK])
+                    self.assertEqual(self.store.money(self.cid),
+                                     (before[0], before[1] - unit_price * quantity))
+                    bought = [row for row in self.inv.rows() if row['uniq'] not in serials]
+                    self.assertEqual(len(bought), quantity)
+                    self.assertTrue(all(row['type_id'] == 3826 and row['count'] == 1
+                                        for row in bought))
+
     def test_every_supported_buff_preserves_quantity_charges_and_payment(self):
         checked = 0
         for type_id in effects.definitions():
@@ -93,7 +108,7 @@ class BuffPurchases(unittest.TestCase):
 
     def test_second_item_failure_rolls_back_first_item_money_and_ledger(self):
         afro_buff = next(t for t in effects.definitions() if items.params_of(t).get('cost'))
-        for type_id, gold in ((3561, True), (afro_buff, False)):
+        for type_id, gold in ((3561, True), (3826, True), (afro_buff, False)):
             with self.subTest(type_id=type_id):
                 before = self.store.money(self.cid)
                 ledger = self.store.db.execute('SELECT COUNT(*) FROM money_ledger').fetchone()[0]
@@ -121,10 +136,12 @@ class BuffPurchases(unittest.TestCase):
             self.assertEqual(self.buy(3561, n), [inventory.RES_REFUSED])
             self.assertEqual(self.store.money(self.cid), before)
             self.assertEqual(self.inv.rows(), [])
-        self.store.set_money(self.cid, before[0], items.params_of(3561)['g_cost'])
-        self.assertEqual(self.buy(3561, 2), [inventory.RES_NO_MONEY])
-        self.assertEqual(self.inv.rows(), [])
-        self.assertEqual(self.store.money(self.cid)[1], items.params_of(3561)['g_cost'])
+        for type_id in (3561, 3826):
+            unit_price = items.params_of(type_id)['g_cost']
+            self.store.set_money(self.cid, before[0], unit_price)
+            self.assertEqual(self.buy(type_id, 2), [inventory.RES_NO_MONEY])
+            self.assertEqual(self.inv.rows(), [])
+            self.assertEqual(self.store.money(self.cid)[1], unit_price)
 
     def test_bulk_weight_is_checked_and_repeated_purchases_deliver_all_pieces(self):
         before = self.store.money(self.cid)

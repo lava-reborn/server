@@ -1337,7 +1337,9 @@ class ReleaseCatalogue(unittest.TestCase):
     def test_only_documented_ordinary_utility_items(self):
         self.assertEqual(effects.definition(3789)['duration'], 1800)
         self.assertEqual(effects.definition(3826)['duration'], 7200)
-        self.assertEqual(items.params_of(3826)['g_cost'], 100)
+        self.assertEqual(items.params_of(3789)['g_cost'], 50)
+        self.assertEqual(items.params_of(3826)['g_cost'], 150)
+        self.assertEqual(items.params_of(3826)['cost'], 0)
         for t in (3093, 3823, 31594, 26275, 26607, 6490):
             self.assertIsNone(effects.definition(t))
 
