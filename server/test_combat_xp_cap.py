@@ -55,8 +55,8 @@ class CombatXpCap(unittest.TestCase):
                         self.assertAlmostEqual(p.combat_mob_xp(mob, level, share, mult), expected)
 
     def test_spec_reward_rises_to_level_16_maximum_at_gap_four(self):
-        ceiling = 1366.945003018 * 1.2
-        expected = [1366.945003018 * ratio for ratio in (890/1100, 980/1100, 1, 1.1, 1.2)]
+        ceiling = 1589.0 * 1.2
+        expected = [1589.0 * ratio for ratio in (890/1100, 980/1100, 1, 1.1, 1.2)]
         for level in (17, 18, 19, 20):
             self.assertEqual([p.combat_mob_xp(17 + gap, level) for gap in range(5)], expected)
             for mob in (17, 18, 21, 30):
@@ -65,8 +65,8 @@ class CombatXpCap(unittest.TestCase):
                     self.assertAlmostEqual(p.combat_mob_xp(mob, level, 1, mult), full)
                     self.assertAlmostEqual(p.combat_mob_xp(mob, level, .25, mult), full / 4)
             self.assertEqual(p.combat_mob_xp(13, level), 0)
-            self.assertEqual(p.combat_mob_xp(15, level), 1366.945003018 * .30)
-        self.assertEqual(p.combat_mob_xp(16, 17), 1366.945003018 * .70)
+            self.assertEqual(p.combat_mob_xp(15, level), 1589.0 * .30)
+        self.assertEqual(p.combat_mob_xp(16, 17), 1589.0 * .70)
         for gap in range(-3, 9):
             self.assertEqual(p.combat_mob_xp(17 + gap, 17),
                              p.combat_mob_xp(16 + gap, 16))
@@ -84,7 +84,7 @@ class CombatXpCap(unittest.TestCase):
                     self.settle(mob, f)
                     self.assertEqual(ch.skill[skill], before)
                     self.assertEqual(self.spec_total(ch, spec),
-                                     int(1366.945003018 * 1.2 * (1 + p.PREMIUM_XP_BONUS[premium]) + 1e-9))
+                                     int(1589.0 * 1.2 * (1 + p.PREMIUM_XP_BONUS[premium]) + 1e-9))
 
     def test_premium_is_applied_once_before_fractional_combat_carry(self):
         for level in (12, 17):
@@ -187,7 +187,7 @@ class CombatXpCap(unittest.TestCase):
             mob = self.mob(17)
             f.award_xp(p.SHOOTING, spec, 1, mob)
             self.settle(mob, f)
-        total = 3 * 1366.945003018 * (890/1100)
+        total = 3 * 1589.0 * (890/1100)
         self.assertEqual(self.spec_total(ch, spec), int(total))
         self.assertAlmostEqual(ch.xp_carry['spec', spec], total % 1)
 

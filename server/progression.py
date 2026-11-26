@@ -942,6 +942,7 @@ COMBAT_LOW_GAP_REWARD = (890 / 1100, .70, .30, .15)
 # Full ordinary +2 kill, indexed by the base skill (never gear/effects).
 # Owner anchors, 2026-11-26: skill 15 pays 890/980/1100 for +0/+1/+2.
 # Base relief enters in thirds at 11/12/13; levels 0..10 keep their base.
+# Skill 16 pays 1589 for +2; capped skills keep that base for specialisations.
 # Preserve the calculated fractions:
 # rounding XP here changes the agreed number of kills near level boundaries.
 COMBAT_XP_BASE = (
@@ -949,7 +950,7 @@ COMBAT_XP_BASE = (
     50.1567, 66.1157, 86.8385, 115.2115,
     153.11, 203.2552, 252.58061816, 363.0088964189,
     512.1589986209, 712.3213673975, 885.1855761029, 1100.0,
-    1366.945003018, 1366.945003018,
+    1589.0, 1589.0,
 )
 COMBAT_XP_ZONE = timezone(timedelta(hours=3), "MSK")
 

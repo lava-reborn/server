@@ -185,7 +185,7 @@ class PvPCriticalBalance(unittest.TestCase):
     def test_approved_xp_relief_preserves_start_and_all_gap_rewards(self):
         self.assertEqual(p.COMBAT_XP_BASE[:11], (20,23.75,30.0751,38.2775,50.1567,66.1157,
                          86.8385,115.2115,153.11,203.2552,252.58061816))
-        for level, base in ((11, 363.0088964189), (12, 512.1589986209), (13, 712.3213673975), (14, 885.1855761029), (15, 1100.0), (16, 1366.945003018)):
+        for level, base in ((11, 363.0088964189), (12, 512.1589986209), (13, 712.3213673975), (14, 885.1855761029), (15, 1100.0), (16, 1589.0)):
             for gap, factor in ((-4,0),(-3,.15),(-2,.30),(-1,.70),(0,890/1100),(1,980/1100),(2,1),(3,1.1),(4,1.2)):
                 self.assertAlmostEqual(p.combat_mob_xp(level+gap,level),base*factor)
                 self.assertAlmostEqual(p.combat_mob_xp(level+gap,level,.25),base*factor/4)
