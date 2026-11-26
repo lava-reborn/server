@@ -80,6 +80,14 @@ class ClientSuiteSelection(unittest.TestCase):
         self.assertFalse(required - selected)
 
 
+    def test_prison_rewards_and_redemption_regressions_are_included_in_ci(self):
+        required = {'server/test_prison_farm_economy.py',
+                    'server/test_halfa_events.py',
+                    'server/test_dongola_quests.py',
+                    'server/test_abuhamed_quests.py'}
+        selected = {Path(path).relative_to(ROOT).as_posix() for path in suite.suites()}
+        self.assertFalse(required - selected, 'Prison reward regressions must reach CI')
+
     def test_buff_bank_transactions_are_also_scheduled_on_postgres(self):
         postgres = (ROOT / 'deploy/ci/pg_suites.sh').read_text(encoding='utf-8')
         groups = {name for group in re.findall(r'(?ms)^SUITES\+?=\((.*?)\)', postgres)

@@ -5476,12 +5476,12 @@
       ],
       "rew_obj": [],
       "num_rew_obj": [],
-      "rew_afro": 500,
+      "rew_afro": 23500,
       "rew_gold": 0,
       "repeatable": 1,
       "level": 0,
       "q_type": 0,
-      "why": "RECOVERED texts, count and place. «Сдать 10 повязок» (62279/62280/62281), Джеф's (877, the centre block 646): bring 10 red armbands (Red_Bandage 2476, «Красная повязка ВХ»), which every prisoner and the godfather carry in the uprising (data/schedule.json loot) and which stay in the prison (keep_in). The medics come for its last five minutes (62273), so that is when it is taken and handed in. DESIGNED taker and reward: Джеф's by the words he speaks for 25 ('Десять повязок с зэков, значит закажем десять пластиковых мешков' against 'Двадцать пять повязок с зэков ...'); 500 afro for the «приз» the finish names ('Ну что же... Вот твой приз.'), fifty afro an armband. Repeatable -- 'будут еще повязки - заглядывай!' (62284) -- and a day's task (server.py DAILY_MAX). Since 2026-10-13 (the owner's «и потом сделай донголу тоже», 2026-10-13) the armbands of Донгола's prison count too: its prisoners (932-936, «Заключенный») and its godfather (2174) drop the same 2476 in its blocks 620-622 (data/schedule.json loot), and Джеф, Аль-Назир and Томпсон stand in its centre block 622 as well (the plan's decision 26). Since 2026-10-14 (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14) the armbands of Абу-Хамед's prison count too: its prisoners (1118-1122, «Заключенный») and its godfather (2175) drop the same 2476 in its blocks 651-653 (data/schedule.json loot), and Джеф, Аль-Назир and Томпсон stand in its centre block 651 as well (the plan's decision 8)."
+      "why": "RECOVERED texts/count (62279-62281), giver/taker Джеф (877), and 10 red prison armbands (2476). DESIGNED reward updated 2026-11-26: 23,500 afro, nearest 500 to 10/75 of the 175,000 afro resale of one talon's 500 rounds at an ordinary NPC. Repeatable within the common daily task limit; no new per-quest daily cap. Since 2026-10-13 (the owner's «и потом сделай донголу тоже», 2026-10-13) the armbands of Донгола's prison count too: its prisoners (932-936, «Заключенный») and its godfather (2174) drop the same 2476 in its blocks 620-622 (data/schedule.json loot), and Джеф, Аль-Назир and Томпсон stand in its centre block 622 as well (the plan's decision 26). Since 2026-10-14 (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14) the armbands of Абу-Хамед's prison count too: its prisoners (1118-1122, «Заключенный») and its godfather (2175) drop the same 2476 in its blocks 651-653 (data/schedule.json loot), and Джеф, Аль-Назир and Томпсон stand in its centre block 651 as well (the plan's decision 8)."
     },
     {
       "type": 165,
@@ -5497,13 +5497,13 @@
       ],
       "rew_obj": [],
       "num_rew_obj": [],
-      "rew_afro": 1250,
+      "rew_afro": 58500,
       "rew_gold": 0,
       "repeatable": 1,
       "per_day": 1,
       "level": 0,
       "q_type": 0,
-      "why": "RECOVERED texts, count and place. «25 повязок» (62282/62283/62284), Джеф's (877, the centre block 646): bring 25 red armbands (Red_Bandage 2476, «Красная повязка ВХ»), which every prisoner and the godfather carry in the uprising (data/schedule.json loot) and which stay in the prison (keep_in). The medics come for its last five minutes (62273), so that is when it is taken and handed in. RECOVERED taker (the wiki lists «25 повязок» on Джеф's page), DESIGNED reward: 1250 afro, fifty an armband as Джеф's ten (164), for the finish's 'О! А тебе положена награда'; once a day. Not a talon: a talon is 500 rounds at Самуэль's (169), 50 G at the stalls' gold price, and the talons come from Томпсон's 75 alone (167, the original's 'Награда составляет 2 талона'), at the recovered rate and no faster -- two a day at most. Repeatable -- 'будут еще повязки - заглядывай!' (62284) -- and a day's task (server.py DAILY_MAX). Since 2026-10-13 (the owner's «и потом сделай донголу тоже», 2026-10-13) the armbands of Донгола's prison count too: its prisoners (932-936, «Заключенный») and its godfather (2174) drop the same 2476 in its blocks 620-622 (data/schedule.json loot), and Джеф, Аль-Назир and Томпсон stand in its centre block 622 as well (the plan's decision 26). Since 2026-10-14 (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14) the armbands of Абу-Хамед's prison count too: its prisoners (1118-1122, «Заключенный») and its godfather (2175) drop the same 2476 in its blocks 651-653 (data/schedule.json loot), and Джеф, Аль-Назир and Томпсон stand in its centre block 651 as well (the plan's decision 8)."
+      "why": "RECOVERED texts/count (62282-62284), giver/taker Джеф (877), and 25 red prison armbands (2476). DESIGNED reward updated 2026-11-26: 58,500 afro, nearest 500 to 25/75 of the 175,000 afro resale of one talon's 500 rounds at an ordinary NPC. Once a day. Since 2026-10-13 (the owner's «и потом сделай донголу тоже», 2026-10-13) the armbands of Донгола's prison count too: its prisoners (932-936, «Заключенный») and its godfather (2174) drop the same 2476 in its blocks 620-622 (data/schedule.json loot), and Джеф, Аль-Назир and Томпсон stand in its centre block 622 as well (the plan's decision 26). Since 2026-10-14 (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14) the armbands of Абу-Хамед's prison count too: its prisoners (1118-1122, «Заключенный») and its godfather (2175) drop the same 2476 in its blocks 651-653 (data/schedule.json loot), and Джеф, Аль-Назир and Томпсон stand in its centre block 651 as well (the plan's decision 8)."
     },
     {
       "type": 166,
@@ -5519,19 +5519,20 @@
       ],
       "rew_obj": [],
       "num_rew_obj": [],
-      "rew_afro": 5000,
+      "rew_afro": 116500,
       "rew_gold": 0,
       "repeatable": 1,
       "per_day": 1,
       "level": 0,
       "q_type": 0,
-      "why": "RECOVERED texts, count and place. «50 повязок» (62285/62286/62287), Аль-Назир's (878, the centre block 646): bring 50 red armbands (Red_Bandage 2476, «Красная повязка ВХ»), which every prisoner and the godfather carry in the uprising (data/schedule.json loot) and which stay in the prison (keep_in). The medics come for its last five minutes (62273), so that is when it is taken and handed in. RECOVERED taker (the wiki lists «50 повязок» on Аль-Назир's page), DESIGNED reward: 5000 afro for the finish's 'Вот оплата, сделка есть сделка', a hundred an armband; once a day. Repeatable -- 'будут еще повязки - заглядывай!' (62284) -- and a day's task (server.py DAILY_MAX). Since 2026-10-13 (the owner's «и потом сделай донголу тоже», 2026-10-13) the armbands of Донгола's prison count too: its prisoners (932-936, «Заключенный») and its godfather (2174) drop the same 2476 in its blocks 620-622 (data/schedule.json loot), and Джеф, Аль-Назир and Томпсон stand in its centre block 622 as well (the plan's decision 26). Since 2026-10-14 (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14) the armbands of Абу-Хамед's prison count too: its prisoners (1118-1122, «Заключенный») and its godfather (2175) drop the same 2476 in its blocks 651-653 (data/schedule.json loot), and Джеф, Аль-Назир and Томпсон stand in its centre block 651 as well (the plan's decision 8)."
+      "why": "RECOVERED texts/count (62285-62287), giver/taker Аль-Назир (878), and 50 red prison armbands (2476). DESIGNED reward updated 2026-11-26: 116,500 afro, nearest 500 to 50/75 of the 175,000 afro resale of one talon's 500 rounds at an ordinary NPC. Once a day. Since 2026-10-13 (the owner's «и потом сделай донголу тоже», 2026-10-13) the armbands of Донгола's prison count too: its prisoners (932-936, «Заключенный») and its godfather (2174) drop the same 2476 in its blocks 620-622 (data/schedule.json loot), and Джеф, Аль-Назир and Томпсон stand in its centre block 622 as well (the plan's decision 26). Since 2026-10-14 (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14) the armbands of Абу-Хамед's prison count too: its prisoners (1118-1122, «Заключенный») and its godfather (2175) drop the same 2476 in its blocks 651-653 (data/schedule.json loot), and Джеф, Аль-Назир and Томпсон stand in its centre block 651 as well (the plan's decision 8)."
     },
     {
       "type": 167,
       "kind": "bring_l_obj",
       "name": "75 двухсотых",
-      "start": "У меня хорошая работа. Пациенты тихие, никогда не жалуются, лежат по полкам, не шумят. Очень, очень хорошая работа, и платят неплохо. Правда эти постоянные бунты и побеги регулярно нарушают покой.<Br><Br><b>Задача:</b> принести 75 повязок.<Br><Br><i>\\\"Охранять\\\" заключенных нужно в течение 30 минут. Награда составляет <b>2 талона</b>.</i>",
+      "own_texts": ["start"],
+      "start": "У меня хорошая работа. Пациенты тихие, никогда не жалуются, лежат по полкам, не шумят. Очень, очень хорошая работа, и платят неплохо. Правда эти постоянные бунты и побеги регулярно нарушают покой.<Br><Br><b>Задача:</b> принести 75 повязок.<Br><Br><i>\\\"Охранять\\\" заключенных нужно в течение 30 минут. Награда составляет <b>1 талон</b>.</i>",
       "notfinish": "",
       "finish": "",
       "give": [879],
@@ -5540,20 +5541,21 @@
         {"obj": 2476, "num": 75, "mobs": [1113, 1114, 1115, 1116, 1117, 2173, 932, 933, 934, 935, 936, 2174, 1118, 1119, 1120, 1121, 1122, 2175]}
       ],
       "rew_obj": [3570],
-      "num_rew_obj": [2],
+      "num_rew_obj": [1],
       "rew_afro": 0,
       "rew_gold": 0,
       "repeatable": 1,
       "per_day": 1,
       "level": 0,
       "q_type": 0,
-      "why": "RECOVERED texts, count and place. «75 двухсотых» (62288/62292), Томпсон's (879, the centre block 646): bring 75 red armbands (Red_Bandage 2476, «Красная повязка ВХ»), which every prisoner and the godfather carry in the uprising (data/schedule.json loot) and which stay in the prison (keep_in). The medics come for its last five minutes (62273), so that is when it is taken and handed in. RECOVERED taker (the wiki lists «75 двухсотых» on Томпсон's page) and reward: 'Награда составляет 2 талона' (62292, the start that names it; 62289 is the same words without); once a day. The file has no finish. Repeatable -- 'будут еще повязки - заглядывай!' (62284) -- and a day's task (server.py DAILY_MAX). Since 2026-10-13 (the owner's «и потом сделай донголу тоже», 2026-10-13) the armbands of Донгола's prison count too: its prisoners (932-936, «Заключенный») and its godfather (2174) drop the same 2476 in its blocks 620-622 (data/schedule.json loot), and Джеф, Аль-Назир and Томпсон stand in its centre block 622 as well (the plan's decision 26). Since 2026-10-14 (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14) the armbands of Абу-Хамед's prison count too: its prisoners (1118-1122, «Заключенный») and its godfather (2175) drop the same 2476 in its blocks 651-653 (data/schedule.json loot), and Джеф, Аль-Назир and Томпсон stand in its centre block 651 as well (the plan's decision 8)."
+      "why": "RECOVERED texts/count (62288/62292), giver/taker Томпсон (879), and 75 red prison armbands (2476). DESIGNED reward updated 2026-11-26: one talon (3570), once a day across all three prisons, replacing the original two talons in source text 62292. One talon buys 500 rounds (169), resold for 175,000 afro at an ordinary NPC. Own start text preserves the current one-talon reward when original strings are overlaid. Since 2026-10-13 (the owner's «и потом сделай донголу тоже», 2026-10-13) the armbands of Донгола's prison count too: its prisoners (932-936, «Заключенный») and its godfather (2174) drop the same 2476 in its blocks 620-622 (data/schedule.json loot), and Джеф, Аль-Назир and Томпсон stand in its centre block 622 as well (the plan's decision 26). Since 2026-10-14 (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14) the armbands of Абу-Хамед's prison count too: its prisoners (1118-1122, «Заключенный») and its godfather (2175) drop the same 2476 in its blocks 651-653 (data/schedule.json loot), and Джеф, Аль-Назир and Томпсон stand in its centre block 651 as well (the plan's decision 8)."
     },
     {
       "type": 168,
       "kind": "bring_l_obj",
       "name": "Сдать 100 повязок",
-      "start": "За сто красных бойцовских повязок тебе полагается 15000<Br><Br><b>Задача:</b> принести 100 повязок.<Br><Br><i>\\\"Охранять\\\" заключенных нужно в течение 30 минут.</i>",
+      "own_texts": ["start"],
+      "start": "За сто красных бойцовских повязок тебе полагается 233 500 афро.<Br><Br><b>Задача:</b> принести 100 повязок.<Br><Br><i>\\\"Охранять\\\" заключенных нужно в течение 30 минут.</i>",
       "notfinish": "",
       "finish": "",
       "give": [879],
@@ -5563,13 +5565,13 @@
       ],
       "rew_obj": [],
       "num_rew_obj": [],
-      "rew_afro": 15000,
+      "rew_afro": 233500,
       "rew_gold": 0,
       "repeatable": 1,
       "per_day": 1,
       "level": 0,
       "q_type": 0,
-      "why": "RECOVERED texts, count and place. «Сдать 100 повязок» (62290/62291), Томпсон's (879, the centre block 646): bring 100 red armbands (Red_Bandage 2476, «Красная повязка ВХ»), which every prisoner and the godfather carry in the uprising (data/schedule.json loot) and which stay in the prison (keep_in). The medics come for its last five minutes (62273), so that is when it is taken and handed in. RECOVERED amount, DESIGNED taker: 'За сто красных бойцовских повязок тебе полагается 15000' (62291), read as afro (the text names no unit; the earlier edition paid 'три купона на патроны' for a hundred, 61396); Томпсон's, who takes 75; once a day. The file has no finish. Repeatable -- 'будут еще повязки - заглядывай!' (62284) -- and a day's task (server.py DAILY_MAX). Since 2026-10-13 (the owner's «и потом сделай донголу тоже», 2026-10-13) the armbands of Донгола's prison count too: its prisoners (932-936, «Заключенный») and its godfather (2174) drop the same 2476 in its blocks 620-622 (data/schedule.json loot), and Джеф, Аль-Назир and Томпсон stand in its centre block 622 as well (the plan's decision 26). Since 2026-10-14 (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14) the armbands of Абу-Хамед's prison count too: its prisoners (1118-1122, «Заключенный») and its godfather (2175) drop the same 2476 in its blocks 651-653 (data/schedule.json loot), and Джеф, Аль-Назир and Томпсон stand in its centre block 651 as well (the plan's decision 8)."
+      "why": "RECOVERED texts/count (62290/62291), giver/taker Томпсон (879), and 100 red prison armbands (2476). DESIGNED reward updated 2026-11-26: 233,500 afro, nearest 500 to 100/75 of the 175,000 afro resale of one talon's 500 rounds at an ordinary NPC. Once a day. Own start text replaces the original 15,000 reward in source text 62291. Since 2026-10-13 (the owner's «и потом сделай донголу тоже», 2026-10-13) the armbands of Донгола's prison count too: its prisoners (932-936, «Заключенный») and its godfather (2174) drop the same 2476 in its blocks 620-622 (data/schedule.json loot), and Джеф, Аль-Назир and Томпсон stand in its centre block 622 as well (the plan's decision 26). Since 2026-10-14 (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14) the armbands of Абу-Хамед's prison count too: its prisoners (1118-1122, «Заключенный») and its godfather (2175) drop the same 2476 in its blocks 651-653 (data/schedule.json loot), and Джеф, Аль-Назир and Томпсон stand in its centre block 651 as well (the plan's decision 8)."
     },
     {
       "type": 169,
