@@ -94,6 +94,25 @@ class ReleasePouches(unittest.TestCase):
                 self.assertLessEqual(ch.spec[index][1], ch.spec[index][2])
                 self.assertEqual(ch.spec_level(index), 5 + declared[index])
 
+    def test_action_points_grow_only_when_a_real_skill_raises_the_highest_level(self):
+        ch = p.Character()
+        ch.set_skill(p.SHOOTING, 16)
+        ch.set_skill(p.MELEE, 15)
+        initial_ap = ch.ap_max
+        ch.gain_xp(p.MELEE, p.skill_xp_max(15), skill_cap=p.COMBAT_SKILL_CAP, premium=False)
+        self.assertEqual((ch.skill[p.MELEE][0], ch.level, ch.ap_max), (16, 16, initial_ap))
+        ch.gain_xp(p.MELEE, p.skill_xp_max(16), skill_cap=p.COMBAT_SKILL_CAP, premium=False)
+        self.assertEqual((ch.skill[p.MELEE][0], ch.level, ch.ap_max), (17, 17, initial_ap + 5))
+        saved = ch.rows()
+        for tid in self.PRICES:
+            ch.set_gear(inventory.gear_bonus([self.row(tid)], ch))
+            self.assertGreater(ch.skill_level(p.MELEE), ch.level)
+            self.assertEqual(ch.rows(), saved)
+            self.assertEqual(ch.ap_max, initial_ap + 5)
+            self.assertEqual(ch.ap_ceiling, ch.ap_max + ch.bonus_od)
+            ch.set_gear(inventory.gear_bonus([], ch))
+            self.assertEqual(ch.rows(), saved)
+
     def test_skill_bonus_helps_matching_weapon_requirements_and_wear_but_not_armour(self):
         for root, skill in ((items.COLD_ARM, p.MELEE), (items.FIRE_ARM, p.SHOOTING)):
             ch = p.Character()

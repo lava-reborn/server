@@ -12,6 +12,8 @@ logging.disable(logging.CRITICAL)
 
 import combat
 import effects
+import inventory
+import items
 import progression as p
 from testkit import run_cases
 
@@ -199,6 +201,49 @@ class CombatXpCap(unittest.TestCase):
                             self.assertEqual(ch.xp_carry.keys(), expected.xp_carry.keys())
                             for key, value in expected.xp_carry.items():
                                 self.assertAlmostEqual(ch.xp_carry[key], value)
+
+    def test_actual_pouches_preserve_rewards_and_thresholds_through_a_real_level_up(self):
+        pouches = items.STRICT_LEVEL_GEAR | {5614}
+        xp_fields = ('a_skills', 'xp_skills', 'xp_max_skills',
+                     'a_specs', 'xp_specs', 'xp_max_specs', 'lvl')
+        for pouch in sorted(pouches):
+            for skill in (p.MELEE, p.SHOOTING):
+                for level in (16, 17):
+                    with self.subTest(pouch=pouch, skill=skill, level=level):
+                        fighter, ch, spec = self.fighter(level, skill=skill)
+                        reference, expected, expected_spec = self.fighter(level, skill=skill)
+                        other_skill = p.SHOOTING if skill == p.MELEE else p.MELEE
+                        for character in (ch, expected):
+                            character.set_skill(other_skill, level)
+                            character.skill[skill][1] = p.skill_xp_max(level) - 100
+                        row = dict(type_id=pouch, root=items.WEAR,
+                                   slot=inventory.BELT, brk=1000)
+                        self.assertTrue(inventory.wearable(row, ch.level, ch))
+                        before = ch.rp_info()
+                        ch.set_gear(inventory.gear_bonus([row], ch))
+                        worn = ch.rp_info()
+                        for field in xp_fields:
+                            self.assertEqual(worn[field], before[field])
+                        self.assertGreater(ch.skill_level(p.MELEE), expected.skill_level(p.MELEE))
+                        self.assertGreater(p.melee_evade(ch), p.melee_evade(expected))
+                        mob = self.mob(level + 2)
+                        self.assertAlmostEqual(combat.Fighter.xp_reward(fighter, skill, 1, mob),
+                                               p.combat_mob_xp(level + 2, level))
+                        fighter.award_xp(skill, spec, 100, mob)
+                        self.settle(mob, fighter)
+                        reference_mob = self.mob(level + 2)
+                        reference.award_xp(skill, expected_spec, 100, reference_mob)
+                        self.settle(reference_mob, reference)
+                        self.assertEqual(ch.rows(), expected.rows())
+                        self.assertEqual(ch.level, 17)
+                        self.assertEqual(ch.xp_carry.keys(), expected.xp_carry.keys())
+                        for key, value in expected.xp_carry.items():
+                            self.assertAlmostEqual(ch.xp_carry[key], value)
+                        after, reference_frame = ch.rp_info(), expected.rp_info()
+                        for field in xp_fields:
+                            self.assertEqual(after[field], reference_frame[field])
+                        ch.set_gear(inventory.gear_bonus([], ch))
+                        self.assertEqual(ch.rows(), expected.rows())
 
     def test_group_shares_and_fractional_carry_are_preserved(self):
         first, a, spec_a = self.fighter()
