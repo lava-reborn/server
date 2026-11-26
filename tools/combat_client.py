@@ -506,6 +506,7 @@ def __bfFire(event):
         this.__bfFireOrig(event)
         return
     bundle = figure.__bfIncoming
+    bundle.melee = not event.shot
     event.__bfBundle = bundle
     timing = _global.__bfShotTiming
     if timing and timing.animation_frames > 0 and timing.recovery_ms > 0:

@@ -65,17 +65,18 @@ class MachinegunBalance(unittest.TestCase):
                            damage / max(seconds + reload, si['fire_costs'][mode] / (p.AP_REGEN / .6))))
         return tuple(max(score[index] for score in scores) for index in (0, 1))
 
-    def test_reviewed_dps_snapshot_uses_fixed_recovery_and_reload(self):
-        # Fixed 350 ms animation, selected mode and amortized reload.
+    def test_reviewed_dps_ladder_uses_native_animation_recovery_and_reload(self):
+        # A quarter of native firing frames, selected mode and amortized reload.
         # Each mode uses its optimal band; fixed distances are checked below.
-        for variants, targets in (((24989, 25006, 25022), (231.1, 223.9, 303.4)),
+        for variants, targets in (((24989, 25006, 25022), (241.7, 256.2, 320.7)),
                                   ((24990, 25007, 7051, 25023, 7052),
-                                   (275.9, 268.6, 297.8, 366.3, 387.5))):
+                                   (288.6, 307.3, 312.6, 387.2, 409.5))):
             scores = [self.scores(type_id)[0] for type_id in variants]
+            self.assertEqual(scores, sorted(scores))
             for type_id, score, target in zip(variants, scores, targets):
                 with self.subTest(type_id=type_id):
                     self.assertAlmostEqual(score, target, delta=.5)
-        self.assertAlmostEqual(self.scores(7052, distance=7)[0], 387.5, delta=.5)
+        self.assertAlmostEqual(self.scores(7052, distance=7)[0], 409.5, delta=.5)
 
     def test_bizon_comparison_preserves_distance_roles_instead_of_forcing_a_class_winner(self):
         for bizon, rpd, aug in ((25540, 24989, 25006), (26177, 24990, 25007)):
@@ -85,13 +86,13 @@ class MachinegunBalance(unittest.TestCase):
                 self.assertGreater(self.scores(aug, distance=18)[0], self.scores(rpd, distance=18)[0])
                 self.assertEqual(self.scores(bizon, distance=18)[0], 0)
 
-    def test_pkm16_reference_uses_the_fixed_pause_and_full_reload_cycle(self):
-        # Native damage/accuracy are unchanged. A fixed pause changes mode
+    def test_pkm16_reference_uses_native_animation_and_full_reload_cycle(self):
+        # Native damage/accuracy are unchanged. Volley animation changes mode
         # efficiency; compare the complete new cycle including reload.
         for pkm, reference in ((7051, 24990),):
             with self.subTest(pkm=pkm):
                 ratio = self.scores(pkm)[0] / self.scores(reference)[0]
-                self.assertAlmostEqual(ratio, 1.079, delta=.002)
+                self.assertAlmostEqual(ratio, 1.083, delta=.002)
 
     def test_afro_and_gold_m249_beat_matching_rpd_on_medium_and_long_ranges(self):
         # Use the same fixed distance for all modes, with real non-optimal
@@ -129,8 +130,8 @@ class MachinegunBalance(unittest.TestCase):
             self.assertAlmostEqual(self.scores(25026, 4)[0], empty)
         self.assertGreater(unopposed, defended)
         self.assertGreater(empty, unopposed)
-        self.assertAlmostEqual(self.scores(25026, 4, stamina=10000)[0], 365.7, delta=.2)
-        self.assertAlmostEqual(self.scores(7052, 4, stamina=10000)[0], 352.6, delta=.2)
+        self.assertAlmostEqual(self.scores(25026, 4, stamina=10000)[0], 386.5, delta=.2)
+        self.assertAlmostEqual(self.scores(7052, 4, stamina=10000)[0], 372.7, delta=.2)
 
     def test_accuracy_ceilings_cover_all_rpd_blueprints_without_changing_other_weapons(self):
         expected = {type_id for type_id, (_root, name) in items.catalogue().items()

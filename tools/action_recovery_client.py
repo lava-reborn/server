@@ -20,6 +20,11 @@ def __bfWaiting():
     if figure and (figure.behavior == "fire" or figure.behavior == "fire_out") and figure.onEnterFrame and figure.animationEnabled != False and figure.isActive != False and figure.is_default != True:
         if figure.__bfBursts and len(figure.__bfBursts) > 0 and figure.__bfBursts[0].got > 0:
             bundle = figure.__bfBursts[0]
+            if bundle.melee and figure.behavior == "fire_out":
+                # A blade's lowering is cosmetic, as before serialization.
+                # Its committed swing must still meet the server deadline.
+                _global.__bfObservedFigure = None
+                return serverWaiting
             observed = _global.__bfObservedFigure
             if not observed or observed.figure != figure or observed.bundle != bundle or observed.frame != figure.currentFrameNumber or observed.got != bundle.got or now < observed.at:
                 observed = {"figure":figure, "bundle":bundle, "frame":figure.currentFrameNumber, "got":bundle.got, "at":now}

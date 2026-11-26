@@ -34,7 +34,7 @@ class ActionRecoveryClient(unittest.TestCase):
                       animationEnabled=True,isActive=True,onEnterFrame=True,
                       __bfScene=scene)
         self.call('__bfAim',scene,dict(aim=0,num_shots=1,seq=1))
-        self.call('__bfFire',scene,dict(gunnerID=0,access=True,seq=1))
+        self.call('__bfFire',scene,dict(gunnerID=0,access=True,shot=True,seq=1))
         self.call('__bfRecovery',None,dict(param=dict(id=0,recovery_ms=120)))
         return scene,figure
 
@@ -357,19 +357,47 @@ class ActionRecoveryClient(unittest.TestCase):
         self.assertEqual(self.fx.reported, [1])
         self.assertIsNone(self.global_['__bfInputTimer'])
 
+    def test_melee_lowering_allows_one_next_strike_only_after_the_committed_swing(self):
+        for command in ('caHit', 'caMiss'):
+            with self.subTest(command=command):
+                self.call('__bfClearInput', None)
+                self.executed.clear()
+                self.now = 100
+                scene, figure = self.fx.scene()
+                figure.update(id=0, behavior='fire', currentFrameNumber=0,
+                              animationEnabled=True, isActive=True, onEnterFrame=True)
+                self.call('__bfAim', scene, dict(aim=0, num_shots=1, seq=1))
+                self.call('__bfRecoveryNotify', dict(__bfRecoveryNotifyOrig=lambda cmd:None),
+                          dict(messID=command, params=dict(id=0, recovery_ms=240)))
+                self.call('__bfFire', scene, dict(gunnerID=0, access=True, shot=False, seq=1))
+                self.assertTrue(figure['__bfBursts'][0]['melee'])
+                owner = dict(__bfRequestStrikeOrig=lambda *args:self.executed.append(args))
+                self.call('__bfRequest2', owner, 1, 41)
+                self.call('__bfRequest2', owner, 1, 42)
+                figure['behavior'] = 'fire_out'
+                self.now = 339
+                self.call('__bfDrainInput', None)
+                self.assertFalse(self.executed)
+                self.now = 340
+                self.call('__bfDrainInput', None)
+                self.call('__bfDrainInput', None)
+                self.assertEqual(self.executed, [(1, 42)])
+                self.assertIsNone(self.global_['__bfInputTimer'])
+                self.assertEqual(figure['__bfBursts'], [])
+
     def test_first_shot_packet_arms_guard_before_native_ack_releases_repeat_attack(self):
         activator = dict(coolDownBlock=False,
                          __bfRequestFireOrig=lambda *args:self.executed.append('fire'))
         connection = dict(__bfRecoveryNotifyOrig=lambda cmd:
                           self.call('__bfRequest1', activator, 1, 42))
         self.call('__bfRecoveryNotify', connection,
-                  dict(messID='faShot', params=dict(id=0, status=1, recovery_ms=350)))
+                  dict(messID='faShot', params=dict(id=0, status=1, recovery_ms=150)))
         self.assertFalse(self.executed)
         self.assertEqual(len(self.timers), 1)
-        self.now = 449
+        self.now = 249
         self.call('__bfDrainInput', None)
         self.assertFalse(self.executed)
-        self.now = 450
+        self.now = 250
         self.call('__bfDrainInput', None)
         self.call('__bfDrainInput', None)
         self.assertEqual(self.executed, ['fire'])
@@ -378,12 +406,12 @@ class ActionRecoveryClient(unittest.TestCase):
         scene, figure = self.fx.scene()
         self.call('__bfAim', scene, dict(aim=0, num_shots=1, seq=1))
         location = dict(__bfLocationShotOrig=lambda event:
-                        self.call('__bfFire', scene, dict(gunnerID=0, access=True, seq=1)))
+                        self.call('__bfFire', scene, dict(gunnerID=0, access=True, shot=True, seq=1)))
         self.call('__bfLocationShot', location,
-                  dict(param=dict(id=0, status=0, recovery_ms=350, animation_frames=9)))
+                  dict(param=dict(id=0, status=0, recovery_ms=150, animation_frames=9)))
         self.assertIsNone(self.global_['__bfShotTiming'])
         self.assertEqual(figure['__bfPlayback'],
-                         dict(start=100, duration=350, frames=9, painted=0))
+                         dict(start=100, duration=150, frames=9, painted=0))
         self.assertEqual(self.fx.reported, [1])
 
     def test_retimed_burst_plays_every_native_frame_and_only_then_releases_one_input(self):
@@ -393,8 +421,8 @@ class ActionRecoveryClient(unittest.TestCase):
         self.call('__bfAim', scene, dict(aim=0, num_shots=5, seq=1))
         for index in range(5):
             if index == 4:
-                self.global_['__bfShotTiming'] = dict(recovery_ms=350, animation_frames=21)
-            self.call('__bfFire', scene, dict(gunnerID=0, access=True, seq=index))
+                self.global_['__bfShotTiming'] = dict(recovery_ms=150, animation_frames=21)
+            self.call('__bfFire', scene, dict(gunnerID=0, access=True, shot=True, seq=index))
             self.global_['__bfShotTiming'] = None
         # Native Char.playAnimation paints a frame, emits finalFrame and runs
         # nextSequence. Exercise its firing/lowering callbacks, not a shortcut
@@ -409,15 +437,15 @@ class ActionRecoveryClient(unittest.TestCase):
                 figure['__bfNextSequenceOrig'] = lambda:figure.update(behavior='stand')
                 self.call('__bfNextSequence', figure)
         figure['__bfPlayAnimationOrig'] = native_frame
-        self.global_['__bfRecoveryUntil'] = 450
+        self.global_['__bfRecoveryUntil'] = 250
         owner = dict(__bfRequestFireOrig=lambda *args:self.executed.append(args))
         self.call('__bfRequest1', owner, 1, 41)
         self.call('__bfRequest1', owner, 1, 42)
-        self.now = 449
+        self.now = 249
         self.call('__bfPlayAnimation', figure)
         self.assertEqual(len(rendered), 20)
         self.assertFalse(self.executed)
-        self.now = 452  # a slow render catches up without adding a native-length tail
+        self.now = 252  # a slow render catches up without adding a native-length tail
         self.call('__bfPlayAnimation', figure)
         self.call('__bfDrainInput', None)
         self.assertEqual(rendered, ['fire'] * 15 + ['fire_out'] * 6)
@@ -445,17 +473,17 @@ class ActionRecoveryClient(unittest.TestCase):
 
     def test_model_frame_count_override_finishes_real_animation_at_deadline(self):
         rendered = []
-        clock = dict(start=100, duration=350, frames=9, painted=0)
+        clock = dict(start=100, duration=150, frames=9, painted=0)
         figure = dict(behavior='fire', __bfPlayback=clock)
         def native_frame():
             rendered.append('frame')
             if len(rendered) == 12:
                 figure.update(behavior='stand', __bfPlayback=None)
         figure['__bfPlayAnimationOrig'] = native_frame
-        self.now = 449
+        self.now = 249
         self.call('__bfPlayAnimation', figure)
         self.assertEqual(len(rendered), 8)
-        self.now = 452
+        self.now = 252
         self.call('__bfPlayAnimation', figure)
         self.assertEqual(len(rendered), 12)
         self.assertEqual(figure['behavior'], 'stand')

@@ -1299,8 +1299,8 @@ try:
           (burst[0], burst[1] in ("faHit", "faMiss", "faWall"), burst[2]), ("faShot", True, "faShot"))
     check("the pair is the player's, open then closed",
           [{k: v for k, v in p.items() if k not in ("recovery_ms", "animation_frames")} for n, p in got if n == "faShot"], [{"id": 0, "status": 1}, {"id": 0, "status": 0}])
-    check("the committed firearm shot carries the fixed 350 ms release duration",
-          next(p["recovery_ms"] for n, p in got if n == "faShot" and p["status"] == 0), 350)
+    check("the human pistol shot respects the 150 ms recovery floor",
+          next(p["recovery_ms"] for n, p in got if n == "faShot" and p["status"] == 0), 150)
     check("the final shot carries a positive native frame budget",
           next(p["animation_frames"] for n, p in got if n == "faShot" and p["status"] == 0) > 0, True)
     hit = named(got, "faHit")

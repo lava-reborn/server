@@ -1862,9 +1862,13 @@ max(now,старое окончание)+days*86400. Другой транспо
 
 
 Firearm animation cadence: the server keeps the selected `fire_times` aiming
-period and then reserves a fixed `350` milliseconds for the committed shot or
-whole volley and lowering the weapon, for every firearm and mode. This pause
-is not added between individual bullets. Damage, accuracy, rounds and AP costs
+period and then reserves 25% of the native `fire` animation for the committed
+shot or whole volley, rounded up to milliseconds, with a minimum of 150 ms.
+The reference excludes `fire_in` and `fire_out`, counts every shot of a burst,
+and counts shotgun
+pellets as one firing cycle. The ordinary human model (0) is the timing
+reference, so costumes cannot change cadence; presentation still uses the
+actual model and its full frame count. This pause is not added between individual bullets. Damage, accuracy, rounds and AP costs
 are unchanged. The first `faShot(status=1)` carries `recovery_ms` so input is
 blocked before the native acknowledgement latch is released. The final
 `faShot(status=0)` repeats `recovery_ms` and supplies `animation_frames`, the
@@ -1873,7 +1877,11 @@ a shotgun). These numeric fields must never be rewritten as viewer IDs.
 The client plays the native frame callbacks on a wall-clock schedule within
 that budget and queues one subsequent action; it does not restart the current
 volley. Rendering delays can postpone presentation but cannot bypass server
-recovery. Melee and NPC animation timing retain their native sequences.
+recovery. Blades restore the old native `fire`-only recovery: lowering
+may overlap the next preparation, but the committed swing cannot be replayed
+or bypass its server deadline. The client distinguishes melee FireEvents
+from firearm shots; firearm lowering still waits for completion. Bare fists
+and NPC attack schedules retain their existing timings.
 
 
 The startup migration `hand-valentines-all-storage-2026-11-26` converts all four
