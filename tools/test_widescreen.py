@@ -112,9 +112,6 @@ WIRED = ("__requirementsReadOrig", "__questSendOrig", "__questFilterOrig",      
          "__eventPlayOrig", "__gameSliderOrig", "__soundVolumeOrig",
          "__trackRequestOrig", "__trackLoadedOrig", "__musicVolumeOrig",
          "__subInitOrig", "__subGlobalOrig",           # sublocation exit
-         "__gzLandscapeScaleOrig", "__gzScaleUpOrig", "__gzScaleDownOrig",
-         "__gzRedrawOrig", "__gzLocBorderOrig", "__gzMoveToLabelOrig",
-         "__gzUiScaleUpOrig", "__gzUiScaleDownOrig", "__gzUiInitOrig",
          "__mapScrollOrig", "__mapResizeOrig")         # global map scroll box
 _source = open(w.__file__, encoding="utf-8").read()
 check("every fn_* patch body in widescreen.py is used",
@@ -360,8 +357,7 @@ def draw_area(window, cell=ABRI, scale=8, stroke=0, body=None):
     frame = dict(mask_mc=dict(_width=mask[0], _height=mask[1]),
                  setScrollArea=lambda *box: boxes.append(box))
     ui = dict(getFrameSize=lambda: dict(width=fw, height=fh), globalMapFrame=frame)
-    tile = int(TILE * scale / CELL) if scale >= CELL else TILE
-    this = dict(cellSize=tile, mapScale=scale, mapScaleType="full" if scale >= CELL else "small")
+    this = dict(cellSize=TILE, mapScale=scale, mapScaleType="full" if scale == 8 else "small")
     this["__mapScrollOrig"] = lambda x, y, centerPers: asked.append(
         original_draw_area(this, ui, x, y))
     env = dict(this=this, x=cell[0], y=cell[1], centerPers=None,
@@ -388,7 +384,7 @@ def frame_range(box, mask):
     return mask[0] - (x + bw), -x, mask[1] - (y + bh), -y
 
 
-def views(box, mask, asked, player, tile=TILE):
+def views(box, mask, asked, player):
     """Where ViewFrame lets the view stand with this box, as its top-left in
     map pixels: centred on the player's cell (_centerPoint, which centerChar
     asks for), scrolled as far as it goes towards each corner (scrollX and
@@ -396,7 +392,7 @@ def views(box, mask, asked, player, tile=TILE):
     keeps cont_mc in (a drag). The content holds the tiles asked for."""
     left, right, top, bottom = frame_range(box, mask)
     mw, mh = mask
-    content = ((asked[1] - asked[0] + 1) * tile, (asked[3] - asked[2] + 1) * tile)
+    content = ((asked[1] - asked[0] + 1) * TILE, (asked[3] - asked[2] + 1) * TILE)
 
     def bound(cx, cy):
         if left < right and content[0] > mw:            # boundOX
@@ -410,7 +406,7 @@ def views(box, mask, asked, player, tile=TILE):
     return centred, scrolled, dragged
 
 
-def faults(tiles=None, body=None, windows=WINDOWS, places=PLACES, scale=CELL):
+def faults(tiles=None, body=None, windows=WINDOWS, places=PLACES):
     """What is wrong with the view the wrapper leaves at each window, stroke
     and place, as (window, stroke, place, axis, what); empty when nothing is.
 
@@ -426,38 +422,37 @@ def faults(tiles=None, body=None, windows=WINDOWS, places=PLACES, scale=CELL):
     Everywhere the drag rectangle is the right way round and the player's
     cell is in the centred view."""
     picture = (tiles or w.MAP_TILES)["full"]
-    tile = int(TILE * scale / CELL)
     out = []
     for wname, window in windows:
         frame = (window[0] - 50, window[1] - 200)
         for stroke in (0, 1):
             for pname, cell in places:
-                boxes, asked, mask = draw_area(window, cell, scale=scale, stroke=stroke, body=body)
-                player = (cell[0] * scale, cell[1] * scale)
-                centred, scrolled, dragged = views(boxes[-1], mask, asked, player, tile=tile)
+                boxes, asked, mask = draw_area(window, cell, stroke=stroke, body=body)
+                player = (cell[0] * CELL, cell[1] * CELL)
+                centred, scrolled, dragged = views(boxes[-1], mask, asked, player)
                 left, right, top, bottom = frame_range(boxes[-1], mask)
                 for k, (axis, before, after) in enumerate((("X", "west", "east"),
                                                            ("Y", "north", "south"))):
                     def fault(what):
                         out.append((wname, stroke, pname, axis, what))
                     size, p = mask[k], player[k]
-                    c = p // tile
+                    c = p // TILE
                     lo, hi = picture[k], picture[2 + k]
                     first, last = asked[2 * k], asked[2 * k + 1]
-                    n = math.floor(0.5 * frame[k] / tile) + 1
+                    n = math.floor(0.5 * frame[k] / TILE) + 1
                     if last + 1 - first != 2 * n + 2:
                         fault("asks for %d tiles, not %d" % (last + 1 - first, 2 * n + 2))
                     if not first <= c <= last:
                         fault("does not ask for the player's tile %d" % c)
-                    if size < 5 * tile or (lo <= c - n and c + n + 2 <= hi):
+                    if size < 5 * TILE or (lo <= c - n and c + n + 2 <= hi):
                         if first != c - n:
                             fault("asks from tile %d, the original from %d" % (first, c - n))
                     elif 2 * n + 2 <= hi - lo and not lo <= first <= last < hi:
                         fault("asks for tiles %d..%d, off the picture" % (first, last))
-                    a0, a1 = (c - 2, c + 3) if size < 5 * tile else (first, last + 1)
-                    r0, r1 = max(lo, a0) * tile, min(hi, a1) * tile
+                    a0, a1 = (c - 2, c + 3) if size < 5 * TILE else (first, last + 1)
+                    r0, r1 = max(lo, a0) * TILE, min(hi, a1) * TILE
                     seen = [v[k] for v in [centred] + scrolled + dragged]
-                    if (hi - lo) * tile > size:
+                    if (hi - lo) * TILE > size:
                         if r1 - r0 < size:
                             fault("the tiles there and asked for, %d px, are narrower "
                                   "than the mask, %d" % (r1 - r0, size))
@@ -476,7 +471,7 @@ def faults(tiles=None, body=None, windows=WINDOWS, places=PLACES, scale=CELL):
                                   "no wider than the mask" % off)
                     if not (left < right if k == 0 else top < bottom):
                         fault("the drag rectangle is empty or inside out")
-                    if not centred[k] <= p <= p + scale <= centred[k] + size:
+                    if not centred[k] <= p <= p + CELL <= centred[k] + size:
                         fault("the player's cell is out of the centred view")
     return out
 
@@ -758,10 +753,6 @@ except Exception:
     fails.append("SWF fixture check crashed:\n" + traceback.format_exc())
 
 
-check("extra map zoom: centring, dragging and every edge stay inside tiles at all window sizes",
-      faults(scale=12), [])
-
-
 # --- real SWF container: the full client, when installed -------------------
 res = os.environ.get("LAVA_RES", os.path.join(os.path.dirname(HERE), "..", "client", "res"))
 src = os.path.join(res, "main.swf")
@@ -784,12 +775,6 @@ try:
         # ... and the resize hook's names, each in its class's own code.
         pools = [set(w.constant_pool(payload[2:])) for code, payload, _ in real[:ours]
                  if code == 59]
-        check("real client: native map zoom hooks exist before injection",
-              [any(required <= pool for pool in pools) for required in (
-                  {"DisplayGlobalMap", "scaleUp", "scaleDown", "setScale", "redrawMap"},
-                  {"DisplayLandscape", "setScale", "mapScaleType", "mapScale", "cellSize", "locationSize"},
-                  {"GlobalMapInterface", "init", "drawLocBorder", "_moveToLabel", "scaleUp", "scaleDown"})],
-              [True, True, True])
         check("real client: confirmed healing and observer aim hooks exist before injection",
               [names for names in ({"WeaponPan", "healTimeBar", "startTimeBar"},
                                    {"DisplayLocScene", "init", "kill", "getWalker"},

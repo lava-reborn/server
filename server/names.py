@@ -220,8 +220,17 @@ for _type_id, (_attribute, _amount) in items.HAND_VALENTINES.items():
         "Послание от любящего человека.<br>Режущее оружие. Не надевается на пояс.<br>Держите валентинку в любой руке: "
         f"она даёт +{_amount} к {_title}, пока находится в руке.")
 
-# Stat stimulants name only what they actually add, without five zero rows.
+# The item description and active-effect caption state the same XP limit.
 import effects
+for _type in effects.EXPERIENCE_UP:
+    _did = items.DESC_ID_OFFSET + _type
+    ALL[_did] = (ALL[_did] + "<br>" if ALL.get(_did) else "") + effects.experience_cap_text()
+    _sid = effects.name_id(_type)
+    if _sid in ALL:
+        raise ValueError('Experience effect caption overlaps an existing string id')
+    ALL[_sid] = ALL[items.STRING_ID_OFFSET + _type] + "<br>" + effects.experience_cap_text()
+
+# Stat stimulants name only what they actually add, without five zero rows.
 for _type in range(3468, 3477):
     _bonuses = effects.definition(_type)['bonuses']['attribs']
     if any(_bonuses):

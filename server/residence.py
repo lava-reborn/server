@@ -45,6 +45,8 @@ def frame(character):
         label += ". +%d кг." % (WEIGHT[level]//1000)
         import progression
         label += " +%d%% опыта." % round(progression.PREMIUM_XP_BONUS[level] * 100)
+        import effects
+        label += " " + effects.experience_cap_text()
     return dict(residence_level=level, residence_until=until,
                 residence_bonus=WEIGHT[level], residence_days=rent_days(character),
                 residence_text=label, residence_now=int(time.time()))

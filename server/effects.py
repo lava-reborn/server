@@ -25,7 +25,19 @@ EXPERIENCE_UP = (3112, 3113, 3114, 3561)
 EXPERIENCE_DOWN = (3201, 3202, 3203, 3205, 3206, 3207)
 SCANNERS = (3789, 3826)
 MAX_EXPERIENCE_MULTIPLIER = 1.7
-MAX_TOTAL_EXPERIENCE_MULTIPLIER = 2.5
+MAX_TOTAL_EXPERIENCE_MULTIPLIER = 2.0
+# Effect captions have their own preloaded strings; item names stay unchanged.
+EXPERIENCE_NAME_OFFSET = 9_000_000
+
+
+def experience_cap_text():
+    return ("Максимально возможный суммарный бонус к опыту = +%d%% (не более x%g)."
+            % (round((MAX_TOTAL_EXPERIENCE_MULTIPLIER - 1) * 100),
+               MAX_TOTAL_EXPERIENCE_MULTIPLIER))
+
+
+def name_id(source):
+    return (EXPERIENCE_NAME_OFFSET if source in EXPERIENCE_UP else items.STRING_ID_OFFSET) + source
 
 
 @lru_cache(maxsize=1)
@@ -76,7 +88,7 @@ def multiplier(session, name, *, bonus=0):
                   for active in manager.active.values() if active.deadline > clock]
     if name in ('mob_exp', 'pl_exp'):
         # INTUX is capped independently; additive weekend/residence bonuses
-        # follow it under the server-wide cap, then reductions apply.
+        # follow it up to +100% total, then reductions apply.
         boost = min(MAX_EXPERIENCE_MULTIPLIER, math.prod(value for value in values if value > 1))
         return min(MAX_TOTAL_EXPERIENCE_MULTIPLIER, boost + bonus) * math.prod(
             value for value in values if value <= 1)
@@ -298,7 +310,7 @@ class Effects:
         if value is None:
             return False
         bonus = value['bonuses']
-        params = dict(type=effect_type, name=items.STRING_ID_OFFSET + source,
+        params = dict(type=effect_type, name=name_id(source),
                       work_time=value['duration'] * 1000, update_delta=value['interval'] * 1000,
                       max_hp=bonus['hp'], max_sp=bonus['sp'], max_od=bonus['od'],
                       critical_probability=bonus['cp'], critical_evade=bonus['ce'], armor=bonus['armor'],
