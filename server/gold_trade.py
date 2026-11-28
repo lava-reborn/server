@@ -197,12 +197,16 @@ def auction_base(type_id):
     if not gold_priced(type_id, params):
         return params.get('cost', 0)
     matched = params.get('repair_cost')
-    # Extending the repair discount to collectibles does not reprice their
-    # existing auction valuation. KS-12 retains its earlier policy.
+    # Repair changes must not reprice auctions. Other collectibles keep the
+    # gold conversion; KS-12 retains its original capped auction valuation.
     level = max(params.get('need_skills') or [0])
-    if (repair_policy.collectible_reference(type_id, level) is not None
-            and repair_policy.ks12_reference(type_id, level) is None):
+    if repair_policy.collectible_reference(type_id, level) is not None:
+        ks12 = repair_policy.ks12_reference(type_id, level)
         matched = None
+        if ks12 is not None:
+            converted = (params.get('cost') or params.get('g_cost', 0)
+                         * progression.GOLD_TO_AFRO_RATE / progression.GOLD_OUNCE)
+            matched = min(repair_policy.afro_cost(ks12) * repair_policy.multiplier(level), converted)
     if matched is not None:
         return matched
     # Blueprints cannot be repaired. Apply the same level multiplier to

@@ -105,7 +105,6 @@ def afro_cost(type_id):
 def valuation(type_id, params):
     """Repair valuation from the corresponding A type and the item's level."""
     import items
-    import progression
 
     if not params.get('g_cost') or not params.get('max_break_abs'):
         return None
@@ -125,12 +124,6 @@ def valuation(type_id, params):
     cost = afro_cost(base)
     if not cost:
         return None
-    value = cost * multiplier(level)
-    if collectible is not None or ks12 is not None:
-        # Do not raise the cheaper low-level repair while adding coverage.
-        # This is the existing fallback used by inventory.repair_base_price.
-        current = params.get('cost') or (
-            params['g_cost'] * progression.GOLD_TO_AFRO_RATE
-            / progression.GOLD_OUNCE)
-        return min(value, current)
-    return value
+    # Collectibles use the ordinary G tier exactly, including low levels.
+    # Their former gold-price conversion is not a second repair ceiling.
+    return cost * multiplier(level)
