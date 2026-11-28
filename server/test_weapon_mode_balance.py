@@ -6,6 +6,7 @@ from functools import lru_cache
 from types import SimpleNamespace as NS
 from unittest.mock import Mock, patch
 
+import action_animation
 import battle_balance
 import combat
 import craft
@@ -40,6 +41,48 @@ def retail_automatic_types():
                 or params['weapon_type'] == items.PISTOL and max(params['fire_mods']) > 1):
             result.add(source)
     return frozenset(result)
+
+
+@lru_cache(maxsize=2048)
+def automatic_mode_metrics(source, distance, skill=17, spec_level=3, suffix='_KS'):
+    """Expected unarmoured hits and a native complete-magazine/AP cycle."""
+    params = items.params_of(source)
+    character = progression.Character()
+    character.set_skill(progression.SHOOTING, skill)
+    spec = combat.SPEC_OF_WEAPON[params['weapon_type']]
+    character.set_spec(spec, spec_level)
+    ammo_id = next(t for t in params['comp_array'] if items.catalogue()[t][1].endswith(suffix))
+    ammo = items.params_of(ammo_id)
+    session = NS(inv=NS(look=0), active={'sex': 0})
+    result = []
+    for mode, shots in enumerate(params['fire_mods']):
+        if not shots:
+            continue
+        weapon = combat.Weapon(shots, params['h_damage_min'][mode], params['h_damage_max'][mode],
+            params['opt_range'][mode], params['end_opt_range'][mode], params['max_range'][mode],
+            ammo.get('piercing', 1),
+            combat.cone_of(combat.spread_factor(skill, spec_level), params['target_size'][mode],
+                           ammo.get('acc_mod', 1), params['max_range'][mode]),
+            0, progression.SHOOTING, spec)
+        weapon = battle_balance.weapon(weapon, character, dict(type_id=source, cur_mode=mode), ammo)
+        if distance > weapon.max_range:
+            continue
+        low = weapon.dmin
+        if weapon.opt_lo <= distance <= weapon.opt_hi:
+            low += (weapon.dmax - low) // 2
+        per_shot = (low + weapon.dmax) / 2 * combat.hit_probability(weapon.cone, distance, weapon.hit_cap)
+        remaining = params['clip_size']
+        seconds, ap = params['reload_time'] / 1000, params['reload_cost']
+        while remaining:
+            live, rounds = combat.pull(params, mode, remaining)
+            remaining -= rounds
+            # The last partial pull still pays the complete mode AP cost.
+            ap += params['fire_costs'][mode]
+            seconds += params['fire_times'][mode] / 1000
+            seconds += action_animation.duration_ms(session, params, live, mode=mode) / 1000
+        cycle = max(seconds, ap / (progression.AP_REGEN / .6))
+        result.append(dict(mean=per_shot * shots, dps=per_shot * params['clip_size'] / cycle))
+    return tuple(result)
 
 
 class WeaponModeBalance(unittest.TestCase):
@@ -194,6 +237,37 @@ class WeaponModeBalance(unittest.TestCase):
                             self.assertGreater(expected(current), expected(previous))
                         comparisons += 1
         self.assertGreater(comparisons, 1000)
+
+    def test_f2000_accuracy_keeps_senior_tier_and_close_machinegun_role(self):
+        names = craft._by_name()
+        def variant(base, effect):
+            if effect is None:
+                return base
+            name = items.catalogue()[base][1]
+            return names.get(name.removesuffix('_gold') + '_mod_' + effect
+                             + ('_gold' if name.endswith('_gold') else ''))
+        for source, machinegun, peers in ((25319, 25022, (25287, 25303)),
+                                           (25320, 25023, (25288, 25304))):
+            for distance in (1, 3):
+                with self.subTest(source=source, distance=distance, role='close machinegun'):
+                    self.assertLess(max(r['dps'] for r in automatic_mode_metrics(source, distance)),
+                                    max(r['dps'] for r in automatic_mode_metrics(machinegun, distance)))
+            for skill, spec, suffix in ((17, 3, '_KS'), (20, 5, '_KS'),
+                                        (17, 3, '_ST'), (17, 3, '_EK_G')):
+                for effect in (None, 'precision', 'damage_clipsize', 'precision_shotrange'):
+                    selected = variant(source, effect)
+                    if selected is None:
+                        continue
+                    for distance in (1, 3, 7, 12, 15, 18, 25, 35, 40):
+                        upper = automatic_mode_metrics(selected, distance, skill, spec, suffix)
+                        lower = [row for peer in peers if (other := variant(peer, effect))
+                                 for row in automatic_mode_metrics(other, distance, skill, spec, suffix)]
+                        if not upper or not lower:
+                            continue
+                        with self.subTest(source=source, effect=effect, skill=skill,
+                                          spec=spec, ammo=suffix, distance=distance):
+                            self.assertGreaterEqual(max(r['dps'] for r in upper),
+                                                    max(r['dps'] for r in lower))
 
     def test_non_retail_event_accuracy_keeps_native_values(self):
         native = {26276: [.5, .804, 1.45], 26279: [.399, .804, 1.45],
