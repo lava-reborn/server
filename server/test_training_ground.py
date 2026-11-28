@@ -560,6 +560,11 @@ class TrainingGround(unittest.IsolatedAsyncioTestCase):
                         self.assertIn(t, range_ammo.EXTRA_SOURCES)
                         with self.assertRaises(ValueError):
                             self.s.inv.create(t)
+                    elif items.weapon_use_error(t):
+                        self.assertIn(t, {26692, 26695, 26698})
+                        self.assertIn(row[1], {11, 15, 17})
+                        with self.assertRaises(ValueError):
+                            self.s.inv.create(t)
                     else:
                         self.assertGreater(row[1], 17)
                         self.assertLessEqual(inventory.item_level(t), 20)

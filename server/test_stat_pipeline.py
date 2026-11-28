@@ -183,7 +183,7 @@ class StatPipeline(unittest.IsolatedAsyncioTestCase):
                     if si['weapon_type'] == items.RIFLE:
                         expected_cone *= .95
                     self.assertAlmostEqual(shot.cone, expected_cone)
-                    self.assertEqual(shot.hit_cap, battle_balance.weapon_hit_caps().get(gun, .95))
+                    self.assertEqual(shot.hit_cap, battle_balance.weapon_hit_cap(gun, mode))
                     power = 1 + .03 * max(0, ch.attr(progression.INTELLECT) - 5)
                     self.assertEqual(shot.dmin, max(1, round(si['h_damage_min'][mode] * power * (1 if items.gold_round(ammo) else ammo['dam_mod']))))
                     self.assertEqual(shot.sdmin, round(si.get('st_damage_min', [0] * 3)[mode] * power * (1 if items.gold_round(ammo) else ammo['st_mod'])))

@@ -687,6 +687,8 @@ class Handler(BaseHTTPRequestHandler):
                     files[i] = fh.read()
             if files:
                 body = world.loc_defs(body, files)
+            import boundary_world
+            body = boundary_world.loc_defs(body)
         elif posix.lower() == "database/locations.xml":
             # The names over the global map's cells, with the owner's edits
             # laid on -- what the launcher does for every player (map_labels).

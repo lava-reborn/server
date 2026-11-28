@@ -189,7 +189,10 @@ class Room:
         # which check_placements refuses too: a row naming one would have
         # to get past both.
         placed = 0
-        for rec in world.placed_in(loc.id):
+        import boundary_world
+        # Installed XML already includes the source room's filtered native
+        # and hand-placed inhabitants. Do not add the latter a second time.
+        for rec in (() if boundary_world.row(loc.id) else world.placed_in(loc.id)):
             type_id = int(rec.get("type", 0))
             if type_id not in mob_types or not names.known(type_id) \
                     or world.retired_creature(type_id):
@@ -365,8 +368,15 @@ def placement_problems(mob_types, table=None):
     marked escort is a fighter in a location whose file has a boss to come
     with. And it says why it is there, the way every hand-kept row does.
     """
-    out = []
-    table = world.placements() if table is None else table
+    import boundary_world
+    if table is None:
+        # Compiled instances include these old actors in their XML, or
+        # intentionally replace the owner's retired outer palm cells.
+        # Check their authoritative compiled spawns, not the former positions.
+        out = boundary_world.validation_problems(mob_types)
+        table = {ident:rows for ident,rows in world.placements().items() if boundary_world.row(ident) is None}
+    else:
+        out = []
     for loc_id, rows in sorted(table.items()):
         try:
             loc = world.location(int(loc_id))

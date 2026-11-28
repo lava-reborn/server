@@ -4,6 +4,8 @@ import logging
 import time
 import asyncio
 import unittest
+from datetime import datetime
+import effects
 from types import SimpleNamespace as NS
 from unittest.mock import patch
 os.environ.pop("LAVA_DB_URL",None)
@@ -69,6 +71,7 @@ class Residence(unittest.TestCase):
             text=residence.frame(self.ch)['residence_text'].lower()
             self.assertIn('+%d%% опыта' % (15 if level == 1 else 30), text)
             self.assertIn(str(residence.WEIGHT[level]//1000),text)
+            self.assertIn('кроме наград за задания', text)
         self.assertEqual(self.ch.premium_level(),2)
 
     def test_login_constants_match_the_bonus_used_by_native_client_messages(self):
@@ -134,17 +137,29 @@ class Residence(unittest.TestCase):
             expired.gain_spec_xp(2, 100)
             self.assertEqual(expired.spec[2][1], expected + 200)
 
-    def test_quest_reward_entry_point_applies_status_to_skill_and_spec_once(self):
-        for level, expected in ((0, 100), (1, 115), (2, 130)):
-            self.ch = self.s.char = progression.Character.load(self.store, self.cid)
-            self.ch.set_skill(progression.INDUSTRY, 0)
-            self.ch.set_spec(2, 0)
-            self.status(level)
-            self.s.pay_xp(((progression.INDUSTRY, 100),), ((2, 100),))
-            self.assertEqual(self.ch.skill[progression.INDUSTRY], [1, expected - 100, 200])
-            self.assertEqual(self.ch.spec[2][1], expected)
-            loaded = progression.Character.load(self.store, self.cid)
-            self.assertEqual(loaded.spec[2][1], expected)
+    def test_quest_reward_ignores_residence_intux_and_weekend_and_survives_reload(self):
+        stamps = [datetime(2026, 11, day, 12, tzinfo=progression.COMBAT_XP_ZONE).timestamp()
+                  for day in (27, 28)]
+        for level in (0, 1, 2):
+            for stamp in stamps:
+                for source in (None, *effects.EXPERIENCE_UP, *effects.EXPERIENCE_DOWN):
+                    with self.subTest(level=level, weekend=stamp == stamps[1], source=source), \
+                            patch.object(progression.time, 'time', return_value=stamp):
+                        self.ch = self.s.char = progression.Character.load(self.store, self.cid)
+                        self.ch.set_skill(progression.INDUSTRY, 0)
+                        self.ch.set_spec(2, 0)
+                        self.status(level)
+                        active = {source: NS(source=source, deadline=stamp + 60)} if source else {}
+                        self.s.effects = NS(active=active, clock=lambda: stamp)
+                        with patch.object(effects, 'multiplier', side_effect=AssertionError('quest multiplier')):
+                            self.s.pay_xp(((progression.INDUSTRY, 100),), ((2, 100),))
+                        self.assertEqual(self.ch.skill[progression.INDUSTRY], [1, 0, 200])
+                        self.assertEqual(self.ch.spec[2][1], 100)
+                        loaded = progression.Character.load(self.store, self.cid)
+                        self.assertEqual(loaded.skill[progression.INDUSTRY], [1, 0, 200])
+                        self.assertEqual(loaded.spec[2][1], 100)
+                        info = next(p for cmd, p in reversed(self.frames) if cmd == 'rp_info')
+                        self.assertEqual(info['quest_xp'], 1)
 
     def test_no_money_or_distant_npc_cannot_grant_status(self):
         self.ch.gold = 999

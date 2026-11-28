@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 import combat
 import mobs
+import world
 from testkit import run_cases
 
 
@@ -93,6 +94,40 @@ class BushBallistics(unittest.TestCase):
         crossed = []
         combat.flight(loc, shooter.cell, bodies[0].cell, 5, 15, bush_hits=crossed)
         self.assertFalse(crossed)
+
+    def test_actual_coastal_foliage_passes_target_and_free_shots_with_one_quarter_loss(self):
+        for loc_id in (17,18,19,20,21,22,23,24,38,39,54,55,56,57):
+            loc = world.location(loc_id)
+            ray = None
+            for bush in sorted(loc.bushes):
+                x,y = bush % loc.width, bush // loc.width
+                if not 4 <= x < loc.width-5:
+                    continue
+                origin, mark = bush-3, bush+3
+                if origin in loc.obstacles or mark in loc.obstacles:
+                    continue
+                crossed = []
+                _, end = combat.flight(loc, origin, mark, 0,
+                    mobs.hex_distance(origin,mark,loc.width),bush_hits=crossed)
+                if crossed and end[0] != "faWall" and combat.shot_wall(loc,origin,mark+2) is None:
+                    ray = origin,mark
+                    break
+            self.assertIsNotNone(ray, loc_id)
+            origin,mark = ray
+            for free in (False,True):
+                with self.subTest(location=loc_id,free=free):
+                    body = Body(mark)
+                    shooter = NS(cell=origin,is_player=True,character=lambda:NS(level=10))
+                    rc = object.__new__(combat.RoomCombat)
+                    rc.room = NS(loc=loc)
+                    rc.bodies = lambda *_: {mark:body}
+                    rc.ranged_critical = lambda *_: False
+                    weapon = combat.Weapon(1,100,100,0,20,20,1,0,0,None,None,
+                                           sdmin=40,sdmax=40)
+                    with patch.object(combat,'bullet_offset',return_value=0):
+                        _,struck = rc.resolve(shooter,None if free else body,
+                            mark+2 if free else mark,weapon,1)
+                    self.assertEqual(struck[body][:3],[75,30,1])
 
     def test_range_counter_exception_remains_shootable_without_foliage_loss(self):
         loc, rc, shooter, bodies, weapon = self.scene(hard=(45,))

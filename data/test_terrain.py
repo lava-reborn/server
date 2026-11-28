@@ -34,6 +34,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(HERE), "server"))
 import eden_map  # noqa: E402
 import travel  # noqa: E402
 import world  # noqa: E402
+from test_borders import enclosed_trail_cells
 
 START = (5970, 1730)
 # The valley as the player who walked it describes it, with a margin.
@@ -227,7 +228,10 @@ def main():
           % (wx0, wx1, wy0, wy1))
 
     # --- the cells players stood on ----------------------------------------
-    settled = world.settlements()
+    # This suite checks the old photographic layer. The two relocated
+    # no-map corridor scenes use the shipped manifest's physical geometry,
+    # exhaustively checked by tools/test_boundary_snapshot.py instead.
+    settled = {c: lid for c, lid in world.settlements().items() if c not in enclosed_trail_cells()}
     blocked = [c for c in settled if rows[c[1] - gy0][c[0] - gx0] not in PASSABLE]
     assert not blocked, "terrain: %d settlements on ground nobody can walk: %s" % (
         len(blocked), sorted(blocked)[:10])

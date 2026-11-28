@@ -58,7 +58,9 @@
   "6112,2002": "The owner's cut of Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»: the cut of Абри's and Донгола's kinds), decision 10 of its plan (the clan bases go as Liberty, Blackwater, KKND and Донгола's three did): the green square with a black centre of the same nameless pair (see 6111,2002). Tile 16063.",
   "6137,1879": "The owner's cut of Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»: the cut of Абри's and Донгола's kinds), decision 10 of its plan: a green mark with no name over it in the desert north of the town, as Абри's green mark the owner had taken off (2026-10-12, «зеленая метка, её тоже убрать»). No file stands on the cell. Tile 15039.",
   "6032,1957": "Owner correction, 2026-11-22: erase both historical NeutralClan squares.",
-  "6033,1957": "Owner correction, 2026-11-22: erase both historical NeutralClan squares."
+  "6033,1957": "Owner correction, 2026-11-22: erase both historical NeutralClan squares.",
+  "6212,1948": "Owner: remove former mountain-entrance square after approved relocation into the single Dongola pattern.",
+  "6210,1948": "Owner: remove former mountain-entrance square after approved relocation into the single Dongola pattern."
  },
  "captions": [
   {
@@ -356,52 +358,52 @@
    "why": "The owner's cut of Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»: the cut of Абри's and Донгола's kinds), decision 10 of its plan (the clan bases go as Liberty, Blackwater, KKND and Донгола's three did): the letters «База Доктора \"Д\"» painted right of the base's squares at 6219-6220,1947 (cells 6221..6230, 1947), tile 15554: the line with its light rim, and the feet of its two «Д» and the tail of its «р» below. Measured on the picture (pixels of the letters 49774-49844 by 15577-15585); the «Горные тропы» left of the squares stay."
   },
   {
-    "was": "Заброшенная база - бункер",
-    "boxes": [
-      [
-        49248,
-        15698,
-        49303,
-        15707
-      ],
-      [
-        49248,
-        15707,
-        49301,
-        15715
-      ],
-      [
-        49276,
-        15715,
-        49280,
-        15717
-      ],
-      [
-        49293,
-        15715,
-        49298,
-        15717
-      ]
+   "was": "Заброшенная база - бункер",
+   "boxes": [
+    [
+     49248,
+     15698,
+     49303,
+     15707
     ],
-    "why": "The owner's cut of Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»: the cut of Абри's and Донгола's kinds), decision 11 of its plan: the two lines of letters «Заброшенная / база - бункер» painted right of the abandoned clan base's square at 6154,1963 (which goes with the retired cell of 118), cells 6156..6162, 1962..1964, tile 15808: a box a line, with its light rim, and the tails of the «у» and the «р». The plan named the base's square and missed its letters. Measured on the picture (pixels of the letters 49249-49302 by 15699-15716)."
+    [
+     49248,
+     15707,
+     49301,
+     15715
+    ],
+    [
+     49276,
+     15715,
+     49280,
+     15717
+    ],
+    [
+     49293,
+     15715,
+     49298,
+     15717
+    ]
+   ],
+   "why": "The owner's cut of Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»: the cut of Абри's and Донгола's kinds), decision 11 of its plan: the two lines of letters «Заброшенная / база - бункер» painted right of the abandoned clan base's square at 6154,1963 (which goes with the retired cell of 118), cells 6156..6162, 1962..1964, tile 15808: a box a line, with its light rim, and the tails of the «у» and the «р». The plan named the base's square and missed its letters. Measured on the picture (pixels of the letters 49249-49302 by 15699-15716)."
   },
   {
-    "was": "База НейтралКлана",
-    "boxes": [
-      [
-        48274,
-        15651,
-        48306,
-        15668
-      ],
-      [
-        48307,
-        15651,
-        48339,
-        15668
-      ]
+   "was": "База НейтралКлана",
+   "boxes": [
+    [
+     48274,
+     15651,
+     48306,
+     15668
     ],
-    "why": "Relocated/unified clan bases: remove baked old caption, actual current name is in locations.xml."
+    [
+     48307,
+     15651,
+     48339,
+     15668
+    ]
+   ],
+   "why": "Relocated/unified clan bases: remove baked old caption, actual current name is in locations.xml."
   }
  ],
  "tint": {
@@ -1645,12 +1647,20 @@
    "why": "The owner's Eden update, 2026-11-16: mark only the recovered town with the standard green settlement square; all sixty-one work cells retain the original photograph."
   },
   "6083,1957": {
-    "colour": "clan",
-    "why": "DESIGNED one visible yard marker per base, 2026-11-22."
+   "colour": "clan",
+   "why": "DESIGNED one visible yard marker per base, 2026-11-22."
   },
   "5926,2068": {
-    "colour": "clan",
-    "why": "Approved Dongola base on open ground between warehouses."
+   "colour": "clan",
+   "why": "Approved Dongola base on open ground between warehouses."
+  },
+  "6210,1950": {
+   "colour": "red",
+   "why": "Native mountain masters room relocated to the bottom of the approved pattern; retain its original dark red game marker, never an editor overlay colour."
+  },
+  "6212,1950": {
+   "colour": "red",
+   "why": "Native mountain masters room relocated to the bottom of the approved pattern; retain its original dark red game marker, never an editor overlay colour."
   }
  },
  "bare": {
@@ -1689,6 +1699,20 @@
   "5873,2008": "The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже», decision 13 of its plan): a remnant of (P) whose name is hidden (data/map_labels.json); «Побережье», above Донгола's own coast 105. The picture has no square on the cell.",
   "5876,2007": "The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже», decision 12 of its plan): «Лагерь экспедиции», a name with no file under it, hidden (data/map_labels.json). The picture has no square on the cell.",
   "6272,1942": "The owner's cut of Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»: the cut of Абри's and Донгола's kinds), decision 10 of its plan: «Заброшенный склад<BR>Контролируеся группировкой Delta Force», a warehouse of a clan whose base went with Донгола's cut, hidden (data/map_labels.json); no file stands under it. The picture has no square on the cell.",
-  "6140,1869": "The owner's Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате», decision 30 of its plan): «Пустыня <br>Стоянка Инсара», the stop of the cut chain «По следу одноногого», hidden (data/map_labels.json); no file stands under it. The picture has no square on the cell."
+  "6140,1869": "The owner's Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате», decision 30 of its plan): «Пустыня <br>Стоянка Инсара», the stop of the cut chain «По следу одноногого», hidden (data/map_labels.json); no file stands under it. The picture has no square on the cell.",
+  "5959,1741": "Owner 2026-11-27: withdraw only the provisional coast tooltip. This feature never painted a square here; preserve pre-existing satellite artwork.",
+  "5970,1720": "Owner 2026-11-27: withdraw only the provisional coast tooltip. This feature never painted a square here; preserve pre-existing satellite artwork.",
+  "5967,1724": "Owner 2026-11-27: withdraw only the provisional coast tooltip. This feature never painted a square here; preserve pre-existing satellite artwork.",
+  "5874,2005": "Owner 2026-11-27: withdraw only the provisional coast tooltip. This feature never painted a square here; preserve pre-existing satellite artwork.",
+  "5861,1841": "Owner 2026-11-27: withdraw only the provisional coast tooltip. This feature never painted a square here; preserve pre-existing satellite artwork.",
+  "5961,1737": "Owner 2026-11-27: withdraw only the provisional coast tooltip. This feature never painted a square here; preserve pre-existing satellite artwork.",
+  "5875,2016": "Owner 2026-11-27: withdraw only the provisional coast tooltip. This feature never painted a square here; preserve pre-existing satellite artwork.",
+  "5876,2016": "Owner 2026-11-27: withdraw only the provisional coast tooltip. This feature never painted a square here; preserve pre-existing satellite artwork.",
+  "6168,1973": "Owner 2026-11-27: withdraw only the provisional coast tooltip. This feature never painted a square here; preserve pre-existing satellite artwork.",
+  "6190,1987": "Owner 2026-11-27: withdraw only the provisional coast tooltip. This feature never painted a square here; preserve pre-existing satellite artwork.",
+  "6174,1973": "Owner 2026-11-27: withdraw only the provisional coast tooltip. This feature never painted a square here; preserve pre-existing satellite artwork.",
+  "5859,1849": "Owner 2026-11-27: withdraw only the provisional coast tooltip. This feature never painted a square here; preserve pre-existing satellite artwork.",
+  "5859,1856": "Owner 2026-11-27: withdraw only the provisional coast tooltip. This feature never painted a square here; preserve pre-existing satellite artwork.",
+  "5860,1861": "Owner 2026-11-27: withdraw only the provisional coast tooltip. This feature never painted a square here; preserve pre-existing satellite artwork."
  }
 }

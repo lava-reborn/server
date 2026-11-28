@@ -173,7 +173,17 @@
   "5926,2068": 1442,
   "6032,1957": null,
   "6033,1957": null,
-  "5955,2032": null
+  "5955,2032": null,
+  "6016,1742": 598,
+  "6016,1743": 623,
+  "6015,1747": 599,
+  "6211,1945": 163,
+  "6211,1946": 53,
+  "6210,1950": 624,
+  "6017,1747": 599,
+  "6212,1950": 624,
+  "6210,1948": null,
+  "6212,1948": null
  },
  "why": {
   "6268,1818": "RECOVERED. The map's own tooltip on this cell is «Поля и Пастбища» (res/database/locations.xml), and 182 «Предгорья» (NoobZone_Cow, library Noob_Zone_Nord like the Нубийское поселение 181 on 6268,1819 below it) is the file with the cows: Корова 5195 three times and the grazing cows 115/116/120. Its one exit is south (outzones side 4 only), which from here is 181; and Зула's quest in 181 sends the player to the cows «в соседней локации, наверху» (texts.xml 59789). The placer had put 182 on 5833,1607 by its title, the tooltip «западные предгорья» of the north-west corner's second drawing of the valley.",
@@ -345,6 +355,16 @@
   "6083,1957": "DESIGNED 2026-11-22: Abu base exactly 50 cells east of the historical NeutralClan cell 6033,1957; original yard/bunker artwork.",
   "5926,2068": "DESIGNED 2026-11-22: Dongola base between the southern and eastern warehouses; 75.93 cells from station 49, 31% farther than the more distant warehouse. Passable terrain, reachable from the town; original NeutralClan yard/bunker artwork.",
   "6032,1957": "Retire both historical NeutralClan map cells.",
-  "5955,2032": "Delta Force is retired again; clan bases use the NeutralClan artwork at 5926,2068 and 6083,1957. The old block-post cell stays wasteland."
+  "5955,2032": "Delta Force is retired again; clan bases use the NeutralClan artwork at 5926,2068 and 6083,1957. The old block-post cell stays wasteland.",
+  "6016,1742": "Owner 2026-11-28: complete Dongola-shaped mountain trail node; existing portal/master identity, no new NPCs.",
+  "6016,1743": "Owner 2026-11-28: complete Dongola-shaped mountain trail node; existing portal/master identity, no new NPCs.",
+  "6015,1747": "Owner 2026-11-28: complete Dongola-shaped mountain trail node; existing portal/master identity, no new NPCs.",
+  "6211,1945": "Owner 2026-11-28: complete Dongola-shaped mountain trail node; existing portal/master identity, no new NPCs.",
+  "6211,1946": "Owner 2026-11-28: complete Dongola-shaped mountain trail node; existing portal/master identity, no new NPCs.",
+  "6210,1950": "Owner 2026-11-28: complete Dongola-shaped mountain trail node; existing portal/master identity, no new NPCs.",
+  "6017,1747": "Owner 2026-11-28: complete Dongola-shaped mountain trail node; existing portal/master identity, no new NPCs.",
+  "6212,1950": "Owner 2026-11-28: complete Dongola-shaped mountain trail node; existing portal/master identity, no new NPCs.",
+  "6210,1948": "Former entrance 163 moved to the single northern corridor; do not regenerate the old map binding.",
+  "6212,1948": "Former entrance 53 moved into the single northern corridor; do not regenerate the old map binding."
  }
 }

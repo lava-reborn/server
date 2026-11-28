@@ -467,7 +467,7 @@ check("an empty charge still closes all pairs and deals neither component",
       _damage_frames(_izh, live=0), ([], (1000, 1000), None, 12))
 _walther = asyncio.run(_aimed_weapon(25636, mode=1))
 check("a Walther burst with zero stamina damage still deals only its H component",
-      _damage_frames(_walther), ([(35, 0, 0)] * 2, (930, 1000), (930, 1000), 4))
+      _damage_frames(_walther), ([(19, 0, 0)] * 2, (962, 1000), (962, 1000), 4))
 _deagle = asyncio.run(_aimed_weapon(25657))
 for stamina, lost in ((1000, 108), (20, 20), (0, 0)):
     check("Desert Eagle G critical hit with %d SP: frames and bars agree" % stamina,
@@ -757,6 +757,10 @@ class _XpSession(object):
         pass
 
 
+# These pinned base-price checks are a weekday fixture. The real calendar
+# (including Saturday's +50%) is tested independently in test_weekend_experience.
+_base_calendar = patch.object(progression, 'combat_calendar_multiplier', return_value=1)
+_base_calendar.start()
 _shooter = progression.Character()
 _shooter.skill[progression.SHOOTING] = [6, 0, progression.skill_xp_max(6)]
 _shooter.recalc()
@@ -811,6 +815,7 @@ check("  ..released: one rp_info for the shooting skill, the whole 12 in it",
       (_onegun.sess.pushed, _one.skill[progression.SHOOTING][:2]),
       ([{"skills": {progression.SHOOTING}, "specs": set(), "attribs": set()}], [0, 12]))
 check("  ..and a release with nothing held pushes nothing", (_onegun.release_stats(), _onegun.sess.pushed[1:]), (None, []))
+_base_calendar.stop()
 
 
 # --- what keeps a room at war -----------------------------------------------------

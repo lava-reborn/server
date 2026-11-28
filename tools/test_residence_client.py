@@ -5,7 +5,8 @@ import unittest
 from pathlib import Path
 sys.path[:0] = [str(Path(__file__).resolve().parent),str(Path(__file__).resolve().parents[1]/"server")]
 import widescreen as w
-from avm_test import execute
+from avm_test import execute, Function
+from quest_xp_client import patches as quest_xp_patches
 from testkit import run_cases
 
 
@@ -14,6 +15,24 @@ class ResidenceClient(unittest.TestCase):
         gamer = dict(attributes=attrs if attrs is not None else {},premium=0,playerInfo={})
         core = dict(Master=dict(getInstance=lambda:dict(gamer=gamer)))
         return dict(lol=dict(core=core),gamer=gamer,getTimer=lambda:1000,Math=dict(ceil=math.ceil))
+
+    def test_quest_xp_notification_has_no_premium_split_or_combat_queue(self):
+        env = dict(_global={})
+        spec = quest_xp_patches(w.Asm, w.UNDEF)
+        methods = {name: Function(params, body.assemble(), env)
+                   for _, name, _, params, body in spec['wraps']}
+        service = dict(__questXPBonusOrig=lambda value: [value - 23, 23],
+                       __questXPWarStateOrig=lambda: True)
+        observed = []
+        def native_info(obj):
+            observed.append((methods['getRealAndBonus'].invoke(service, [100]),
+                             methods['warState'].invoke(service, [])))
+        attrs = dict(__questXPInfoOrig=native_info)
+        methods['rp_info'].invoke(attrs, [dict(param=dict(quest_xp=1))])
+        self.assertEqual(observed[-1], ([100, 0], False))
+        methods['rp_info'].invoke(attrs, [dict(param={})])
+        self.assertEqual(observed[-1], ([77, 23], True))
+        self.assertFalse(env['_global'].get('__questXPPlain'))
 
     def test_free_home_service_is_distinguished_from_paid_status_quests(self):
         for service in (0,1,2):

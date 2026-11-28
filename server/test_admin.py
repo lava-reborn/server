@@ -346,6 +346,8 @@ try:
                 return body
             time.sleep(0.25)
 
+    # HTTP can be ready while the game is still validating its world snapshot.
+    testkit.connect(PORT, srv, _log).close()
     body = panel_until(lambda b: "никого нет в игре" in b)
     check("пока никто не зашёл -- так и написано",
           "никого нет в игре" in body, True)

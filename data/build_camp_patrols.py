@@ -11,17 +11,15 @@ desert template's <mobs> node holds four-hex nests and no creature
 encounters.near_town keeps every ambush off a cell that touches a camp.
 
 The cells
-  A camp's neighbour cells are the open desert touching it or its chief's
-  place: the 8-neighbourhood of both, the two places taken out. That is 12
-  cells round each camp pair of Вади-Хальфа (80/82, 81/83, 84/86, 85/87)
-  and of Абри (88/89, 92/90: the owner's «В Абри добавь мобов в лагеря и
-  в окрестности», 2026-10-12, ORDERED) and of Донгола (93/91, 98/99: the
-  owner's «и потом сделай донголу тоже», 2026-10-13, ORDERED), as many
-  round Абу-Хамед's pirates and the Northern Alliance's base (132/133,
-  263/274) and 8 round its outpost (168), which has no chief's place in the
-  client (the owner's «сделай потом абу хамед в таком же формате»,
-  2026-10-14, ORDERED), and 8 round the Nubian valley's
-  «Лагерь бандитов» (34). A cell is left
+  The owner's correction of 2026-11-28: a camp occupies a single 3x3
+  neighbourhood containing the main camp and its separate chief's place.
+  Normally the main camp is in the middle; the pirates' square shifts one
+  row north so its existing chief fits and no patrol stands in the river.
+  The separate chief's place is never a second centre for
+  generating more patrol cells. Only open-desert neighbours receive
+  patrol rows; native camps, chiefs and their inhabitants stay unchanged.
+  This is an explicit design requirement, not a recovered original table.
+  A cell is left
   out (and the run says so) where it is a settlement, a place taken out of
   the game (world.retired_cells), the rock of the rim, impassable, or on the
   other side of the valley's wall from its camp. Open desert's location id
@@ -61,9 +59,11 @@ import io
 import json
 import os
 import sys
+from copy import deepcopy
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(os.path.dirname(HERE), "server"))
+os.environ.setdefault('LAVA_BOUNDARY_WORLD', 'off')
 import world  # noqa: E402
 
 PATH = os.path.join(HERE, "placements.json")
@@ -202,13 +202,19 @@ def ring(camp, said=None):
     """The camp's neighbour cells that can hold a patrol, by row then column.
     said, a list, collects the cells left out with why."""
     chief = RINGS[camp][0]
-    places = [world.cell_of(camp)] + ([world.cell_of(chief)] if chief else [])
+    centre = world.cell_of(camp)
+    places = [centre] + ([world.cell_of(chief)] if chief else [])
     inside = region(camp) == "valley"
     found = set()
-    for cx, cy in places:
-        for dx in (-1, 0, 1):
-            for dy in (-1, 0, 1):
-                found.add((cx + dx, cy + dy))
+    cx, cy = centre
+    hx,hy=places[-1]
+    if abs(cx-hx)>2 or abs(cy-hy)>2:
+        raise ValueError('Camp and PB do not fit one 3x3 footprint')
+    left=min(max(cx-1,max(cx,hx)-2),min(cx,hx))
+    top=min(max(cy-1,max(cy,hy)-2),min(cy,hy))
+    for x in range(left,left+3):
+        for y in range(top,top+3):
+            found.add((x,y))
     out = []
     for x, y in sorted(found - set(places), key=lambda c: (c[1], c[0])):
         why = None
@@ -353,6 +359,14 @@ def rows():
             loc = world.location(key)
             assert loc.war, "%d,%d (%s) is at peace" % (x, y, loc.file)
             safe_slots = patrol_slots(loc, slots)
+            existing = [r for r in world.placed_in(key) if r.get('patrol') == camp]
+            if (len(existing) == n
+                    and [r['cell'] for r in existing] == [list(c) for c in safe_slots]
+                    and all(r['type'] in allowed for r in existing)):
+                # Restrict the footprint without reshuffling surviving actors.
+                # A new cell still uses the deterministic assignment below.
+                out[key] = deepcopy(existing)
+                continue
             anchor = ANCHORS.get((x, y))
             if anchor:
                 picked = list(anchor[0])

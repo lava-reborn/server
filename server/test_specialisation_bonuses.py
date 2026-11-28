@@ -24,8 +24,8 @@ from training.arena import TrainingFighter
 class SpecialisationBonuses(unittest.IsolatedAsyncioTestCase):
     async def test_galil_at_level_thirteen_uses_fourth_spec_and_actual_ammo_in_every_fire_mode(self):
         params = items.params_of(25201)
-        self.assertEqual(params['h_damage_min'], [62, 42, 111])
-        self.assertEqual(params['h_damage_max'], [137, 61, 192])
+        self.assertEqual(params['h_damage_min'], [62, 42, 26])
+        self.assertEqual(params['h_damage_max'], [137, 61, 44])
         for mode in range(3):
             cones = []
             for ammo_type in (6107, 6119, 6143):
@@ -43,7 +43,7 @@ class SpecialisationBonuses(unittest.IsolatedAsyncioTestCase):
                     if params['fire_mods'][mode] == 1:
                         expected *= .8
                     self.assertAlmostEqual(shot.cone, expected)
-                    self.assertEqual(shot.hit_cap, .95)
+                    self.assertEqual(shot.hit_cap, (.95, .785, .70)[mode])
                     cones.append(shot.cone)
                     rng = random.Random(25201 + mode)
                     for distance in (2, 5, params['end_opt_range'][mode], shot.max_range):
@@ -185,15 +185,17 @@ class SpecialisationBonuses(unittest.IsolatedAsyncioTestCase):
                          [base, int(base + base * .15), int(base + base * .30)])
         self.assertTrue(all(skill - spec in (0, 1) for skill, spec in awards))
 
-    def test_residence_bonus_applies_to_quest_spec_xp_but_not_admin_awards(self):
+    def test_explicit_action_spec_xp_keeps_residence_but_raw_awards_do_not(self):
         for premium, expected in ((0, 100), (1, 115), (2, 130)):
             ch = p.Character()
             ch.premium = premium
             ch.set_spec(2, 0)
             ch.gain_spec_xp(2, 100)
             self.assertEqual(ch.spec[2][1], expected)
-            ch.add_spec_xp(2, 100)
+            ch.gain_spec_xp(2, 100, premium=False)
             self.assertEqual(ch.spec[2][1], expected + 100)
+            ch.add_spec_xp(2, 100)
+            self.assertEqual(ch.spec[2][1], expected + 200)
             ch.add_skill_xp(p.SHOOTING, 100)
             self.assertEqual(ch.skill[p.SHOOTING], [1, 0, p.skill_xp_max(1)])
 

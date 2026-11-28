@@ -1176,6 +1176,8 @@ class Inventory:
         """Private templates need an explicitly authorised inventory subclass."""
         if item_templates.contains(type_id):
             raise ValueError("Private equipment cannot enter an ordinary inventory")
+        if items.weapon_use_error(type_id):
+            raise ValueError(items.WEAPON_UNAVAILABLE)
         if items.acquisition_blocked(type_id):
             raise ValueError("Equipment above level %d is not released" % items.PLAYER_GEAR_MAX_LEVEL)
 
@@ -1869,6 +1871,10 @@ class Inventory:
         ch = self.sess.character()
         level = ch.level
         for thing, slot in ((row, dst), (displaced, src)):
+            if thing and slot in BODY_SLOTS and items.weapon_use_error(thing['type_id']):
+                self.ack(RES_REFUSED)
+                self.sess.answer(items.WEAPON_UNAVAILABLE)
+                return
             if thing and slot in BODY_SLOTS and not wearable(thing, level, ch):
                 self.ack(RES_LEVEL)
                 self.sess.answer(weapon_requirement_error(thing, ch) or level_line(thing, level))
@@ -1952,6 +1958,10 @@ class Inventory:
         if not gun or gun["root"] != items.FIRE_ARM:
             self.ack(RES_NOT_FOUND)
             return
+        if items.weapon_use_error(gun['type_id']):
+            self.ack(RES_REFUSED)
+            self.sess.answer(items.WEAPON_UNAVAILABLE)
+            return
         if not stack or stack["root"] != items.AMMO:
             self.ack(RES_NO_AMMO)
             return
@@ -1992,6 +2002,10 @@ class Inventory:
         if gun is None:
             # A committed upgrade/deletion consumed this serial. Never clear
             # a newer client's bar on behalf of an item that no longer exists.
+            return
+        if items.weapon_use_error(gun['type_id']):
+            self.sess.send('actionCancel', release=1)
+            self.sess.answer(items.WEAPON_UNAVAILABLE)
             return
         valid = (stack is not None
                  and gun["char_id"] == stack["char_id"] == self.char_id
@@ -2698,9 +2712,10 @@ class Inventory:
                     return
                 share = (gold_trade.BASE_SALE_SHARE if rates['smod'] == float(gold_trade.BASE_SALE_SHARE)
                          else gold_trade.NPC_SALE_SHARE)
+                share = gold_trade.effective_sale_share(row['type_id'], share)
                 sale_unit = gold_trade.afro_sale_unit(row['type_id'], si, share)
                 price = max(1, int(math.floor((sale_unit if sale_unit else
-                    unit * rates['smod'] * si.get('sell_mod', 1)) * n * quality)))
+                    unit * float(share) * si.get('sell_mod', 1)) * n * quality)))
                 if cap:
                     price = min(price, max(1, int(math.floor(cap * n * quality))))
                 owner = self.store.character(self.char_id)

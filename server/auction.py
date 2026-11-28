@@ -288,9 +288,11 @@ def sweep(store, directory, now=None):
     for lot in store.auction_due(now):
         name = meta(lot["type_id"])[3]
         if items.acquisition_blocked(lot["type_id"]):
+            reason = (items.WEAPON_UNAVAILABLE if items.weapon_use_error(lot['type_id'])
+                      else "Оружие и броня выше 17 уровня временно недоступны.")
             letters = refund(lot, "Предмет временно недоступен.") + give_back(
                 lot, "Аукцион: «%s» снят с продажи" % name,
-                "Оружие и броня выше 17 уровня временно недоступны. Предмет сохранён во вложении.")
+                reason + " Предмет сохранён во вложении.")
         elif lot["bidder"]:
             letters = settle(lot, lot["bidder"], lot["bid"], lot["bidder_name"])
         else:

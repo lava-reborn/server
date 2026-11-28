@@ -391,7 +391,7 @@ class Build:
         try:
             names = sorted(os.listdir(src))
         except FileNotFoundError:
-            return {}
+            names = []
         theirs = set()
         fdir = os.path.join(self.cdir, "files")
         for d, _dirs, fs in os.walk(fdir):
@@ -408,6 +408,28 @@ class Build:
                                  "and never the server's; an id is ours in one place only" % (name, path))
             with open(os.path.join(src, name), "rb") as fh:
                 files[int(stem)] = fh.read()
+        boundary_path = os.path.join(self.tree, 'data', 'boundary_world.json')
+        if os.path.isfile(boundary_path):
+            with open(boundary_path, encoding='utf-8') as fh:
+                boundary = json.load(fh)
+            if boundary.get('version') != 1:
+                raise SystemExit('Unsupported boundary world manifest')
+            sys.path.insert(0, os.path.join(self.tree, 'server'))
+            try:
+                from boundary_world import xml_bytes
+                for record in boundary['cells'].values():
+                    template = record['template']
+                    own = os.path.join(src, '%d.xml' % template)
+                    if os.path.isfile(own):
+                        with open(own, 'rb') as fh:
+                            raw = fh.read()
+                    else:
+                        path = ('locations/static/%d.xml' % template if template < 8192 else
+                                'locations/desert/%04d.xml' % ((((template >> 13) + (template & 8191)) & 3) + 1))
+                        raw = self.original(path)
+                    files[record['id']] = xml_bytes(record, raw)
+            finally:
+                sys.path.pop(0)
         if not files:
             return {}
         sys.path.insert(0, os.path.join(self.tree, "server"))

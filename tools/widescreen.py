@@ -3315,6 +3315,8 @@ def injected(training=None):
     for name, params, body in lifecycle['globals']:
         a.var('_global').push(name).function(params, body).op('setmember')
     wraps += lifecycle['wraps']
+    from effects_client import patches as effect_patches
+    wraps += effect_patches(Asm, UNDEF)['wraps']
     a.push(0).var('_global').push('__lcInstallTimeout').op('callmethod').op('pop')
     from chat_history import patches as history_patches
     history = history_patches(Asm, UNDEF)
@@ -3341,6 +3343,8 @@ def injected(training=None):
     for name, params, body in commerce["globals"]:
         a.var("_global").push(name).function(params, body).op("setmember")
     wraps += commerce["wraps"]
+    from quest_xp_client import patches as quest_xp_patches
+    wraps += quest_xp_patches(Asm, UNDEF)['wraps']
     from inventory_controls_client import patches as inventory_controls_patches
     inventory_controls = inventory_controls_patches(Asm, UNDEF)
     for name, params, body in inventory_controls['globals']:

@@ -22,29 +22,58 @@ from avm_test import execute
 
 
 class RepairPolicy(unittest.TestCase):
-    def test_ks12_uses_the_same_level_premium_without_raising_low_levels(self):
+    def test_all_real_collectible_families_follow_ordinary_gold_repair_tiers(self):
+        rows=[(7055,800),(7056,2800),(7057,4300),(7059,32500),(7065,39700),
+              (7066,57100),(7067,67400),(7051,67400),(7052,78900),
+              (7068,91600),(7071,91600),(7082,91600),(7053,105600),(7069,105600),(7054,120900)]
+        for t,afro in rows:
+            with self.subTest(type=t):
+                current=items.params_of(t);level=inventory.item_level(t)
+                fallback=dict(current);fallback.pop('repair_cost',None)
+                self.assertEqual(current['repair_cost'],afro*repair_policy.multiplier(level))
+                expected=dict(fallback,repair_cost=afro*repair_policy.multiplier(level))
+                for brk in (0,current['max_break_abs']//2,current['max_break_abs']-1):
+                    old=inventory.repair_prices(fallback,brk,current['max_break_abs'])
+                    new=inventory.repair_prices(current,brk,current['max_break_abs'])
+                    self.assertEqual(new,inventory.repair_prices(expected,brk,current['max_break_abs']))
+                    self.assertEqual(new[2],old[2])
+
+    def test_collectible_repair_does_not_change_trade_prices_or_enable_placeholders(self):
+        import gold_trade
+        import progression
+        for t in (7051,7052,7055,7056,7057,7059,7065,7066,7067):
+            p=items.params_of(t)
+            self.assertEqual(gold_trade.auction_base(t),p['g_cost']*progression.GOLD_TO_AFRO_RATE/progression.GOLD_OUNCE)
+            self.assertEqual(p.get('cost',0),0)
+        for t in (7072,7073,7074,7077,7080,7070,7081,34565,35032,35033,35037,36860):
+            p=items.params_of(t);level=inventory.item_level(t)
+            base=repair_policy.ks12_reference(t,level)
+            legacy=min(repair_policy.afro_cost(base)*repair_policy.multiplier(level),
+                       p.get('cost') or p['g_cost']*progression.GOLD_TO_AFRO_RATE/progression.GOLD_OUNCE)
+            self.assertEqual(gold_trade.auction_base(t),legacy,t)
+        for t in range(7060,7065):self.assertNotIn('repair_cost',items.params_of(t))
+
+    def test_ks12_uses_the_exact_same_level_premium_including_low_levels(self):
         # Expected A valuations are independently recorded from current prices.
         rows = [(7072, 2800), (7073, 4300), (7074, 6400), (7075, 9000),
                 (7076, 12200), (7077, 16100), (7078, 20700), (7079, 26200),
                 (7080, 32500), (7070, 47900), (7081, 57100)]
         for t, afro in rows:
             with self.subTest(type=t):
-                with patch.dict(repair_policy.KS12_AFRO_REFERENCES, {}, clear=True):
+                with patch.object(repair_policy,'valuation',return_value=None):
                     old = items.params_of(t)
                 new = items.params_of(t)
                 level = inventory.item_level(t)
-                previous = inventory.repair_base_price(old)
-                self.assertEqual(new['repair_cost'],
-                                 min(afro * repair_policy.multiplier(level), previous))
-                self.assertLessEqual(new['repair_cost'], previous)
+                expected=afro*repair_policy.multiplier(level)
+                self.assertEqual(new['repair_cost'],expected)
                 self.assertEqual({k: v for k, v in old.items() if k != 'repair_cost'},
                                  {k: v for k, v in new.items() if k != 'repair_cost'})
                 for ceiling in (new['max_break_abs'], new['max_break_abs'] * 9 // 10):
                     for brk in (0, ceiling // 2, ceiling - 1):
                         before = inventory.repair_prices(old, brk, ceiling)
                         after = inventory.repair_prices(new, brk, ceiling)
-                        self.assertLessEqual(after[0], before[0])
-                        self.assertLessEqual(after[1], before[1])
+                        self.assertEqual(after,inventory.repair_prices(
+                            dict(old,repair_cost=expected),brk,ceiling))
                         self.assertEqual(after[2], before[2])  # restore price is separate
 
     def test_ks12_named_copies_follow_their_public_level_and_other_guns_stay_independent(self):
@@ -52,11 +81,27 @@ class RepairPolicy(unittest.TestCase):
             p = items.params_of(t)
             base = repair_policy.ks12_reference(t, inventory.item_level(t))
             self.assertIsNotNone(base, t)
-            self.assertEqual(p['repair_cost'], min(
-                repair_policy.afro_cost(base) * repair_policy.multiplier(inventory.item_level(t)),
-                p['g_cost'] * inventory.GOLD_REPAIR_MOD / 100))
+            self.assertEqual(p['repair_cost'],
+                repair_policy.afro_cost(base) * repair_policy.multiplier(inventory.item_level(t)))
         for t in (25997, 26062, 7056, 7057):
             self.assertIsNone(repair_policy.ks12_reference(t, inventory.item_level(t)))
+
+    def test_pkm17_and_low_level_ks12_match_real_gold_counterparts(self):
+        # Explicit native counterparts, not a copy of the policy lookup.
+        for collectible,gold in ((7052,25023),(7072,25857)):
+            special,ordinary=items.params_of(collectible),items.params_of(gold)
+            self.assertEqual(inventory.item_level(collectible),inventory.item_level(gold))
+            self.assertEqual(special['repair_cost'],ordinary['repair_cost'])
+            factory=min(special['max_break_abs'],ordinary['max_break_abs'])
+            for top in (factory,factory*9//10):
+                for brk in (0,1,top//2,top-1):
+                    for rate in (inventory.RMOD,inventory.RMOD*.5,inventory.RMOD*.7):
+                        special_slot,special_all=inventory.repair_window(special,brk,top,rate)
+                        gold_slot,gold_all=inventory.repair_window(ordinary,brk,top,rate)
+                        self.assertEqual(special_slot[:2],gold_slot[:2])
+                        self.assertEqual(special_all,gold_all)
+                        self.assertEqual(inventory.repair_prices(special,brk,top,rate)[:2],
+                                         inventory.repair_prices(ordinary,brk,top,rate)[:2])
 
     def test_ks12_actual_charge_matches_slot_and_repair_all_prices(self):
         import accounts
@@ -74,7 +119,7 @@ class RepairPolicy(unittest.TestCase):
                   send_player_info=lambda: None)
         inv = inventory.Inventory(sess, store)
         inv.trade = inventory.TradeSession(1, 1200)
-        for t in (7072, 7073, 7077, 7080, 7070, 7081):
+        for t in (7072, 7073, 7077, 7080, 7070, 7081, 7056, 7059, 7065, 7051, 7052):
             for code in (inventory.UPD_REPAIR, inventory.UPD_REPAIR_GOLD):
                 with self.subTest(type=t, currency=code):
                     p = items.params_of(t)

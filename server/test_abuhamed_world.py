@@ -252,21 +252,23 @@ try:
         for r in recs:
             if r.get("patrol") in (132, 168, 263):
                 patrols[r["patrol"]].append((world.unpack(key), int(r["type"])))
-    check("patrols ring the three camps, eight of the camp's own fighters a cell, on every walkable cell"
-          " round the camp and its chief's place: the pirates' eleven (the river south of them), the"
-          " outpost's eight (no chief's place), the base's twelve",
+    check("approved nine-cell camps: seven patrol cells plus centre and PB; eight patrols without a PB",
           {c: (len({cell for cell, _t in v}), len(v)) for c, v in patrols.items()},
-          {132: (11, 88), 168: (8, 64), 263: (12, 96)})
+          {132: (7, 56), 168: (8, 64), 263: (7, 56)})
     check("  ..of the faction's ranks only, no boss, treasurer, named man or box",
           {c: sorted({t for _cell, t in v} - set(range(765, 777)) - set(range(1025, 1037))
                      - set(range(1728, 1736)) - set(range(2315, 2320)))
            for c, v in patrols.items()}, {132: [], 168: [], 263: []})
     chief = {132: 133, 168: None, 263: 274}
-    check("  ..each cell touching the camp or its chief's place, walkable",
+    boxes = {132: (6159, 1973), 168: (6209, 1985), 263: (6272, 1952)}
+    check('each complete camp footprint is exactly its approved 3x3, including the PB',
+          {c: {cell for cell, _t in v} | {world.cell_of(c)}
+           | ({world.cell_of(chief[c])} if chief[c] else set()) for c, v in patrols.items()},
+          {c: {(x+dx, y+dy) for dx in range(3) for dy in range(3)}
+           for c, (x,y) in boxes.items()})
+    check("all retained patrol cells are walkable",
           [cell for c, v in patrols.items() for cell, _t in v
-           if min(max(abs(cell[0] - p[0]), abs(cell[1] - p[1]))
-                  for p in [world.cell_of(c)] + ([world.cell_of(chief[c])] if chief[c] else [])) != 1
-           or not world.passable(*cell)], [])
+           if not world.passable(*cell)], [])
 except Exception:
     import traceback
     fails.append("who stands there broke:\n" + traceback.format_exc())

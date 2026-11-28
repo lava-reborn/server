@@ -4,22 +4,21 @@ The owner's word of 2026-10-11: «во всех соседних локация�
 они там должны быть». The rows of data/placements.json marked "patrol",
 written by data/build_camp_patrols.py, on the real table and the real world:
 
-  * the rings: every open-desert cell touching one of Вади-Хальфа's camps or
-    its chief's place (12 round each of 80/82, 81/83, 84/86, 85/87) stands,
+  * the rings: only open-desert cells in the main camp's 3x3 footprint stand
     in rooms.Room, eight of the camp's own fighters -- role mob, kinds of
     the camp's data/camp_fill.json, levels inside the camp's band -- on the
     slot cells of the original's wasteland tile MW_023; every cell touching
     the valley's «Лагерь бандитов» (8, inside the valley's wall) four of its
     bandits 20, 21 and 251; and since the owner's «В Абри добавь мобов в
-    лагеря и в окрестности» (2026-10-12) the 12 round each of Абри's camps
+    лагеря и в окрестности» (2026-10-12) the neighbours of Абри's camps
     and their chiefs' places, 88/89 (the slave traders, 8-10) and 92/90 (the
     flayers, 10-12), eight of their fighters each, and since the owner's «и
-    потом сделай донголу тоже» (2026-10-13) the 12 round each of Донгола's,
+    потом сделай донголу тоже» (2026-10-13) the neighbours of Донгола's,
     93/91 (the ДСР, 12-14) and 98/99 (the Peacekeepers, 14-16), and since the
     owner's «сделай потом абу хамед в таком же формате» (2026-10-14) Абу-Хамед's:
-    the 11 round the Somali pirates' 132/133 (16-18; three cells of the river
-    below the camp are no ground), the 8 round the Northern Alliance's outpost
-    168 (16-18, no chief's place in the client) and the 12 round its base
+    the seven round the Somali pirates' 132 (16-18; the square shifts north
+    to keep the chief and avoid the river), the 8 round the Northern Alliance's outpost
+    168 (16-18, no chief's place in the client) and the seven round its base
     263/274 (19-20); every ring cell is open desert, at war, passable, no
     settlement and no place taken out of the game;
   * the cells the lavabook names for the camps' quests stand the kinds
@@ -156,11 +155,13 @@ HAND[267] = [(60020, [20, 110], False)]
 
 
 def ring(camp):
-    """The open ground touching a camp or its chief's place: the river below
+    """Only the main camp's 3x3 footprint: the river below
     Абу-Хамед's pirates (6159-6161,1976) is no cell to stand a patrol on."""
     chief = CAMPS[camp][0]
     places = [world.cell_of(camp)] + ([world.cell_of(chief)] if chief else [])
-    cells = {(x + dx, y + dy) for x, y in places for dx in (-1, 0, 1) for dy in (-1, 0, 1)}
+    x,y=world.cell_of(camp)
+    cells = {(x + dx, y + dy) for dx in (-1, 0, 1) for dy in (-1, 0, 1)}
+    if camp==132:cells={(x,y) for x in range(6159,6162) for y in range(1973,1976)}
     return sorted((c for c in cells - set(places) if world.passable(*c)), key=lambda c: (c[1], c[0]))
 
 
@@ -196,13 +197,11 @@ STOOD = {}                      # (x, y) -> [type id] as rooms.Room stands them
 # --- the rings ------------------------------------------------------------------------------
 print("the rings")
 try:
-    check("135 cells hold a patrol: 12 round each of the four camps of Вади-Хальфа, of Абри's two and"
-          " of Донгола's two, 8 round the valley's «Лагерь бандитов», and round Абу-Хамед's three 11"
-          " (the pirates, by the river), 8 (the outpost) and 12 (the base)",
+    check("86 patrol cells stay inside one 3x3 footprint per main camp; PBs do not expand it",
           (len(patrol), {camp: len(cells) for camp, cells in RINGS.items()}),
-          (135, {80: 12, 81: 12, 84: 12, 85: 12, 34: 8, 88: 12, 92: 12, 93: 12, 98: 12,
-                 132: 11, 168: 8, 263: 12}))
-    check("  ..and they are exactly the open-desert cells touching a camp or its chief's place",
+          (86, {80: 7, 81: 7, 84: 7, 85: 7, 34: 8, 88: 7, 92: 7, 93: 7, 98: 7,
+                132: 7, 168: 8, 263: 7}))
+    check("  ..and they are exactly the open-desert neighbours of the main camp",
           sorted(patrol), sorted(world.pack(x, y) for cells in RINGS.values() for x, y in cells))
     check("  ..each row naming its own camp",
           {camp: sorted({r["patrol"] for x, y in cells for r in patrol[world.pack(x, y)]})
@@ -253,8 +252,8 @@ try:
           {camp: sorted(set(build_camp_patrols.kinds(camp))
                         | {t for c, (ks, _w) in build_camp_patrols.ANCHORS.items()
                            if c in RINGS[camp] for t in ks}) for camp in CAMPS})
-    check("1048 fighters in all (416 of Вади-Хальфа and the valley, 192 of Абри, 192 of Донгола, 248 of"
-          " Абу-Хамед)", sum(len(v) for v in STOOD.values()), 1048)
+    check("656 existing patrol fighters remain; only 392 outside the approved footprints were removed",
+          sum(len(v) for v in STOOD.values()), 656)
 except Exception:
     fails.append("the rings broke:\n" + traceback.format_exc())
 

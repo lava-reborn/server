@@ -50,6 +50,10 @@ try:
 except Exception:
     REAL_NAMES = {}
 
+# The selected legacy patrol has only an internal asset name in the source.
+# The owner explicitly restored this type as the level-19 Magrib patrol.
+REAL_NAMES[98] = 'Патрульный Магриба'
+
 # Item names from the wiki over the internal ones, under the same ids, and
 # item descriptions under items.DESC_ID_OFFSET + type: the id ss_si_* puts in
 # desc. Deliberately no try/except, for the reason given at QUEST_STRINGS: a

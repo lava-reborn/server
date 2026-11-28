@@ -799,83 +799,20 @@ try:
           (acks(got)[-1:], have.get(MAUSER_Q), have.get(PRECISION_2), have.get(MAUSER_PRECISION)),
           ([inventory.RES_NOT_FOUND], 1, 1, 1))
 
-    # --- the gunsmith's bench -----------------------------------------------------------------
+    # Mountain masters are temporarily closed; definitions and inventory stay.
     here = goto(c, SMITHS)
-    salvage = row_of("salvage", weapon="pistol", **{"class": 2})
-    pistol = give(c, NAGAN)[0]
-    got, q_id = take(c, here, PISTOL_SMITH, salvage)
-    check("«Разобрать сломаный пистолет 2кл.» at the pistols' gunsmith (599): taken, but a"
-          " whole pistol is no broken one -- not complete, and the hand-in refused",
-          (acks(got), completes(got), acks(hand_in(c, here, PISTOL_SMITH, q_id))),
-          ([0], [0], [21]))
-    st = accounts.Store(DB)
-    st.update_item(inventory.parse_oid(pistol)[0], brk=0)
-    st.close()
-    got = c.frames(0.2)
-    give(c, 41)                                     # anything into the bag: the recount
-    got = c.frames(0.8)
-    afro0, _g = purse()
-    parts = {o[0] for o in quests.get(salvage).rew_random}
-    got = hand_in(c, here, PISTOL_SMITH, q_id)
-    have = owned()
-    check("  ..broken, it is: handed in, 1433 afro, the pistol gone, one of the class's parts",
-          (acks(got), afro0 - purse()[0], have.get(NAGAN, 0),
-           sum(have.get(t, 0) for t in parts)), ([0], 1433, 0, 1))
-
-    # The bench takes the cheapest broken gun of its class, and never one
-    # bought for gold or upgraded: given dearest first, taken cheapest first.
-    uniqs = [inventory.parse_oid(give(c, t)[0])[0] for t in (BERETTA_G, BERETTA, NAGAN)]
-    st = accounts.Store(DB)
-    uniqs += [r["uniq"] for r in st.items_of(char_id()) if r["type_id"] == BERETTA_DAMAGE]
-    for u in uniqs:
-        st.update_item(u, brk=0)
-    st.close()
-    give(c, 41)
-    c.frames(0.5)
-    taken = []
-    for _k in range(3):
-        before = owned()
-        got, q_id = take(c, here, PISTOL_SMITH, salvage)
-        got = hand_in(c, here, PISTOL_SMITH, q_id)
-        after = owned()
-        taken.append((acks(got)[-1:], [t for t in (NAGAN, BERETTA, BERETTA_G, BERETTA_DAMAGE)
-                                       if after.get(t, 0) < before.get(t, 0)]))
-        if acks(got)[-1:] != [0]:
-            c.send("q_ca;q_id=%d;" % q_id)
-            c.frames()
-    check("  ..four broken pistols of the class: the Наган (400) first, then the Беретта"
-          " (800), then nothing -- the gold Беретта and the upgraded one stay",
-          (taken, owned().get(BERETTA_G), owned().get(BERETTA_DAMAGE)),
-          ([([0], [NAGAN]), ([0], [BERETTA]), ([21], [])], 1, 1))
-
-    # The 1st class of the rifles and the sub-machine guns: their guns start
-    # at the 6th and the 8th level.
-    first_class = []
-    for weapon, gun_type in (("rifle", RIFLE_6), ("smg", SMG_8)):
-        row = row_of("salvage", weapon=weapon, **{"class": 1})
-        u = inventory.parse_oid(give(c, gun_type)[0])[0]
-        st = accounts.Store(DB)
-        st.update_item(u, brk=0)
-        st.close()
-        give(c, 41)
-        c.frames(0.5)
-        smith = GUNSMITHS[weapon]
-        got, q_id = take(c, here, smith, row)
-        got = hand_in(c, here, smith, q_id)
-        have = owned()
-        first_class.append((acks(got)[-1:], have.get(gun_type, 0),
-                            sum(have.get(o[0], 0) for o in quests.get(row).rew_random)))
-    check("  ..a broken Самодельная винтовка (6) at the rifles' bench of the 1st class, a"
-          " broken Кустарный ПП (8) at the sub-machine guns': taken, a part each",
-          first_class, [([0], 0, 1), ([0], 0, 1)])
-
-    assembly = row_of("assembly", gun=BERETTA)
-    for o in quests.get(assembly).objs:
-        give(c, o[0], o[1])
-    got, q_id = take(c, here, PISTOL_SMITH, assembly)
-    got = hand_in(c, here, PISTOL_SMITH, q_id)
-    check("«Беретта 92(A)» assembled from its three parts: the gun in the bag",
-          (acks(got), owned().get(BERETTA, 0)), ([0], 1))
+    paused = [(PISTOL_SMITH, row_of("salvage", weapon="pistol", **{"class": 2})),
+              (GUNSMITHS["rifle"], row_of("salvage", weapon="rifle", **{"class": 1})),
+              (GUNSMITHS["smg"], row_of("salvage", weapon="smg", **{"class": 1})),
+              (PISTOL_SMITH, row_of("assembly", gun=BERETTA))]
+    for npc_type, qtype in paused:
+        before, money_before = owned(), purse()
+        got, q_id = take(c, here, npc_type, qtype)
+        check("closed mountain master %d offers no new quest %d" % (npc_type,qtype),
+              (0 not in acks(got), q_id, owned(), purse()),
+              (True, 0, before, money_before))
+        check("the archived master recipe is retained but blocked",
+              quests.acquisition_blocked(quests.get(qtype)), True)
 
     # --- the whetstone and the decoder ------------------------------------------------------------
     here = goto(c, BLACK_MARKET)

@@ -3900,6 +3900,21 @@
    "string_id": 9011,
    "text": "[21] Ящик<Br>Северный Альянс",
    "why": "na_box_ammo: The Northern Alliance's block 8980-9011 ('[18] Казначей', the ranks [16] 'Рекрут', 'Рядовой', 'Капрал', 'Стрелок', [17] 'Рядовой-рекрут', 'Мастер-сержант', 'Сержант-майор', 'Скаут', [18] 'Часовой', 'Сержант', 'Капитан', 'Снайпер', '[20] Бухгалтер', [19] 'Рядовой I класса', 'Штаб-Сержант', 'Подполковник', 'Элитный снайпер', '[21] Прототип', [20] 'Штурмовик', 'Капрал', 'Полковник', 'Элитный снайпер', 'Стрелок поддержки', 'Рейнджер', 'Командер', 'Меткий стрелок', 'Джеймс Бейкер', 'Крис Кайл', the two bosses and '[21] Ящик', each '<Br>Северный Альянс'), the ranks by position under their [N], the rule of Абри's and Донгола's camps; the matcher's medium picks agree where it made one. The boxes of the outpost 168 and the base 263 (one type in both). The Somali pirates' camp 132/133 (L285/L286), the Alliance's outpost 168 (L284) and base 263/274 (L287/L288), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "2418": {
+   "string_id": 9532,
+   "text": "Крокодил<Br>Дикое животное",
+   "why": "DESIGNED family-label reuse for the restored coast crocodile 2418. The original Russian crocodile label is reused; its bracketed source level is discarded on the wire. Actual combat level remains the existing mob_types.json value."
+  },
+  "2419": {
+   "string_id": 9532,
+   "text": "Крокодил<Br>Дикое животное",
+   "why": "DESIGNED family-label reuse for the restored coast crocodile 2419. The original Russian crocodile label is reused; its bracketed source level is discarded on the wire. Actual combat level remains the existing mob_types.json value."
+  },
+  "2420": {
+   "string_id": 9536,
+   "text": "Крокодил<Br>Дикое животное",
+   "why": "DESIGNED family-label reuse for the restored coast crocodile 2420. The original Russian crocodile label is reused; its bracketed source level is discarded on the wire. Actual combat level remains the existing mob_types.json value."
   }
  },
  "none": {

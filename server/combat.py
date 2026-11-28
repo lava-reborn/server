@@ -44,6 +44,7 @@ import action_animation
 import battle_medicine
 import battle_balance
 import bosses
+import coasts
 import mob_equipment_loot
 import eden
 import eden_harvest
@@ -1697,7 +1698,9 @@ class Fighter:
         room = getattr(self.sess, 'room', None)
         npc = room.npcs.get(uniq - mobs.VIRTUAL_BASE) if room is not None else None
         if npc is not None and npc.root == world.MOB:
-            stats = mobs.stats(npc.type_id)
+            state = getattr(room, 'combat', None)
+            live = state.mobs.get(uniq - mobs.VIRTUAL_BASE) if state is not None else None
+            stats = live.stats if live is not None else mobs.stats(npc.type_id)
             if stats.weapon_type_id == type_id:
                 ammo_type = stats.loot_ammo_type
         di = mobs.virtual_di(uniq, type_id, root, ammo_type=ammo_type)
@@ -1776,6 +1779,10 @@ class Fighter:
         row = None if obj in ("", "0") else sess.inv.find(obj)
         if obj not in ("", "0") and row is None:
             self.ack(inventory.RES_NOT_FOUND)
+            return
+        if row is not None and items.weapon_use_error(row['type_id']):
+            self.ack(inventory.RES_REFUSED)
+            sess.answer(items.WEAPON_UNAVAILABLE)
             return
         why = inventory.weapon_requirement_error(row, self.character()) if row is not None else None
         if why:
@@ -1935,6 +1942,11 @@ class Fighter:
         row = self.store.item(uniq)
         if row is not None and row["char_id"] != self.sess.char_id:
             row = None
+        if row is not None and items.weapon_use_error(row['type_id']):
+            Fighter.action_cancelled(self, stop_aim=True)
+            self.sess.answer(items.WEAPON_UNAVAILABLE)
+            self.c_ap()
+            return
         if (row is None or row["slot"] != inventory.PRIMARY or row["brk"] <= 0
                 or inventory.weapon_requirement_error(row, self.character())):
             # Requirements may have changed during aiming. Finish the animation
@@ -2022,6 +2034,10 @@ class Fighter:
 
     def strike_with(self, row, target, hexcell):
         """A swing: fist (5 AP, damage from strength) or the blade in hand."""
+        if row is not None and items.weapon_use_error(row['type_id']):
+            self.ack(inventory.RES_REFUSED)
+            self.sess.answer(items.WEAPON_UNAVAILABLE)
+            return
         if self.strike is not None:
             # Space/click spam must not restart a melee wind-up. Acknowledge
             # the repeated request silently, keeping the original target and
@@ -2096,6 +2112,11 @@ class Fighter:
         syringe = False
         if uniq is not None:
             row = self.store.item(uniq)
+            if row is not None and items.weapon_use_error(row['type_id']):
+                Fighter.action_cancelled(self, stop_aim=True)
+                self.sess.answer(items.WEAPON_UNAVAILABLE)
+                self.c_ap()
+                return
             if (row is None or row["char_id"] != sess.char_id
                     or row["slot"] != inventory.PRIMARY or row["brk"] <= 0
                     or inventory.weapon_requirement_error(row, ch)):
@@ -2782,6 +2803,11 @@ class Fighter:
             if row is None:
                 self.ack(inventory.RES_NOT_FOUND)
                 return True
+            if items.weapon_use_error(row['type_id']):
+                # A paused item must not be put into a bag nobody can pick up.
+                self.ack(inventory.RES_REFUSED)
+                self.sess.answer(items.WEAPON_UNAVAILABLE)
+                return True
             if eden.restricted_item(row["type_id"]) or gold_item(row["type_id"]):
                 # A shared ground bag must not bypass gold gear's binding.
                 # Plantation property cannot be handed to another worker or
@@ -2912,6 +2938,7 @@ class RoomCombat:
         self.store = store
         self.mobs = {eid: mobs.Mob(eid, npc.type_id, npc.cell)
                      for eid, npc in room.npcs.items() if npc.root == world.MOB}
+        coasts.prepare_room(self)
         eden_harvest.prepare_room(self)
         holdings.prepare_room(self)
         battle_balance.prepare_world_boss_defence(self)
@@ -3000,14 +3027,16 @@ class RoomCombat:
         if self.timer is None:
             self.ap_last = now()
             self._arm()
-        if getattr(self.room, "ambush", None) is not None and not fighter.dead:
+        patrol = getattr(getattr(fighter, 'sess', None), 'char_id', None) in getattr(self.room, 'patrol_interceptions', ())
+        if (getattr(self.room, "ambush", None) is not None or patrol) and not fighter.dead:
             # A pack met on the map (encounters.py) is after the one it
             # waylaid from the moment he is in: the room at war (lch;ws=1,
             # the battle track, the fight's bar) and every creature of it red
             # on his screen (lch;enemy). That is what says «На Вас напали»;
             # the loader's caption of those words never comes (encounters.py).
             for mob in self.mobs.values():
-                if mob.alive and mob.target is None and mob.stats.can_attack:
+                if (mob.alive and mob.target is None and mob.stats.can_attack
+                        and (not patrol or mob.type_id == 98)):
                     self.aggro(mob, fighter)
 
     def _arm(self):
@@ -3321,7 +3350,8 @@ class RoomCombat:
             cone = spread_factor(st.level, st.spec) * st.scatter
             weapon = Weapon(num_shots=st.shots, dmin=st.dmg_min, dmax=st.dmg_max,
                             opt_lo=1, opt_hi=st.range, max_range=st.range, piercing=1,
-                            cone=cone, crit=st.crit, skill=None, spec=None)
+                            cone=cone, crit=st.crit, skill=None, spec=None,
+                            hit_cap=battle_balance.MOB_HIT_CAP)
             mob.aim = loop.call_later(pace.paced(st.attack_time),
                                       self.mob_burst, mob, target, weapon)
         elif st.attack_time:
@@ -3967,6 +3997,8 @@ class RoomCombat:
         (LAVA_BOSS_HOURS=off) a boss is back every respawn delay, and an
         ingot on each of those kills would be gold without a limit, so its
         bag holds the rest of its loot and no ingot."""
+        if coasts.without_loot(self.room.loc.id, mob.type_id):
+            return []
         rows = []
         thing = mob.stats.role == "object"
         restricted = not thing and getattr(mob, 'loot_multiplier', 1) <= 0
@@ -3992,6 +4024,9 @@ class RoomCombat:
                 continue
             if items.out_of_game(type_id) or items.acquisition_blocked(type_id):
                 continue            # (P) or retired by name; see items.out_of_game
+            if (not (type_id in mob.quest_wants and mobs.personal_quest_item(type_id))
+                    and not mob_equipment_loot.random_drop_allowed(type_id)):
+                continue            # Final guard for new ordinary loot/event tables too.
             if type_id in items.GOLD_INGOTS and not gold_ok:
                 continue            # gold off the hours' bosses only, above
             if thing and type_id == mobs.FALLBACK_LOOT:
