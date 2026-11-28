@@ -3348,6 +3348,11 @@ def injected(training=None):
     wraps += inventory_controls['wraps']
     from quest_window_client import patches as quest_window_patches
     wraps += quest_window_patches(Asm, UNDEF)['wraps']
+    from intux_confirmation_client import patches as intux_confirmation_patches
+    intux = intux_confirmation_patches(Asm, UNDEF)
+    for name, params, body in intux['globals']:
+        a.var('_global').push(name).function(params, body).op('setmember')
+    wraps += intux['wraps']
     from eden_inventory_client import patches as eden_inventory_patches
     wraps += eden_inventory_patches(Asm, UNDEF)['wraps']
     from restore_price_client import patches as restore_patches
@@ -3508,7 +3513,9 @@ def online_art(tags):
 
 def inject(tags, training=None):
     """Put the DoAction before the first ShowFrame, replacing an earlier one."""
-    tags = [t for t in tags if not (t[0] == 12 and MARK.encode() in t[1])]
+    from intux_confirmation_client import MARK as intux_mark
+    tags = [t for t in tags if not (t[0] == 12 and
+            any(mark.encode() in t[1] for mark in (MARK, intux_mark)))]
     tags = without_online_art(tags)
     from reflash_art import without_artwork as without_reflash_artwork
     tags = without_reflash_artwork(tags)

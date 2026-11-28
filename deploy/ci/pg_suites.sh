@@ -58,6 +58,8 @@ SUITES+=(holdings warehouse_daily_reset)
 SUITES+=(bank_stacks)
 # Online-only buff time uses the same migration and checkpoint SQL in production.
 SUITES+=(effect_clock_storage)
+# INTUX consent and atomic effect/item consumption honour the production dialect.
+SUITES+=(intux_confirmation)
 # Plantation coupon migration and reward delivery use the production dialect too.
 SUITES+=(eden_ticket_storage)
 # Legacy parcel/auction gift-class migration and rollback.

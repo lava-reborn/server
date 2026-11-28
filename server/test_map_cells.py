@@ -96,6 +96,8 @@ try:
     ABUHAMED_SQ = {(6184, 1974), (6184, 1976), (6126, 1981), (6174, 1946), (6175, 1946), (6081, 1975),
                    (6082, 1975), (6219, 1947), (6220, 1947), (6111, 2002), (6112, 2002), (6137, 1879)}
     LABEL_ONLY |= ABUHAMED_SQ
+    # The approved single Dongola pattern moves both native masters markers south.
+    LABEL_ONLY |= {(6210, 1948), (6212, 1948)}
     ABRI_CUT = [(5860, 1836), (5860, 1837), (5861, 1836), (5863, 1837), (5866, 1836),
                 (5906, 1888), (5906, 1889), (5865, 1835), (5924, 1838)]
     # The camps across the river of Вади-Хальфа (429) and Донгола (431), and
@@ -848,8 +850,13 @@ try:
           [load_paint(p) for p in ({"25,15": {"colour": "pink", "why": "t"}}, {"25,15": {"colour": "red"}},
                                    {"10,10": {"colour": "red", "why": "t"}})], ["refused"] * 3)
     import world
-    check("every cell the repository paints on holds a place of ours (the canonical world mapping,"
-          " data/locations)", [c for c in plan.paint if world.location_at(*c) not in world.overlay_ids()],
+    native_masters = {(6210, 1950): 624, (6212, 1950): 624}
+    check('the relocated masters keep their native room and dark red game markers',
+          {c: (world.location_at(*c), plan.paint[c][0]) for c in native_masters},
+          {c: (lid, 'red') for c, lid in native_masters.items()})
+    check("every cell the repository paints holds an overlay or an explicitly relocated native room",
+          [c for c in plan.paint if world.location_at(*c) not in world.overlay_ids()
+           and world.location_at(*c) != native_masters.get(c)],
           [])
 
     # --- the real map ------------------------------------------------------------------------------

@@ -4,6 +4,15 @@ from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'server'))
 
 
+def draft_choices(doc):
+    """Compare either resolved editor previews or the saved manual draft marks."""
+    if 'boundary_preview' in doc:
+        return {key: row['template'] for key, row in doc['boundary_preview']['placements'].items()}
+    if isinstance(doc.get('scene_edits'), dict):
+        return doc['scene_edits']
+    raise ValueError('Draft has neither preview placements nor saved scene edits')
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument('--manifest', type=Path, required=True)
@@ -16,6 +25,7 @@ def main():
     manifest = json.loads(args.manifest.read_bytes())
     draft = json.loads(args.draft.read_bytes())
     previous = json.loads(args.previous_draft.read_bytes())
+    a, b = draft_choices(previous), draft_choices(draft)
     types = world.mob_types()
     original_cells = {**world.borders(), **world.settlements(), **world.eden_map.CELL_TO_LOC}
     for ident in world.placements():
@@ -106,7 +116,6 @@ def main():
     camps = set(camp_elites.locations()) | {b.camp for b, reach in encounters.bands()}
     camps.update(i for i, (title, fn) in titles.items() if 'лагер' in title.lower() or 'bandit_camp' in fn.lower())
     camp_rows = []
-    a = previous['boundary_preview']['placements']; b = draft['boundary_preview']['placements']
     for camp in sorted(camps):
         locations = [c for c, ident in original_cells.items() if ident == camp]
         nearby = []
@@ -114,7 +123,7 @@ def main():
             for dx in range(-2, 3):
                 for dy in range(-2, 3):
                     key = '%d,%d' % (x + dx, y + dy)
-                    old = (a.get(key) or {}).get('template'); new = (b.get(key) or {}).get('template')
+                    old = a.get(key); new = b.get(key)
                     if old != new:
                         nearby.append(dict(cell=key, before=old, after=new))
         current = rooms.Room(world.location(camp), rooms.IdAllocator(), types)

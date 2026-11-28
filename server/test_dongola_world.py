@@ -221,9 +221,8 @@ try:
         for r in recs:
             if r.get("patrol") in (93, 98):
                 patrols[r["patrol"]].append((world.unpack(key), int(r["type"])))
-    check("patrols ring both camps: twelve cells each, eight of the camp's own fighters a cell, round the"
-          " camp and its chief's place",
-          {c: (len({cell for cell, _t in v}), len(v)) for c, v in patrols.items()}, {93: (12, 96), 98: (12, 96)})
+    check("both approved 3x3 camps: seven patrol cells plus the centre and existing PB",
+          {c: (len({cell for cell, _t in v}), len(v)) for c, v in patrols.items()}, {93: (7, 56), 98: (7, 56)})
     check("  ..of the faction's ranks only, no boss, treasurer, named man or box",
           {c: sorted({t for _cell, t in v} - set(range(362, 374)) - set(range(395, 407)))
            for c, v in patrols.items()}, {93: [], 98: []})

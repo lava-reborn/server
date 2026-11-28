@@ -473,6 +473,7 @@ class Character:
             [s[2] for s in self.spec], specs, SPECS)
         import residence
         p.update(residence.frame(self))
+        p['intux_confirmation'] = 1
         next_afro, next_gold = self.spec_cost()
         p.update(spec_slots=self.spec_capacity(),
                  spec_next_afro=next_afro, spec_next_gold=next_gold)

@@ -367,6 +367,9 @@ def activate(fighter, uniq, target, ap_cost, peace_damage=None):
         fighter.sess.send('actionCancel', release=1)
         fighter.sess.answer(str(reason))
         return
+    import intux_confirmation
+    if not intux_confirmation.finish_allowed(fighter, row):
+        return
     with storage.atomic(fighter.store.db):
         for char_id in sorted({fighter.sess.char_id, target.sess.char_id}):
             if not fighter.store.lock_quest_character(char_id):
