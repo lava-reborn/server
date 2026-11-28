@@ -539,8 +539,6 @@ def expected_item_description(t, original):
         note = ("Только для (A) и (G) оружия." if used == {"A", "G"}
                 else "Только для (" + next(iter(used)) + ") оружия.")
         original = (original + "<br>" if original else "") + note
-    if t in effects.EXPERIENCE_UP:
-        original = (original + '<br>' if original else '') + effects.experience_cap_text()
     level_note = items.equipment_level_text(t)
     return original + ("<br>" if original else "") + level_note if level_note else original
 

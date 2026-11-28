@@ -197,8 +197,6 @@ try:
     # including articles without an original/wiki description.
     ids |= {items.DESC_ID_OFFSET + t for t in items.catalogue()
             if items.equipment_level_text(t)}
-    import effects
-    ids |= {effects.name_id(t) for t in effects.EXPERIENCE_UP}
     have = {int(i) for i in re.findall(rb"id='(\d+)'", everything)}
     check('every name the server sends is preloaded', ids - have, set())
     check('creature, item, description, quest, transport and set ids do not collide',

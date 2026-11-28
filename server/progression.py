@@ -473,7 +473,6 @@ class Character:
             [s[2] for s in self.spec], specs, SPECS)
         import residence
         p.update(residence.frame(self))
-        p['intux_confirmation'] = 1
         next_afro, next_gold = self.spec_cost()
         p.update(spec_slots=self.spec_capacity(),
                  spec_next_afro=next_afro, spec_next_gold=next_gold)
@@ -962,7 +961,7 @@ COMBAT_XP_ZONE = timezone(timedelta(hours=3), "MSK")
 def combat_calendar_multiplier(at=None):
     """PvE weekend bonus, Saturday 00:00 through Monday 00:00 MSK.
 
-    Add its percentage to INTUX and residence, capped at x2 by effects.
+    Add its percentage to INTUX and residence; do not multiply bonuses.
     The caller snapshots the result at damage time, not at kill settlement.
     """
     stamp = time.time() if at is None else at

@@ -2256,9 +2256,6 @@ class Fighter:
         if rc is not None and rc.room.ws and self.ap < cost:
             self.refuse_no_ap()
             return
-        import intux_confirmation
-        if not intux_confirmation.guard(self, row, p):
-            return
         revision = Fighter.begin_action(self)
         self.ack(inventory.RES_OK)
         # Recreate the accepted heal's bar after cancellation of the old one.
