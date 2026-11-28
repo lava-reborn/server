@@ -21,10 +21,9 @@ class ShippedBoundarySnapshot(unittest.TestCase):
 
     def test_every_original_inhabitant_keeps_its_type_and_hex(self):
         with tempfile.TemporaryDirectory() as folder:
-            out=Path(folder)/'population.json';draft=ROOT/'data/boundary_editor_draft.json'
+            out=Path(folder)/'population.json'
             result=subprocess.run([sys.executable,'-B',str(ROOT/'tools/audit_boundary_population.py'),
-                '--manifest',str(ROOT/'data/boundary_world.json'),'--draft',str(draft),
-                '--previous-draft',str(draft),'--out',str(out)],
+                '--manifest',str(ROOT/'data/boundary_world.json'),'--out',str(out)],
                 cwd=ROOT,env=dict(os.environ),capture_output=True,text=True,timeout=600)
             self.assertEqual(result.returncode,0,(result.stdout+result.stderr)[-8000:])
             report=json.loads(out.read_bytes())

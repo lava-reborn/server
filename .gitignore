@@ -44,7 +44,6 @@ __pycache__/
 /lava_ci
 /lava_ci.pub
 data/map_editor_base.png
-data/map_editor_base.png.sha256
 # A developer's own release stand (client/devserve.py): its keys, store and
 # test game folder. Never a key of production's.
 /client/dev/

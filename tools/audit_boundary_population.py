@@ -16,16 +16,19 @@ def draft_choices(doc):
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument('--manifest', type=Path, required=True)
-    ap.add_argument('--draft', type=Path, required=True)
-    ap.add_argument('--previous-draft', type=Path, required=True)
+    ap.add_argument('--draft', type=Path, help='Optional local comparison; requires --previous-draft')
+    ap.add_argument('--previous-draft', type=Path, help='Optional local comparison; requires --draft')
     ap.add_argument('--out', type=Path, required=True)
     args = ap.parse_args()
     os.environ['LAVA_BOUNDARY_WORLD'] = 'off'
     import world, rooms, boundary_world as bw, camp_elites, encounters
     manifest = json.loads(args.manifest.read_bytes())
-    draft = json.loads(args.draft.read_bytes())
-    previous = json.loads(args.previous_draft.read_bytes())
-    a, b = draft_choices(previous), draft_choices(draft)
+    if bool(args.draft) != bool(args.previous_draft):
+        ap.error('--draft and --previous-draft must be supplied together')
+    a, b = {}, {}
+    if args.draft is not None:
+        a = draft_choices(json.loads(args.previous_draft.read_bytes()))
+        b = draft_choices(json.loads(args.draft.read_bytes()))
     types = world.mob_types()
     original_cells = {**world.borders(), **world.settlements(), **world.eden_map.CELL_TO_LOC}
     for ident in world.placements():
