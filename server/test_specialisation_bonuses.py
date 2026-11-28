@@ -185,15 +185,17 @@ class SpecialisationBonuses(unittest.IsolatedAsyncioTestCase):
                          [base, int(base + base * .15), int(base + base * .30)])
         self.assertTrue(all(skill - spec in (0, 1) for skill, spec in awards))
 
-    def test_residence_bonus_applies_to_quest_spec_xp_but_not_admin_awards(self):
+    def test_explicit_action_spec_xp_keeps_residence_but_raw_awards_do_not(self):
         for premium, expected in ((0, 100), (1, 115), (2, 130)):
             ch = p.Character()
             ch.premium = premium
             ch.set_spec(2, 0)
             ch.gain_spec_xp(2, 100)
             self.assertEqual(ch.spec[2][1], expected)
-            ch.add_spec_xp(2, 100)
+            ch.gain_spec_xp(2, 100, premium=False)
             self.assertEqual(ch.spec[2][1], expected + 100)
+            ch.add_spec_xp(2, 100)
+            self.assertEqual(ch.spec[2][1], expected + 200)
             ch.add_skill_xp(p.SHOOTING, 100)
             self.assertEqual(ch.skill[p.SHOOTING], [1, 0, p.skill_xp_max(1)])
 

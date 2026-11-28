@@ -614,6 +614,42 @@ class BaseTrade(unittest.TestCase):
                 self.assertLessEqual(after[0] + after[1] * rate, before[0] + before[1] * rate)
                 self.assertIsNone(self.store.item(row['uniq']))
 
+    def test_mob_trash_loot_has_matching_higher_base_quote_and_actual_credit(self):
+        for loc_id in (609, 1443):
+            self.base_room(loc_id)
+            self.open(1013)
+            for source in (6941, 6944, 6945):
+                params = items.params_of(source)
+                fields = gold_trade.client_fields(source)
+                self.assertEqual(items.root_of(source), items.TRASH)
+                self.assertGreater(fields['a_base_sale_unit'], fields['a_sale_unit'])
+                for count in (1, 3):
+                    row = self.give(source, 5)
+                    before = self.store.money(self.cid)
+                    quoted = max(1, math.floor(fields['a_base_sale_unit'] * count))
+                    self.assertEqual(self.sell(row, count), inventory.RES_OK)
+                    self.assertEqual(self.store.money(self.cid), (before[0] + quoted, before[1]))
+                    self.assertEqual(self.store.item(row['uniq'])['count'], 5 - count)
+
+    def test_weapons_armour_and_belts_keep_ordinary_buyback_at_paid_bases(self):
+        for source in (25287, 25288, 10061, 3577):
+            params = items.params_of(source)
+            self.assertIn(items.root_of(source), items.BREAKABLE_ROOTS)
+            fields = gold_trade.client_fields(source)
+            self.assertEqual(fields['a_base_sale_unit'], fields['a_sale_unit'])
+            self.assertEqual(fields['g_base_sale_unit'], fields['g_sale_unit'])
+        for loc_id in (609, 1443):
+            self.base_room(loc_id)
+            self.open(1013)
+            for source in (25287, 10061, 3577):
+                row = self.give(source)
+                params = items.params_of(source)
+                expected = max(1, math.floor(gold_trade.afro_sale_unit(source, params)
+                                             * gold_trade.sale_quality(row, params)))
+                before = self.store.money(self.cid)
+                self.assertEqual(self.sell(row, 1), inventory.RES_OK)
+                self.assertEqual(self.store.money(self.cid), (before[0] + expected, before[1]))
+
     def test_gold_valuables_are_refused_by_every_trader_on_both_paid_bases(self):
         for loc_id in (609, 1443):
             self.base_room(loc_id)
@@ -627,6 +663,8 @@ class BaseTrade(unittest.TestCase):
                     request, quote = self.quote(row, 2)
                     self.assertEqual(quote['res'], inventory.RES_REFUSED)
                     self.assertEqual(self.confirmed(request, quote), inventory.RES_REFUSED)
+                    self.assertEqual((self.store.money(self.cid), list(self.inv.rows())), before)
+                    self.assertEqual(self.sell(row, 2), inventory.RES_REFUSED)
                     self.assertEqual((self.store.money(self.cid), list(self.inv.rows())), before)
 
     def test_old_gold_quote_cannot_be_confirmed_after_exchange_is_removed(self):

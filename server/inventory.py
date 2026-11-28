@@ -2712,9 +2712,10 @@ class Inventory:
                     return
                 share = (gold_trade.BASE_SALE_SHARE if rates['smod'] == float(gold_trade.BASE_SALE_SHARE)
                          else gold_trade.NPC_SALE_SHARE)
+                share = gold_trade.effective_sale_share(row['type_id'], share)
                 sale_unit = gold_trade.afro_sale_unit(row['type_id'], si, share)
                 price = max(1, int(math.floor((sale_unit if sale_unit else
-                    unit * rates['smod'] * si.get('sell_mod', 1)) * n * quality)))
+                    unit * float(share) * si.get('sell_mod', 1)) * n * quality)))
                 if cap:
                     price = min(price, max(1, int(math.floor(cap * n * quality))))
                 owner = self.store.character(self.char_id)

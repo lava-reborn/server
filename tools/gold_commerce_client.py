@@ -12,6 +12,41 @@ def __esNominal(item):
 def __esTraderInfo(obj):
     this.__esTraderInfoOrig(obj)
     this.eden_shop = obj.param.eden_shop == 1
+    pan = lol.core.SceneShifter._ref.UIPanels.trade.instance.content
+    if pan and pan.trader == this:
+        _global.__gcRefreshTradeRates(pan)
+
+def __gcRefreshBagPrices(bag, modifier, selling):
+    if not bag:
+        return
+    bag.cost_mod = modifier
+    bag.showItemSellMod = selling
+    rows = bag.itemList
+    if not rows:
+        return
+    i = 0
+    while i < len(rows):
+        card = rows[i].item_mc
+        if card:
+            card.cost_mod = modifier
+            card.showItemSellMod = selling
+            if card.item and card.priceEnabled and card.price_mc:
+                align = "left"
+                if card.attachIconEnabled:
+                    align = "center"
+                card.showCost(card.item, align)
+        i = i + 1
+
+def __gcRefreshTradeRates(pan):
+    if not pan or not pan.trader:
+        return
+    pan.cost_mod = pan.trader.smod
+    _global.__gcRefreshBagPrices(pan.bag_mc, pan.trader.smod, True)
+    _global.__gcRefreshBagPrices(pan.visavisBag_mc, pan.trader.pmod, False)
+
+def __gcTradeInit():
+    this.__gcTradeInitOrig()
+    _global.__gcRefreshTradeRates(this)
 
 def __gcInitialize(obj):
     this.__gcInitializeOrig(obj)
@@ -102,9 +137,25 @@ def __gcBaseBuyPrice(item, count):
 def __gcAddCost(rows):
     this.__gcAddCostOrig(rows)
     price = _global.__gcBaseBuyPrice(this.item, 1)
-    if price == None:
+    if price != None:
+        rows.push(["Цена на клан базе:", price])
         return
-    rows.push(["Цена на клан базе:", price])
+    pan = lol.core.SceneShifter._ref.UIPanels.trade.instance.content
+    item = this.item
+    if not pan or not pan.trader or pan.trader.smod != 85 / 100 or not item or item.tradeID != None:
+        return
+    if item.getProp("mortimer_only"):
+        return
+    unit = _global.__gcSaleUnit(item)
+    if not (unit > 0):
+        return
+    value = Math.max(1, Math.floor(unit * _global.__gcSaleQuality(item)))
+    rows.push(["Выкуп на базе, за 1 шт.:", String(value) + " Афро"])
+    if item.rootID == 0 or item.rootID == 1 or item.rootID == 5:
+        rows.push(["Ставка выкупа:", "Обычная: 70%, с учётом износа и лимитов"])
+    else:
+        rows.push(["Ставка выкупа:", "85% вместо 70%, с учётом лимитов"])
+
 
 def __gcShowCost(item, align):
     this.__gcShowCostOrig(item, align)
@@ -506,6 +557,7 @@ def patches(Asm, undef):
     wraps = []
     for path, method, keep, helper in (
         (('core', 'player', 'Trader'), 'userInfo', '__esTraderInfoOrig', '__esTraderInfo'),
+        (('gpui', 'TradeInterface'), 'init', '__gcTradeInitOrig', '__gcTradeInit'),
         (('core', 'objects', 'Item'), 'initialize', '__gcInitializeOrig', '__gcInitialize'),
         (('core', 'objects', 'Item'), 'getProp', '__gcGetPropOrig', '__gcGetProp'),
         (('gpui', 'Annotation'), 'addSell', '__gcAddSellOrig', '__gcAddSell'),
@@ -534,4 +586,5 @@ def patches(Asm, undef):
     return dict(globals=[(name, params, body) for name, params, body in functions
                          if name in ('__gcQuality', '__gcSaleQuality', '__gcSaleUnit', '__gcConfirmInput',
                                      '__esActive', '__esNominal', '__gcBuyTotal',
-                                     '__gcBaseBuyPrice')], wraps=tuple(wraps))
+                                     '__gcBaseBuyPrice', '__gcRefreshBagPrices',
+                                     '__gcRefreshTradeRates')], wraps=tuple(wraps))

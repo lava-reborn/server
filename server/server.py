@@ -2857,11 +2857,14 @@ class Session:
         first and clamps it against the maximum it has not raised yet."""
         self.send("usrUp", id=0, **self.character().vitals())
 
-    def push_stats(self, **groups):
+    def push_stats(self, *, quest_xp=False, **groups):
         """Send rp_info unasked, whole or for the indexes named in
         attribs=/skills=/specs=. The client asks for this frame once per
         session and never again, so every change is pushed from here."""
-        self.send("rp_info", **self.character().rp_info(**groups))
+        params = self.character().rp_info(**groups)
+        if quest_xp:
+            params['quest_xp'] = 1
+        self.send("rp_info", **params)
         if getattr(self.combat, 'amax_sent', None) is not None:
             self.combat.sync_ap_ceiling()
         self.skill_recount()
@@ -4413,8 +4416,8 @@ class Session:
 
     def pay_xp(self, rewards, spec_rewards=()):
         """Experience a quest pays (rew_xp: (skill, points)), all of it into
-        the skill -- rew_xp trains no specialisation -- with the premium
-        share on top, as any action pays (Character.gain_xp); and into a
+        the skill -- rew_xp trains no specialisation -- at its written value,
+        without residence, calendar or consumable bonuses; and into a
         specialisation alone (rew_spec_xp: (spec, points),
         Character.gain_spec_xp), where it is learned. The card and the
         client's own «Медицина: +20 опыта» follow from the rp_info pushed
@@ -4424,14 +4427,14 @@ class Session:
         ch = self.character()
         changed = {"skills": set(), "specs": set(), "attribs": set()}
         for skill, xp in rewards:
-            for group, idxs in ch.gain_xp(skill, xp).items():
+            for group, idxs in ch.gain_xp(skill, xp, premium=False).items():
                 changed[group] |= idxs
         for spec, xp in spec_rewards:
-            for group, idxs in ch.gain_spec_xp(spec, xp).items():
+            for group, idxs in ch.gain_spec_xp(spec, xp, premium=False).items():
                 changed[group] |= idxs
         ch.save(STORE)
         if any(changed.values()):
-            self.push_stats(**changed)
+            self.push_stats(quest_xp=True, **changed)
         if progression.moves_vitals(changed):
             self.push_vitals()
 

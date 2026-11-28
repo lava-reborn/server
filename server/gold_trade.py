@@ -125,12 +125,24 @@ def cap_consumable_sale(type_id, params, share, unit):
     return min(unit, min(prices) * share / BASE_SALE_SHARE)
 
 
+def effective_sale_share(type_id, share):
+    """Base loot benefit excludes weapons, armour and all wearable belts.
+
+    The rule follows item type, never an unverifiable origin claimed by the
+    client. Buying or trading the same gear cannot turn its bonus back on.
+    """
+    if items.root_of(type_id) in items.BREAKABLE_ROOTS:
+        return min(share, NPC_SALE_SHARE)
+    return share
+
+
 def afro_sale_unit(type_id, params, share=NPC_SALE_SHARE):
     """Healthy A-gear/consumable payout; purchase and repair fields stay separate."""
-    if (items.root_of(type_id) not in (*items.BREAKABLE_ROOTS, items.HEAL, items.AMMO)
-            or params.get("quest") or gold_priced(type_id, params)
+    if (items.root_of(type_id) not in (*items.BREAKABLE_ROOTS, items.HEAL, items.AMMO, items.TRASH)
+            or params.get("quest") or type_id in mortimer.VALUABLES or gold_priced(type_id, params)
             or params.get("cost", 0) <= 0):
         return 0
+    share = effective_sale_share(type_id, share)
     unit = (Fraction(str(params['cost'])) * share
             * Fraction(str(params.get('sell_mod', 1)))
             / Fraction(str(params.get('sell_num') or 1)))
@@ -145,6 +157,7 @@ def sale_unit(type_id, params, share=NPC_SALE_SHARE):
     """
     if protected(type_id, params) or not gold_priced(type_id, params):
         return 0
+    share = effective_sale_share(type_id, share)
     nominal = Fraction(str(params['g_cost']))
     # Buying a finished lab pouch skips five personal daily parts. That
     # convenience premium must not become cash when crafting it instead.

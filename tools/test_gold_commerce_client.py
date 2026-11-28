@@ -185,6 +185,40 @@ class GoldCommerceClient(unittest.TestCase):
             self.assertEqual(len(native), 1)
             self.assertEqual(values, [])
 
+    def test_late_trader_rates_reprice_both_existing_and_future_cards(self):
+        calls = []
+        def bag(tag):
+            card = dict(item=self.item(), priceEnabled=True, attachIconEnabled=True, price_mc={})
+            # A real native card has a nonempty price movie clip.
+            card['price_mc']['fontContainer'] = {}
+            card['showCost'] = lambda item, align: calls.append((tag, card['cost_mod'], card['showItemSellMod'], align))
+            return dict(itemList=Arr([dict(item_mc=card)]))
+        trader = dict(smod=.7, pmod=1, __esTraderInfoOrig=lambda obj: trader.update(obj['param']))
+        self.pan.update(trader=trader, bag_mc=bag('own'), visavisBag_mc=bag('stock'),
+                        __gcTradeInitOrig=lambda: None)
+        self.methods['init'].invoke(self.pan, [])
+        self.methods['userInfo'].invoke(trader, [dict(param=dict(smod=.85, pmod=.9))])
+        self.assertEqual(calls[-2:], [('own', .85, True, 'center'), ('stock', .9, False, 'center')])
+        self.assertEqual((self.pan['cost_mod'], self.pan['bag_mc']['cost_mod']), (.85, .85))
+        self.methods['userInfo'].invoke(trader, [dict(param=dict(smod=.7, pmod=1))])
+        self.assertEqual(calls[-2:], [('own', .7, True, 'center'), ('stock', 1, False, 'center')])
+
+    def test_base_buyback_annotation_distinguishes_loot_gear_and_valuables(self):
+        self.pan['trader'] = dict(smod=.85)
+        for root, expected, unit in ((4, '85% вместо 70%', 85), (0, 'Обычная: 70%', 70), (1, 'Обычная: 70%', 70)):
+            item = self.item(g_sale_unit=0, a_sale_unit=70, a_base_sale_unit=unit,
+                             max_break_abs=0, max_break_cur=0)
+            item['rootID'] = root
+            rows = Arr([])
+            self.methods['addCost'].invoke(dict(item=item, __gcAddCostOrig=lambda arr: None), [rows])
+            self.assertEqual(rows[0][1], str(unit) + ' Афро')
+            self.assertIn(expected, rows[1][1])
+        rows = Arr([])
+        item = self.item(mortimer_only=1)
+        item['rootID'] = 4
+        self.methods['addCost'].invoke(dict(item=item, __gcAddCostOrig=lambda arr: None), [rows])
+        self.assertEqual(len(rows), 0)
+
     def test_paid_base_selects_static_base_price_without_corrupting_cached_ordinary_price(self):
         item = self.item(g_sale_unit=700, g_base_sale_unit=850, size=2)
         unit = self.env['_global']['__gcSaleUnit']
