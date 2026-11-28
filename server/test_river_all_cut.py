@@ -560,12 +560,12 @@ try:
     named_no_place = sorted(c for c in HIDDEN if c not in ON_CELLS)
     check("every hidden name with no place under it is decided: its square goes, or the picture has none there"
           " ('bare', 30; Донгола's cut of the same day adds four of its own by the town, Абу-Хамед's of"
-          " 2026-10-14 two; the withdrawn trial coasts and Oasis tooltip preserve their native artwork)",
+          " 2026-10-14 two; the withdrawn trial coasts preserve their native artwork)",
           ([c for c in named_no_place if c not in plan.cells and c not in plan.bare],
            len([c for c, why in plan.bare.items() if why.startswith(CUT_WHY)]),
            sorted(c for c, why in plan.bare.items() if not why.startswith(CUT_WHY))),
           ([], 30, sorted([(5873,2008),(5876,2007),(5885,2035),(5912,1993),(6140,1869),(6272,1942),
-                          (5972,1738),(5959,1741),(5970,1720),(5967,1724),(5874,2005),
+                          (5959,1741),(5970,1720),(5967,1724),(5874,2005),
                           (5861,1841),(5961,1737),(5875,2016),(5876,2016),(6168,1973),
                           (6190,1987),(6174,1973),(5859,1849),(5859,1856),(5860,1861)])))
     check("  ..and no 'bare' cell is a square's", sorted(set(plan.bare) & (set(SQ_PLACES) | set(SQ_NAMES))), [])

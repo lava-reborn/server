@@ -256,12 +256,13 @@ _COAST_ADDED = {(e["x"],e["y"],e["text"]) for e in LABELS
                 and _SETTLED.get((e["x"],e["y"])) == e["coastal_location"]}
 check("withdrawn preliminary coasts do not leave global labels",
       len(_COAST_ADDED),0)
-check("Oasis caption is hidden without removing its quest point",
-      (texts_at(out,5972,1738),_SETTLED.get((5972,1738))),([],61))
+check("original Oasis caption and Hermit quest point remain available",
+      (texts_at(out,5972,1738),_SETTLED.get((5972,1738))),
+      (texts_at(raw,5972,1738),61))
 OURS_ADDED |= _COAST_ADDED
 kept, clocked = [], 0
 for x, y, text in rows_of(raw, HALFA_BOX):
-    if (x, y) in HALFA_CUT or (x, y) in (PREMIUM_CAMP_CELL, FSC_AIRFIELD_CELL, (5972,1738)):
+    if (x, y) in HALFA_CUT or (x, y) in (PREMIUM_CAMP_CELL, FSC_AIRFIELD_CELL):
         continue
     if (x, y) == OLD_MARKET_CELL and text == OLD_MARKET % "Обмен G комплектов<br>":
         text = OLD_MARKET % ""
