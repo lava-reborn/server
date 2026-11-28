@@ -106,4 +106,4 @@ class MedicalProgression(unittest.IsolatedAsyncioTestCase):
 
 
 if __name__ == '__main__':
-    run_cases()
+    run_cases(MedicalProgression)

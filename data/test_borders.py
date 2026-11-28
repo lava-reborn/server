@@ -31,6 +31,7 @@ Runs under WSL with the client resources present:
     wsl.exe -e python3 data/test_borders.py
 """
 import collections
+from functools import lru_cache
 import io
 import json
 import os
@@ -41,6 +42,17 @@ sys.path.insert(0, os.path.join(os.path.dirname(HERE), "server"))
 import eden_map  # noqa: E402
 import travel  # noqa: E402
 import world  # noqa: E402
+
+
+@lru_cache(maxsize=1)
+def enclosed_trail_cells():
+    """Only the two approved native portals now using compiled tunnel geometry."""
+    expected = {'6016,1743': 623, '6211,1946': 53}
+    cells = load('boundary_world.json')['cells']
+    for key, ident in expected.items():
+        row = cells[key]
+        assert row['id'] == row['source_location'] == ident and row['no_map'], (key,row)
+    return frozenset(tuple(map(int,key.split(','))) for key in expected)
 
 # Where a character starts: the black market of Wadi Halfa (server.GLOBAL_X).
 START = (5970, 1730)
@@ -156,6 +168,11 @@ def check_exits(ring):
     settled = world.settlements()
     placed = list(settled.items()) + list(ring.items())
     for (gx, gy), loc_id in placed:
+        if (gx, gy) in enclosed_trail_cells():
+            # The native 53/623 file is replaced by a compiled corridor at
+            # this coordinate. Its actual exits/collision are checked by
+            # test_boundary_snapshot, not the legacy photograph fixture.
+            continue
         for side in sides_of(loc_id):
             counted += 1
             if (gx, gy) in settled:
@@ -347,7 +364,7 @@ def check_walk():
           " drawn as rock or water"
           % (wide, high, len(blocked)))
 
-    settled = world.settlements()
+    settled = {c: lid for c, lid in world.settlements().items() if c not in enclosed_trail_cells()}
     assert len(settled) >= 227, "borders: only %d settlements" % len(settled)
 
     # The world is no longer one piece, and that is a decision rather than a

@@ -476,7 +476,7 @@ def droppable(type_id):
     si = items.params_of(type_id)
     return bool(si) and not items.out_of_game(type_id) and not items.acquisition_blocked(type_id) \
         and not si.get("quest") \
-        and si.get("cost", 0) > 0
+        and si.get("cost", 0) > 0 and mob_equipment_loot.random_drop_allowed(type_id)
 
 
 _LOOT_WIKI = None
@@ -713,7 +713,7 @@ def one_of_droppable(type_id):
     litter, though no trader pays afro for them."""
     si = items.params_of(type_id)
     return bool(si) and not items.out_of_game(type_id) and not items.acquisition_blocked(type_id) \
-        and not si.get("quest")
+        and not si.get("quest") and mob_equipment_loot.random_drop_allowed(type_id)
 
 
 def one_of_groups(type_id):

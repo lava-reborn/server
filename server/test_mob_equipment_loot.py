@@ -35,7 +35,8 @@ class FixedRandom:
 class EquipmentLoot(unittest.TestCase):
     def test_single_draw_uses_absolute_rates_with_one_result_only(self):
         options = (('armour', (10,), .01), ('weapon', (20,), .005), ('pouch', (30,), .005))
-        with patch.object(equipment, 'categories', return_value=options):
+        with patch.object(equipment, 'categories', return_value=options), \
+                patch.object(equipment, 'random_drop_allowed', return_value=True):
             for multiplier in (.25, .95, 1, 1.25, 1.3, 3.75, 3.9, 100):
                 factor = min(3.9, multiplier)
                 for point, expected in ((0, 10), (.009999, 10), (.01, 20),
@@ -47,7 +48,8 @@ class EquipmentLoot(unittest.TestCase):
 
     def test_unavailable_categories_do_not_transfer_their_chance(self):
         options = (('armour', (), .01), ('weapon', (), .005), ('pouch', (30,), .005))
-        with patch.object(equipment, 'categories', return_value=options):
+        with patch.object(equipment, 'categories', return_value=options), \
+                patch.object(equipment, 'random_drop_allowed', return_value=True):
             for point, expected in ((0, []), (.01, []), (.015, [(30, 1)]), (.02, [])):
                 self.assertEqual(equipment.roll(NS(), FixedRandom(point)), expected)
         for multiplier in (0, -1, float('nan'), float('inf')):

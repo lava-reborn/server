@@ -497,7 +497,7 @@ try:
           shifted, [])
     check("  ..among them the «Горные тропы» doors 598/162 and 623/53, as before the mine",
           [taken.get(k) for k in ((598, "a"), (162, "b"), (623, "a"), (53, "b"))],
-          [(162, 6015, 1747), (598, 5908, 2001), (53, 6017, 1747), (623, 6212, 1948)])
+            [(162, 6016, 1742), (598, 5908, 2001), (53, 6016, 1743), (623, 6211, 1946)])
 
     def reached(start):
         seen, todo = set(start), list(start)

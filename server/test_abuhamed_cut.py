@@ -346,10 +346,10 @@ try:
     ours = {i for i in world.overlay_ids() if i >= world.FIRST_NEW_ID}
     added = {(e["x"], e["y"], e["text"]) for e in LABELS if e.get("add")
              and (world.settlements().get((e["x"], e["y"])) in ours
-                  or (e["x"], e["y"]) == (6083, 1957))}
+                    or (e["x"], e["y"]) in ((6083, 1957), (6210, 1950), (6212, 1950)))}
     check("every other name over Абу-Хамед is the file's own, row for row (the places of ours aside)",
           [r for r in rows_in(out, BOX) if r not in added], want)
-    check("  ..twenty-nine original labels remain after relocating the base", len(want), 29)
+    check("  ..twenty-seven original labels remain after relocating the base and both trail markers", len(want), 27)
     painted = map_cells.load()
     check("the squares of the hidden names with no place under them, and of the places the client has no"
           " file for, are painted over or bare, each decided (data/map_cells.json): the set upgrade's, the"

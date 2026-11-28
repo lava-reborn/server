@@ -174,6 +174,11 @@ def near_town(gx, gy):
     5968,1730, 5968,1731 and 5971,1733, on the walks from Причал to «Генри
     Мл.» 43, the crates 108 and the prison yard 176, stay as safe as they
     were."""
+    # A shifted 3x3 footprint can have a patrol two cells from either boss.
+    # Its existing fighters must not receive a second random camp ambush.
+    rows = world.placements().get(world.pack(int(math.floor(gx)), int(math.floor(gy))), ())
+    if any(row.get('patrol') for row in rows):
+        return True
     placed, former = world.settlements(), world.retired_cells()
     return any((gx + dx, gy + dy) in placed or (gx + dx, gy + dy) in former
                for dx in (-1, 0, 1) for dy in (-1, 0, 1))

@@ -531,6 +531,21 @@ def out_of_game(type_id):
 # existing items, their names, stats and saved ownership must survive.
 PLAYER_GEAR_MAX_LEVEL = 17
 
+# Owner-approved temporary pause, separate from retirement/confiscation.
+# Exact ordinary IDs only: native MP-40 level 9, its modifications, event
+# Schmeisser MP 43 and private simulator copies are not these models.
+TEMPORARILY_DISABLED_WEAPONS = {
+    26692: 'MP-40 (11): unreleased extra model, owner pause 2026-11-28',
+    26695: 'MP-40 (15): unreleased extra model, owner pause 2026-11-28',
+    26698: 'MP-40 (17): unintended ordinary mob drop, owner pause 2026-11-28',
+}
+WEAPON_UNAVAILABLE = 'Это оружие временно недоступно для использования'
+
+
+def weapon_use_error(type_id):
+    """O(1), no catalogue/DB lookup; never retire or rewrite an existing item."""
+    return WEAPON_UNAVAILABLE if type_id in TEMPORARILY_DISABLED_WEAPONS else None
+
 
 def acquisition_blocked(type_id):
     """Ordinary acquisition refuses private templates and unreleased equipment.
@@ -539,7 +554,7 @@ def acquisition_blocked(type_id):
     Ordinary medicine, blueprints and other non-equipment are unaffected.
     Keep this separate from out_of_game: it must not trigger confiscation.
     """
-    if item_templates.contains(type_id):
+    if weapon_use_error(type_id) or item_templates.contains(type_id):
         return True
     if root_of(type_id) == AMMO:
         return type_id not in player_ammunition()
@@ -1799,3 +1814,6 @@ def preload():
     # the loop for it -- in CI, test_terrain_move, which starts on Хальфа's
     # black market (102), read that market's stalls after the map's frames.
     shop_bands.wares()
+    # Resolve the explicit random-loot retail witnesses before the first kill.
+    import equipment_release
+    equipment_release.available_types()

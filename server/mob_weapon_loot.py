@@ -2,6 +2,7 @@
 from functools import lru_cache
 
 import camp_loot
+import equipment_release
 
 
 BASE_CHANCE = .005
@@ -32,5 +33,6 @@ def weapon_type(stats, loc_id=None):
     kind = getattr(stats, 'weapon_class', None) if getattr(stats, 'ranged', False) else 'knife'
     ceiling = min(MAX_LEVEL, stats.level)
     choices = [row for row in battle_balance.mob_weapons().get(kind, ())
-               if row[0] <= ceiling and not items.acquisition_blocked(row[2])]
+               if row[0] <= ceiling and not items.acquisition_blocked(row[2])
+               and equipment_release.available(row[2])]
     return max(choices, default=(0, 0, None))[2]

@@ -1780,6 +1780,10 @@ class Fighter:
         if obj not in ("", "0") and row is None:
             self.ack(inventory.RES_NOT_FOUND)
             return
+        if row is not None and items.weapon_use_error(row['type_id']):
+            self.ack(inventory.RES_REFUSED)
+            sess.answer(items.WEAPON_UNAVAILABLE)
+            return
         why = inventory.weapon_requirement_error(row, self.character()) if row is not None else None
         if why:
             self.ack(inventory.RES_LEVEL)
@@ -1938,6 +1942,11 @@ class Fighter:
         row = self.store.item(uniq)
         if row is not None and row["char_id"] != self.sess.char_id:
             row = None
+        if row is not None and items.weapon_use_error(row['type_id']):
+            Fighter.action_cancelled(self, stop_aim=True)
+            self.sess.answer(items.WEAPON_UNAVAILABLE)
+            self.c_ap()
+            return
         if (row is None or row["slot"] != inventory.PRIMARY or row["brk"] <= 0
                 or inventory.weapon_requirement_error(row, self.character())):
             # Requirements may have changed during aiming. Finish the animation
@@ -2025,6 +2034,10 @@ class Fighter:
 
     def strike_with(self, row, target, hexcell):
         """A swing: fist (5 AP, damage from strength) or the blade in hand."""
+        if row is not None and items.weapon_use_error(row['type_id']):
+            self.ack(inventory.RES_REFUSED)
+            self.sess.answer(items.WEAPON_UNAVAILABLE)
+            return
         if self.strike is not None:
             # Space/click spam must not restart a melee wind-up. Acknowledge
             # the repeated request silently, keeping the original target and
@@ -2099,6 +2112,11 @@ class Fighter:
         syringe = False
         if uniq is not None:
             row = self.store.item(uniq)
+            if row is not None and items.weapon_use_error(row['type_id']):
+                Fighter.action_cancelled(self, stop_aim=True)
+                self.sess.answer(items.WEAPON_UNAVAILABLE)
+                self.c_ap()
+                return
             if (row is None or row["char_id"] != sess.char_id
                     or row["slot"] != inventory.PRIMARY or row["brk"] <= 0
                     or inventory.weapon_requirement_error(row, ch)):
@@ -2787,6 +2805,11 @@ class Fighter:
             row = inv.find(p.get("obj"))
             if row is None:
                 self.ack(inventory.RES_NOT_FOUND)
+                return True
+            if items.weapon_use_error(row['type_id']):
+                # A paused item must not be put into a bag nobody can pick up.
+                self.ack(inventory.RES_REFUSED)
+                self.sess.answer(items.WEAPON_UNAVAILABLE)
                 return True
             if eden.restricted_item(row["type_id"]) or gold_item(row["type_id"]):
                 # A shared ground bag must not bypass gold gear's binding.
@@ -4003,6 +4026,9 @@ class RoomCombat:
                 continue
             if items.out_of_game(type_id) or items.acquisition_blocked(type_id):
                 continue            # (P) or retired by name; see items.out_of_game
+            if (not (type_id in mob.quest_wants and mobs.personal_quest_item(type_id))
+                    and not mob_equipment_loot.random_drop_allowed(type_id)):
+                continue            # Final guard for new ordinary loot/event tables too.
             if type_id in items.GOLD_INGOTS and not gold_ok:
                 continue            # gold off the hours' bosses only, above
             if thing and type_id == mobs.FALLBACK_LOOT:

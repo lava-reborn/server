@@ -1,6 +1,7 @@
 """One mutually exclusive worn A item per corpse, with native quest exceptions."""
 import camp_loot
 import mob_weapon_loot
+import equipment_release
 
 
 POUCHES = {'assault_rifle': 3577, 'rifle': 3578, 'smg': 3579,
@@ -26,12 +27,22 @@ def without_equipment(drops):
     return [(type_id, count) for type_id, count in drops if kind_of(type_id) is None]
 
 
+def random_drop_allowed(type_id):
+    """Release/retail guard for ordinary equipment, never for personal quest rewards."""
+    import items
+    return (not items.out_of_game(type_id) and not items.acquisition_blocked(type_id)
+            and (kind_of(type_id) is None or equipment_release.available(type_id)))
+
+
 def categories(stats, loc_id=None, ambush_camp=None):
     """Fixed base rates; an unavailable category does not subsidise another."""
-    parts = camp_loot.piece_types(stats, loc_id, ambush_camp)
+    parts = tuple(t for t in camp_loot.piece_types(stats, loc_id, ambush_camp)
+                  if random_drop_allowed(t))
     weapon = mob_weapon_loot.weapon_type(stats, loc_id)
     kind = getattr(stats, 'weapon_class', None) if getattr(stats, 'ranged', False) else 'knife'
     pouch = POUCHES.get(kind) if weapon else None
+    if pouch is not None and not random_drop_allowed(pouch):
+        pouch = None
     return (('armour', parts, camp_loot.BASE_CHANCE),
             ('weapon', (weapon,) if weapon else (), mob_weapon_loot.BASE_CHANCE),
             ('pouch', (pouch,) if pouch else (), .005))
@@ -51,7 +62,8 @@ def roll(stats, rng, *, loc_id=None, ambush_camp=None, multiplier=1, protected=(
     for _kind, types, chance in options:
         threshold += chance
         if draw < threshold * factor:
-            return [(rng.choice(types), 1)] if types else []
+            chosen = rng.choice(types) if types else None
+            return [(chosen, 1)] if chosen is not None and random_drop_allowed(chosen) else []
     return []
 
 

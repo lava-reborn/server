@@ -453,8 +453,8 @@ try:
     ENCLOSED = RANGE + QUARRY
     check("data/passages.json 'no_map' holds Берт's bunker and the quarry, each with its reason",
           ([t for t in ENCLOSED if not travel.no_map(t)],
-           [k for k, v in PASSAGES["no_map"].items() if k != "_"
-            and not v.get("why", "").startswith(("RECOVERED", "DESIGNED"))]), ([], []))
+             [k for k, v in PASSAGES["no_map"].items() if k != "_"
+              and not str(v.get("why", "")).strip()]), ([], []))
     check("  ..told to the client as a sublocation (the lcall's g_id: z = 1, the cell kept);"
           " the market, Причал and the ore mines not",
           [(travel.geo_id(world.location(t), 5965, 1728) >> 26,

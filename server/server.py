@@ -5397,6 +5397,8 @@ def refused_gift(type_id):
     if items.retired(type_id):
         return RETIRED_REFUSED % (
             type_id, names.text(items.STRING_ID_OFFSET + type_id).split("$")[0].strip())
+    if items.weapon_use_error(type_id):
+        return items.WEAPON_UNAVAILABLE
     if items.acquisition_blocked(type_id):
         return "Выдача оружия и брони выше %d уровня временно недоступна" % items.PLAYER_GEAR_MAX_LEVEL
     return None
