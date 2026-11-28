@@ -30,6 +30,7 @@ MIN_LEVEL_DAMAGE = .1
 GAP_MAX = 3
 ORDINARY_LEVEL_ACCURACY = .05
 PLAYER_HIT_CAP = .95
+MOB_HIT_CAP = .95
 SINGLE_SHOT_SPREAD = .8
 RIFLE_SPREAD = .95
 MOB_BALANCE_DIVISOR = 1.5
@@ -627,6 +628,38 @@ def mob_weapons():
     return MappingProxyType({kind: tuple(sorted(rows)) for kind, rows in result.items()})
 
 
+@lru_cache(maxsize=1)
+def mob_weapon_damage_overrides():
+    """Explicit NPC budgets: player item corrections must not buff old mobs."""
+    import items
+    raw = json.loads(PATH.with_name('combat_balance.json').read_text(encoding='utf-8'))
+    if raw['source_commit'] != data()['source_commit']:
+        raise ValueError('NPC weapon budgets and equations have different sources')
+    result = {}
+    for key, row in raw.get('mob_weapon_damage_overrides', {}).items():
+        source = int(key)
+        if (str(source) != key or source <= 0 or items.root_of(source) != items.FIRE_ARM
+                or set(row) != {'reason', 'h_damage_min', 'h_damage_max', 'fire_modes'}
+                or not isinstance(row['reason'], str) or not row['reason'].strip()):
+            raise ValueError('Invalid NPC weapon damage override: ' + key)
+        low, high = row['h_damage_min'], row['h_damage_max']
+        modes = items.params_of(source)['fire_mods']
+        if (not isinstance(low, list) or not isinstance(high, list)
+                or len(low) != len(modes) or len(high) != len(modes)
+                or any(type(lo) is not int or type(hi) is not int or not 0 <= lo <= hi
+                       or (shots > 0 and lo == 0)
+                       for lo, hi, shots in zip(low, high, modes))):
+            raise ValueError('Invalid NPC weapon damage bounds: ' + key)
+        allowed = row['fire_modes']
+        if (not isinstance(allowed, list) or not allowed
+                or any(type(mode) is not int or not 0 <= mode < len(modes)
+                       or not modes[mode] for mode in allowed)
+                or len(set(allowed)) != len(allowed)):
+            raise ValueError('Invalid NPC weapon fire modes: ' + key)
+        result[source] = (tuple(low), tuple(high), tuple(allowed))
+    return MappingProxyType(result)
+
+
 def equip_mob(stats, damage_scale, *, site=False):
     """Plain A item modes; camps use KS, defended sites retain their ST profile."""
     if not stats.can_attack or stats.role not in ('mob', 'boss', 'turret', 'animal'):
@@ -702,17 +735,19 @@ def equip_mob(stats, damage_scale, *, site=False):
     ammo_type = next(t for t in params['comp_array'] if items.catalogue()[t][1].endswith(quality))
     ammo = items.params_of(ammo_type)
     stats.loot_ammo_type = ammo_type
+    damage_min, damage_max, allowed_modes = mob_weapon_damage_overrides().get(type_id,
+        (params['h_damage_min'], params['h_damage_max'], range(len(params['fire_mods']))))
     modes = []
     for mode, shots in enumerate(params['fire_mods']):
-        if not shots or not params['max_range'][mode]:
+        if mode not in allowed_modes or not shots or not params['max_range'][mode]:
             continue
         damage = factor * ammo.get('dam_mod', 1)
         stamina = factor * ammo.get('st_mod', 1)
         modes.append(dict(shots=shots, ap=params['fire_costs'][mode], time=params['fire_times'][mode] / 1000,
             reach=math.floor(params['max_range'][mode] * ammo.get('range_mod', 1) + 1e-9),
             opt_lo=params['opt_range'][mode], opt_hi=params['end_opt_range'][mode],
-            dmin=max(1, round(params['h_damage_min'][mode] * damage)),
-            dmax=max(1, round(params['h_damage_max'][mode] * damage)),
+            dmin=max(1, round(damage_min[mode] * damage)),
+            dmax=max(1, round(damage_max[mode] * damage)),
             sdmin=round(params.get('st_damage_min', [0, 0, 0])[mode] * stamina),
             sdmax=round(params.get('st_damage_max', [0, 0, 0])[mode] * stamina),
             piercing=ammo.get('piercing', 1), crit=stats.crit, hit=stats.hit,
@@ -829,7 +864,7 @@ def mob_mode(stats, distance):
         weapon = combat.Weapon(row['shots'], row['dmin'], row['dmax'], row.get('opt_lo', 1),
             row.get('opt_hi', row['reach']), row['reach'], row.get('piercing', 1),
             row.get('cone', 0), row['crit'], None, None,
-            sdmin=row.get('sdmin', 0), sdmax=row.get('sdmax', 0))
-        worth = combat.hit_probability(weapon.cone, distance) * (weapon.dmin + weapon.dmax) * weapon.num_shots / max(1, row['ap'])
+            sdmin=row.get('sdmin', 0), sdmax=row.get('sdmax', 0), hit_cap=MOB_HIT_CAP)
+        worth = combat.hit_probability(weapon.cone, distance, weapon.hit_cap) * (weapon.dmin + weapon.dmax) * weapon.num_shots / max(1, row['ap'])
         choices.append((worth, weapon, row['ap'], row['time']))
     return max(choices, key=lambda entry: entry[0])[1:] if choices else None

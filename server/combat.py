@@ -3350,7 +3350,8 @@ class RoomCombat:
             cone = spread_factor(st.level, st.spec) * st.scatter
             weapon = Weapon(num_shots=st.shots, dmin=st.dmg_min, dmax=st.dmg_max,
                             opt_lo=1, opt_hi=st.range, max_range=st.range, piercing=1,
-                            cone=cone, crit=st.crit, skill=None, spec=None)
+                            cone=cone, crit=st.crit, skill=None, spec=None,
+                            hit_cap=battle_balance.MOB_HIT_CAP)
             mob.aim = loop.call_later(pace.paced(st.attack_time),
                                       self.mob_burst, mob, target, weapon)
         elif st.attack_time:

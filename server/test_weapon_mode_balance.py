@@ -10,12 +10,97 @@ import combat
 import craft
 import inventory
 import items
+import mobs
 import progression
 from testkit import run_cases
 from training.balance import before_release
 
 
 class WeaponModeBalance(unittest.TestCase):
+    def test_longer_third_burst_never_has_less_total_damage_than_second(self):
+        checked = 0
+        for source, (root, name) in items.catalogue().items():
+            if (root != items.FIRE_ARM or items.out_of_game(source)
+                    or items.acquisition_blocked(source)):
+                continue
+            params = items.params_of(source)
+            shots = params['fire_mods']
+            # A third aimed single shot is a different role, not a longer burst.
+            if len(shots) < 3 or not 0 < shots[1] < shots[2]:
+                continue
+            for field in ('h_damage_min', 'h_damage_max'):
+                with self.subTest(source=source, field=field):
+                    self.assertGreaterEqual(params[field][2] * shots[2],
+                                            params[field][1] * shots[1])
+            checked += 1
+        self.assertGreater(checked, 100)
+
+    def test_player_weapon_improvements_do_not_increase_existing_npc_pressure(self):
+        # Frozen current-main outputs, covering ordinary mobs, a capped boss,
+        # a senior boss and the separate site pipeline. No damage is restored
+        # for the erroneous G3/MP5 bursts corrected by this release.
+        expected = {
+            (False, 1027): [(31, 44)],
+            (False, 1029): [(25, 40)],
+            (False, 374): [(6, 8)],
+            (False, 5641): [(25, 40)],
+            (True, 1027): [(35, 49)],
+            (True, 1029): [(28, 45)],
+            (True, 374): [(59, 88)],
+            (True, 5641): [(28, 45)],
+        }
+        player_before = {source: copy.deepcopy(items.params_of(source))
+                         for source in (25287, 25288, 25319, 25320)}
+        for (site, source), bounds in expected.items():
+            stats = mobs.MobStats(source, balanced=not site)
+            if site:
+                battle_balance.configure_mob(stats, site=True)
+            with self.subTest(site=site, source=source):
+                self.assertEqual([(row['dmin'], row['dmax'])
+                                  for row in stats.balanced_modes], bounds)
+                if stats.weapon_type_id in (25287, 25319):
+                    self.assertEqual([row['shots'] for row in stats.balanced_modes], [3])
+                    self.assertIsNone(battle_balance.mob_mode(stats, stats.range + 1))
+        self.assertEqual(set(battle_balance.mob_weapon_damage_overrides()), {25217, 25287, 25319})
+        for source, params in player_before.items():
+            self.assertEqual(items.params_of(source), params)
+        self.assertEqual(items.params_of(25287)['h_damage_max'], [170, 80, 52])
+        self.assertEqual(items.params_of(25319)['h_damage_max'], [218, 100, 64])
+
+    def test_npc_bullets_have_independent_scatter_and_can_miss_at_close_range(self):
+        stats = mobs.MobStats(1029)
+        weapon, cost, delay = battle_balance.mob_mode(stats, 1)
+        self.assertEqual((weapon.num_shots, cost, delay), (3, 24, .7))
+        self.assertEqual(weapon.hit_cap, .95)
+        self.assertEqual(combat.hit_probability(0, 1, weapon.hit_cap), .95)
+        room = combat.RoomCombat.__new__(combat.RoomCombat)
+        room.room = NS(loc=NS(width=128, height=2, obstacles=set()))
+        room.bodies = lambda *_args: {}
+        room.ranged_critical = lambda *_args: False
+        room.bullet_damage = lambda *_args: (10, 0)
+        shooter = NS(cell=0, is_player=False, stats=stats)
+        target = Mock(cell=1, is_player=True, sp_now=lambda: 100)
+        with patch.object(combat, 'bullet_offset', side_effect=(0, .151, 0)) as scatter, \
+                patch.object(combat, 'shot_wall', return_value=None), \
+                patch.object(combat, 'bodies_between', return_value=[]), \
+                patch.object(combat, 'flight', return_value=([], ('faMiss', {}))), \
+                patch.object(combat.holdings, 'defender_friendly', return_value=False):
+            pairs, struck = room.resolve(shooter, target, target.cell, weapon, 3)
+        self.assertEqual(scatter.call_count, 3)
+        self.assertEqual(len(pairs), 3)
+        self.assertEqual(struck[target][:3], [20, 0, 2])
+
+    def test_reviewed_second_modes_are_between_single_and_long_burst(self):
+        for source in (25166, 25167, 25217, 25218, 25265, 25266,
+                       25287, 25288, 25319, 25320):
+            params = items.params_of(source)
+            for field in ('h_damage_min', 'h_damage_max'):
+                first, second, third = [v*n for v,n in zip(params[field], params['fire_mods'])]
+                with self.subTest(source=source, field=field):
+                    self.assertLess(first, second)
+                    self.assertLess(second, third)
+                    self.assertLessEqual(abs(second - (first + third)/2), 3)
+
     def test_galil_and_g3_keep_reviewed_per_projectile_bounds(self):
         for source, minimum, maximum in ((25201, 26, 44), (25202, 31, 53),
                                          (25217, 32, 52), (25218, 38, 62)):
@@ -82,7 +167,11 @@ class WeaponModeBalance(unittest.TestCase):
 
     def test_affected_blueprints_keep_their_declared_damage_bonus(self):
         bases = {25166, 25167, 25201, 25202, 25217, 25218,
-                 25469, 25470, 25636, 25637, 25287, 25288, 25319, 25320}
+                 25265, 25266, 25469, 25470, 25636, 25637,
+                 25287, 25288, 25319, 25320,
+                 24989, 24990, 25006, 25007, 25341, 25342, 25357, 25358,
+                 25373, 25374, 25389, 25390, 25421, 25422, 25437, 25438,
+                 25453, 25454, 25514, 25515, 25540, 26177}
         checked = 0
         for source, (root, name) in items.catalogue().items():
             mod = craft.mod_of(source) if root == items.FIRE_ARM else None
@@ -100,7 +189,8 @@ class WeaponModeBalance(unittest.TestCase):
 
     def test_frozen_range_profiles_are_preserved(self):
         frozen = battle_balance.data()['equipment']
-        for source in (25201, 25202, 25217, 25218, 25287, 25288, 25319, 25320):
+        for source in (25201, 25202, 25217, 25218, 25265, 25266,
+                       25287, 25288, 25319, 25320):
             ordinary = items.params_of(source)
             fixed = frozen.get(str(source), {})
             original = before_release(source, copy.deepcopy(ordinary))
