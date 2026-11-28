@@ -1655,12 +1655,12 @@
    "why": "Approved Dongola base on open ground between warehouses."
   },
   "6210,1950": {
-   "colour": "yellow",
-   "why": "Native mountain masters room relocated to the bottom of the approved pattern"
+   "colour": "red",
+   "why": "Native mountain masters room relocated to the bottom of the approved pattern; retain its original dark red game marker, never an editor overlay colour."
   },
   "6212,1950": {
-   "colour": "yellow",
-   "why": "Native mountain masters room relocated to the bottom of the approved pattern"
+   "colour": "red",
+   "why": "Native mountain masters room relocated to the bottom of the approved pattern; retain its original dark red game marker, never an editor overlay colour."
   }
  },
  "bare": {

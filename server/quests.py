@@ -965,6 +965,11 @@ def check_items(table=None):
 # intact. Both taking and handing in call acquisition_blocked before writes.
 # 943-947 award Paladin components; 960-964 assemble the five armour pieces.
 TEMPORARILY_DISABLED_QUESTS = frozenset(range(943, 948)) | frozenset(range(960, 965))
+# Owner's temporary closure of all masters' quests on the mountain trails
+# (locations 599, 624, 625). Keep NPCs, definitions and journal ids intact;
+# gating the native types also covers generated disassembly/crafting rows.
+DISABLED_MOUNTAIN_TRAIL_NPCS = frozenset((238, 239, 242, 243, 244, 246,
+                                         247, 249, 730, 732, 733))
 # Preserve lesson definitions and journal ids, but close all paid academy XP.
 # Quest 967 (knives for the unarmed teacher) and entry/exit 965/966 stay open.
 DISABLED_ACADEMY_LESSONS = frozenset(range(12000, 12075))
@@ -979,13 +984,15 @@ CLAN_BASE_EXITS = frozenset((18202, 18204))
 
 
 def acquisition_blocked(quest):
-    """Close temporary quests, unreleased rewards and level-18/20 upgrades.
+    """Close temporary quests, mountain masters and unreleased upgrades.
 
     Keep rows and journal instances intact so cancelling stays possible.
     Block the whole mixed reward rather than silently deleting a prize.
     """
     if (quest.type in TEMPORARILY_DISABLED_QUESTS or quest.type in DISABLED_ACADEMY_LESSONS
-            or quest.type in REPLACED_WAREHOUSE_REWARDS):
+            or quest.type in REPLACED_WAREHOUSE_REWARDS
+            or DISABLED_MOUNTAIN_TRAIL_NPCS.intersection(quest.give)
+            or DISABLED_MOUNTAIN_TRAIL_NPCS.intersection(quest.take)):
         return True
     import items
     import craft
