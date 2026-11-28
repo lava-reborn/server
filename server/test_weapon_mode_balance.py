@@ -44,9 +44,12 @@ def retail_automatic_types():
 
 
 @lru_cache(maxsize=2048)
-def automatic_mode_metrics(source, distance, skill=17, spec_level=3, suffix='_KS'):
+def automatic_mode_metrics(source, distance, skill=17, spec_level=3, suffix='_KS', accuracy=None):
     """Expected unarmoured hits and a native complete-magazine/AP cycle."""
     params = items.params_of(source)
+    if accuracy is not None:
+        params = copy.deepcopy(params)
+        params['target_size'] = accuracy[0]
     character = progression.Character()
     character.set_skill(progression.SHOOTING, skill)
     spec = combat.SPEC_OF_WEAPON[params['weapon_type']]
@@ -65,6 +68,10 @@ def automatic_mode_metrics(source, distance, skill=17, spec_level=3, suffix='_KS
                            ammo.get('acc_mod', 1), params['max_range'][mode]),
             0, progression.SHOOTING, spec)
         weapon = battle_balance.weapon(weapon, character, dict(type_id=source, cur_mode=mode), ammo)
+        if accuracy is not None:
+            # Retain level penalties while restoring the reviewed old ceiling.
+            native_cap = battle_balance.weapon_hit_cap(source, mode)
+            weapon = weapon._replace(hit_cap=weapon.hit_cap * accuracy[1][mode] / native_cap)
         if distance > weapon.max_range:
             continue
         low = weapon.dmin
@@ -240,6 +247,8 @@ class WeaponModeBalance(unittest.TestCase):
 
     def test_f2000_accuracy_keeps_senior_tier_and_close_machinegun_role(self):
         names = craft._by_name()
+        effects = (None, *sorted({mod[1] for source in retail_automatic_types()
+                                  if (mod := craft.mod_of(source)) and mod[0] in (25319, 25320)}))
         def variant(base, effect):
             if effect is None:
                 return base
@@ -254,11 +263,11 @@ class WeaponModeBalance(unittest.TestCase):
                                     max(r['dps'] for r in automatic_mode_metrics(machinegun, distance)))
             for skill, spec, suffix in ((17, 3, '_KS'), (20, 5, '_KS'),
                                         (17, 3, '_ST'), (17, 3, '_EK_G')):
-                for effect in (None, 'precision', 'damage_clipsize', 'precision_shotrange'):
+                for effect in effects:
                     selected = variant(source, effect)
                     if selected is None:
                         continue
-                    for distance in (1, 3, 7, 12, 15, 18, 25, 35, 40):
+                    for distance in (1, 3, 7, 12, 15, 18, 25, 28, 35, 40):
                         upper = automatic_mode_metrics(selected, distance, skill, spec, suffix)
                         lower = [row for peer in peers if (other := variant(peer, effect))
                                  for row in automatic_mode_metrics(other, distance, skill, spec, suffix)]
@@ -268,6 +277,36 @@ class WeaponModeBalance(unittest.TestCase):
                                           spec=spec, ammo=suffix, distance=distance):
                             self.assertGreaterEqual(max(r['dps'] for r in upper),
                                                     max(r['dps'] for r in lower))
+
+    def test_f2000_accuracy_reduction_is_bounded_by_twenty_percent(self):
+        previous = {25319: (.57024, .63, .624749),
+                    25320: (.57024, .63, .626926)}
+        checked = 0
+        for source in sorted(retail_automatic_types()):
+            mod = craft.mod_of(source)
+            base = mod[0] if mod else source
+            if base not in previous:
+                continue
+            legacy = copy.deepcopy(items.params_of(base))
+            legacy['target_size'] = list(previous[base])
+            if mod:
+                craft._apply(legacy, mod[1])
+            accuracy = (tuple(legacy['target_size']), (.95, .87, .89))
+            for distance in (1, 3, 7, 12, 15, 25, 28):
+                before = automatic_mode_metrics(source, distance, accuracy=accuracy)
+                after = automatic_mode_metrics(source, distance)
+                with self.subTest(source=source, distance=distance):
+                    self.assertEqual(len(after), len(before))
+                    for old, new in zip(before, after):
+                        self.assertLessEqual(new['mean'], old['mean'] + 1e-8)
+                        self.assertGreaterEqual(new['mean'], .8 * old['mean'] - 1e-8)
+                        self.assertLessEqual(new['dps'], old['dps'] + 1e-8)
+                        self.assertGreaterEqual(new['dps'], .8 * old['dps'] - 1e-8)
+                    if mod is None and distance in (1, 3, 7, 15, 25):
+                        self.assertLess(max(r['dps'] for r in after),
+                                        max(r['dps'] for r in before))
+            checked += 1
+        self.assertEqual(checked, 26)
 
     def test_non_retail_event_accuracy_keeps_native_values(self):
         native = {26276: [.5, .804, 1.45], 26279: [.399, .804, 1.45],
