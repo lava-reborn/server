@@ -29,7 +29,10 @@ class ShippedBoundarySnapshot(unittest.TestCase):
             self.assertEqual(result.returncode,0,(result.stdout+result.stderr)[-8000:])
             report=json.loads(out.read_bytes())
             self.assertGreater(report['original_identities_checked'],10000)
-            self.assertGreater(report['original_inhabited_identities'],1200)
+            # The approved single 3x3 camp footprints remove old peripheral
+            # populated cells. The exact roster is checked by the audit below;
+            # this floor only detects an absent/incomplete native fixture.
+            self.assertGreater(report['original_inhabited_identities'],1100)
             self.assertEqual(set(map(int,report['new_combat_actors'])),{98,130,2418,2419,2420})
             self.assertEqual(report['errors'],[])
 
