@@ -136,7 +136,8 @@ def exit_sides(loc):
     """
     sides = _SIDES.get(loc.id)
     if sides is None:
-        raw = _table("exits_sides.json", "locations").get(str(loc.id))
+        import boundary_world
+        raw = None if boundary_world.row(loc.id) else _table("exits_sides.json", "locations").get(str(loc.id))
         if raw is not None:
             sides = {int(c): s for c, s in raw.items()}
         else:
@@ -244,7 +245,8 @@ def no_map(loc_id):
     walked once, or a tool that is lent for one place (quests.json
     stay_in), is not left behind by a button. A death still sends the
     player home (and stay_in takes the tool back on arrival)."""
-    return isinstance((_passages().get("no_map") or {}).get(str(int(loc_id))), dict)
+    import boundary_world
+    return boundary_world.no_map(loc_id) or isinstance((_passages().get("no_map") or {}).get(str(int(loc_id))), dict)
 
 
 _WAYS = {}
@@ -408,6 +410,12 @@ MAX_STEPS = 2 * ((MAP_X[1] - MAP_X[0]) + (MAP_Y[1] - MAP_Y[0])) + 4
 
 
 def walk(gx, gy, dx, dy):
+    import boundary_world
+    end_x,end_y = _walk_cells(gx,gy,dx,dy)
+    return boundary_world.clip_walk(gx,gy,end_x,end_y)
+
+
+def _walk_cells(gx, gy, dx, dy):
     """The far end of a move, cut short at the first cell nobody can enter.
 
     The walker crosses cells, not points: this is the grid traversal every
@@ -719,6 +727,20 @@ def door_arrival(loc, from_loc_id):
 def plan_exit(loc, pos, gx, gy):
     """Where chWorld;to=1 from this cell leads. Raises Refused when it is
     not an exit cell, or a door whose far side is not known well enough."""
+    import boundary_world
+    projected = boundary_world.row(loc.id)
+    if projected and projected.get('boundary'):
+        side = side_at(loc, pos)
+        if side in ('a','b'):
+            portal = next((r for r in projected.get('portals',{}).values() if r['side']==side),None)
+            if not portal:
+                raise Refused('Куда ведёт этот проход, пока неизвестно')
+            return Exit(portal['target_id'],portal['arrival_hex'],*portal['target_cell'])
+        nx,ny = neighbour(gx,gy,side) if side in SIDES else (gx,gy)
+        if side not in SIDES or not boundary_world.crossing((gx,gy),(nx,ny)):
+            raise Refused('Здесь нет доступного перехода')
+        dest = world.location(destination(nx,ny))
+        return Exit(dest.id,arrival_cell(dest,OPPOSITE[side]),nx,ny)
     if eden_map.cell_of(loc.id) is not None:
         # Plantation edges join only its nine local scenes. Ignore saved
         # global coordinates and passage overrides when choosing the far
@@ -727,7 +749,12 @@ def plan_exit(loc, pos, gx, gy):
         if side not in SIDES:
             raise Refused("Здесь нет выхода")
         nx, ny = neighbour(*eden_map.cell_of(loc.id), side)
-        target = eden_map.location_at(nx, ny)
+        if boundary_world.manifest():
+            if not boundary_world.crossing(eden_map.cell_of(loc.id),(nx,ny)):
+                raise Refused('За пределы плантации пройти нельзя')
+            target = world.location_at(nx,ny)
+        else:
+            target = eden_map.location_at(nx, ny)
         if target is None:
             raise Refused("За пределы плантации пройти нельзя")
         dest = world.location(target)
@@ -758,6 +785,8 @@ def plan_exit(loc, pos, gx, gy):
         return Exit(dest.id, arrival_cell(dest, OPPOSITE[side]), int(gx), int(gy))
     if side in SIDES:
         nx, ny = neighbour(gx, gy, side)
+        if boundary_world.manifest() and not boundary_world.crossing((gx,gy),(nx,ny)):
+            raise Refused('Дальше прохода нет')
         # What a location's own file says about its sides is never argued
         # with here: an outzone pointing east means the player goes east,
         # and the ground beyond is whatever stands there. Only two things

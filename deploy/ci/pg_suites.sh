@@ -38,6 +38,7 @@
 # again once, alone, on a database made fresh again; only a second failure
 # counts, as in tools/run_suite.sh --rerun.
 set -u
+export LAVA_BOUNDARY_WORLD=${LAVA_BOUNDARY_WORLD:-off}  # Original-map regression fixture.
 
 BASE=${LAVA_PG:?set LAVA_PG to postgresql://USER:PASSWORD@HOST:PORT}
 OUT=${1:-/tmp/lava_pg}

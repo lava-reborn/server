@@ -757,6 +757,10 @@ class _XpSession(object):
         pass
 
 
+# These pinned base-price checks are a weekday fixture. The real calendar
+# (including Saturday's +50%) is tested independently in test_weekend_experience.
+_base_calendar = patch.object(progression, 'combat_calendar_multiplier', return_value=1)
+_base_calendar.start()
 _shooter = progression.Character()
 _shooter.skill[progression.SHOOTING] = [6, 0, progression.skill_xp_max(6)]
 _shooter.recalc()
@@ -811,6 +815,7 @@ check("  ..released: one rp_info for the shooting skill, the whole 12 in it",
       (_onegun.sess.pushed, _one.skill[progression.SHOOTING][:2]),
       ([{"skills": {progression.SHOOTING}, "specs": set(), "attribs": set()}], [0, 12]))
 check("  ..and a release with nothing held pushes nothing", (_onegun.release_stats(), _onegun.sess.pushed[1:]), (None, []))
+_base_calendar.stop()
 
 
 # --- what keeps a room at war -----------------------------------------------------

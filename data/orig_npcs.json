@@ -4,11 +4,11 @@
    "creature_types": 5987,
    "dropped_test_high": 85,
    "dropped_test_medium": 18,
-   "manual": 779,
-   "npcs": 1117,
-   "npcs_mob": 477,
+   "manual": 782,
+   "npcs": 1120,
+   "npcs_mob": 480,
    "npcs_npc": 640,
-   "suggest": 569,
+   "suggest": 567,
    "verified_promoted_to_high": 1
   },
   "rule": "type_id -> original string. Numbered families (Npc_Trader000039): member k takes string block start + k, the start picked by a Viterbi pass over wiki placement, role, sprite and the 'Тестовый' string of member 000000; high = own evidence in a run with >=2 evidenced members incl. a wiki-loc or test one. Speaking-name families (dn_, wh_, nz_): transliteration anchors chained in family order; >=2 proper-name anchors = high, 1:1 fill between anchors = medium. Mobs: proper name in one '[N] Name' string or level-equal = high. Single strong signal = medium. Output drops strings starting with 'Тест' and never uses the generated block 9182-9445. Text = html.unescape of the original, nothing else.",
@@ -2939,11 +2939,29 @@
    "name": "[12] Крыса<Br>Дикое животное",
    "string_id": 9498
   },
+  "2418": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[12] Крокодил<Br>Дикое животное",
+   "string_id": 9532
+  },
+  "2419": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[12] Крокодил<Br>Дикое животное",
+   "string_id": 9532
+  },
   "242": {
    "confidence": "high",
    "kind": "npc",
    "name": "Оружейник<Br>Пистолеты",
    "string_id": 48074
+  },
+  "2420": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[20] Крокодил<Br>Дикое животное",
+   "string_id": 9536
   },
   "2426": {
    "confidence": "high",
@@ -7155,16 +7173,6 @@
    "confidence": "medium",
    "name": "[19] Антилопа<Br>Дикое животное",
    "string_id": 9509
-  },
-  "2418": {
-   "confidence": "medium",
-   "name": "[8] Крокодил",
-   "string_id": 10639
-  },
-  "2420": {
-   "confidence": "medium",
-   "name": "[20] Крокодил<Br>Дикое животное",
-   "string_id": 9536
   },
   "2453": {
    "confidence": "medium",

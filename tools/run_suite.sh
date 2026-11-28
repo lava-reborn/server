@@ -76,6 +76,10 @@
 #                   process): tools/impact_map.json, the map of --affected.
 set -u
 
+# Legacy suites pin the original resource map. test_boundary_snapshot enables
+# the shipped manifest explicitly and audits every installed instance/actor.
+export LAVA_BOUNDARY_WORLD=${LAVA_BOUNDARY_WORLD:-off}
+
 KNOWN=
 RERUN=0
 RERUN_JOBS=4

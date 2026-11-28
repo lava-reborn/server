@@ -22,6 +22,29 @@ from avm_test import execute
 
 
 class RepairPolicy(unittest.TestCase):
+    def test_all_real_collectible_families_follow_ordinary_gold_repair_tiers(self):
+        rows=[(7055,800),(7056,2800),(7057,4300),(7059,32500),(7065,39700),
+              (7066,57100),(7067,67400),(7051,67400),(7052,78900),
+              (7068,91600),(7071,91600),(7082,91600),(7053,105600),(7069,105600),(7054,120900)]
+        for t,afro in rows:
+            with self.subTest(type=t):
+                current=items.params_of(t);level=inventory.item_level(t)
+                fallback=dict(current);fallback.pop('repair_cost',None)
+                self.assertEqual(current['repair_cost'],min(afro*repair_policy.multiplier(level),inventory.repair_base_price(fallback)))
+                for brk in (0,current['max_break_abs']//2,current['max_break_abs']-1):
+                    old=inventory.repair_prices(fallback,brk,current['max_break_abs'])
+                    new=inventory.repair_prices(current,brk,current['max_break_abs'])
+                    self.assertLessEqual(new[0],old[0]);self.assertLessEqual(new[1],old[1]);self.assertEqual(new[2],old[2])
+
+    def test_collectible_discount_does_not_change_trade_prices_or_enable_placeholders(self):
+        import gold_trade
+        import progression
+        for t in (7051,7052,7055,7056,7057,7059,7065,7066,7067):
+            p=items.params_of(t)
+            self.assertEqual(gold_trade.auction_base(t),p['g_cost']*progression.GOLD_TO_AFRO_RATE/progression.GOLD_OUNCE)
+            self.assertEqual(p.get('cost',0),0)
+        for t in range(7060,7065):self.assertNotIn('repair_cost',items.params_of(t))
+
     def test_ks12_uses_the_same_level_premium_without_raising_low_levels(self):
         # Expected A valuations are independently recorded from current prices.
         rows = [(7072, 2800), (7073, 4300), (7074, 6400), (7075, 9000),
@@ -74,7 +97,7 @@ class RepairPolicy(unittest.TestCase):
                   send_player_info=lambda: None)
         inv = inventory.Inventory(sess, store)
         inv.trade = inventory.TradeSession(1, 1200)
-        for t in (7072, 7073, 7077, 7080, 7070, 7081):
+        for t in (7072, 7073, 7077, 7080, 7070, 7081, 7056, 7059, 7065, 7051, 7052):
             for code in (inventory.UPD_REPAIR, inventory.UPD_REPAIR_GOLD):
                 with self.subTest(type=t, currency=code):
                     p = items.params_of(t)

@@ -21,6 +21,22 @@ KS12_AFRO_REFERENCES = {
     14: 25217, 15: 25249,
 }
 
+# The same ordinary weapon price tier for every collectible firearm family.
+# These are valuation references only; no item availability/price is changed.
+COLLECTIBLE_AFRO_REFERENCES = {
+    **KS12_AFRO_REFERENCES, 2: 25586, 13: 25755, 16: 24989, 17: 25022,
+    18: 25039, 19: 25074, 20: 25110,
+}
+
+
+def collectible_reference(type_id, level):
+    import items
+    root, name = items.catalogue().get(type_id, (None, ''))
+    if root == items.FIRE_ARM and re.fullmatch(
+            r'lamantin_(?:machine_gun|pistols|assault_rifle|rifle|shotgun|sub_machine_guns)_\d+(?:_.*)?', name):
+        return COLLECTIBLE_AFRO_REFERENCES.get(level)
+    return None
+
 
 def ks12_reference(type_id, level):
     """Repair reference for a known KS-12 level, including named copies."""
@@ -102,14 +118,15 @@ def valuation(type_id, params):
     if level < 1:
         return None
     ks12 = ks12_reference(type_id, level)
-    base = ks12 if ks12 is not None else counterparts().get(type_id)
+    collectible = collectible_reference(type_id, level)
+    base = ks12 if ks12 is not None else collectible if collectible is not None else counterparts().get(type_id)
     if base is None:
         return None
     cost = afro_cost(base)
     if not cost:
         return None
     value = cost * multiplier(level)
-    if ks12 is not None:
+    if collectible is not None or ks12 is not None:
         # Do not raise the cheaper low-level repair while adding coverage.
         # This is the existing fallback used by inventory.repair_base_price.
         current = params.get('cost') or (

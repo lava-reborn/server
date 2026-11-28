@@ -3348,6 +3348,11 @@ def injected(training=None):
     wraps += inventory_controls['wraps']
     from quest_window_client import patches as quest_window_patches
     wraps += quest_window_patches(Asm, UNDEF)['wraps']
+    from global_map_zoom_client import patches as zoom_patches
+    zoom = zoom_patches(Asm, UNDEF)
+    for name, params, body in zoom['globals']:
+        a.var('_global').push(name).function(params, body).op('setmember')
+    wraps += zoom['wraps']
     from eden_inventory_client import patches as eden_inventory_patches
     wraps += eden_inventory_patches(Asm, UNDEF)['wraps']
     from restore_price_client import patches as restore_patches

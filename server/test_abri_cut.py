@@ -333,6 +333,10 @@ try:
     # The clothing market's, since the owner's next order (section 8).
     HIDDEN = dict(HIDDEN)
     HIDDEN[(5865, 1836)] = "Торговцы одеждой"
+    # Withdrawn provisional coast labels may already be embedded in a tester.
+    # They were never native town places; remove only their exact old text.
+    for cell in ((5861,1841),(5859,1849),(5859,1856),(5860,1861)):
+        HIDDEN[cell] = "Побережье: Абри<br>Крокодилы, 11 ур.<br>Охота за опытом. Без добычи предметов."
     # The names over the far bank and Эван's on the north bank went with the
     # owner's cut of everything across the river (2026-10-13): that cut's,
     # server/test_river_all_cut.py.

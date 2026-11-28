@@ -120,6 +120,58 @@ class BushCover(unittest.TestCase):
         cells = {(0, 0): "3", (1, 0): "2", (0, 1): "2"}
         self.assertEqual(self.load(self.xml(anchor=(0, 0), cells=cells)).bushes, frozenset())
 
+    def test_sides_foliage_collision_variants_keep_both_hex_parities_and_heights(self):
+        # Independent fixtures recovered from isolated native placements:
+        # a tuft, both reed orientations and two tall-grass size variants.
+        fixtures = ((3, (((0, 0),),)),
+                    (4, (((0, 0), (0, 1)), ((0, 0), (1, 0)))),
+                    (5, (((-1, -1), (0, -1), (0, 0)),
+                         ((-1, -1), (0, -2), (0, -1), (0, 0)))))
+        for number, shapes in fixtures:
+            for shape in shapes:
+                for ay in (10, 11):
+                    for code in ("2", "3", "4"):
+                        with self.subTest(plant=number, shape=shape, row=ay, code=code):
+                            cells = {(10 + dx + (1 if ay % 2 and dy % 2 else 0), ay + dy): code
+                                     for dx, dy in shape}
+                            loc = self.load(self.xml(anchor=(10, ay), cells=cells,
+                                bush_id="plant%02d.png" % number, kind="lib", library="Sides"))
+                            self.assertEqual(loc.bushes, self.packed(cells))
+                            self.assertEqual(loc.obstacles, self.packed(cells))
+
+    def test_sides_foliage_never_opens_hard_scenery_or_another_library(self):
+        fixtures = {"plant03.png": ((0, 0),),
+                    "plant05.png": ((-1, -1), (0, -1), (0, 0)),
+                    "plant13.png": ((-1, -1), (-1, 0), (0, -1), (0, 0), (0, 1), (1, 0))}
+        for plant, shape in fixtures.items():
+            cells = {(10 + dx, 10 + dy): "2" for dx, dy in shape}
+            base = self.xml(cells=cells, bush_id=plant, kind="lib", library="Sides")
+            for name in ("rock22.png", "palm01.png", "future_scenery.png"):
+                extra = '<sprite id="%s" type="lib" front="8080">0a0a</sprite>' % name
+                self.assertFalse(self.load(base.replace('<obstacles>', extra + '<obstacles>')).bushes)
+            self.assertFalse(self.load(base.replace('library="Sides"', 'library="Desert"')).bushes)
+            self.assertFalse(self.load(base.replace('type="lib"', 'type="ext"')).bushes)
+            self.assertFalse(self.load(base.replace('</obstacles>', '0a0af</obstacles>')).bushes)
+
+    def test_incomplete_or_unsupported_sides_footprints_stay_hard(self):
+        for cells in ({(10, 10): "1"}, {(10, 10): "f"}, {(10, 10): "2"}):
+            loc = self.load(self.xml(cells=cells, bush_id="plant05.png", kind="lib", library="Sides"))
+            self.assertFalse(loc.bushes)
+            self.assertEqual(loc.obstacles, self.packed(cells))
+
+    def test_every_original_coast_has_verified_soft_foliage_without_opening_walls(self):
+        for loc_id in (17,18,19,20,21,22,23,24,38,39,54,55,56,57):
+            with self.subTest(location=loc_id):
+                loc = world.location(loc_id)
+                txt = world._read(world.path_for(loc_id))
+                original = {loc._cell(c) for c in world._chunks(txt, "obstacles", 5)}
+                walls = {loc._cell(c) for c in world._chunks(txt, "obstacles", 5)
+                         if c[4].lower() not in ("2", "3", "4")}
+                self.assertTrue(loc.bushes)
+                self.assertLessEqual(loc.bushes, original)
+                self.assertTrue(loc.bushes.isdisjoint(walls))
+                self.assertEqual(loc.obstacles, original)
+
     def test_real_original_bushes_are_obstacles_with_the_verified_material_codes(self):
         path = os.path.join(world.RES, 'locations', 'static', '1304.xml')
         if not os.path.isfile(path):

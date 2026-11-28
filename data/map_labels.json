@@ -1533,11 +1533,158 @@
    "hide": true
   },
   {
-    "x": 6083,
-    "y": 1957,
-    "add": true,
-    "text": "Клановая база Абу-Хамеда<br>Захват: суббота, 20:00–21:00 МСК; 3 живых соклановца 16+.<br>Аренда: 1 500 000 афро из казны до 21:15; сброс — сб. 19:55.<br>После оплаты: ремонт −50%, расходники −10%, выкуп 85%.",
-    "why": "DESIGNED unified base marker and rules, owner-approved 2026-11-22."
+   "x": 6083,
+   "y": 1957,
+   "add": true,
+   "text": "Клановая база Абу-Хамеда<br>Захват: суббота, 20:00–21:00 МСК; 3 живых соклановца 16+.<br>Аренда: 1 500 000 афро из казны до 21:15; сброс — сб. 19:55.<br>После оплаты: ремонт −50%, расходники −10%, выкуп 85%.",
+   "why": "DESIGNED unified base marker and rules, owner-approved 2026-11-22."
+  },
+  {
+   "x": 5972,
+   "y": 1738,
+   "was": "Оазис",
+   "hide": true,
+   "why": "Owner 2026-11-27: hide the unwanted floating Oasis caption, retaining Q_Hermit 61 and the Lost Comrade quest point. There is no painted marker on this exact cell."
+  },
+  {
+   "x": 5959,
+   "y": 1741,
+   "was": "Побережье: Вади-Хальфа<br>Крокодилы, 4 ур.<br>Охота за опытом. Без добычи предметов.",
+   "hide": true,
+   "withdrawn_coastal_location": 17,
+   "why": "Owner 2026-11-27: withdraw the unapproved preliminary coastal point, including labels embedded in previously updated tester clients."
+  },
+  {
+   "x": 5970,
+   "y": 1720,
+   "was": "Побережье: Вади-Хальфа<br>Крокодилы, 4 ур.<br>Охота за опытом. Без добычи предметов.",
+   "hide": true,
+   "withdrawn_coastal_location": 18,
+   "why": "Owner 2026-11-27: withdraw the unapproved preliminary coastal point, including labels embedded in previously updated tester clients."
+  },
+  {
+   "x": 5967,
+   "y": 1724,
+   "was": "Побережье: Вади-Хальфа<br>Крокодилы, 4 ур.<br>Охота за опытом. Без добычи предметов.",
+   "hide": true,
+   "withdrawn_coastal_location": 19,
+   "why": "Owner 2026-11-27: withdraw the unapproved preliminary coastal point, including labels embedded in previously updated tester clients."
+  },
+  {
+   "x": 5874,
+   "y": 2005,
+   "was": "Побережье: Донгола<br>Крокодилы, 12 ур.<br>Охота за опытом. Без добычи предметов.",
+   "hide": true,
+   "withdrawn_coastal_location": 20,
+   "why": "Owner 2026-11-27: withdraw the unapproved preliminary coastal point, including labels embedded in previously updated tester clients."
+  },
+  {
+   "x": 5861,
+   "y": 1841,
+   "was": "Побережье: Абри<br>Крокодилы, 11 ур.<br>Охота за опытом. Без добычи предметов.",
+   "hide": true,
+   "withdrawn_coastal_location": 21,
+   "why": "Owner 2026-11-27: withdraw the unapproved preliminary coastal point, including labels embedded in previously updated tester clients."
+  },
+  {
+   "x": 5961,
+   "y": 1737,
+   "was": "Побережье: Вади-Хальфа<br>Крокодилы, 4 ур.<br>Охота за опытом. Без добычи предметов.",
+   "hide": true,
+   "withdrawn_coastal_location": 22,
+   "why": "Owner 2026-11-27: withdraw the unapproved preliminary coastal point, including labels embedded in previously updated tester clients."
+  },
+  {
+   "x": 5875,
+   "y": 2016,
+   "was": "Побережье: Донгола<br>Крокодилы, 12 ур.<br>Охота за опытом. Без добычи предметов.",
+   "hide": true,
+   "withdrawn_coastal_location": 23,
+   "why": "Owner 2026-11-27: withdraw the unapproved preliminary coastal point, including labels embedded in previously updated tester clients."
+  },
+  {
+   "x": 5876,
+   "y": 2016,
+   "was": "Побережье: Донгола<br>Крокодилы, 12 ур.<br>Охота за опытом. Без добычи предметов.",
+   "hide": true,
+   "withdrawn_coastal_location": 24,
+   "why": "Owner 2026-11-27: withdraw the unapproved preliminary coastal point, including labels embedded in previously updated tester clients."
+  },
+  {
+   "x": 6168,
+   "y": 1973,
+   "was": "Побережье: Абу-Хамед<br>Крокодилы, 17 ур.<br>Охота за опытом. Без добычи предметов.",
+   "hide": true,
+   "withdrawn_coastal_location": 38,
+   "why": "Owner 2026-11-27: withdraw the unapproved preliminary coastal point, including labels embedded in previously updated tester clients."
+  },
+  {
+   "x": 6190,
+   "y": 1987,
+   "was": "Побережье: Абу-Хамед<br>Крокодилы, 17 ур.<br>Охота за опытом. Без добычи предметов.",
+   "hide": true,
+   "withdrawn_coastal_location": 39,
+   "why": "Owner 2026-11-27: withdraw the unapproved preliminary coastal point, including labels embedded in previously updated tester clients."
+  },
+  {
+   "x": 6174,
+   "y": 1973,
+   "was": "Побережье: Абу-Хамед<br>Крокодилы, 17 ур.<br>Охота за опытом. Без добычи предметов.",
+   "hide": true,
+   "withdrawn_coastal_location": 54,
+   "why": "Owner 2026-11-27: withdraw the unapproved preliminary coastal point, including labels embedded in previously updated tester clients."
+  },
+  {
+   "x": 5859,
+   "y": 1849,
+   "was": "Побережье: Абри<br>Крокодилы, 11 ур.<br>Охота за опытом. Без добычи предметов.",
+   "hide": true,
+   "withdrawn_coastal_location": 55,
+   "why": "Owner 2026-11-27: withdraw the unapproved preliminary coastal point, including labels embedded in previously updated tester clients."
+  },
+  {
+   "x": 5859,
+   "y": 1856,
+   "was": "Побережье: Абри<br>Крокодилы, 11 ур.<br>Охота за опытом. Без добычи предметов.",
+   "hide": true,
+   "withdrawn_coastal_location": 56,
+   "why": "Owner 2026-11-27: withdraw the unapproved preliminary coastal point, including labels embedded in previously updated tester clients."
+  },
+  {
+   "x": 5860,
+   "y": 1861,
+   "was": "Побережье: Абри<br>Крокодилы, 11 ур.<br>Охота за опытом. Без добычи предметов.",
+   "hide": true,
+   "withdrawn_coastal_location": 57,
+   "why": "Owner 2026-11-27: withdraw the unapproved preliminary coastal point, including labels embedded in previously updated tester clients."
+  },
+  {
+   "x": 6210,
+   "y": 1948,
+   "was": "Горные тропы",
+   "hide": true,
+   "why": "Owner: remove old entrances after full Dongola-pattern relocation"
+  },
+  {
+   "x": 6212,
+   "y": 1948,
+   "was": "Горные тропы",
+   "hide": true,
+   "why": "Owner: remove old entrances after full Dongola-pattern relocation"
+  },
+  {
+   "x": 6210,
+   "y": 1950,
+   "text": "Горные тропы",
+   "add": true,
+   "why": "Existing masters room, new bottom approach of the approved mountain pattern"
+  },
+  {
+   "x": 6212,
+   "y": 1950,
+   "text": "Горные тропы",
+   "add": true,
+   "why": "Existing masters room, new bottom approach of the approved mountain pattern"
   }
  ]
 }

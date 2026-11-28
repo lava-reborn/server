@@ -161,12 +161,10 @@ try:
                        and c not in plan.bare)
     check("every hidden name with no place under it is decided: its square goes, stays with a why, or the"
           " picture has none there ('bare', with its why)", undecided, [])
-    check("  ..the 'bare' ones are the thirty-six names with no place and no square: across the river"
-          " Доктор «Д»'s columns, Эван's pasture and quarry, the north-west corner's six;"
-          " by Донгола its three (P) remnants and «Лагерь экспедиции»; by Абу-Хамед Delta Force's"
-          " warehouse and Инсар's stop",
+    check("bare text-only withdrawals include the fourteen preliminary coasts and Oasis; "
+          "the Hermit quest location is retained without erasing its neighbouring artwork",
           (len(plan.bare), sorted(set(plan.bare) - hidden), sorted(set(plan.bare) & live)),
-          (36, [], []))
+          (51, [], [(5972,1738)]))
     eden_cells = EXPECTED_CELLS
     check("only Eden's town has the standard green marker; its sixty-one work cells are not painted",
           {c: colour for c, (colour, _why) in plan.paint.items() if c in eden_cells},

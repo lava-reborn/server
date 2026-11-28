@@ -44,6 +44,7 @@ import action_animation
 import battle_medicine
 import battle_balance
 import bosses
+import coasts
 import mob_equipment_loot
 import eden
 import eden_harvest
@@ -1697,7 +1698,9 @@ class Fighter:
         room = getattr(self.sess, 'room', None)
         npc = room.npcs.get(uniq - mobs.VIRTUAL_BASE) if room is not None else None
         if npc is not None and npc.root == world.MOB:
-            stats = mobs.stats(npc.type_id)
+            state = getattr(room, 'combat', None)
+            live = state.mobs.get(uniq - mobs.VIRTUAL_BASE) if state is not None else None
+            stats = live.stats if live is not None else mobs.stats(npc.type_id)
             if stats.weapon_type_id == type_id:
                 ammo_type = stats.loot_ammo_type
         di = mobs.virtual_di(uniq, type_id, root, ammo_type=ammo_type)
@@ -2912,6 +2915,7 @@ class RoomCombat:
         self.store = store
         self.mobs = {eid: mobs.Mob(eid, npc.type_id, npc.cell)
                      for eid, npc in room.npcs.items() if npc.root == world.MOB}
+        coasts.prepare_room(self)
         eden_harvest.prepare_room(self)
         holdings.prepare_room(self)
         battle_balance.prepare_world_boss_defence(self)
@@ -3000,14 +3004,16 @@ class RoomCombat:
         if self.timer is None:
             self.ap_last = now()
             self._arm()
-        if getattr(self.room, "ambush", None) is not None and not fighter.dead:
+        patrol = getattr(getattr(fighter, 'sess', None), 'char_id', None) in getattr(self.room, 'patrol_interceptions', ())
+        if (getattr(self.room, "ambush", None) is not None or patrol) and not fighter.dead:
             # A pack met on the map (encounters.py) is after the one it
             # waylaid from the moment he is in: the room at war (lch;ws=1,
             # the battle track, the fight's bar) and every creature of it red
             # on his screen (lch;enemy). That is what says «На Вас напали»;
             # the loader's caption of those words never comes (encounters.py).
             for mob in self.mobs.values():
-                if mob.alive and mob.target is None and mob.stats.can_attack:
+                if (mob.alive and mob.target is None and mob.stats.can_attack
+                        and (not patrol or mob.type_id == 98)):
                     self.aggro(mob, fighter)
 
     def _arm(self):
@@ -3967,6 +3973,8 @@ class RoomCombat:
         (LAVA_BOSS_HOURS=off) a boss is back every respawn delay, and an
         ingot on each of those kills would be gold without a limit, so its
         bag holds the rest of its loot and no ingot."""
+        if coasts.without_loot(self.room.loc.id, mob.type_id):
+            return []
         rows = []
         thing = mob.stats.role == "object"
         restricted = not thing and getattr(mob, 'loot_multiplier', 1) <= 0

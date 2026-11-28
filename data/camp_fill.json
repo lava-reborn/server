@@ -573,6 +573,269 @@
     406
    ],
    "why": "Макс Коул's meeting place (MW_bandits8_boss) beside the camp 98: the Peacekeepers of levels 15-16 round their chief, the kinds 98 leaves out (404-406) twice each."
+  },
+  "17": {
+   "fn": "3_LeftDounCorner_ARS",
+   "faction": null,
+   "band": [
+    4,
+    4
+   ],
+   "types": [
+    2418,
+    2418,
+    2418,
+    2418,
+    2418,
+    2418,
+    2418,
+    2418
+   ],
+   "why": "DESIGNED 2026-11-27: restore Вади-Хальфа coast with the original 3_LeftDounCorner_ARS geometry and its 8 empty nests; coastal level-4 profile of crocodile 2418, natural respawn, no loot. Regional placement is not a recovered server table."
+  },
+  "18": {
+   "fn": "16_UpSide_IVS",
+   "faction": null,
+   "band": [
+    4,
+    4
+   ],
+   "types": [
+    2418,
+    2418,
+    2418,
+    2418,
+    2418,
+    2418,
+    2418,
+    2418
+   ],
+   "why": "DESIGNED 2026-11-27: restore Вади-Хальфа coast with the original 16_UpSide_IVS geometry and its 8 empty nests; coastal level-4 profile of crocodile 2418, natural respawn, no loot. Regional placement is not a recovered server table."
+  },
+  "19": {
+   "fn": "13_RightSide_IVS",
+   "faction": null,
+   "band": [
+    4,
+    4
+   ],
+   "types": [
+    2418,
+    2418,
+    2418,
+    2418,
+    2418,
+    2418,
+    2418
+   ],
+   "why": "DESIGNED 2026-11-27: restore Вади-Хальфа coast with the original 13_RightSide_IVS geometry and its 7 empty nests; coastal level-4 profile of crocodile 2418, natural respawn, no loot. Regional placement is not a recovered server table."
+  },
+  "20": {
+   "fn": "17_RightUpCorner_ARS",
+   "faction": null,
+   "band": [
+    12,
+    12
+   ],
+   "types": [
+    130,
+    130,
+    130,
+    130,
+    130,
+    130,
+    130,
+    130
+   ],
+   "why": "DESIGNED 2026-11-27: restore Донгола coast with the original 17_RightUpCorner_ARS geometry and its 8 empty nests; coastal level-12 profile of crocodile 130, natural respawn, no loot. Regional placement is not a recovered server table."
+  },
+  "21": {
+   "fn": "18_LeftUpCorner_ARS",
+   "faction": null,
+   "band": [
+    11,
+    11
+   ],
+   "types": [
+    2419,
+    2419,
+    2419,
+    2419,
+    2419,
+    2419,
+    2419,
+    2419
+   ],
+   "why": "DESIGNED 2026-11-27: restore Абри coast with the original 18_LeftUpCorner_ARS geometry and its 8 empty nests; coastal level-11 profile of crocodile 2419, natural respawn, no loot. Regional placement is not a recovered server table."
+  },
+  "22": {
+   "fn": "4_LeftSide_IVS",
+   "faction": null,
+   "band": [
+    4,
+    4
+   ],
+   "types": [
+    2418,
+    2418,
+    2418,
+    2418,
+    2418,
+    2418,
+    2418,
+    2418
+   ],
+   "why": "DESIGNED 2026-11-27: restore Вади-Хальфа coast with the original 4_LeftSide_IVS geometry and its 8 empty nests; coastal level-4 profile of crocodile 2418, natural respawn, no loot. Regional placement is not a recovered server table."
+  },
+  "23": {
+   "fn": "1_RightDownCorner_ARS",
+   "faction": null,
+   "band": [
+    12,
+    12
+   ],
+   "types": [
+    130,
+    130,
+    130,
+    130,
+    130,
+    130,
+    130,
+    130
+   ],
+   "why": "DESIGNED 2026-11-27: restore Донгола coast with the original 1_RightDownCorner_ARS geometry and its 8 empty nests; coastal level-12 profile of crocodile 130, natural respawn, no loot. Regional placement is not a recovered server table."
+  },
+  "24": {
+   "fn": "14_DownSide_IVS",
+   "faction": null,
+   "band": [
+    12,
+    12
+   ],
+   "types": [
+    130,
+    130,
+    130,
+    130,
+    130,
+    130,
+    130,
+    130
+   ],
+   "why": "DESIGNED 2026-11-27: restore Донгола coast with the original 14_DownSide_IVS geometry and its 8 empty nests; coastal level-12 profile of crocodile 130, natural respawn, no loot. Regional placement is not a recovered server table."
+  },
+  "38": {
+   "fn": "15_HorisontalPass_MWS",
+   "faction": null,
+   "band": [
+    17,
+    17
+   ],
+   "types": [
+    2420,
+    2420,
+    2420,
+    2420,
+    2420,
+    2420,
+    2420
+   ],
+   "why": "DESIGNED 2026-11-27: restore Абу-Хамед coast with the original 15_HorisontalPass_MWS geometry and its 7 empty nests; coastal level-17 profile of crocodile 2420, natural respawn, no loot. Regional placement is not a recovered server table."
+  },
+  "39": {
+   "fn": "5_VerticalPass_MWS",
+   "faction": null,
+   "band": [
+    17,
+    17
+   ],
+   "types": [
+    2420,
+    2420,
+    2420,
+    2420,
+    2420,
+    2420,
+    2420
+   ],
+   "why": "DESIGNED 2026-11-27: restore Абу-Хамед coast with the original 5_VerticalPass_MWS geometry and its 7 empty nests; coastal level-17 profile of crocodile 2420, natural respawn, no loot. Regional placement is not a recovered server table."
+  },
+  "54": {
+   "fn": "19_UpPeninsula_ARS",
+   "faction": null,
+   "band": [
+    17,
+    17
+   ],
+   "types": [
+    2420,
+    2420,
+    2420,
+    2420,
+    2420,
+    2420,
+    2420,
+    2420
+   ],
+   "why": "DESIGNED 2026-11-27: restore Абу-Хамед coast with the original 19_UpPeninsula_ARS geometry and its 8 empty nests; coastal level-17 profile of crocodile 2420, natural respawn, no loot. Regional placement is not a recovered server table."
+  },
+  "55": {
+   "fn": "21_RightPeninsula_MWS",
+   "faction": null,
+   "band": [
+    11,
+    11
+   ],
+   "types": [
+    2419,
+    2419,
+    2419,
+    2419,
+    2419,
+    2419,
+    2419,
+    2419
+   ],
+   "why": "DESIGNED 2026-11-27: restore Абри coast with the original 21_RightPeninsula_MWS geometry and its 8 empty nests; coastal level-11 profile of crocodile 2419, natural respawn, no loot. Regional placement is not a recovered server table."
+  },
+  "56": {
+   "fn": "22_LeftPeninsula_MWS",
+   "faction": null,
+   "band": [
+    11,
+    11
+   ],
+   "types": [
+    2419,
+    2419,
+    2419,
+    2419,
+    2419,
+    2419,
+    2419,
+    2419
+   ],
+   "why": "DESIGNED 2026-11-27: restore Абри coast with the original 22_LeftPeninsula_MWS geometry and its 8 empty nests; coastal level-11 profile of crocodile 2419, natural respawn, no loot. Regional placement is not a recovered server table."
+  },
+  "57": {
+   "fn": "2_DownPeninsula_IVS",
+   "faction": null,
+   "band": [
+    11,
+    11
+   ],
+   "types": [
+    2419,
+    2419,
+    2419,
+    2419,
+    2419,
+    2419,
+    2419,
+    2419
+   ],
+   "why": "DESIGNED 2026-11-27: restore Абри coast with the original 2_DownPeninsula_IVS geometry and its 8 empty nests; coastal level-11 profile of crocodile 2419, natural respawn, no loot. Regional placement is not a recovered server table."
   }
  }
 }

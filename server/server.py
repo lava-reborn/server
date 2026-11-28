@@ -1346,10 +1346,15 @@ class Session:
             except (TypeError, ValueError, OverflowError):
                 valid = False
             if valid:
+                import boundary_world
+                record = boundary_world.cell_row(*point)
+                valid = not boundary_world.blocked(*point) and (not record or record.get('global_entry', True))
+            if valid:
                 map_point = point
             else:
                 # Older rows may have on_map=1 but NULL coordinates. Do not
-                # make every subsequent login fail on floor(NULL).
+                # make every subsequent login fail on floor(NULL), or enter
+                # newly closed water/wall depth through a stale saved position.
                 loc_id, gx, gy = travel.home(c, (START_LOC, GLOBAL_X, GLOBAL_Y))
                 c = dict(c)
                 c.update(loc=loc_id, pos=None, gx=gx, gy=gy, on_map=0)
@@ -1372,6 +1377,13 @@ class Session:
             loc_id, pos = travel.destination(self.gx, self.gy), None
         else:
             map_point = None
+        if not map_point:
+            import boundary_world
+            relocated=boundary_world.manifest().get('relocated_sources',{}).get(str(loc_id))
+            if relocated and world.settlements().get((self.gx,self.gy))!=loc_id:
+                # Keep a valid alias of the native masters' room, otherwise
+                # move an old saved anchor to the approved trail pattern.
+                self.gx,self.gy=relocated
         self.on_map = False
         if loc_id is not None:
             try:
@@ -1391,7 +1403,7 @@ class Session:
         # is a wall now: a location of ours changed since the player left it
         # (data/locations) may have put an obstacle on the very cell, and the
         # client cannot walk a figure off one -- it stands at the entry.
-        if pos and 0 <= pos < self.loc.width * self.loc.height \
+        if pos is not None and 0 <= pos < self.loc.width * self.loc.height \
                 and pos not in self.loc.obstacles:
             self.pos = pos
         else:
@@ -1817,6 +1829,13 @@ class Session:
             x, y = eden_map.clamp(x, y, self.loc.id)
         gx, gy = math.floor(x), math.floor(y)
         destination = world.location_at(gx, gy)
+        import boundary_world
+        installed = boundary_world.cell_row(gx, gy)
+        if boundary_world.manifest() and (boundary_world.blocked(gx, gy) or installed and not installed.get('global_entry', True)):
+            if acknowledge:
+                self.send('cmdAck', res=RES_NO_WAY)
+            self.say('В эту клетку нельзя войти с глобальной карты.')
+            return False
         loc = world.location(destination)
         pending = None
         if oriented and not (not getattr(self, 'eden_sentence', None) and eden.inside(destination)):

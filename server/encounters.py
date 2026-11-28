@@ -186,6 +186,13 @@ def band_at(gx, gy):
     x, y = int(math.floor(gx)), int(math.floor(gy))
     if not world.in_map(x, y) or not world.passable(x, y) or world.in_noob_valley(x, y):
         return None
+    # Explicit level-19 patrol marks are independent of the old camp rings.
+    # Intercept on the marked cell itself, never invent extra neighbour rooms.
+    import boundary_world
+    record = boundary_world.cell_row(x, y)
+    if (record and not eden_map.inside_cell(x, y)
+            and any(t == 98 for c, t in record['spawns'])):
+        return Band(record['id'], (x, y), 19, 19, (98,))
     if world.location_at(x, y) != world.pack(x, y) or near_town(x, y):
         return None
     best, best_d = None, None
@@ -251,7 +258,7 @@ def arrival_cell(loc, side, spawns):
     threats = [(cell, mobs.stats(type_id).range) for cell, type_id in spawns]
 
     def safe(cell):
-        return all(mobs.hex_distance(cell, nest, loc.width) > reach + 1
+        return cell not in loc.obstacles and all(mobs.hex_distance(cell, nest, loc.width) > reach + 1
                    for nest, reach in threats)
 
     if safe(start):
@@ -283,6 +290,7 @@ class Encounters:
         self.rest_until = {}                         # char id -> time
         self.today = {}                              # char id -> (day, encounters)
         self.serial = 0
+        self.stationary = weakref.WeakSet()          # interceptions by existing patrols
 
     # --- who may be waylaid ------------------------------------------------
     def allowed(self, sess):
@@ -321,7 +329,7 @@ class Encounters:
         origin = self.origin.get(sess)
         if origin is None:
             origin = self.origin[sess] = (int(math.floor(sx)), int(math.floor(sy)))
-        chance = CHANCE * self.aggro(sess)
+        chance = min(1.0, max(0.0, CHANCE * self.aggro(sess)))
         leg = sess.leg
         total = math.hypot(tx - sx, ty - sy) / speed if speed > 0 else 0
         # One roll a cell a visit to the map, however many legs are laid over
@@ -363,6 +371,10 @@ class Encounters:
     def start(self, sess, cell, band, leg=None):
         """Waylay the player on a map cell: the pack's room, the pack on its
         nests, and the player into it over the edge he came in by."""
+        import boundary_world
+        record = boundary_world.cell_row(*cell)
+        if record and band.types == (98,):
+            return self.start_patrol(sess, cell, record, leg)
         loc_id = world.pack(*cell)
         loc = world.location(loc_id)
         self.serial += 1
@@ -385,6 +397,32 @@ class Encounters:
                  sess.nick, cell[0], cell[1], len(room.npcs), band.camp, band.lo,
                  band.hi, loc.file)
         sess.meet(loc_id, pos, cell[0], cell[1])
+        return room
+
+    def start_patrol(self, sess, cell, record, leg=None):
+        """Enter the existing shared patrol, without spawning another pack."""
+        loc = world.location(record['id'])
+        key = travel.room_key(loc, *cell)
+        room = self.rooms.get(key)
+        if room.combat is not None:
+            guards = [(m.cell, m.type_id) for m in room.combat.mobs.values()
+                      if m.type_id == 98 and m.alive]
+        else:
+            guards = [(n.cell, n.type_id) for n in room.npcs.values() if n.type_id == 98]
+        if not guards:
+            return None
+        side = entered_over(leg[3], leg[4]) if leg else travel.W
+        pos = arrival_cell(loc, side, guards)
+        if pos is None:
+            return None
+        self.met[sess] = Meeting(key, loc.id, cell)
+        self.stationary.add(sess)
+        if not hasattr(room, 'patrol_interceptions'):
+            room.patrol_interceptions = set()
+        room.patrol_interceptions.add(sess.char_id)
+        when, n = self.today.get(sess.char_id, (None, 0))
+        self.today[sess.char_id] = (day(), (n if when == day() else 0) + 1)
+        sess.meet(loc.id, pos, *cell)
         return room
 
     def room_key(self, sess):
@@ -412,6 +450,11 @@ class Encounters:
         if sess.char_id:
             self.rest_until[sess.char_id] = time.time() + COOLDOWN
         room = self.rooms.rooms.get(met.key)
+        if sess in self.stationary:
+            self.stationary.discard(sess)
+            if room is not None:
+                room.patrol_interceptions.discard(sess.char_id)
+            return  # Shared patrol inhabitants and their respawn remain intact.
         if room is not None and not room.players \
                 and not any(m.key == met.key for m in self.met.values()):
             del self.rooms.rooms[met.key]

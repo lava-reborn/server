@@ -197,6 +197,12 @@ def auction_base(type_id):
     if not gold_priced(type_id, params):
         return params.get('cost', 0)
     matched = params.get('repair_cost')
+    # Extending the repair discount to collectibles does not reprice their
+    # existing auction valuation. KS-12 retains its earlier policy.
+    level = max(params.get('need_skills') or [0])
+    if (repair_policy.collectible_reference(type_id, level) is not None
+            and repair_policy.ks12_reference(type_id, level) is None):
+        matched = None
     if matched is not None:
         return matched
     # Blueprints cannot be repaired. Apply the same level multiplier to

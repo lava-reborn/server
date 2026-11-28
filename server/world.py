@@ -131,6 +131,30 @@ _BUSH_FOOTPRINTS = {
         (-1, 1, "2"), (0, 1, "2")),
 }
 
+# Sides-library foliage, checked against the exported artwork and repeated
+# isolated collision components in original coast XMLs 17-24, 38-39, 54-57.
+# These are collision shapes, never sprite fronts or artwork bounding boxes.
+# Native low-plant height variants use one material code from 2, 3 or 4.
+# Prefer the complete larger shape where an original has two variants.
+_SIDE_BUSH_SHAPES = {
+    1: (((-1, 1), (0, -1), (0, 0), (1, 0)), ((-1, 1), (0, 0), (1, 0))),
+    2: (((0, -1), (0, 0), (1, 0)), ((0, 0), (1, 0))),
+    3: (((0, 0),),),
+    4: (((0, 0), (0, 1)), ((0, 0), (1, 0))),
+    5: (((-1, -1), (0, -2), (0, -1), (0, 0)), ((-1, -1), (0, -1), (0, 0))),
+    6: (((-1, -1), (0, -2), (0, -1), (0, 0)), ((-1, -1), (0, -1), (0, 0))),
+    7: (((0, 0),),), 8: (((0, 0),),), 9: (((0, 0),),), 10: (((0, 0),),),
+    11: (((0, -1), (0, 0), (1, 0)), ((0, 0), (1, 0))),
+    13: (((-1, -1), (-1, 0), (0, -1), (0, 0), (0, 1), (1, 0)),),
+    14: (((-1, -1), (0, -1), (0, 0)),),
+}
+_BUSH_VARIANTS = {
+    ("lib", "Sides", "plant%02d.png" % number):
+        tuple(tuple((dx, dy, "234") for dx, dy in shape) for shape in shapes)
+    for number, shapes in _SIDE_BUSH_SHAPES.items()
+}
+
+
 # Visually checked low vegetation without a tree trunk, rock or building.
 # It must not reserve a hard scenery box over a verified bush, but its own
 # cells remain hard until a separate collision footprint is verified.
@@ -179,23 +203,34 @@ def _bush_cells(txt, attrs, width, height):
             at = dict(re.findall(r'(\w+)="([^"]*)"', match.group(1)))
             kind = at.get("type") or "lib"
             key = kind, attrs.get("library", "") if kind != "ext" else "", at.get("id", "")
-            template = _BUSH_FOOTPRINTS.get(key)
+            native = _BUSH_FOOTPRINTS.get(key)
+            templates = (native,) if native is not None else _BUSH_VARIANTS.get(key, ())
             anchors = "".join(match.group(2).split())
             front = "".join(at.get("front", "").split())
             if len(anchors) % 4 or len(front) % 4:
                 return frozenset()
-            if key in _LOW_VEGETATION:
+            if key in _LOW_VEGETATION and not templates:
                 continue
             for i in range(0, len(anchors), 4):
                 ax, ay = int(anchors[i:i + 2], 16), int(anchors[i + 2:i + 4], 16)
-                if template is not None:
+                complete = False
+                attempted = []
+                for template in templates:
                     footprint = [(ax + dx + (1 if ay % 2 and dy % 2 else 0), ay + dy, code)
                                  for dx, dy, code in template]
-                    if all(0 <= x < width and 0 <= y < height and codes.get((x, y)) == {code}
+                    attempted.extend((x, y) for x, y, _code in footprint)
+                    if all(0 <= x < width and 0 <= y < height
+                           and len(codes.get((x, y), ())) == 1
+                           and next(iter(codes[x, y])) in code
                            for x, y, code in footprint):
                         candidates.append([(x, y) for x, y, _code in footprint])
-                        continue
-                    reserve([(x, y) for x, y, _code in footprint])
+                        complete = True
+                        break
+                if complete:
+                    continue
+                # A partial plant keeps every possible collision cell hard,
+                # including cells outside its unrelated depth-sorting front.
+                reserve(attempted)
                 points = [(ax, ay)]
                 # The client replaces a one-cell depth front with the
                 # anchor, including legacy front="0000" declarations.
@@ -391,6 +426,10 @@ def overlay_ids(root=None):
 
 def overlay_path(loc_id):
     """Our file for a static id, or None when the overlay has none."""
+    import boundary_world
+    generated = boundary_world.overlay_path(loc_id)
+    if generated is not None:
+        return generated
     p = os.path.join(OVERLAY, "static", "%d.xml" % int(loc_id))
     return p if os.path.isfile(p) else None
 
@@ -402,6 +441,15 @@ def static_path(loc_id):
     if p is not None:
         return p
     p = os.path.join(RES, "locations", "static", "%d.xml" % int(loc_id))
+    return p if os.path.isfile(p) else None
+
+
+def source_static_path(loc_id):
+    """Unprojected native XML, including authored static overlays."""
+    p = os.path.join(OVERLAY, 'static', '%d.xml' % int(loc_id))
+    if os.path.isfile(p):
+        return p
+    p = os.path.join(RES, 'locations', 'static', '%d.xml' % int(loc_id))
     return p if os.path.isfile(p) else None
 
 
@@ -480,9 +528,9 @@ def is_wilderness(loc_id):
     return static_path(loc_id) is None and loc_id >> 26 == 0
 
 
-def path_for(loc_id):
+def source_path_for(loc_id):
     """The file behind a location id, or None where the client draws nothing."""
-    static = static_path(loc_id)
+    static = source_static_path(loc_id)
     if static is not None:
         return static
     if loc_id >> 28 == 4:
@@ -493,6 +541,11 @@ def path_for(loc_id):
         return os.path.join(RES, "locations", "desert",
                             "%04d.xml" % (((gx + gy) & 3) + 1))
     return None
+
+
+def path_for(loc_id):
+    import boundary_world
+    return boundary_world.overlay_path(loc_id) or source_path_for(loc_id)
 
 
 class Location:
@@ -538,6 +591,10 @@ class Location:
         # is kept peaceful at all (NOOB_VALLEY_SAFE).
         self.newbies = (NOOB_VALLEY_SAFE and self.file.startswith("desert/")
                         and in_noob_valley(*unpack(loc_id)))
+        import boundary_world
+        projected_cell = boundary_world.coordinate(loc_id)
+        if projected_cell is not None and NOOB_VALLEY_SAFE and in_noob_valley(*projected_cell):
+            self.newbies = True
         if self.newbies:
             self.pvp = 0
 
@@ -662,6 +719,10 @@ def cell_of(loc_id):
     back wherever they happened to stand before. A settlement wide enough
     to cover two cells answers with the first.
     """
+    import boundary_world
+    projected = boundary_world.coordinate(loc_id)
+    if projected is not None:
+        return projected
     island = eden_map.cell_of(loc_id)
     if island is not None:
         return island
@@ -690,6 +751,10 @@ def location_at(gx, gy):
     # settlement icon is drawn from the cell's top-left corner, and a player
     # standing anywhere on that square expects to walk into it. Rounding
     # sent the half of the square past its centre into the neighbour.
+    import boundary_world
+    projected = boundary_world.cell_row(gx, gy)
+    if projected is not None:
+        return projected['id']
     island = eden_map.location_at(gx, gy)
     if island is not None:
         return island
@@ -856,6 +921,12 @@ def passable(gx, gy):
     Floor, not round, like location_at: the cell under a position is the one
     the client draws the figure on.
     """
+    import boundary_world
+    projected = boundary_world.blocked(gx, gy)
+    if projected is not None:
+        record = boundary_world.cell_row(gx, gy)
+        return (in_map(int(math.floor(gx)), int(math.floor(gy))) and not projected
+                and not eden_map.inside_cell(gx, gy) and (not record or record.get('global_entry', True)))
     if eden_map.inside_cell(gx, gy):
         return False
     x, y = int(math.floor(gx)), int(math.floor(gy))

@@ -837,6 +837,9 @@ def loot_for(st, rng, wanted=(), *, loc_id=None, ambush_camp=None,
     brought it down still need (quest_roll; wanted, the types). combat.
     drop_loot still turns away anything out of the game (items.out_of_game),
     whatever a list says."""
+    import coasts
+    if coasts.without_loot(loc_id, getattr(st, 'type_id', None)):
+        return []
     if st.role != 'object' and (multiplier <= 0 or
             (killer_level is not None and loot_level_factor(st.level - killer_level) <= 0)):
         personal = [t for t in wanted if personal_quest_item(t)]

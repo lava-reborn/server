@@ -54,6 +54,7 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(os.path.dirname(HERE), "server"))
 import world  # noqa: E402
+import coasts  # noqa: E402
 
 # Camp family number (Bandit_CampN, Up_Camp_*LVL_NN) -> faction prefix.
 CAMP_FACTIONS = {
@@ -306,6 +307,11 @@ CAMP_FILL = {
 }
 
 
+# Coastal populations share the same ordinary spawn mechanism.
+from build_coastal_locations import fill_rows as coastal_fill_rows
+CAMP_FILL.update(coastal_fill_rows())
+
+
 def camp_fill(mt, types):
     """data/camp_fill.json out of CAMP_FILL, checked: one type per empty
     slot of the file, each a fighter the client can draw (root 0, not an
@@ -325,8 +331,9 @@ def camp_fill(mt, types):
             assert rec["role"] in roles, "camp fill: %d in %d is a %s" % (t, loc_id, rec["role"])
             assert faction is None or prefix_of(rec["name"]) == faction, \
                 "camp fill: %d (%s) in %d is not %s" % (t, rec["name"], loc_id, faction)
-            assert lo <= rec["level"] <= hi, "camp fill: %d (%s, level %d) in %d is outside %d-%d" % (
-                t, rec["name"], rec["level"], loc_id, lo, hi)
+            level = coasts.profiles().get((loc_id, t), rec["level"])
+            assert lo <= level <= hi, "camp fill: %d (%s, level %d) in %d is outside %d-%d" % (
+                t, rec["name"], level, loc_id, lo, hi)
         fill[str(loc_id)] = dict(fn=loc.fn, faction=faction, band=[lo, hi], types=picked, why=why)
     return {
         "_": "DESIGNED, not recovered: who stands in the empty (type 0) spawn slots of "

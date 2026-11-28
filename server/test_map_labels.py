@@ -27,6 +27,10 @@ SPECIALISTS = {(5857, 1929): 'Плантация Эдем<br>Сортировщ�
                (5859, 1929): 'Плантация Эдем<br>Сортировщик зелёных бананов'}
 COMPATIBILITY = OLD_COMPATIBILITY | {
     (*cell, 'Плантация Эдем<br>Сортировщик бананов') for cell in SPECIALISTS}
+with open(os.path.join(os.path.dirname(HERE),'data','map_labels.json'),encoding='utf-8') as _fh:
+    _WITHDRAWN = [r for r in json.load(_fh)['labels'] if 'withdrawn_coastal_location' in r]
+COAST_COMPATIBILITY = {(r['x'],r['y'],r['was']) for r in _WITHDRAWN}
+COMPATIBILITY |= COAST_COMPATIBILITY
 check("the six Eden compatibility rules hide only exact obsolete overlay rows",
       {(x, y, was) for x, y, was, new in edits
        if was is not None and was.startswith('Плантация Эдем<br>Сортировщик') and new is None},
@@ -60,7 +64,7 @@ def rows_at(doc, x, y, was):
 print("every edit names one row the client really has")
 for x, y, was, new in edits:
     if (x, y, was) in COMPATIBILITY:
-        check("the original has no later Eden overlay text at (%d,%d)" % (x, y),
+        check("the original has no later compatibility overlay text at (%d,%d)" % (x, y),
               rows_at(raw, x, y, was), [])
         continue
     if was is None:
@@ -245,9 +249,19 @@ except OSError:
 with open(os.path.join(_DATA, "settlements.json"), encoding="utf-8") as _fh:
     _SETTLED = {tuple(int(v) for v in k.split(",")): lid for k, lid in json.load(_fh)["cells"].items()}
 OURS_ADDED = {(x, y, new) for x, y, was, new in edits if was is None and _SETTLED.get((x, y)) in _OURS}
+with open(os.path.join(_DATA, "coastal_locations.json"), encoding="utf-8") as _fh:
+    _COAST_IDS = {int(i) for i in json.load(_fh)["locations"]}
+_COAST_ADDED = {(e["x"],e["y"],e["text"]) for e in LABELS
+                if e.get("coastal_location") in _COAST_IDS
+                and _SETTLED.get((e["x"],e["y"])) == e["coastal_location"]}
+check("withdrawn preliminary coasts do not leave global labels",
+      len(_COAST_ADDED),0)
+check("Oasis caption is hidden without removing its quest point",
+      (texts_at(out,5972,1738),_SETTLED.get((5972,1738))),([],61))
+OURS_ADDED |= _COAST_ADDED
 kept, clocked = [], 0
 for x, y, text in rows_of(raw, HALFA_BOX):
-    if (x, y) in HALFA_CUT or (x, y) in (PREMIUM_CAMP_CELL, FSC_AIRFIELD_CELL):
+    if (x, y) in HALFA_CUT or (x, y) in (PREMIUM_CAMP_CELL, FSC_AIRFIELD_CELL, (5972,1738)):
         continue
     if (x, y) == OLD_MARKET_CELL and text == OLD_MARKET % "Обмен G комплектов<br>":
         text = OLD_MARKET % ""

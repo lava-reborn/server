@@ -5,6 +5,7 @@ from types import SimpleNamespace as NS
 from unittest.mock import Mock, patch
 
 import combat
+import coasts
 import location_entry
 import movement
 import mobs
@@ -77,6 +78,50 @@ class GlobalEntrySessionTests(unittest.IsolatedAsyncioTestCase):
         return location_entry.choose(room.loc, x, y,
             occupied=movement.get(room).occupied(exclude=self.s),
             near_exits=location_entry.has_combat_mobs(room))
+
+    async def test_installed_regional_coasts_enter_from_the_map_with_local_profiles(self):
+        import boundary_world as bw
+        import json
+        from pathlib import Path
+        snapshot=json.loads((Path(__file__).resolve().parents[1]/'data/boundary_world.json').read_bytes())
+        # These are installed per-coordinate rooms, not the fourteen withdrawn
+        # preliminary bindings. Leave every other session test on its baseline.
+        def clear():
+            for fn in (bw.by_id,bw.blocked_cells,bw.regions,bw.overlay_path,coasts.profiles):
+                fn.cache_clear()
+            world._CACHE.clear();travel._SIDES.clear();travel._WAYS.clear()
+        self.enterContext(patch.object(bw,'manifest',return_value=snapshot))
+        clear();self.addCleanup(clear)
+        for key in ('5945,1728','5854,1846','5853,1939','6093,2015'):
+            record=snapshot['cells'][key]
+            loc_id=record['id'];type_id=record['crocodile']['type_id'];level=record['crocodile']['level']
+            for fraction in (.01,.5,.99):
+                with self.subTest(location=loc_id,fraction=fraction):
+                    self.on_map()
+                    self.s.loc = world.location(loc_id)
+                    self.s.pos = self.s.loc.entry_cell()
+                    gx,gy = world.cell_of(loc_id)
+                    self.s.gx,self.s.gy = gx+fraction,gy+fraction
+                    self.s.handle('chWorld',{})
+                    self.assertEqual(self.acks(),[0])
+                    self.assertFalse(self.s.on_map)
+                    self.s.handle('lenter',{'accept':1})
+                    self.assertFalse(self.s.closed)
+                    self.assertEqual(self.s.loc.id,loc_id)
+                    self.assertEqual(self.s._accepted_place[0],loc_id)
+                    self.assertEqual((self.s.gx,self.s.gy),(gx,gy))
+                    rc = self.s.room.combat
+                    self.assertTrue(rc.mobs)
+                    self.assertEqual({m.type_id for m in rc.mobs.values()},{type_id})
+                    for mob in rc.mobs.values():
+                        self.assertEqual(mob.level,level)
+                        self.assertGreater(mobs.hex_distance(self.s.pos,mob.cell,self.s.loc.width),
+                                           mob.stats.aggro)
+                    mob = next(iter(rc.mobs.values()))
+                    self.s.send_npc_info(mob.eid)
+                    info = next(fields for cmd,fields in reversed(self.s.writer.frames)
+                                if cmd == world.USERINFO[world.MOB] and fields.get('id')==mob.eid)
+                    self.assertEqual(info['lvl'],level)
 
     async def test_real_global_toggle_uses_fraction_and_publishes_same_safe_cell(self):
         positions = set()
@@ -413,6 +458,26 @@ class GlobalEntrySessionTests(unittest.IsolatedAsyncioTestCase):
                         expected = travel.home(dict(saved), (server.START_LOC, server.GLOBAL_X, server.GLOBAL_Y))
                         self.assertEqual((self.s.loc.id, self.s.gx, self.s.gy), expected)
                     self.assertNotIn(self.s.pos, self.s.loc.obstacles)
+
+    async def test_saved_global_position_cannot_enter_new_depth_or_internal_tunnel(self):
+        import boundary_world as bw
+        import eden
+        for confined in (False,True):
+            if confined:
+                eden.assign(self.store,self.s.char_id,'test','Closed saved cell')
+            for blocked,record in ((True,None),(False,{'global_entry':False})):
+                with self.subTest(confined=confined,blocked=blocked), \
+                        patch.object(bw,'blocked',return_value=blocked),patch.object(bw,'cell_row',return_value=record):
+                    self.store.save_position(self.s.char_id,103,None,6000.5,1750.5,True)
+                    saved=self.store.character(self.s.char_id)
+                    self.assertIsNone(self.s.restore(saved))
+                    self.assertFalse(self.s.on_map)
+                    if confined:
+                        self.assertTrue(eden.inside(self.s.loc))
+                    else:
+                        self.assertEqual((self.s.loc.id,self.s.gx,self.s.gy),
+                            travel.home(dict(saved),(server.START_LOC,server.GLOBAL_X,server.GLOBAL_Y)))
+                    self.assertNotIn(self.s.pos,self.s.loc.obstacles)
 
     def home(self):
         row = self.store.character(self.s.char_id)

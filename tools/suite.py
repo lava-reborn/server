@@ -589,6 +589,7 @@ def run(paths, out, jobs, res, stagger, record_dir=None, timeout=1500):
                        LAVA_DB=os.path.join(own, "lava.db"),
                        TMPDIR=os.path.join(own, "tmp"),
                        LAVA_TEST_REPORT=os.path.join(out, n + ".jsonl"))
+            env.setdefault('LAVA_BOUNDARY_WORLD', 'off')  # Native-map fixtures; snapshot suite explicitly opts in.
             if record_dir:
                 env.update(LAVA_IMPACT_OUT=record_dir, LAVA_IMPACT_ROOT=ROOT, LAVA_IMPACT_SUITE=n,
                            PYTHONPATH=os.pathsep.join([os.path.join(HERE, "impact")]

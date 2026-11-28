@@ -33,6 +33,12 @@ import subprocess
 import sys
 import time
 
+# Restoration suites pin the original map/actor tables as their fixture.
+# Release-snapshot suites explicitly enable their manifest in a subprocess;
+# both the baseline and the installed 13k-instance world are checked in CI.
+# This module is test-only and is never imported by the running game.
+os.environ.setdefault('LAVA_BOUNDARY_WORLD', 'off')
+
 fails = []
 
 _HEADER = re.compile(r"^\s*# -{2,}\s*(.+?)\s*-*\s*$")
