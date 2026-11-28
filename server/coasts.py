@@ -70,7 +70,10 @@ def patrol_stats():
             dmax=max(1,round(mode['dmax']*gold['h_damage_max'][index]/old['h_damage_max'][index]))))
     stats.balanced_modes=tuple(modes);row=max(modes,key=lambda r:r['reach'])
     stats.dmg_min,stats.dmg_max=row['dmin'],row['dmax']
-    stats.plain_weapon=False
+    # This flag selects the ordinary item-based NPC damage path, not A/G
+    # item quality. Disabling it would add legacy pressure damage x1.5 and
+    # extra stamina damage on top of the approved gold blueprint upgrade.
+    stats.plain_weapon=True
     return stats
 
 

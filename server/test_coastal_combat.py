@@ -152,6 +152,20 @@ class CoastalCombat(unittest.IsolatedAsyncioTestCase):
         self.assertAlmostEqual(fixture.skill_xp(ch,start=16),expected)
         rc.room.players={}
 
+    async def test_patrol_gold_weapon_does_not_enable_legacy_extra_pressure(self):
+        # The gold item's higher bounds are already applied by patrol_stats.
+        # Resolve a fixed impact through the real ordinary combat policy:
+        # an additional legacy multiplier or SP shock was never approved.
+        patrol=coasts.patrol_stats()
+        shooter=NS(is_player=False,stats=patrol)
+        character=p.Character()
+        character.set_skill(p.SHOOTING,17)
+        target=NS(is_player=True,character=lambda:character,armor=lambda:0)
+        for critical,expected in ((False,(40,0)),(True,(40,40))):
+            with self.subTest(critical=critical):
+                self.assertEqual(balance.split(shooter,target,40,.9,critical,1000,
+                                               ordinary=True),expected)
+
     async def test_fangs_use_native_gold_knife_values_without_creating_an_item(self):
         self.assertEqual(tuple(coasts.fangs(4)[k] for k in ('h_damage_min','h_damage_max')),(37,49))
         self.assertEqual(tuple(coasts.fangs(11)[k] for k in ('h_damage_min','h_damage_max')),(68,111))
