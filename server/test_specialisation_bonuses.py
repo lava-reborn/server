@@ -24,8 +24,8 @@ from training.arena import TrainingFighter
 class SpecialisationBonuses(unittest.IsolatedAsyncioTestCase):
     async def test_galil_at_level_thirteen_uses_fourth_spec_and_actual_ammo_in_every_fire_mode(self):
         params = items.params_of(25201)
-        self.assertEqual(params['h_damage_min'], [62, 42, 111])
-        self.assertEqual(params['h_damage_max'], [137, 61, 192])
+        self.assertEqual(params['h_damage_min'], [62, 42, 26])
+        self.assertEqual(params['h_damage_max'], [137, 61, 44])
         for mode in range(3):
             cones = []
             for ammo_type in (6107, 6119, 6143):

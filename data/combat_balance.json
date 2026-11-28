@@ -370,24 +370,24 @@
     "25166": {
       "h_damage_min": [
         30,
-        44,
+        32,
         21
       ],
       "h_damage_max": [
         91,
-        92,
+        68,
         39
       ]
     },
     "25167": {
       "h_damage_min": [
         36,
-        52,
+        38,
         25
       ],
       "h_damage_max": [
         109,
-        110,
+        82,
         47
       ]
     },
@@ -419,36 +419,36 @@
       "h_damage_min": [
         62,
         42,
-        111
+        26
       ],
       "h_damage_max": [
         137,
         61,
-        192
+        44
       ]
     },
     "25202": {
       "h_damage_min": [
         75,
         50,
-        131
+        31
       ],
       "h_damage_max": [
         164,
         74,
-        232
+        53
       ]
     },
     "25217": {
       "h_damage_min": [
         62,
         52,
-        130
+        32
       ],
       "h_damage_max": [
         162,
         92,
-        220
+        52
       ],
       "fire_costs": [
         19,
@@ -460,12 +460,12 @@
       "h_damage_min": [
         75,
         62,
-        158
+        38
       ],
       "h_damage_max": [
         195,
         111,
-        266
+        62
       ],
       "fire_costs": [
         19,
@@ -557,26 +557,26 @@
     },
     "25319": {
       "h_damage_min": [
-        81,
-        42,
-        33
+        126,
+        80,
+        51
       ],
       "h_damage_max": [
-        149,
-        67,
-        43
+        218,
+        110,
+        64
       ]
     },
     "25320": {
       "h_damage_min": [
-        97,
-        50,
-        40
+        151,
+        96,
+        61
       ],
       "h_damage_max": [
-        178,
-        81,
-        52
+        262,
+        132,
+        77
       ]
     },
     "25341": {
@@ -762,24 +762,24 @@
     "25469": {
       "h_damage_min": [
         31,
-        40,
+        28,
         0
       ],
       "h_damage_max": [
         85,
-        89,
+        62,
         0
       ]
     },
     "25470": {
       "h_damage_min": [
         38,
-        49,
+        34,
         0
       ],
       "h_damage_max": [
         102,
-        101,
+        74,
         0
       ]
     },
@@ -870,24 +870,24 @@
     "25636": {
       "h_damage_min": [
         10,
-        16,
+        9,
         0
       ],
       "h_damage_max": [
         31,
-        55,
+        29,
         0
       ]
     },
     "25637": {
       "h_damage_min": [
         13,
-        17,
+        11,
         0
       ],
       "h_damage_max": [
         38,
-        61,
+        35,
         0
       ]
     },
@@ -1625,24 +1625,24 @@
     "25639": {
       "h_damage_max": [
         31,
-        55,
+        29,
         0
       ],
       "h_damage_min": [
         10,
-        16,
+        9,
         0
       ]
     },
     "25642": {
       "h_damage_max": [
         31,
-        55,
+        29,
         0
       ],
       "h_damage_min": [
         10,
-        16,
+        9,
         0
       ]
     },
@@ -1745,24 +1745,24 @@
     "25640": {
       "h_damage_max": [
         38,
-        61,
+        35,
         0
       ],
       "h_damage_min": [
         13,
-        17,
+        11,
         0
       ]
     },
     "25643": {
       "h_damage_max": [
         38,
-        61,
+        35,
         0
       ],
       "h_damage_min": [
         13,
-        17,
+        11,
         0
       ]
     },
@@ -2283,36 +2283,36 @@
     "25169": {
       "h_damage_max": [
         100,
-        101,
+        75,
         43
       ],
       "h_damage_min": [
         33,
-        48,
+        35,
         23
       ]
     },
     "26155": {
       "h_damage_max": [
         91,
-        92,
+        68,
         39
       ],
       "h_damage_min": [
         30,
-        44,
+        32,
         21
       ]
     },
     "25175": {
       "h_damage_max": [
         91,
-        92,
+        68,
         39
       ],
       "h_damage_min": [
         30,
-        44,
+        32,
         21
       ]
     },
@@ -2356,36 +2356,36 @@
       "h_damage_max": [
         137,
         61,
-        192
+        44
       ],
       "h_damage_min": [
         62,
         42,
-        111
+        26
       ]
     },
     "25207": {
       "h_damage_max": [
         137,
         61,
-        192
+        44
       ],
       "h_damage_min": [
         62,
         42,
-        111
+        26
       ]
     },
     "25210": {
       "h_damage_max": [
         137,
         61,
-        192
+        44
       ],
       "h_damage_min": [
         62,
         42,
-        111
+        26
       ]
     },
     "25226": {
@@ -2397,12 +2397,12 @@
       "h_damage_max": [
         162,
         92,
-        220
+        52
       ],
       "h_damage_min": [
         62,
         52,
-        130
+        32
       ]
     },
     "25223": {
@@ -2414,12 +2414,12 @@
       "h_damage_max": [
         162,
         92,
-        220
+        52
       ],
       "h_damage_min": [
         62,
         52,
-        130
+        32
       ]
     },
     "25229": {
@@ -2431,12 +2431,12 @@
       "h_damage_max": [
         162,
         92,
-        220
+        52
       ],
       "h_damage_min": [
         62,
         52,
-        130
+        32
       ]
     },
     "25236": {
@@ -2606,36 +2606,36 @@
     "26156": {
       "h_damage_max": [
         109,
-        110,
+        82,
         47
       ],
       "h_damage_min": [
         36,
-        52,
+        38,
         25
       ]
     },
     "25170": {
       "h_damage_max": [
         120,
-        121,
+        90,
         52
       ],
       "h_damage_min": [
         40,
-        57,
+        42,
         28
       ]
     },
     "25176": {
       "h_damage_max": [
         109,
-        110,
+        82,
         47
       ],
       "h_damage_min": [
         36,
-        52,
+        38,
         25
       ]
     },
@@ -2679,36 +2679,36 @@
       "h_damage_max": [
         164,
         74,
-        232
+        53
       ],
       "h_damage_min": [
         75,
         50,
-        131
+        31
       ]
     },
     "25208": {
       "h_damage_max": [
         164,
         74,
-        232
+        53
       ],
       "h_damage_min": [
         75,
         50,
-        131
+        31
       ]
     },
     "25211": {
       "h_damage_max": [
         164,
         74,
-        232
+        53
       ],
       "h_damage_min": [
         75,
         50,
-        131
+        31
       ]
     },
     "25227": {
@@ -2720,12 +2720,12 @@
       "h_damage_max": [
         195,
         111,
-        266
+        62
       ],
       "h_damage_min": [
         75,
         62,
-        158
+        38
       ]
     },
     "25224": {
@@ -2737,12 +2737,12 @@
       "h_damage_max": [
         195,
         111,
-        266
+        62
       ],
       "h_damage_min": [
         75,
         62,
-        158
+        38
       ]
     },
     "25230": {
@@ -2754,12 +2754,12 @@
       "h_damage_max": [
         195,
         111,
-        266
+        62
       ],
       "h_damage_min": [
         75,
         62,
-        158
+        38
       ]
     },
     "25237": {
@@ -3796,48 +3796,48 @@
     "25472": {
       "h_damage_max": [
         85,
-        89,
+        62,
         0
       ],
       "h_damage_min": [
         31,
-        40,
+        28,
         0
       ]
     },
     "25475": {
       "h_damage_max": [
         85,
-        89,
+        62,
         0
       ],
       "h_damage_min": [
         31,
-        40,
+        28,
         0
       ]
     },
     "25481": {
       "h_damage_max": [
         94,
-        98,
+        68,
         0
       ],
       "h_damage_min": [
         34,
-        44,
+        31,
         0
       ]
     },
     "25478": {
       "h_damage_max": [
         85,
-        89,
+        62,
         0
       ],
       "h_damage_min": [
         31,
-        40,
+        28,
         0
       ]
     },
@@ -4048,43 +4048,44 @@
     "25473": {
       "h_damage_max": [
         102,
-        101,
+        74,
         0
       ],
       "h_damage_min": [
         38,
-        49,
+        34,
         0
       ]
     },
     "25476": {
       "h_damage_max": [
         102,
-        101,
+        74,
         0
       ],
       "h_damage_min": [
         38,
-        49,
+        34,
         0
       ]
     },
     "25482": {
       "h_damage_min": [
         42,
-        54,
+        37,
         0
-      ]
+      ],
+      "h_damage_max": [112, 81, 0]
     },
     "25479": {
       "h_damage_max": [
         102,
-        101,
+        74,
         0
       ],
       "h_damage_min": [
         38,
-        49,
+        34,
         0
       ]
     },
@@ -4152,38 +4153,38 @@
     },
     "25322": {
       "h_damage_max": [
-        149,
-        67,
-        43
+        218,
+        110,
+        64
       ],
       "h_damage_min": [
-        81,
-        42,
-        33
+        126,
+        80,
+        51
       ]
     },
     "25325": {
       "h_damage_max": [
-        149,
-        67,
-        43
+        218,
+        110,
+        64
       ],
       "h_damage_min": [
-        81,
-        42,
-        33
+        126,
+        80,
+        51
       ]
     },
     "25331": {
       "h_damage_max": [
-        149,
-        67,
-        43
+        218,
+        110,
+        64
       ],
       "h_damage_min": [
-        81,
-        42,
-        33
+        126,
+        80,
+        51
       ]
     },
     "25025": {
@@ -5531,38 +5532,38 @@
     },
     "25323": {
       "h_damage_max": [
-        178,
-        81,
-        52
+        262,
+        132,
+        77
       ],
       "h_damage_min": [
-        97,
-        50,
-        40
+        151,
+        96,
+        61
       ]
     },
     "25332": {
       "h_damage_max": [
-        178,
-        81,
-        52
+        262,
+        132,
+        77
       ],
       "h_damage_min": [
-        97,
-        50,
-        40
+        151,
+        96,
+        61
       ]
     },
     "25326": {
       "h_damage_max": [
-        178,
-        81,
-        52
+        262,
+        132,
+        77
       ],
       "h_damage_min": [
-        97,
-        50,
-        40
+        151,
+        96,
+        61
       ]
     },
     "26018": {
@@ -5660,7 +5661,291 @@
         0,
         716
       ]
-    }
+    },
+    "25178": {"h_damage_min": [30, 32, 21], "h_damage_max": [91, 68, 39]},
+    "25179": {"h_damage_min": [36, 38, 25], "h_damage_max": [109, 82, 47]},
+    "25213": {"h_damage_min": [62, 42, 26], "h_damage_max": [137, 61, 44]},
+    "25214": {"h_damage_min": [75, 50, 31], "h_damage_max": [164, 74, 53]},
+    "25220": {"h_damage_min": [68, 57, 35], "h_damage_max": [178, 101, 57]},
+    "25221": {"h_damage_min": [83, 68, 42], "h_damage_max": [215, 122, 68]},
+    "25287": {"h_damage_min": [80, 76, 35], "h_damage_max": [170, 104, 49]},
+    "25288": {"h_damage_min": [96, 91, 42], "h_damage_max": [204, 125, 58]},
+    "25290": {"h_damage_min": [88, 84, 39], "h_damage_max": [187, 114, 54]},
+    "25291": {"h_damage_min": [106, 100, 46], "h_damage_max": [224, 138, 64]},
+    "25293": {"h_damage_min": [80, 76, 35], "h_damage_max": [170, 104, 49]},
+    "25294": {"h_damage_min": [96, 91, 42], "h_damage_max": [204, 125, 58]},
+    "25296": {"h_damage_min": [80, 76, 35], "h_damage_max": [170, 104, 49]},
+    "25297": {"h_damage_min": [96, 91, 42], "h_damage_max": [204, 125, 58]},
+    "25299": {"h_damage_min": [80, 76, 35], "h_damage_max": [170, 104, 49]},
+    "25300": {"h_damage_min": [96, 91, 42], "h_damage_max": [204, 125, 58]},
+    "25328": {"h_damage_min": [126, 80, 51], "h_damage_max": [218, 110, 64]},
+    "25329": {"h_damage_min": [151, 96, 61], "h_damage_max": [262, 132, 77]},
+    "38747": {"h_damage_max": [112, 81, 0], "h_damage_min": [42, 37, 0]},
+    "38750": {"h_damage_max": [102, 74, 0], "h_damage_min": [38, 34, 0]},
+    "38753": {"h_damage_max": [102, 74, 0], "h_damage_min": [38, 34, 0]},
+    "38756": {"h_damage_max": [102, 74, 0], "h_damage_min": [38, 34, 0]},
+    "38759": {"h_damage_max": [102, 74, 0], "h_damage_min": [38, 34, 0]},
+    "38762": {"h_damage_max": [102, 74, 0], "h_damage_min": [38, 34, 0]},
+    "38765": {"h_damage_max": [102, 74, 0], "h_damage_min": [38, 34, 0]},
+    "38768": {"h_damage_max": [102, 74, 0], "h_damage_min": [38, 34, 0]},
+    "40885": {"h_damage_min": [30, 32, 21], "h_damage_max": [91, 68, 39]},
+    "40887": {"h_damage_min": [36, 38, 25], "h_damage_max": [109, 82, 47]},
+    "40888": {"h_damage_min": [30, 32, 21], "h_damage_max": [91, 68, 39]},
+    "40890": {"h_damage_min": [36, 38, 25], "h_damage_max": [109, 82, 47]},
+    "40891": {"h_damage_min": [30, 32, 21], "h_damage_max": [91, 68, 39]},
+    "40893": {"h_damage_min": [36, 38, 25], "h_damage_max": [109, 82, 47]},
+    "40894": {"h_damage_min": [30, 32, 21], "h_damage_max": [91, 68, 39]},
+    "40896": {"h_damage_min": [36, 38, 25], "h_damage_max": [109, 82, 47]},
+    "40897": {"h_damage_min": [30, 32, 21], "h_damage_max": [91, 68, 39]},
+    "40899": {"h_damage_min": [36, 38, 25], "h_damage_max": [109, 82, 47]},
+    "40900": {"h_damage_min": [30, 32, 21], "h_damage_max": [91, 68, 39]},
+    "40902": {"h_damage_min": [36, 38, 25], "h_damage_max": [109, 82, 47]},
+    "40903": {"h_damage_min": [30, 32, 21], "h_damage_max": [91, 68, 39]},
+    "40905": {"h_damage_min": [36, 38, 25], "h_damage_max": [109, 82, 47]},
+    "40906": {"h_damage_min": [33, 35, 23], "h_damage_max": [100, 75, 43]},
+    "40908": {"h_damage_min": [40, 42, 28], "h_damage_max": [120, 90, 52]},
+    "40933": {"h_damage_min": [62, 42, 26], "h_damage_max": [137, 61, 44]},
+    "40935": {"h_damage_min": [75, 50, 31], "h_damage_max": [164, 74, 53]},
+    "40936": {"h_damage_min": [68, 46, 29], "h_damage_max": [151, 67, 48]},
+    "40938": {"h_damage_min": [83, 55, 34], "h_damage_max": [180, 81, 58]},
+    "40939": {"h_damage_min": [62, 42, 26], "h_damage_max": [137, 61, 44]},
+    "40941": {"h_damage_min": [75, 50, 31], "h_damage_max": [164, 74, 53]},
+    "40942": {"h_damage_min": [62, 42, 26], "h_damage_max": [137, 61, 44]},
+    "40944": {"h_damage_min": [75, 50, 31], "h_damage_max": [164, 74, 53]},
+    "40945": {"h_damage_min": [62, 42, 26], "h_damage_max": [137, 61, 44]},
+    "40947": {"h_damage_min": [75, 50, 31], "h_damage_max": [164, 74, 53]},
+    "40948": {"h_damage_min": [62, 42, 26], "h_damage_max": [137, 61, 44]},
+    "40950": {"h_damage_min": [75, 50, 31], "h_damage_max": [164, 74, 53]},
+    "40951": {"h_damage_min": [62, 42, 26], "h_damage_max": [137, 61, 44]},
+    "40953": {"h_damage_min": [75, 50, 31], "h_damage_max": [164, 74, 53]},
+    "40954": {"h_damage_min": [68, 46, 29], "h_damage_max": [151, 67, 48]},
+    "40956": {"h_damage_min": [83, 55, 34], "h_damage_max": [180, 81, 58]},
+    "40957": {"h_damage_min": [62, 52, 32], "h_damage_max": [162, 92, 52]},
+    "40959": {"h_damage_min": [75, 62, 38], "h_damage_max": [195, 111, 62]},
+    "40960": {"h_damage_min": [62, 52, 32], "h_damage_max": [162, 92, 52]},
+    "40962": {"h_damage_min": [75, 62, 38], "h_damage_max": [195, 111, 62]},
+    "40963": {"h_damage_min": [62, 52, 32], "h_damage_max": [162, 92, 52]},
+    "40965": {"h_damage_min": [75, 62, 38], "h_damage_max": [195, 111, 62]},
+    "40966": {"h_damage_min": [62, 52, 32], "h_damage_max": [162, 92, 52]},
+    "40968": {"h_damage_min": [75, 62, 38], "h_damage_max": [195, 111, 62]},
+    "40969": {"h_damage_min": [62, 52, 32], "h_damage_max": [162, 92, 52]},
+    "40971": {"h_damage_min": [75, 62, 38], "h_damage_max": [195, 111, 62]},
+    "40972": {"h_damage_min": [62, 52, 32], "h_damage_max": [162, 92, 52]},
+    "40974": {"h_damage_min": [75, 62, 38], "h_damage_max": [195, 111, 62]},
+    "40975": {"h_damage_min": [62, 52, 32], "h_damage_max": [162, 92, 52]},
+    "40977": {"h_damage_min": [75, 62, 38], "h_damage_max": [195, 111, 62]},
+    "40978": {"h_damage_min": [68, 57, 35], "h_damage_max": [178, 101, 57]},
+    "40980": {"h_damage_min": [83, 68, 42], "h_damage_max": [215, 122, 68]},
+    "41059": {"h_damage_min": [80, 76, 35], "h_damage_max": [170, 104, 49]},
+    "41061": {"h_damage_min": [96, 91, 42], "h_damage_max": [204, 125, 58]},
+    "41062": {"h_damage_min": [80, 76, 35], "h_damage_max": [170, 104, 49]},
+    "41064": {"h_damage_min": [96, 91, 42], "h_damage_max": [204, 125, 58]},
+    "41065": {"h_damage_min": [80, 76, 35], "h_damage_max": [170, 104, 49]},
+    "41067": {"h_damage_min": [96, 91, 42], "h_damage_max": [204, 125, 58]},
+    "41068": {"h_damage_min": [80, 76, 35], "h_damage_max": [170, 104, 49]},
+    "41070": {"h_damage_min": [96, 91, 42], "h_damage_max": [204, 125, 58]},
+    "41071": {"h_damage_min": [80, 76, 35], "h_damage_max": [170, 104, 49]},
+    "41073": {"h_damage_min": [96, 91, 42], "h_damage_max": [204, 125, 58]},
+    "41074": {"h_damage_min": [80, 76, 35], "h_damage_max": [170, 104, 49]},
+    "41076": {"h_damage_min": [96, 91, 42], "h_damage_max": [204, 125, 58]},
+    "41077": {"h_damage_min": [80, 76, 35], "h_damage_max": [170, 104, 49]},
+    "41079": {"h_damage_min": [96, 91, 42], "h_damage_max": [204, 125, 58]},
+    "41080": {"h_damage_min": [88, 84, 39], "h_damage_max": [187, 114, 54]},
+    "41082": {"h_damage_min": [106, 100, 46], "h_damage_max": [224, 138, 64]},
+    "41107": {"h_damage_min": [139, 88, 56], "h_damage_max": [240, 121, 70]},
+    "41109": {"h_damage_min": [166, 106, 67], "h_damage_max": [288, 145, 85]},
+    "41110": {"h_damage_min": [126, 80, 51], "h_damage_max": [218, 110, 64]},
+    "41112": {"h_damage_min": [151, 96, 61], "h_damage_max": [262, 132, 77]},
+    "41113": {"h_damage_min": [126, 80, 51], "h_damage_max": [218, 110, 64]},
+    "41115": {"h_damage_min": [151, 96, 61], "h_damage_max": [262, 132, 77]},
+    "41116": {"h_damage_min": [126, 80, 51], "h_damage_max": [218, 110, 64]},
+    "41118": {"h_damage_min": [151, 96, 61], "h_damage_max": [262, 132, 77]},
+    "41119": {"h_damage_min": [126, 80, 51], "h_damage_max": [218, 110, 64]},
+    "41121": {"h_damage_min": [151, 96, 61], "h_damage_max": [262, 132, 77]},
+    "41122": {"h_damage_min": [126, 80, 51], "h_damage_max": [218, 110, 64]},
+    "41124": {"h_damage_min": [151, 96, 61], "h_damage_max": [262, 132, 77]},
+    "41125": {"h_damage_min": [126, 80, 51], "h_damage_max": [218, 110, 64]},
+    "41127": {"h_damage_min": [151, 96, 61], "h_damage_max": [262, 132, 77]},
+    "41128": {"h_damage_min": [139, 88, 56], "h_damage_max": [240, 121, 70]},
+    "41130": {"h_damage_min": [166, 106, 67], "h_damage_max": [288, 145, 85]},
+    "43647": {"h_damage_min": [11, 10, 0], "h_damage_max": [34, 32, 0]},
+    "43649": {"h_damage_min": [14, 12, 0], "h_damage_max": [42, 39, 0]},
+    "43650": {"h_damage_min": [10, 9, 0], "h_damage_max": [31, 29, 0]},
+    "43652": {"h_damage_min": [13, 11, 0], "h_damage_max": [38, 35, 0]},
+    "43653": {"h_damage_min": [10, 9, 0], "h_damage_max": [31, 29, 0]},
+    "43655": {"h_damage_min": [13, 11, 0], "h_damage_max": [38, 35, 0]},
+    "43656": {"h_damage_min": [10, 9, 0], "h_damage_max": [31, 29, 0]},
+    "43658": {"h_damage_min": [13, 11, 0], "h_damage_max": [38, 35, 0]},
+    "43659": {"h_damage_min": [10, 9, 0], "h_damage_max": [31, 29, 0]},
+    "43661": {"h_damage_min": [13, 11, 0], "h_damage_max": [38, 35, 0]},
+    "43662": {"h_damage_min": [10, 9, 0], "h_damage_max": [31, 29, 0]},
+    "43664": {"h_damage_min": [13, 11, 0], "h_damage_max": [38, 35, 0]},
+    "43665": {"h_damage_min": [10, 9, 0], "h_damage_max": [31, 29, 0]},
+    "43667": {"h_damage_min": [13, 11, 0], "h_damage_max": [38, 35, 0]},
+    "43668": {"h_damage_min": [10, 9, 0], "h_damage_max": [31, 29, 0]},
+    "43670": {"h_damage_min": [13, 11, 0], "h_damage_max": [38, 35, 0]},
+    "43671": {"h_damage_min": [10, 9, 0], "h_damage_max": [31, 29, 0]},
+    "43673": {"h_damage_min": [13, 11, 0], "h_damage_max": [38, 35, 0]},
+    "43674": {"h_damage_min": [11, 10, 0], "h_damage_max": [34, 32, 0]},
+    "43676": {"h_damage_min": [14, 12, 0], "h_damage_max": [42, 39, 0]},
+    "25153": {"h_damage_min": [30, 24, 21], "h_damage_max": [90, 56, 39]},
+    "25154": {"h_damage_min": [36, 29, 25], "h_damage_max": [108, 67, 47]},
+    "25156": {"h_damage_min": [33, 26, 23], "h_damage_max": [99, 62, 43]},
+    "25157": {"h_damage_min": [40, 32, 28], "h_damage_max": [119, 74, 52]},
+    "25159": {"h_damage_min": [30, 24, 21], "h_damage_max": [90, 56, 39]},
+    "25160": {"h_damage_min": [36, 29, 25], "h_damage_max": [108, 67, 47]},
+    "25162": {"h_damage_min": [30, 24, 21], "h_damage_max": [90, 56, 39]},
+    "25163": {"h_damage_min": [36, 29, 25], "h_damage_max": [108, 67, 47]},
+    "25197": {"h_damage_min": [40, 34, 21], "h_damage_max": [110, 70, 41]},
+    "25198": {"h_damage_min": [48, 41, 25], "h_damage_max": [132, 84, 49]},
+    "25252": {"h_damage_min": [68, 37, 28], "h_damage_max": [148, 73, 52]},
+    "25253": {"h_damage_min": [82, 44, 34], "h_damage_max": [171, 84, 62]},
+    "25258": {"h_damage_min": [68, 37, 28], "h_damage_max": [148, 73, 52]},
+    "25259": {"h_damage_min": [82, 44, 34], "h_damage_max": [171, 84, 62]},
+    "25261": {"h_damage_min": [68, 37, 28], "h_damage_max": [148, 73, 52]},
+    "25262": {"h_damage_min": [82, 44, 34], "h_damage_max": [171, 84, 62]},
+    "26164": {"h_damage_min": [75, 41, 31], "h_damage_max": [163, 80, 57]},
+    "26165": {"h_damage_min": [90, 48, 37], "h_damage_max": [188, 92, 68]},
+    "26167": {"h_damage_min": [68, 37, 28], "h_damage_max": [148, 73, 52]},
+    "26168": {"h_damage_min": [82, 44, 34], "h_damage_max": [171, 84, 62]},
+    "26173": {"h_damage_min": [13, 10, 9], "h_damage_max": [29, 22, 20]},
+    "26174": {"h_damage_min": [12, 9, 8], "h_damage_max": [26, 20, 18]},
+    "26175": {"h_damage_min": [12, 9, 8], "h_damage_max": [26, 20, 18]},
+    "26176": {"h_damage_min": [12, 9, 8], "h_damage_max": [26, 20, 18]},
+    "38745": {"h_damage_min": [34, 31, 0], "h_damage_max": [94, 68, 0]},
+    "38748": {"h_damage_min": [31, 28, 0], "h_damage_max": [85, 62, 0]},
+    "38751": {"h_damage_min": [31, 28, 0], "h_damage_max": [85, 62, 0]},
+    "38754": {"h_damage_min": [31, 28, 0], "h_damage_max": [85, 62, 0]},
+    "38757": {"h_damage_min": [31, 28, 0], "h_damage_max": [85, 62, 0]},
+    "38760": {"h_damage_min": [31, 28, 0], "h_damage_max": [85, 62, 0]},
+    "38763": {"h_damage_min": [31, 28, 0], "h_damage_max": [85, 62, 0]},
+    "38766": {"h_damage_min": [31, 28, 0], "h_damage_max": [85, 62, 0]},
+    "40861": {"h_damage_min": [30, 24, 21], "h_damage_max": [90, 56, 39]},
+    "40863": {"h_damage_min": [36, 29, 25], "h_damage_max": [108, 67, 47]},
+    "40864": {"h_damage_min": [30, 24, 21], "h_damage_max": [90, 56, 39]},
+    "40866": {"h_damage_min": [36, 29, 25], "h_damage_max": [108, 67, 47]},
+    "40867": {"h_damage_min": [30, 24, 21], "h_damage_max": [90, 56, 39]},
+    "40869": {"h_damage_min": [36, 29, 25], "h_damage_max": [108, 67, 47]},
+    "40870": {"h_damage_min": [30, 24, 21], "h_damage_max": [90, 56, 39]},
+    "40872": {"h_damage_min": [36, 29, 25], "h_damage_max": [108, 67, 47]},
+    "40873": {"h_damage_min": [30, 24, 21], "h_damage_max": [90, 56, 39]},
+    "40875": {"h_damage_min": [36, 29, 25], "h_damage_max": [108, 67, 47]},
+    "40876": {"h_damage_min": [30, 24, 21], "h_damage_max": [90, 56, 39]},
+    "40878": {"h_damage_min": [36, 29, 25], "h_damage_max": [108, 67, 47]},
+    "40879": {"h_damage_min": [30, 24, 21], "h_damage_max": [90, 56, 39]},
+    "40881": {"h_damage_min": [36, 29, 25], "h_damage_max": [108, 67, 47]},
+    "40882": {"h_damage_min": [33, 26, 23], "h_damage_max": [99, 62, 43]},
+    "40884": {"h_damage_min": [40, 32, 28], "h_damage_max": [119, 74, 52]},
+    "40909": {"h_damage_min": [40, 34, 21], "h_damage_max": [110, 70, 41]},
+    "40911": {"h_damage_min": [48, 41, 25], "h_damage_max": [132, 84, 49]},
+    "40912": {"h_damage_min": [40, 34, 21], "h_damage_max": [110, 70, 41]},
+    "40914": {"h_damage_min": [48, 41, 25], "h_damage_max": [132, 84, 49]},
+    "40915": {"h_damage_min": [40, 34, 21], "h_damage_max": [110, 70, 41]},
+    "40917": {"h_damage_min": [48, 41, 25], "h_damage_max": [132, 84, 49]},
+    "40918": {"h_damage_min": [40, 34, 21], "h_damage_max": [110, 70, 41]},
+    "40920": {"h_damage_min": [48, 41, 25], "h_damage_max": [132, 84, 49]},
+    "40921": {"h_damage_min": [40, 34, 21], "h_damage_max": [110, 70, 41]},
+    "40923": {"h_damage_min": [48, 41, 25], "h_damage_max": [132, 84, 49]},
+    "40924": {"h_damage_min": [40, 34, 21], "h_damage_max": [110, 70, 41]},
+    "40926": {"h_damage_min": [48, 41, 25], "h_damage_max": [132, 84, 49]},
+    "40927": {"h_damage_min": [40, 34, 21], "h_damage_max": [110, 70, 41]},
+    "40929": {"h_damage_min": [48, 41, 25], "h_damage_max": [132, 84, 49]},
+    "40930": {"h_damage_min": [44, 37, 23], "h_damage_max": [121, 77, 45]},
+    "40932": {"h_damage_min": [53, 45, 28], "h_damage_max": [145, 92, 54]},
+    "40981": {"h_damage_min": [55, 38, 25], "h_damage_max": [125, 60, 34]},
+    "40983": {"h_damage_min": [66, 46, 30], "h_damage_max": [150, 72, 41]},
+    "40984": {"h_damage_min": [61, 42, 28], "h_damage_max": [138, 66, 37]},
+    "40986": {"h_damage_min": [73, 51, 33], "h_damage_max": [165, 79, 45]},
+    "40987": {"h_damage_min": [55, 38, 25], "h_damage_max": [125, 60, 34]},
+    "40989": {"h_damage_min": [66, 46, 30], "h_damage_max": [150, 72, 41]},
+    "40990": {"h_damage_min": [55, 38, 25], "h_damage_max": [125, 60, 34]},
+    "40992": {"h_damage_min": [66, 46, 30], "h_damage_max": [150, 72, 41]},
+    "40993": {"h_damage_min": [55, 38, 25], "h_damage_max": [125, 60, 34]},
+    "40995": {"h_damage_min": [66, 46, 30], "h_damage_max": [150, 72, 41]},
+    "40996": {"h_damage_min": [55, 38, 25], "h_damage_max": [125, 60, 34]},
+    "40998": {"h_damage_min": [66, 46, 30], "h_damage_max": [150, 72, 41]},
+    "40999": {"h_damage_min": [55, 38, 25], "h_damage_max": [125, 60, 34]},
+    "41001": {"h_damage_min": [66, 46, 30], "h_damage_max": [150, 72, 41]},
+    "41002": {"h_damage_min": [61, 42, 28], "h_damage_max": [138, 66, 37]},
+    "41004": {"h_damage_min": [73, 51, 33], "h_damage_max": [165, 79, 45]},
+    "41005": {"h_damage_min": [12, 9, 8], "h_damage_max": [26, 20, 18]},
+    "41006": {"h_damage_min": [12, 9, 8], "h_damage_max": [26, 20, 18]},
+    "41007": {"h_damage_min": [12, 9, 8], "h_damage_max": [26, 20, 18]},
+    "41008": {"h_damage_min": [12, 9, 8], "h_damage_max": [26, 20, 18]},
+    "41009": {"h_damage_min": [12, 9, 8], "h_damage_max": [26, 20, 18]},
+    "41010": {"h_damage_min": [12, 9, 8], "h_damage_max": [26, 20, 18]},
+    "41011": {"h_damage_min": [12, 9, 8], "h_damage_max": [26, 20, 18]},
+    "41012": {"h_damage_min": [13, 10, 9], "h_damage_max": [29, 22, 20]},
+    "41014": {"h_damage_min": [68, 37, 28], "h_damage_max": [148, 73, 52]},
+    "41016": {"h_damage_min": [82, 44, 34], "h_damage_max": [171, 84, 62]},
+    "41017": {"h_damage_min": [68, 37, 28], "h_damage_max": [148, 73, 52]},
+    "41019": {"h_damage_min": [82, 44, 34], "h_damage_max": [171, 84, 62]},
+    "41020": {"h_damage_min": [68, 37, 28], "h_damage_max": [148, 73, 52]},
+    "41022": {"h_damage_min": [82, 44, 34], "h_damage_max": [171, 84, 62]},
+    "41023": {"h_damage_min": [68, 37, 28], "h_damage_max": [148, 73, 52]},
+    "41025": {"h_damage_min": [82, 44, 34], "h_damage_max": [171, 84, 62]},
+    "41026": {"h_damage_min": [68, 37, 28], "h_damage_max": [148, 73, 52]},
+    "41028": {"h_damage_min": [82, 44, 34], "h_damage_max": [171, 84, 62]},
+    "41029": {"h_damage_min": [68, 37, 28], "h_damage_max": [148, 73, 52]},
+    "41031": {"h_damage_min": [82, 44, 34], "h_damage_max": [171, 84, 62]},
+    "41032": {"h_damage_min": [75, 41, 31], "h_damage_max": [163, 80, 57]},
+    "41034": {"h_damage_min": [90, 48, 37], "h_damage_max": [188, 92, 68]},
+    "41035": {"h_damage_min": [92, 81, 42], "h_damage_max": [178, 108, 54]},
+    "41037": {"h_damage_min": [111, 98, 51], "h_damage_max": [215, 130, 65]},
+    "41038": {"h_damage_min": [84, 74, 38], "h_damage_max": [162, 98, 49]},
+    "41040": {"h_damage_min": [101, 89, 46], "h_damage_max": [195, 118, 59]},
+    "41041": {"h_damage_min": [84, 74, 38], "h_damage_max": [162, 98, 49]},
+    "41043": {"h_damage_min": [101, 89, 46], "h_damage_max": [195, 118, 59]},
+    "41044": {"h_damage_min": [84, 74, 38], "h_damage_max": [162, 98, 49]},
+    "41046": {"h_damage_min": [101, 89, 46], "h_damage_max": [195, 118, 59]},
+    "41047": {"h_damage_min": [84, 74, 38], "h_damage_max": [162, 98, 49]},
+    "41049": {"h_damage_min": [101, 89, 46], "h_damage_max": [195, 118, 59]},
+    "41050": {"h_damage_min": [84, 74, 38], "h_damage_max": [162, 98, 49]},
+    "41052": {"h_damage_min": [101, 89, 46], "h_damage_max": [195, 118, 59]},
+    "41053": {"h_damage_min": [84, 74, 38], "h_damage_max": [162, 98, 49]},
+    "41055": {"h_damage_min": [101, 89, 46], "h_damage_max": [195, 118, 59]},
+    "41056": {"h_damage_min": [92, 81, 42], "h_damage_max": [178, 108, 54]},
+    "41058": {"h_damage_min": [111, 98, 51], "h_damage_max": [215, 130, 65]},
+    "41083": {"h_damage_min": [131, 47, 53], "h_damage_max": [227, 76, 66]},
+    "41085": {"h_damage_min": [156, 57, 64], "h_damage_max": [273, 91, 79]},
+    "41086": {"h_damage_min": [119, 43, 48], "h_damage_max": [206, 69, 60]},
+    "41088": {"h_damage_min": [142, 52, 58], "h_damage_max": [248, 83, 72]},
+    "41089": {"h_damage_min": [119, 43, 48], "h_damage_max": [206, 69, 60]},
+    "41091": {"h_damage_min": [142, 52, 58], "h_damage_max": [248, 83, 72]},
+    "41092": {"h_damage_min": [119, 43, 48], "h_damage_max": [206, 69, 60]},
+    "41094": {"h_damage_min": [142, 52, 58], "h_damage_max": [248, 83, 72]},
+    "41095": {"h_damage_min": [119, 43, 48], "h_damage_max": [206, 69, 60]},
+    "41097": {"h_damage_min": [142, 52, 58], "h_damage_max": [248, 83, 72]},
+    "41098": {"h_damage_min": [119, 43, 48], "h_damage_max": [206, 69, 60]},
+    "41100": {"h_damage_min": [142, 52, 58], "h_damage_max": [248, 83, 72]},
+    "41101": {"h_damage_min": [119, 43, 48], "h_damage_max": [206, 69, 60]},
+    "41103": {"h_damage_min": [142, 52, 58], "h_damage_max": [248, 83, 72]},
+    "41104": {"h_damage_min": [131, 47, 53], "h_damage_max": [227, 76, 66]},
+    "41106": {"h_damage_min": [156, 57, 64], "h_damage_max": [273, 91, 79]},
+    "41134": {"h_damage_min": [12, 9, 8], "h_damage_max": [26, 20, 18]},
+    "41136": {"h_damage_min": [12, 9, 8], "h_damage_max": [26, 20, 18]},
+    "41137": {"h_damage_min": [13, 10, 9], "h_damage_max": [29, 22, 20]},
+    "41139": {"h_damage_min": [13, 10, 9], "h_damage_max": [29, 22, 20]},
+    "41140": {"h_damage_min": [12, 9, 8], "h_damage_max": [26, 20, 18]},
+    "41142": {"h_damage_min": [12, 9, 8], "h_damage_max": [26, 20, 18]},
+    "41143": {"h_damage_min": [12, 9, 8], "h_damage_max": [26, 20, 18]},
+    "41145": {"h_damage_min": [12, 9, 8], "h_damage_max": [26, 20, 18]},
+    "41146": {"h_damage_min": [12, 9, 8], "h_damage_max": [26, 20, 18]},
+    "41148": {"h_damage_min": [12, 9, 8], "h_damage_max": [26, 20, 18]},
+    "41149": {"h_damage_min": [12, 9, 8], "h_damage_max": [26, 20, 18]},
+    "41151": {"h_damage_min": [12, 9, 8], "h_damage_max": [26, 20, 18]},
+    "41152": {"h_damage_min": [12, 9, 8], "h_damage_max": [26, 20, 18]},
+    "41154": {"h_damage_min": [12, 9, 8], "h_damage_max": [26, 20, 18]},
+    "41155": {"h_damage_min": [12, 9, 8], "h_damage_max": [26, 20, 18]},
+    "41157": {"h_damage_min": [12, 9, 8], "h_damage_max": [26, 20, 18]},
+    "41158": {"h_damage_min": [12, 9, 8], "h_damage_max": [26, 20, 18]},
+    "41160": {"h_damage_min": [12, 9, 8], "h_damage_max": [26, 20, 18]},
+    "41161": {"h_damage_min": [12, 9, 8], "h_damage_max": [26, 20, 18]},
+    "41163": {"h_damage_min": [12, 9, 8], "h_damage_max": [26, 20, 18]},
+    "41164": {"h_damage_min": [12, 9, 8], "h_damage_max": [26, 20, 18]},
+    "41166": {"h_damage_min": [12, 9, 8], "h_damage_max": [26, 20, 18]},
+    "41167": {"h_damage_min": [13, 10, 9], "h_damage_max": [29, 22, 20]},
+    "41169": {"h_damage_min": [13, 10, 9], "h_damage_max": [29, 22, 20]}
   },
   "previous_equipment": {
     "40086": {
@@ -18741,7 +19026,215 @@
         0,
         601
       ]
-    }
+    },
+    "25178": {"h_damage_min": [30, 27, 21], "h_damage_max": [90, 57, 39]},
+    "25179": {"h_damage_min": [36, 32, 25], "h_damage_max": [108, 68, 47]},
+    "25213": {"h_damage_min": [53, 36, 22], "h_damage_max": [117, 52, 38]},
+    "25214": {"h_damage_min": [64, 43, 26], "h_damage_max": [140, 63, 46]},
+    "25220": {"h_damage_min": [55, 40, 32], "h_damage_max": [143, 70, 54]},
+    "25221": {"h_damage_min": [66, 47, 39], "h_damage_max": [172, 85, 65]},
+    "25287": {"h_damage_min": [80, 52, 35], "h_damage_max": [170, 74, 49]},
+    "25288": {"h_damage_min": [96, 63, 42], "h_damage_max": [204, 89, 58]},
+    "25290": {"h_damage_min": [88, 57, 38], "h_damage_max": [188, 81, 54]},
+    "25291": {"h_damage_min": [106, 68, 46], "h_damage_max": [224, 98, 64]},
+    "25293": {"h_damage_min": [80, 52, 35], "h_damage_max": [170, 74, 49]},
+    "25294": {"h_damage_min": [96, 63, 42], "h_damage_max": [204, 89, 58]},
+    "25296": {"h_damage_min": [80, 52, 35], "h_damage_max": [170, 74, 49]},
+    "25297": {"h_damage_min": [96, 63, 42], "h_damage_max": [204, 89, 58]},
+    "25299": {"h_damage_min": [80, 52, 35], "h_damage_max": [170, 74, 49]},
+    "25300": {"h_damage_min": [96, 63, 42], "h_damage_max": [204, 89, 58]},
+    "25328": {"h_damage_min": [95, 49, 39], "h_damage_max": [175, 79, 51]},
+    "25329": {"h_damage_min": [114, 59, 47], "h_damage_max": [210, 95, 61]},
+    "38747": {"h_damage_max": [125, 78, 0], "h_damage_min": [46, 37, 0]},
+    "38750": {"h_damage_max": [114, 71, 0], "h_damage_min": [42, 34, 0]},
+    "38753": {"h_damage_max": [114, 71, 0], "h_damage_min": [42, 34, 0]},
+    "38756": {"h_damage_max": [114, 71, 0], "h_damage_min": [42, 34, 0]},
+    "38759": {"h_damage_max": [114, 71, 0], "h_damage_min": [42, 34, 0]},
+    "38762": {"h_damage_max": [114, 71, 0], "h_damage_min": [42, 34, 0]},
+    "38765": {"h_damage_max": [114, 71, 0], "h_damage_min": [42, 34, 0]},
+    "38768": {"h_damage_max": [114, 71, 0], "h_damage_min": [42, 34, 0]},
+    "40885": {"h_damage_min": [30, 27, 21], "h_damage_max": [90, 57, 39]},
+    "40887": {"h_damage_min": [36, 32, 25], "h_damage_max": [108, 68, 47]},
+    "40888": {"h_damage_min": [30, 27, 21], "h_damage_max": [90, 57, 39]},
+    "40890": {"h_damage_min": [36, 32, 25], "h_damage_max": [108, 68, 47]},
+    "40891": {"h_damage_min": [30, 27, 21], "h_damage_max": [90, 57, 39]},
+    "40893": {"h_damage_min": [36, 32, 25], "h_damage_max": [108, 68, 47]},
+    "40894": {"h_damage_min": [30, 27, 21], "h_damage_max": [90, 57, 39]},
+    "40896": {"h_damage_min": [36, 32, 25], "h_damage_max": [108, 68, 47]},
+    "40897": {"h_damage_min": [30, 27, 21], "h_damage_max": [90, 57, 39]},
+    "40899": {"h_damage_min": [36, 32, 25], "h_damage_max": [108, 68, 47]},
+    "40900": {"h_damage_min": [30, 27, 21], "h_damage_max": [90, 57, 39]},
+    "40902": {"h_damage_min": [36, 32, 25], "h_damage_max": [108, 68, 47]},
+    "40903": {"h_damage_min": [30, 27, 21], "h_damage_max": [90, 57, 39]},
+    "40905": {"h_damage_min": [36, 32, 25], "h_damage_max": [108, 68, 47]},
+    "40906": {"h_damage_min": [33, 30, 23], "h_damage_max": [99, 63, 43]},
+    "40908": {"h_damage_min": [40, 35, 28], "h_damage_max": [119, 75, 52]},
+    "40933": {"h_damage_min": [53, 36, 22], "h_damage_max": [117, 52, 38]},
+    "40935": {"h_damage_min": [64, 43, 26], "h_damage_max": [140, 63, 46]},
+    "40936": {"h_damage_min": [58, 40, 24], "h_damage_max": [129, 57, 42]},
+    "40938": {"h_damage_min": [70, 47, 29], "h_damage_max": [154, 69, 51]},
+    "40939": {"h_damage_min": [53, 36, 22], "h_damage_max": [117, 52, 38]},
+    "40941": {"h_damage_min": [64, 43, 26], "h_damage_max": [140, 63, 46]},
+    "40942": {"h_damage_min": [53, 36, 22], "h_damage_max": [117, 52, 38]},
+    "40944": {"h_damage_min": [64, 43, 26], "h_damage_max": [140, 63, 46]},
+    "40945": {"h_damage_min": [53, 36, 22], "h_damage_max": [117, 52, 38]},
+    "40947": {"h_damage_min": [64, 43, 26], "h_damage_max": [140, 63, 46]},
+    "40948": {"h_damage_min": [53, 36, 22], "h_damage_max": [117, 52, 38]},
+    "40950": {"h_damage_min": [64, 43, 26], "h_damage_max": [140, 63, 46]},
+    "40951": {"h_damage_min": [53, 36, 22], "h_damage_max": [117, 52, 38]},
+    "40953": {"h_damage_min": [64, 43, 26], "h_damage_max": [140, 63, 46]},
+    "40954": {"h_damage_min": [58, 40, 24], "h_damage_max": [129, 57, 42]},
+    "40956": {"h_damage_min": [70, 47, 29], "h_damage_max": [154, 69, 51]},
+    "40957": {"h_damage_min": [50, 36, 29], "h_damage_max": [130, 64, 49]},
+    "40959": {"h_damage_min": [60, 43, 35], "h_damage_max": [156, 77, 59]},
+    "40960": {"h_damage_min": [50, 36, 29], "h_damage_max": [130, 64, 49]},
+    "40962": {"h_damage_min": [60, 43, 35], "h_damage_max": [156, 77, 59]},
+    "40963": {"h_damage_min": [50, 36, 29], "h_damage_max": [130, 64, 49]},
+    "40965": {"h_damage_min": [60, 43, 35], "h_damage_max": [156, 77, 59]},
+    "40966": {"h_damage_min": [50, 36, 29], "h_damage_max": [130, 64, 49]},
+    "40968": {"h_damage_min": [60, 43, 35], "h_damage_max": [156, 77, 59]},
+    "40969": {"h_damage_min": [50, 36, 29], "h_damage_max": [130, 64, 49]},
+    "40971": {"h_damage_min": [60, 43, 35], "h_damage_max": [156, 77, 59]},
+    "40972": {"h_damage_min": [50, 36, 29], "h_damage_max": [130, 64, 49]},
+    "40974": {"h_damage_min": [60, 43, 35], "h_damage_max": [156, 77, 59]},
+    "40975": {"h_damage_min": [50, 36, 29], "h_damage_max": [130, 64, 49]},
+    "40977": {"h_damage_min": [60, 43, 35], "h_damage_max": [156, 77, 59]},
+    "40978": {"h_damage_min": [55, 40, 32], "h_damage_max": [143, 70, 54]},
+    "40980": {"h_damage_min": [66, 47, 39], "h_damage_max": [172, 85, 65]},
+    "41059": {"h_damage_min": [80, 52, 35], "h_damage_max": [170, 74, 49]},
+    "41061": {"h_damage_min": [96, 63, 42], "h_damage_max": [204, 89, 58]},
+    "41062": {"h_damage_min": [80, 52, 35], "h_damage_max": [170, 74, 49]},
+    "41064": {"h_damage_min": [96, 63, 42], "h_damage_max": [204, 89, 58]},
+    "41065": {"h_damage_min": [80, 52, 35], "h_damage_max": [170, 74, 49]},
+    "41067": {"h_damage_min": [96, 63, 42], "h_damage_max": [204, 89, 58]},
+    "41068": {"h_damage_min": [80, 52, 35], "h_damage_max": [170, 74, 49]},
+    "41070": {"h_damage_min": [96, 63, 42], "h_damage_max": [204, 89, 58]},
+    "41071": {"h_damage_min": [80, 52, 35], "h_damage_max": [170, 74, 49]},
+    "41073": {"h_damage_min": [96, 63, 42], "h_damage_max": [204, 89, 58]},
+    "41074": {"h_damage_min": [80, 52, 35], "h_damage_max": [170, 74, 49]},
+    "41076": {"h_damage_min": [96, 63, 42], "h_damage_max": [204, 89, 58]},
+    "41077": {"h_damage_min": [80, 52, 35], "h_damage_max": [170, 74, 49]},
+    "41079": {"h_damage_min": [96, 63, 42], "h_damage_max": [204, 89, 58]},
+    "41080": {"h_damage_min": [88, 57, 39], "h_damage_max": [187, 81, 54]},
+    "41082": {"h_damage_min": [106, 69, 46], "h_damage_max": [224, 98, 64]},
+    "41107": {"h_damage_min": [105, 54, 43], "h_damage_max": [193, 87, 56]},
+    "41109": {"h_damage_min": [125, 65, 52], "h_damage_max": [231, 105, 67]},
+    "41110": {"h_damage_min": [95, 49, 39], "h_damage_max": [175, 79, 51]},
+    "41112": {"h_damage_min": [114, 59, 47], "h_damage_max": [210, 95, 61]},
+    "41113": {"h_damage_min": [95, 49, 39], "h_damage_max": [175, 79, 51]},
+    "41115": {"h_damage_min": [114, 59, 47], "h_damage_max": [210, 95, 61]},
+    "41116": {"h_damage_min": [95, 49, 39], "h_damage_max": [175, 79, 51]},
+    "41118": {"h_damage_min": [114, 59, 47], "h_damage_max": [210, 95, 61]},
+    "41119": {"h_damage_min": [95, 49, 39], "h_damage_max": [175, 79, 51]},
+    "41121": {"h_damage_min": [114, 59, 47], "h_damage_max": [210, 95, 61]},
+    "41122": {"h_damage_min": [95, 49, 39], "h_damage_max": [175, 79, 51]},
+    "41124": {"h_damage_min": [114, 59, 47], "h_damage_max": [210, 95, 61]},
+    "41125": {"h_damage_min": [95, 49, 39], "h_damage_max": [175, 79, 51]},
+    "41127": {"h_damage_min": [114, 59, 47], "h_damage_max": [210, 95, 61]},
+    "41128": {"h_damage_min": [105, 54, 43], "h_damage_max": [193, 87, 56]},
+    "41130": {"h_damage_min": [125, 65, 52], "h_damage_max": [231, 105, 67]},
+    "43647": {"h_damage_min": [17, 14, 0], "h_damage_max": [50, 50, 0]},
+    "43649": {"h_damage_min": [20, 15, 0], "h_damage_max": [59, 55, 0]},
+    "43650": {"h_damage_min": [15, 13, 0], "h_damage_max": [45, 45, 0]},
+    "43652": {"h_damage_min": [18, 14, 0], "h_damage_max": [54, 50, 0]},
+    "43653": {"h_damage_min": [15, 13, 0], "h_damage_max": [45, 45, 0]},
+    "43655": {"h_damage_min": [18, 14, 0], "h_damage_max": [54, 50, 0]},
+    "43656": {"h_damage_min": [15, 13, 0], "h_damage_max": [45, 45, 0]},
+    "43658": {"h_damage_min": [18, 14, 0], "h_damage_max": [54, 50, 0]},
+    "43659": {"h_damage_min": [15, 13, 0], "h_damage_max": [45, 45, 0]},
+    "43661": {"h_damage_min": [18, 14, 0], "h_damage_max": [54, 50, 0]},
+    "43662": {"h_damage_min": [15, 13, 0], "h_damage_max": [45, 45, 0]},
+    "43664": {"h_damage_min": [18, 14, 0], "h_damage_max": [54, 50, 0]},
+    "43665": {"h_damage_min": [15, 13, 0], "h_damage_max": [45, 45, 0]},
+    "43667": {"h_damage_min": [18, 14, 0], "h_damage_max": [54, 50, 0]},
+    "43668": {"h_damage_min": [15, 13, 0], "h_damage_max": [45, 45, 0]},
+    "43670": {"h_damage_min": [18, 14, 0], "h_damage_max": [54, 50, 0]},
+    "43671": {"h_damage_min": [15, 13, 0], "h_damage_max": [45, 45, 0]},
+    "43673": {"h_damage_min": [18, 14, 0], "h_damage_max": [54, 50, 0]},
+    "43674": {"h_damage_min": [17, 14, 0], "h_damage_max": [50, 50, 0]},
+    "43676": {"h_damage_min": [20, 15, 0], "h_damage_max": [59, 55, 0]},
+    "40981": {"h_damage_min": [55, 38, 31], "h_damage_max": [125, 60, 43]},
+    "40983": {"h_damage_min": [66, 46, 37], "h_damage_max": [150, 72, 51]},
+    "40984": {"h_damage_min": [61, 42, 34], "h_damage_max": [138, 66, 47]},
+    "40986": {"h_damage_min": [73, 51, 41], "h_damage_max": [165, 79, 56]},
+    "40987": {"h_damage_min": [55, 38, 31], "h_damage_max": [125, 60, 43]},
+    "40989": {"h_damage_min": [66, 46, 37], "h_damage_max": [150, 72, 51]},
+    "40990": {"h_damage_min": [55, 38, 31], "h_damage_max": [125, 60, 43]},
+    "40992": {"h_damage_min": [66, 46, 37], "h_damage_max": [150, 72, 51]},
+    "40993": {"h_damage_min": [55, 38, 31], "h_damage_max": [125, 60, 43]},
+    "40995": {"h_damage_min": [66, 46, 37], "h_damage_max": [150, 72, 51]},
+    "40996": {"h_damage_min": [55, 38, 31], "h_damage_max": [125, 60, 43]},
+    "40998": {"h_damage_min": [66, 46, 37], "h_damage_max": [150, 72, 51]},
+    "40999": {"h_damage_min": [55, 38, 31], "h_damage_max": [125, 60, 43]},
+    "41001": {"h_damage_min": [66, 46, 37], "h_damage_max": [150, 72, 51]},
+    "41002": {"h_damage_min": [61, 42, 34], "h_damage_max": [138, 66, 47]},
+    "41004": {"h_damage_min": [73, 51, 41], "h_damage_max": [165, 79, 56]},
+    "41012": {"h_damage_min": [12, 9, 8], "h_damage_max": [26, 20, 18]},
+    "41035": {"h_damage_min": [83, 56, 37], "h_damage_max": [160, 74, 48]},
+    "41037": {"h_damage_min": [99, 67, 45], "h_damage_max": [191, 89, 58]},
+    "41038": {"h_damage_min": [75, 51, 34], "h_damage_max": [145, 67, 44]},
+    "41040": {"h_damage_min": [90, 61, 41], "h_damage_max": [174, 81, 53]},
+    "41041": {"h_damage_min": [75, 51, 34], "h_damage_max": [145, 67, 44]},
+    "41043": {"h_damage_min": [90, 61, 41], "h_damage_max": [174, 81, 53]},
+    "41044": {"h_damage_min": [75, 51, 34], "h_damage_max": [145, 67, 44]},
+    "41046": {"h_damage_min": [90, 61, 41], "h_damage_max": [174, 81, 53]},
+    "41047": {"h_damage_min": [75, 51, 34], "h_damage_max": [145, 67, 44]},
+    "41049": {"h_damage_min": [90, 61, 41], "h_damage_max": [174, 81, 53]},
+    "41050": {"h_damage_min": [75, 51, 34], "h_damage_max": [145, 67, 44]},
+    "41052": {"h_damage_min": [90, 61, 41], "h_damage_max": [174, 81, 53]},
+    "41053": {"h_damage_min": [75, 51, 34], "h_damage_max": [145, 67, 44]},
+    "41055": {"h_damage_min": [90, 61, 41], "h_damage_max": [174, 81, 53]},
+    "41056": {"h_damage_min": [83, 56, 37], "h_damage_max": [160, 74, 48]},
+    "41058": {"h_damage_min": [99, 67, 45], "h_damage_max": [191, 89, 58]},
+    "41083": {"h_damage_min": [105, 51, 42], "h_damage_max": [182, 81, 53]},
+    "41085": {"h_damage_min": [125, 61, 51], "h_damage_max": [218, 98, 64]},
+    "41086": {"h_damage_min": [95, 46, 38], "h_damage_max": [165, 74, 48]},
+    "41088": {"h_damage_min": [114, 55, 46], "h_damage_max": [198, 89, 58]},
+    "41089": {"h_damage_min": [95, 46, 38], "h_damage_max": [165, 74, 48]},
+    "41091": {"h_damage_min": [114, 55, 46], "h_damage_max": [198, 89, 58]},
+    "41092": {"h_damage_min": [95, 46, 38], "h_damage_max": [165, 74, 48]},
+    "41094": {"h_damage_min": [114, 55, 46], "h_damage_max": [198, 89, 58]},
+    "41095": {"h_damage_min": [95, 46, 38], "h_damage_max": [165, 74, 48]},
+    "41097": {"h_damage_min": [114, 55, 46], "h_damage_max": [198, 89, 58]},
+    "41098": {"h_damage_min": [95, 46, 38], "h_damage_max": [165, 74, 48]},
+    "41100": {"h_damage_min": [114, 55, 46], "h_damage_max": [198, 89, 58]},
+    "41101": {"h_damage_min": [95, 46, 38], "h_damage_max": [165, 74, 48]},
+    "41103": {"h_damage_min": [114, 55, 46], "h_damage_max": [198, 89, 58]},
+    "41104": {"h_damage_min": [105, 51, 42], "h_damage_max": [182, 81, 53]},
+    "41106": {"h_damage_min": [125, 61, 51], "h_damage_max": [218, 98, 64]},
+    "41137": {"h_damage_min": [12, 9, 8], "h_damage_max": [26, 20, 18]},
+    "41139": {"h_damage_min": [12, 9, 8], "h_damage_max": [26, 20, 18]},
+    "41167": {"h_damage_min": [12, 9, 8], "h_damage_max": [26, 20, 18]},
+    "41169": {"h_damage_min": [12, 9, 8], "h_damage_max": [26, 20, 18]},
+    "26164": {"h_damage_max": [163, 81, 57]},
+    "26165": {"h_damage_min": [90, 49, 37], "h_damage_max": [196, 97, 69]},
+    "26173": {"h_damage_min": [12, 9, 8], "h_damage_max": [26, 20, 18]},
+    "25197": {"h_damage_min": [40, 28, 21], "h_damage_max": [110, 58, 41]},
+    "25198": {"h_damage_min": [48, 34, 25], "h_damage_max": [132, 70, 49]},
+    "38745": {"h_damage_min": [39, 31, 0], "h_damage_max": [105, 68, 0]},
+    "38748": {"h_damage_min": [35, 28, 0], "h_damage_max": [95, 62, 0]},
+    "38751": {"h_damage_min": [35, 28, 0], "h_damage_max": [95, 62, 0]},
+    "38754": {"h_damage_min": [35, 28, 0], "h_damage_max": [95, 62, 0]},
+    "38757": {"h_damage_min": [35, 28, 0], "h_damage_max": [95, 62, 0]},
+    "38760": {"h_damage_min": [35, 28, 0], "h_damage_max": [95, 62, 0]},
+    "38763": {"h_damage_min": [35, 28, 0], "h_damage_max": [95, 62, 0]},
+    "38766": {"h_damage_min": [35, 28, 0], "h_damage_max": [95, 62, 0]},
+    "40909": {"h_damage_min": [40, 28, 21], "h_damage_max": [110, 58, 41]},
+    "40911": {"h_damage_min": [48, 34, 25], "h_damage_max": [132, 70, 49]},
+    "40912": {"h_damage_min": [40, 28, 21], "h_damage_max": [110, 58, 41]},
+    "40914": {"h_damage_min": [48, 34, 25], "h_damage_max": [132, 70, 49]},
+    "40915": {"h_damage_min": [40, 28, 21], "h_damage_max": [110, 58, 41]},
+    "40917": {"h_damage_min": [48, 34, 25], "h_damage_max": [132, 70, 49]},
+    "40918": {"h_damage_min": [40, 28, 21], "h_damage_max": [110, 58, 41]},
+    "40920": {"h_damage_min": [48, 34, 25], "h_damage_max": [132, 70, 49]},
+    "40921": {"h_damage_min": [40, 28, 21], "h_damage_max": [110, 58, 41]},
+    "40923": {"h_damage_min": [48, 34, 25], "h_damage_max": [132, 70, 49]},
+    "40924": {"h_damage_min": [40, 28, 21], "h_damage_max": [110, 58, 41]},
+    "40926": {"h_damage_min": [48, 34, 25], "h_damage_max": [132, 70, 49]},
+    "40927": {"h_damage_min": [40, 28, 21], "h_damage_max": [110, 58, 41]},
+    "40929": {"h_damage_min": [48, 34, 25], "h_damage_max": [132, 70, 49]},
+    "40930": {"h_damage_min": [44, 31, 23], "h_damage_max": [121, 64, 45]},
+    "40932": {"h_damage_min": [53, 37, 28], "h_damage_max": [145, 77, 54]}
   },
   "previous_sets": {
     "11167": {
