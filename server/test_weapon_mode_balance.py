@@ -2,6 +2,7 @@
 import copy
 import re
 import unittest
+from functools import lru_cache
 from types import SimpleNamespace as NS
 from unittest.mock import Mock, patch
 
@@ -12,8 +13,33 @@ import inventory
 import items
 import mobs
 import progression
+import equipment_release
+import shop_bands
 from testkit import run_cases
 from training.balance import before_release
+
+
+@lru_cache(maxsize=1)
+def retail_automatic_types():
+    """Placed sellers' live stock, plus supported mods of those base guns."""
+    sold = set()
+    for location in set(shop_bands.CITY_OF) | set(shop_bands.OASIS_MARKETS):
+        for trader in equipment_release.sellers_at(location):
+            sold.update(items.stock_for(trader, location))
+    result = set()
+    for source, (root, _name) in items.catalogue().items():
+        if (root != items.FIRE_ARM or items.out_of_game(source)
+                or items.acquisition_blocked(source)):
+            continue
+        mod = craft.mod_of(source)
+        base = mod[0] if mod else source
+        if base not in sold:
+            continue
+        params = items.params_of(source)
+        if (params['weapon_type'] in (items.SMG, items.ASSAULT, items.MACHINEGUN)
+                or params['weapon_type'] == items.PISTOL and max(params['fire_mods']) > 1):
+            result.add(source)
+    return frozenset(result)
 
 
 class WeaponModeBalance(unittest.TestCase):
@@ -119,8 +145,7 @@ class WeaponModeBalance(unittest.TestCase):
                     or items.acquisition_blocked(source)
                     or not 1 <= inventory.item_level(source) <= 17):
                 continue
-            mod = craft.mod_of(source)
-            if mod and items.weapon_use_error(mod[0]):
+            if source not in retail_automatic_types():
                 continue
             params = items.params_of(source)
             if params['weapon_type'] not in (items.PISTOL, items.SMG, items.ASSAULT, items.MACHINEGUN):
@@ -169,6 +194,17 @@ class WeaponModeBalance(unittest.TestCase):
                             self.assertGreater(expected(current), expected(previous))
                         comparisons += 1
         self.assertGreater(comparisons, 1000)
+
+    def test_non_retail_event_accuracy_keeps_native_values(self):
+        native = {26276: [.5, .804, 1.45], 26279: [.399, .804, 1.45],
+                  26282: [.352, .804, 1.45], 26285: [.448, .804, 1.45]}
+        reviewed = retail_automatic_types()
+        self.assertIn(25453, reviewed)  # Thompson A is sold in Abri.
+        self.assertIn(25454, reviewed)
+        for source, target_size in native.items():
+            with self.subTest(source=source):
+                self.assertNotIn(source, reviewed)
+                self.assertEqual(items.params_of(source)['target_size'], target_size)
 
     def test_reviewed_second_modes_are_between_single_and_long_burst(self):
         for source in (25166, 25167, 25217, 25218, 25265, 25266,
@@ -228,7 +264,7 @@ class WeaponModeBalance(unittest.TestCase):
                     if root != items.FIRE_ARM or not re.fullmatch(r'assault_rifle_\d+_lvl_\d+' + ('_gold' if gold else ''), name):
                         continue
                     level = inventory.item_level(source)
-                    if not 12 <= level <= 17:
+                    if source not in retail_automatic_types() or not 12 <= level <= 17:
                         continue
                     selected = source
                     if effect:
