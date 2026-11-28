@@ -511,5 +511,74 @@ class GofusTrade(unittest.TestCase):
                     self.store.delete_item(rows[0]['uniq'])
 
 
+class BaseConsumableTrade(unittest.TestCase):
+    setUp = trade_fixtures.GoldCommerce.setUp
+
+    def purchases(self, key, loc, ammo_trader):
+        import math
+        from datetime import datetime
+        import bosses
+        import holdings
+        import world
+        now = datetime(2026, 11, 21, 20, tzinfo=bosses.ZONE).timestamp() + 10
+        self.enterContext(patch.object(bosses, 'clock', return_value=now))
+        clan = self.store.clan_create(self.cid, 'Consumables', 'base-consumables', '', None)
+        self.store.clan_treasury_adjust(clan, 4500000, 'admin')
+        site = holdings.site(key)
+        self.assertTrue(self.store.holding_capture(site.key, clan, now - 10, self.cid, now,
+                                                   base_sites=holdings.base_keys()))
+        self.assertTrue(holdings.pay_rent(self.store, site, self.cid, now))
+        self.s.loc = world.location(loc)
+        self.s.room.loc = self.s.loc
+        self.assertEqual(holdings.paid_base_for(self.store, loc, self.cid).key, key)
+        for trader in (1013, 2018, ammo_trader):
+            self.inv.trade = inventory.TradeSession(1, trader, loc)
+            self.s.room.npc = lambda n: (0, trader, world.TRADER) if n == 1 else None
+            stock = items.stock_for(trader, loc)
+            self.assertTrue(stock)
+            self.assertEqual(len(stock), len(set(stock)))
+            for index, tid in enumerate(stock):
+                with self.subTest(location=loc, trader=trader, item=tid):
+                    si = items.params_of(tid)
+                    self.assertIn(items.root_of(tid), (items.HEAL, items.AMMO))
+                    self.store.set_money(self.cid, 5000000, 100000)
+                    self.s.char.afro, self.s.char.gold = self.store.money(self.cid)
+                    before = self.store.money(self.cid)
+                    gold = bool(si['g_cost'])
+                    quantity = 3
+                    self.frames.clear()
+                    self.inv.buy(dict(obj=format(index, 'x'), param=quantity),
+                                 inventory.UPD_BUY_GOLD if gold else inventory.UPD_BUY)
+                    self.assertEqual([p['res'] for cmd, p in self.frames if cmd == 'cmdAck'], [0])
+                    price = inventory.buy_price(si, items.root_of(tid), quantity, gold,
+                        inventory.purchase_pmod(tid, self.inv.current_trade_rates()))
+                    after = self.store.money(self.cid)
+                    self.assertEqual(before[int(gold)] - after[int(gold)], price)
+                    self.assertEqual(before[int(not gold)], after[int(not gold)])
+                    rows = self.inv.rows()
+                    self.assertEqual(sum(r['count'] for r in rows), quantity)
+                    self.assertEqual({r['type_id'] for r in rows}, {tid})
+                    if items.root_of(tid) == items.HEAL:
+                        self.assertTrue(all(r['use_count'] == si['use_count'] > 0 for r in rows))
+                        value = effects.definition(tid)
+                        if value:
+                            self.assertTrue(math.isfinite(value['duration']) and value['duration'] > 0)
+                            self.assertEqual(si['effects'], [effects.FIRST + tid])
+                        else:
+                            self.assertGreater(max(si['max_h_rest'], si['max_st_rest']), 0)
+                    else:
+                        self.assertTrue(any(tid in (items.params_of(t) or {}).get('comp_array', ())
+                                            for t, (root, _) in items.catalogue().items()
+                                            if root == items.FIRE_ARM))
+                    for row in rows:
+                        self.store.delete_item(row['uniq'])
+
+    def test_abu_hamed_paid_base_all_consumables(self):
+        self.purchases('base_ah', 609, 714)
+
+    def test_dongola_paid_base_all_consumables(self):
+        self.purchases('base_dn', 1443, 5240)
+
+
 if __name__ == '__main__':
-    run_cases(ArchivedBuffs, GofusStock, GofusTrade)
+    run_cases(ArchivedBuffs, GofusStock, GofusTrade, BaseConsumableTrade)

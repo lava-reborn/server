@@ -949,10 +949,13 @@ class ReleaseCatalogue(unittest.TestCase):
             if st.ranged:
                 self.assertIn(st.loot_ammo_type, p['comp_array'], key)
                 self.assertTrue(items.catalogue()[st.loot_ammo_type][1].endswith('_KS'), key)
-                self.assertEqual([m['shots'] for m in st.balanced_modes], [n for n in p['fire_mods'] if n], key)
+                profile = battle_balance.mob_weapon_damage_overrides().get(st.weapon_type_id, p)
+                modes = [i for i, n in enumerate(p['fire_mods']) if n
+                         and i in profile.get('fire_modes', range(len(p['fire_mods'])))]
+                self.assertEqual([m['shots'] for m in st.balanced_modes], [p['fire_mods'][i] for i in modes], key)
                 ammo = items.params_of(st.loot_ammo_type)
-                for row, mode in zip(st.balanced_modes, (i for i, n in enumerate(p['fire_mods']) if n)):
-                    self.assertLessEqual(row['dmax'], max(1, round(p['h_damage_max'][mode] * ammo['dam_mod'])), key)
+                for row, mode in zip(st.balanced_modes, modes):
+                    self.assertLessEqual(row['dmax'], max(1, round(profile['h_damage_max'][mode] * ammo['dam_mod'])), key)
                     self.assertLessEqual(row['sdmax'], round(p['st_damage_max'][mode] * ammo['st_mod']), key)
             else:
                 self.assertEqual(items.root_of(st.weapon_type_id), items.COLD_ARM, key)

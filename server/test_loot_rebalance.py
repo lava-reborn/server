@@ -27,6 +27,18 @@ ROOT = Path(__file__).resolve().parents[1]
 FOLLOWUP = json.loads((ROOT / 'data/loot_rebalance.json').read_text(encoding='utf-8'))['followup_2026_11_23']
 
 
+# Original economic calibration before the approved nine-location footprint.
+# Retain the 4% per-level slope; a different roster mix changes its mean,
+# without changing any per-type drop table or the old 105000 SA baseline.
+CAMP_CALIBRATION_LEVEL = {34: 2.5, 80: 1.125, 81: 131/48, 84: 4.5,
+    85: 6.40625, 88: 415/48, 92: 10.5, 93: 12.75, 98: 14.75,
+    132: 16.75, 168: 16.625, 263: 463/24}
+
+
+def camp_level_factor(camp, kind):
+    return 1 + .04 * (mobs.stats(kind).level - CAMP_CALIBRATION_LEVEL[camp])
+
+
 def followup_delta(kind, currency):
     """Explicit release adjustment, without discarding the old calibration."""
     return FOLLOWUP['income_delta_175'].get(str(kind), {}).get(currency + '_175', 0)
@@ -137,11 +149,13 @@ class LootRebalance(unittest.TestCase):
                 total = sum(counts.values())
                 a = sum(revenue(k)[0] * n for k, n in counts.items()) / total
                 g = sum(revenue(k)[1] * n for k, n in counts.items()) / total
-                target = sum(current_income_target(k, profile['afro']) * n
+                target = sum(current_income_target(k, profile['afro'] * camp_level_factor(camp, k)) * n
                              for k, n in counts.items()) / total
                 self.assertAlmostEqual(a, target, delta=1)
                 gold_adjustment = sum(followup_delta(k, 'gold') * n for k, n in counts.items()) / total
-                self.assertAlmostEqual(g, profile['gold'] + gold_adjustment, delta=.0001)
+                gold_target = sum(profile['gold'] * camp_level_factor(camp, k) * n
+                                  for k, n in counts.items()) / total
+                self.assertAlmostEqual(g, gold_target + gold_adjustment, delta=.0001)
             else:
                 top = max(mobs.stats(k).level for k in counts)
                 for k in counts:
@@ -175,8 +189,10 @@ class LootRebalance(unittest.TestCase):
                              for k, n in counts.items()) / total
         afro_adjustment = sum(followup_delta(k, 'afro') * n for k, n in counts.items()) / total
         gold_adjustment = sum(followup_delta(k, 'gold') * n for k, n in counts.items()) / total
-        self.assertAlmostEqual(a - carried_change, 105000 + afro_adjustment, delta=1)
-        self.assertAlmostEqual(g, 1.2 + gold_adjustment, delta=.0001)
+        factor = sum(camp_level_factor(263, k) * n for k, n in counts.items()) / total
+        self.assertAlmostEqual(105000 * (factor - 1), 125)
+        self.assertAlmostEqual(a - carried_change, 105000 * factor + afro_adjustment, delta=1)
+        self.assertAlmostEqual(g, 1.2 * factor + gold_adjustment, delta=.0001)
 
     def test_elite_roster_is_absent_from_every_patrol_and_not_officers(self):
         forbidden = ('командир', 'командер', 'полков', 'капитан', 'лейтенант', 'майор', 'казнач', 'бухгалтер')

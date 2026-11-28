@@ -20,17 +20,17 @@ for t, level, ap, weapon in ((840, 16, 180, 25287), (841, 17, 200, 25319)):
     check('%d: level retained and automatic weapon profile applied' % t,
           (st.level, st.weapon_class, st.weapon_type_id, st.ranged,
            st.ap_max, st.attack_ap, st.shots, st.range),
-          (level, 'assault_rifle', weapon, True, ap, 22 if t == 840 else 23, 1, 39))
+          (level, 'assault_rifle', weapon, True, ap, 23 if t == 840 else 24, 3, 28 if t == 840 else 30))
     expected = designed['pc_miner_lvl%d' % level]
     check('%d: generated data matches generator overrides' % t,
           {k: mobs.TYPES[str(t)][k] for k in expected}, expected)
     check('%d: native aim time and firing modes' % t,
-          (st.attack_time, [m['shots'] for m in st.balanced_modes]), (.8, [1, 3, 6]))
+          (st.attack_time, [m['shots'] for m in st.balanced_modes]), (.7, [3]))
     check('%d: every native mode has finite positive spread and affordable AP' % t,
           all(0 < m['cone'] < 1 and m['ap'] <= st.ap_max for m in st.balanced_modes), True)
     check('%d: damage follows the common ordinary-mob release ladder' % t,
           (st.dmg_min, st.dmg_max),
-          (48, 102) if t == 840 else (49, 89))
+          (31, 44) if t == 840 else (25, 40))
     check('%d: virtual weapon loaded with compatible ammo' % t,
           mobs.virtual_di(mobs.VIRTUAL_BASE + 1, weapon, items.FIRE_ARM, st.loot_ammo_type)[1]['ammo_type'],
           6097)

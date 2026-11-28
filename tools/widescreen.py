@@ -3315,6 +3315,8 @@ def injected(training=None):
     for name, params, body in lifecycle['globals']:
         a.var('_global').push(name).function(params, body).op('setmember')
     wraps += lifecycle['wraps']
+    from effects_client import patches as effect_patches
+    wraps += effect_patches(Asm, UNDEF)['wraps']
     a.push(0).var('_global').push('__lcInstallTimeout').op('callmethod').op('pop')
     from chat_history import patches as history_patches
     history = history_patches(Asm, UNDEF)

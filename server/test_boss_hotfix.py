@@ -53,10 +53,12 @@ for t, info in mobs.TYPES.items():
     weapon = items.params_of(st.weapon_type_id) if getattr(st, 'plain_weapon', False) else None
     scale = min(1, adjustment.get('damage_scale', 1) / 1.5)
     if weapon and items.root_of(st.weapon_type_id) == items.FIRE_ARM:
-        mode = max((i for i, shots in enumerate(weapon['fire_mods']) if shots and weapon['max_range'][i]),
-                   key=lambda i: weapon['max_range'][i])
+        profile = battle_balance.mob_weapon_damage_overrides().get(st.weapon_type_id, weapon)
+        mode = max((i for i, shots in enumerate(weapon['fire_mods']) if shots
+                    and i in profile.get('fire_modes', range(len(weapon['fire_mods'])))
+                    and profile['max_range'][i]), key=lambda i: profile['max_range'][i])
         ammo = items.params_of(st.loot_ammo_type)
-        damage = round(weapon['h_damage_min'][mode] * scale * ammo['dam_mod'])
+        damage = round(profile['h_damage_min'][mode] * scale * ammo['dam_mod'])
     elif weapon and items.root_of(st.weapon_type_id) == items.COLD_ARM:
         damage = round(weapon['h_damage_min'] * scale)
     else:

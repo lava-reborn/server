@@ -140,7 +140,9 @@ class MachinegunBalance(unittest.TestCase):
         caps = balance.weapon_hit_caps()
         self.assertTrue(expected <= set(caps))
         for type_id in expected:
-            self.assertEqual(caps[type_id], .60)
+            # These two catalogue variants are shotspeed copies not decoded
+            # by craft.mod_of; their reviewed burst ceiling is independent.
+            self.assertEqual(caps[type_id], .83 if type_id in (39997, 39999) else .60)
         for type_id, cap in ((24990, .60), (7052, .95), (25026, .95), (26177, .95)):
             with self.subTest(type_id=type_id):
                 self.assertEqual(self.weapon(type_id, 2, {}).hit_cap, cap)

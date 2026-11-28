@@ -62,7 +62,7 @@ class WeaponModeBalance(unittest.TestCase):
                     self.assertEqual([row['shots'] for row in stats.balanced_modes], [3])
                     self.assertIsNone(battle_balance.mob_mode(stats, stats.range + 1))
         self.assertEqual(set(battle_balance.mob_weapon_damage_overrides()), {
-            24989, 25006, 25217, 25249, 25265, 25287, 25303, 25319,
+            24989, 25006, 25150, 25185, 25217, 25249, 25265, 25287, 25303, 25319,
             25341, 25357, 25373, 25389,
             25405, 25437, 25453, 25469, 25485, 25514, 25540})
         for source, params in player_before.items():
@@ -94,7 +94,8 @@ class WeaponModeBalance(unittest.TestCase):
         self.assertEqual(struck[target][:3], [20, 0, 2])
 
     def test_mode_accuracy_limits_are_applied_without_changing_other_modes(self):
-        for source, caps in ((25201, (.95, .785, .70)), (25217, (.95, .87, .70)),
+        for source, caps in ((25150, (.95, .95, .78)), (25166, (.95, .95, .78)),
+                             (25201, (.95, .785, .70)), (25217, (.95, .87, .70)),
                              (25303, (.91, .95, .95))):
             params = items.params_of(source)
             ch = progression.Character()
@@ -108,6 +109,66 @@ class WeaponModeBalance(unittest.TestCase):
         self.assertEqual(battle_balance.weapon_hit_cap(7052, 2), .95)
         with self.assertRaises(ValueError):
             battle_balance.weapon_hit_cap(25201, -1)
+
+    def test_close_range_prepared_trigger_damage_grows_with_burst_length(self):
+        # Expected complete-trigger HP damage, before armour/crit. A long
+        # burst costs more rounds/AP; this is deliberately not a DPS claim.
+        comparisons = 0
+        for source, (root, _name) in items.catalogue().items():
+            if (root != items.FIRE_ARM or items.out_of_game(source)
+                    or items.acquisition_blocked(source)
+                    or not 1 <= inventory.item_level(source) <= 17):
+                continue
+            mod = craft.mod_of(source)
+            if mod and items.weapon_use_error(mod[0]):
+                continue
+            params = items.params_of(source)
+            if params['weapon_type'] not in (items.PISTOL, items.SMG, items.ASSAULT, items.MACHINEGUN):
+                continue
+            pairs = [(left, right) for left, right in ((0, 1), (1, 2))
+                     if 0 < params['fire_mods'][left] < params['fire_mods'][right]]
+            if not pairs:
+                continue  # An aimed third single shot is not a longer burst.
+            for skill, spec_level, suffix in ((inventory.item_level(source), 3, '_KS'),
+                                             (20, 5, '_KS'),
+                                             (inventory.item_level(source), 3, '_ST'),
+                                             (inventory.item_level(source), 3, '_EK_G')):
+                character = progression.Character()
+                character.set_skill(progression.SHOOTING, skill)
+                spec = combat.SPEC_OF_WEAPON[params['weapon_type']]
+                character.set_spec(spec, spec_level)
+                ammo_id = next(t for t in params['comp_array']
+                               if items.catalogue()[t][1].endswith(suffix))
+                ammo = items.params_of(ammo_id)
+                weapons = {}
+                for mode, shots in enumerate(params['fire_mods']):
+                    if not shots:
+                        continue
+                    weapon = combat.Weapon(shots, params['h_damage_min'][mode], params['h_damage_max'][mode],
+                        params['opt_range'][mode], params['end_opt_range'][mode], params['max_range'][mode],
+                        ammo.get('piercing', 1),
+                        combat.cone_of(combat.spread_factor(skill, spec_level),
+                                       params['target_size'][mode], ammo.get('acc_mod', 1),
+                                       params['max_range'][mode]),
+                        0, progression.SHOOTING, spec)
+                    weapons[mode] = battle_balance.weapon(weapon, character,
+                        dict(type_id=source, cur_mode=mode), ammo)
+                for distance in range(1, 8):
+                    for left, right in pairs:
+                        previous, current = weapons[left], weapons[right]
+                        if distance > min(previous.max_range, current.max_range):
+                            continue
+                        def expected(weapon):
+                            low = weapon.dmin
+                            if weapon.opt_lo <= distance <= weapon.opt_hi:
+                                low += (weapon.dmax - low) // 2
+                            return ((low + weapon.dmax) / 2 * weapon.num_shots
+                                    * combat.hit_probability(weapon.cone, distance, weapon.hit_cap))
+                        with self.subTest(source=source, skill=skill, spec=spec_level,
+                                          ammo=ammo_id, distance=distance, modes=(left, right)):
+                            self.assertGreater(expected(current), expected(previous))
+                        comparisons += 1
+        self.assertGreater(comparisons, 1000)
 
     def test_reviewed_second_modes_are_between_single_and_long_burst(self):
         for source in (25166, 25167, 25217, 25218, 25265, 25266,

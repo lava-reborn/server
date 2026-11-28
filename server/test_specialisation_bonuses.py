@@ -43,7 +43,7 @@ class SpecialisationBonuses(unittest.IsolatedAsyncioTestCase):
                     if params['fire_mods'][mode] == 1:
                         expected *= .8
                     self.assertAlmostEqual(shot.cone, expected)
-                    self.assertEqual(shot.hit_cap, .95)
+                    self.assertEqual(shot.hit_cap, (.95, .785, .70)[mode])
                     cones.append(shot.cone)
                     rng = random.Random(25201 + mode)
                     for distance in (2, 5, params['end_opt_range'][mode], shot.max_range):
