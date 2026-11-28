@@ -61,10 +61,13 @@ class WeaponModeBalance(unittest.TestCase):
                 if stats.weapon_type_id in (25287, 25319):
                     self.assertEqual([row['shots'] for row in stats.balanced_modes], [3])
                     self.assertIsNone(battle_balance.mob_mode(stats, stats.range + 1))
-        self.assertEqual(set(battle_balance.mob_weapon_damage_overrides()), {25217, 25287, 25319})
+        self.assertEqual(set(battle_balance.mob_weapon_damage_overrides()), {
+            24989, 25006, 25217, 25249, 25265, 25287, 25303, 25319,
+            25341, 25357, 25373, 25389,
+            25405, 25437, 25453, 25469, 25485, 25514, 25540})
         for source, params in player_before.items():
             self.assertEqual(items.params_of(source), params)
-        self.assertEqual(items.params_of(25287)['h_damage_max'], [170, 80, 52])
+        self.assertEqual(items.params_of(25287)['h_damage_max'], [188, 83, 52])
         self.assertEqual(items.params_of(25319)['h_damage_max'], [218, 100, 64])
 
     def test_npc_bullets_have_independent_scatter_and_can_miss_at_close_range(self):
@@ -89,6 +92,22 @@ class WeaponModeBalance(unittest.TestCase):
         self.assertEqual(scatter.call_count, 3)
         self.assertEqual(len(pairs), 3)
         self.assertEqual(struck[target][:3], [20, 0, 2])
+
+    def test_mode_accuracy_limits_are_applied_without_changing_other_modes(self):
+        for source, caps in ((25201, (.95, .785, .70)), (25217, (.95, .87, .70)),
+                             (25303, (.91, .95, .95))):
+            params = items.params_of(source)
+            ch = progression.Character()
+            ch.set_skill(progression.SHOOTING, inventory.item_level(source))
+            for mode, expected in enumerate(caps):
+                weapon = combat.Weapon(params['fire_mods'][mode], 10, 20, 1, 5, 25,
+                                       1, .1, 0, progression.SHOOTING, 7)
+                prepared = battle_balance.weapon(weapon, ch, dict(type_id=source, cur_mode=mode), {})
+                with self.subTest(source=source, mode=mode):
+                    self.assertEqual(prepared.hit_cap, expected)
+        self.assertEqual(battle_balance.weapon_hit_cap(7052, 2), .95)
+        with self.assertRaises(ValueError):
+            battle_balance.weapon_hit_cap(25201, -1)
 
     def test_reviewed_second_modes_are_between_single_and_long_burst(self):
         for source in (25166, 25167, 25217, 25218, 25265, 25266,
@@ -157,12 +176,13 @@ class WeaponModeBalance(unittest.TestCase):
                         if selected is None:
                             continue
                     params = items.params_of(selected)
-                    budget = [lo + hi for lo, hi in zip(params['h_damage_min'], params['h_damage_max'])]
-                    levels[level] = [max(a, b) for a, b in zip(levels.get(level, [0]*3), budget)]
+                    budget = (params['h_damage_min'] + params['h_damage_max']
+                              + [lo + hi for lo, hi in zip(params['h_damage_min'], params['h_damage_max'])])
+                    levels[level] = [max(a, b) for a, b in zip(levels.get(level, [0]*9), budget)]
                 self.assertEqual(set(levels), set(range(12, 18)))
-                for mode in range(3):
-                    values = [levels[level][mode] for level in sorted(levels)]
-                    with self.subTest(gold=gold, effect=effect, mode=mode):
+                for field in range(9):
+                    values = [levels[level][field] for level in sorted(levels)]
+                    with self.subTest(gold=gold, effect=effect, field=field // 3, mode=field % 3):
                         self.assertEqual(values, sorted(values))
 
     def test_affected_blueprints_keep_their_declared_damage_bonus(self):
